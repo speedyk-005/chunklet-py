@@ -1,0 +1,10 @@
+[project]
+name = "chunklet"
+version = "1.0.0"
+description = "A smart multilingual text chunker for LLMs, RAG, and beyond."
+authors = [
+  { name = "Speed k.", email = "speedy40115719@gmail.com" }
+]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.9"
