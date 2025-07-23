@@ -1,14 +1,4 @@
-"""
-chunklet.py
 
-A smart sentence-based tokenizer for splitting multilingual or multi-format text
-into overlapping chunks. Ideal for pre-processing tasks such as LLM prompting,
-summarization, and context-aware NLP.
-
-Author: Speed k.
-
-License: MIT
-"""
 
 import re
 import math
