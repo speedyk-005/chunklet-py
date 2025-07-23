@@ -2,7 +2,7 @@
 
 > Chunk smarter, not harder. For LLMs, RAG, and beyond.
 Author: Speed k.
-Version: 1.0
+Version: 1.0.1
 License: MIT
 
 

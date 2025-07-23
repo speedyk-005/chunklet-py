@@ -8,6 +8,6 @@ summarization, and context-aware NLP.
 
 from .core import Chunklet
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "Speed k."
 __license__ = "MIT"
