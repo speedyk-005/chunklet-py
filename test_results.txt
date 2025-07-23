@@ -1,0 +1,35 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.11, pytest-8.4.1, pluggy-1.6.0
+rootdir: /storage/emulated/0/Documents/chunklet
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.9.0, cov-6.2.1
+collected 6 items
+
+tests/test_chunklet.py ......                                            [100%]
+
+=============================== warnings summary ===============================
+../../../../../data/data/com.termux/files/usr/lib/python3.12/site-packages/coverage/core.py:97
+  /data/data/com.termux/files/usr/lib/python3.12/site-packages/coverage/core.py:97: CoverageWarning: Couldn't import C tracer: No module named 'coverage.tracer' (no-ctracer)
+    warn(f"Couldn't import C tracer: {IMPORT_ERROR}", slug="no-ctracer", once=True)
+
+../../../../../data/data/com.termux/files/usr/lib/python3.12/site-packages/sentsplit/segment.py:9
+  /data/data/com.termux/files/usr/lib/python3.12/site-packages/sentsplit/segment.py:9: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+../../../../../data/data/com.termux/files/usr/lib/python3.12/site-packages/pkg_resources/__init__.py:3146
+  /data/data/com.termux/files/usr/lib/python3.12/site-packages/pkg_resources/__init__.py:3146: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('google')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    declare_namespace(pkg)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.11-final-0 _______________
+
+Name                       Stmts   Miss  Cover   Missing
+--------------------------------------------------------
+src/chunklet/__init__.py       4      0   100%
+src/chunklet/core.py         144     36    75%   61-63, 74, 138, 141, 144, 154, 157-159, 175, 237-248, 254, 258-307
+--------------------------------------------------------
+TOTAL                        148     36    76%
+======================== 6 passed, 3 warnings in 9.79s =========================

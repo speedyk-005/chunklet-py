@@ -1,20 +1,27 @@
-# Byte-compiled / optimized / DLL files
+# Byte-compiled / cache
 __pycache__/
 *.py[cod]
-*$py.class
+.pytest_cache/
+.coverage
+*.parquet
 
-# C extensions
-*.so
-*.dll
-*.dylib
-
-# Distribution / packaging
-.Python
-build/
-dist/
-wheels/
+# Installer files
 *.egg-info/
-*.egg
+dist/
+build/
+
+# Virtualenv
+.venv/
+env/
+venv/
+
+# Test artifacts
+htmlcov/
+coverage.xml
+.tox/
+
+# Editable install outputs
+src/chunklet.egg-info/
 
 # Editors
 .idea/
@@ -32,25 +39,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
-# Testing
-.pytest_cache/
-.coverage
-.tox/
-/htmlcov/
-
-# MyPy
-.mypy_cache/
-.dmypy.json
-.dmypy.bld
-
-# PyInstaller
-*.spec
-build/
-dist/
-
-# Jupyter Notebook
-.ipynb_checkpoints
 
 # Logs and databases
 *.log
@@ -76,3 +64,12 @@ temp/
 
 # Specific to this project
 test_results.txt
+
+# Ignore everything not part of source, tests, or docs
+!.gitignore
+!README.md
+!LICENSE
+!CHANGELOG.md
+!pyproject.toml
+!src/
+!tests/

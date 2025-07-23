@@ -37,21 +37,15 @@ class Chunklet:
     Args:
         verbose (bool): Enable warnings for issues like low language detection confidence.
         use_cache (bool): Enable LRU caching for repeated chunk calls.
+        token_counter (Callable): Function used to count tokens in a sentence.
     """
 
-    def __init__(self, verbose: bool = True, use_cache: bool = False):
+    def __init__(self, verbose: bool = True, use_cache: bool = False, token_counter: Optional[Callable[[str], int]] = None):
         self.verbose = verbose
         self.use_cache = use_cache
+        self.token_counter = token_counter
 
-    @staticmethod
-    def _static_chunk_helper(chunk_params: tuple):
-        """
-        Helper for parallel processing. Creates a temporary Chunklet instance per worker
-        to perform chunking, ensuring picklability and avoiding shared state issues.
-        """
-        text, lang, mode, max_tokens, max_sentences, token_counter, overlap_fraction, offset = chunk_params
-        temp_chunker = Chunklet(verbose=False, use_cache=False)  # No verbose/cache for worker instances
-        return temp_chunker._chunk(text, lang, mode, max_tokens, max_sentences, token_counter, overlap_fraction, offset)
+    
 
     def _falllback_regex_spliiter(self, text: str) -> List[str]:
         """
@@ -59,7 +53,7 @@ class Chunklet:
         and merges mis-splits like abbreviations (e.g., "Dr.", "Sr.") or numbered lists.
         """
         common_end_triggers = r"?!…。！？؛٫،।."
-        sentences = re.split(rf"\n|(?<=[{common_end_triggers}])\s*", text.strip())
+        sentences = re.split(rf"\n|(?<=[{common_end_triggers}])\s*", text)
 
         if not sentences:
             return []
@@ -100,10 +94,8 @@ class Chunklet:
             lang_detected, confidence = langid.classify(text)
             if confidence < 0.90 and self.verbose:
                 logger.warning(f"Low confidence in language detection: '{lang_detected}' ({confidence:.2f}).")
-            lang = lang_detected if confidence > 0.9 else lang  # Use detected lang only if confident
-        print(f"Using language: {lang}")
-        if lang in LANGS_SENT_SPLIT:
-            print("Using SentSplit")
+            lang = lang_detected if confidence > 0.9 else lang  # Use detected lang only if confident        
+        if lang in LANGS_SENT_SPLIT:            
             return SentSplit(lang).segment
 
         if lang in LANGS_MOSES:
@@ -111,8 +103,7 @@ class Chunklet:
             return SentenceSplitter(language=lang).split
 
         if self.verbose:
-            logger.warning(f"Language '{lang}' not fully supported. Falling back to regex splitter.")
-        print("Using _falllback_regex_spliiter")
+            logger.warning(f"Language '{lang}' not fully supported. Falling back to regex splitter.")        
         return self._falllback_regex_spliiter
 
     def _chunk(
@@ -122,7 +113,6 @@ class Chunklet:
         mode: str = "hybrid",
         max_tokens: int = 512,
         max_sentences: int = 100,
-        token_counter: Optional[Callable[[str], int]] = None,
         overlap_fraction: float = 0.2,
         offset: int = 0,
     ) -> List[str]:
@@ -135,16 +125,13 @@ class Chunklet:
         if mode not in {"sentence", "token", "hybrid"}:
             raise ValueError("Invalid mode. Choose from 'sentence', 'token', or 'hybrid'.")
 
-        # Adjust limits based on mode: 'inf' means that limit is ignored
+        if mode in {"token", "hybrid"} and self.token_counter is None:
+            raise ValueError("A 'token_counter' function must be provided for 'token' or 'hybrid' modes.")
+
         if mode == "sentence":
             max_tokens = math.inf
         elif mode == "token":
             max_sentences = math.inf
-        # 'hybrid' mode uses both limits
-
-        # Token counter is required for token-based modes
-        if mode in {"token", "hybrid"} and token_counter is None:
-            raise ValueError("A 'token_counter' function must be provided for 'token' or 'hybrid' modes.")
 
         splitter = self._get_sentence_splitter(text, lang)
         sentences = splitter(text)
@@ -156,100 +143,67 @@ class Chunklet:
                 logger.warning(f"Offset {offset} >= total sentences {len(sentences)}. Returning empty list.")
             return []
 
-        sentences = sentences[offset:]  # Start processing from specified offset
+        sentences = sentences[offset:]
 
         chunks = []
         if mode == "sentence":
             overlap_num = int(max_sentences * overlap_fraction)
-            # Ensure at least one sentence of overlap if overlap is requested
             if overlap_fraction > 0 and overlap_num == 0 and max_sentences > 1:
                 overlap_num = 1
-            overlap_num = min(overlap_num, max_sentences - 1)  # Ensure overlap < chunk size
+            overlap_num = min(overlap_num, max_sentences - 1)
             stride = max(1, max_sentences - overlap_num)
 
-            # Iterate with sliding window
             for idx in range(0, len(sentences), stride):
                 end_idx = min(idx + max_sentences, len(sentences))
                 chunk = sentences[idx:end_idx]
-                if not chunk:  # Stop if we have an empty chunk at the end
+                if not chunk:
                     break
                 chunks.append(chunk)
 
         else:
-            # Token/Hybrid mode: dynamic growth with splitting and proportional overlap
             curr_chunk: List[str] = []
             token_count = 0
             sentence_count = 0
 
             for sentence in sentences:
-                sentence_tokens = token_counter(sentence)
+                sentence_tokens = self.token_counter(sentence)
 
-                # If current chunk has content and adding this sentence would push it over
                 if curr_chunk and (
                     (token_count + sentence_tokens > max_tokens) or
                     (sentence_count + 1 > max_sentences)
                 ):
-                    chunks.append(curr_chunk)  # Finalize the current chunk
-
-                    # Calculate dynamic overlap for the *just completed* chunk.
+                    chunks.append(curr_chunk)
                     overlap_num_dynamic = int(len(curr_chunk) * overlap_fraction)
 
-                    # Ensure at least 1 sentence overlap if overlap_fraction > 0 and possible
                     if overlap_fraction > 0 and overlap_num_dynamic == 0 and len(curr_chunk) > 0:
                         overlap_num_dynamic = 1
-
                     overlap_num_dynamic = min(overlap_num_dynamic, len(curr_chunk) - 1 if len(curr_chunk) > 0 else 0)
 
-                    # Initialize the new chunk with overlapping sentences from the previous chunk.
-                    # The current 'sentence' (that triggered the split) will be added next.
                     curr_chunk = curr_chunk[-overlap_num_dynamic:]
-                    token_count = sum(token_counter(s) for s in curr_chunk)
+                    token_count = sum(self.token_counter(s) for s in curr_chunk)
                     sentence_count = len(curr_chunk)
 
-                # Add the current sentence to the active chunk (whether it's new or continuing)
                 curr_chunk.append(sentence)
                 token_count += sentence_tokens
                 sentence_count += 1
 
-            if curr_chunk:  # Add any remaining sentences as the last chunk
+            if curr_chunk:
                 chunks.append(curr_chunk)
 
-        # Join sentences within each sublist to form final string chunks
         return ["\n".join(chunk) for chunk in chunks]
 
     @lru_cache(maxsize=25)
-    def _chunk_cached(
-        self,
-        text: str,
-        lang: str = "auto",
-        mode: str = "hybrid",
-        max_tokens: int = 512,
-        max_sentences: int = 100,
-        token_counter: Optional[Callable[[str], int]] = None,
-        overlap_fraction: float = 0.2,
-        offset: int = 0,
-    ) -> List[str]:
+    def _chunk_cached(self, *args, **kwargs):
         """A cached version of the core chunking logic."""
-        return self._chunk(text, lang, mode, max_tokens, max_sentences, token_counter, overlap_fraction, offset)
+        return self._chunk(*args, **kwargs)
 
-    def chunk(
-        self,
-        text: str,
-        lang: str = "auto",
-        mode: str = "hybrid",
-        max_tokens: int = 512,
-        max_sentences: int = 100,
-        token_counter: Optional[Callable[[str], int]] = None,
-        overlap_fraction: float = 0.2,
-        offset: int = 0,
-    ) -> List[str]:
+    def chunk(self, *args, **kwargs) -> List[str]:
         """
         Public interface for chunking text. Uses caching if enabled.
         """
-        if self.use_cache and hasattr(token_counter, '__hash__'):
-            # Avoid caching if token_counter changes frequently (e.g., new lambda each call).
-            return self._chunk_cached(text, lang, mode, max_tokens, max_sentences, token_counter, overlap_fraction, offset)
-        return self._chunk(text, lang, mode, max_tokens, max_sentences, token_counter, overlap_fraction, offset)
+        if self.use_cache:
+            return self._chunk_cached(*args, **kwargs)
+        return self._chunk(*args, **kwargs)
 
     def batch_chunk(
         self,
@@ -258,24 +212,28 @@ class Chunklet:
         mode: str = "hybrid",
         max_tokens: int = 512,
         max_sentences: int = 100,
-        token_counter: Optional[Callable[[str], int]] = None,
         overlap_fraction: float = 0.2,
         offset: int = 0,
         n_jobs: int = None,
     ) -> List[List[str]]:
         """
-        Splits a list of texts into overlapping chunks using parallel workers.
+        Splits a list of texts into overlapping chunks.
         """
         if not texts:
             return []
 
-        args = [
-            (text, lang, mode, max_tokens, max_sentences, token_counter, overlap_fraction, offset)
-            for text in texts
-        ]
-
-        with WorkerPool(n_jobs=n_jobs) as pool:
-            results = pool.map(self._static_chunk_helper, args)
+        results = []
+        for text in texts:
+            chunks = self.chunk(
+                text=text,
+                lang=lang,
+                mode=mode,
+                max_tokens=max_tokens,
+                max_sentences=max_sentences,
+                overlap_fraction=overlap_fraction,
+                offset=offset
+            )
+            results.append(chunks)
 
         return results
 
@@ -292,7 +250,7 @@ if __name__ == "__main__":
     def simple_token_counter(sentence: str) -> int:
         return len(sentence.split())
 
-    chunker = Chunklet(verbose=True, use_cache=True)
+    chunker = Chunklet(verbose=True, use_cache=True, token_counter=simple_token_counter)
 
     sample_text = textwrap.dedent("""
         She loves cooking. He studies AI. "You are a Dr." she said. The weather is great.
@@ -313,7 +271,6 @@ if __name__ == "__main__":
         mode="hybrid",
         max_tokens=30,
         max_sentences=7,
-        token_counter=simple_token_counter,
         overlap_fraction=0.3
     )
     for i, c in enumerate(chunks):
@@ -334,7 +291,6 @@ if __name__ == "__main__":
         sample_text,
         mode="token",
         max_tokens=25,
-        token_counter=simple_token_counter,
         overlap_fraction=0.3
     )
     for i, c in enumerate(chunks):

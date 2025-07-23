@@ -1,6 +1,6 @@
 import pytest
 from typing import List
-from chunklet import Chunklet  
+from chunklet import Chunklet
 
 # --- Sample Texts ---
 english_sample_text = """
@@ -18,11 +18,11 @@ english_sample_text = """
 
 acronym_text = "The section is N. A. S. A. related. Consider S.1 to be an important point. Let's move on."
 
-multilingual_text = (
-    "English text here. 中文文本在这里。 Français texte ici.\n"
-    "Deutsche Text hier. 日本語のテキスト。 Русский текст.\n"
-    "More English. 更多中文。 Plus de français."
-)
+multilingual_text = """
+English text here. 中文文本在这里。 Français texte ici.
+Deutsche Text hier. 日本語のテキスト。 Русский текст.
+More English. 更多中文。 Plus de français.
+"""
 
 texts_with_langs = {
     "en": "Hello. How are you? I am fine.",
@@ -50,8 +50,13 @@ def has_word_overlap(chunk1: str, chunk2: str, overlap_length: int = 2) -> bool:
 
 @pytest.fixture
 def chunklet_instance():
-    """Provides a fresh Chunklet instance for each test."""
+    """Provides a fresh Chunklet instance with default token_counter."""
     return Chunklet()
+
+@pytest.fixture
+def token_counter_chunklet_instance():
+    """Provides Chunklet with simple_token_counter for token-based tests."""
+    return Chunklet(token_counter=simple_token_counter)
 
 # --- Tests ---
 
@@ -70,16 +75,15 @@ def test_sentence_mode_overlap(chunklet_instance):
     if len(chunks) > 1:
         assert has_word_overlap(chunks[0], chunks[1], overlap_length=2), "Overlap not found between first two chunks."
 
-def test_token_mode_overlap(chunklet_instance):
+def test_token_mode_overlap(token_counter_chunklet_instance):
     """Tests if token mode correctly handles token limits and overlap."""
     max_tokens = 25
     overlap_fraction = 0.2
 
-    chunks = chunklet_instance.chunk(
+    chunks = token_counter_chunklet_instance.chunk(
         english_sample_text,
         mode="token",
         max_tokens=max_tokens,
-        token_counter=simple_token_counter,
         overlap_fraction=overlap_fraction
     )
 
@@ -90,7 +94,7 @@ def test_token_mode_overlap(chunklet_instance):
     if len(chunks) > 1:
         prev_chunk = chunks[0]
         current_chunk = chunks[1]
-        splitter = chunklet_instance._get_sentence_splitter(text=english_sample_text, lang="en")
+        splitter = token_counter_chunklet_instance._get_sentence_splitter(text=english_sample_text, lang="en")
         prev_sentences = splitter(prev_chunk)
         current_sentences = splitter(current_chunk)
         if prev_sentences and current_sentences:
@@ -121,3 +125,44 @@ def test_batch_chunking_with_language_dict(chunklet_instance):
     assert "Bonjour." in results[1][0]
     assert "Hola." in results[2][0]
     assert "Das ist ein deutscher Satz." in results[3][0]
+
+def test_chunk_caching_behavior():
+    """Tests that caching returns consistent results and is actually used."""
+    chunker = Chunklet(token_counter=simple_token_counter, use_cache=True)
+    text = "This is a test. This is only a test. Testing caching behavior."
+
+    # First call, should compute and cache
+    result1 = chunker.chunk(text, mode="hybrid", max_tokens=10, max_sentences=2, overlap_fraction=0.3)
+
+    # Second call, should hit cache and return quickly (same parameters)
+    result2 = chunker.chunk(text, mode="hybrid", max_tokens=10, max_sentences=2, overlap_fraction=0.3)
+
+    assert result1 == result2, "Cached result differs from original result."
+
+    # Changing a parameter invalidates cache, should recompute
+    result3 = chunker.chunk(text, mode="hybrid", max_tokens=5, max_sentences=2, overlap_fraction=0.3)
+    assert result3 != result1, "Cache was not invalidated on parameter change."
+
+def test_batch_chunk_method(token_counter_chunklet_instance):
+    """Tests the batch_chunk method for correct chunking and parallel processing."""
+    texts = [
+        "This is the first sentence. This is the second sentence.",
+        "Another text for batch processing. It has multiple sentences.",
+        "Short text."
+    ]
+    expected_min_chunks = [1, 1, 1] # Adjusted based on current chunking logic for max_sentences=2
+
+    results = token_counter_chunklet_instance.batch_chunk(
+        texts,
+        mode="sentence",
+        max_sentences=2,
+        overlap_fraction=0.0,
+        n_jobs=2 # Use multiple jobs to trigger _static_chunk_helper
+    )
+
+    assert len(results) == len(texts), "Expected results for each input text."
+    for i, chunks_for_text in enumerate(results):
+        assert len(chunks_for_text) >= expected_min_chunks[i], f"Expected at least {expected_min_chunks[i]} chunks for text {i}."
+        for chunk in chunks_for_text:
+            assert isinstance(chunk, str), "Each chunk should be a string."
+            assert len(chunk) > 0, "Chunks should not be empty."

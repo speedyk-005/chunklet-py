@@ -1,113 +1,91 @@
 # 📦 Chunklet: Smart Multilingual Text Chunker
 
-> Chunk smarter, not harder. For LLMs, RAG, and beyond.
-Author: Speed k.
-Version: 1.0.1
-License: MIT
-
-
----
-
-✨ Features
-
-🧠 Intelligent Sentence Splitting
-Uses sentsplit (CRF-based) and sentence-splitter (rule-based) for precise multilingual segmentation, with a regex fallback for unsupported languages.
-
-🧩 Flexible Chunking Modes
-Choose from:
-
-"sentence" — chunk by sentence count only
-
-"token" — chunk by token count only
-
-"hybrid" — both sentence and token thresholds combined
-
-
-🔁 Contextual Overlap
-Customizable overlap_fraction (e.g. 0.2 for 20%) ensures no idea is lost between chunks.
-
-⚙️ Parallel Batch Processing
-Accelerated processing of multiple texts via mpire, using multiple CPU cores.
-
-🧩 Plug-in Token Counter
-Supports custom token counters (e.g. GPT-2, TikToken, BPE-based, or simple word counts).
-
-🚀 LRU Caching
-Optional caching of repeated chunk operations for speed boosts.
-
+> Chunk smarter, not harder — built for LLMs, RAG pipelines, and beyond.  
+**Author:** Speed k.  
+**Version:** 1.0.2  
+**License:** MIT
 
 ---
 
-📦 Installation (Manual)
+## 🔥 Why Chunklet?
 
-> A future PyPI release would simplify this.
+Feature | Why it’s elite  
+--------|----------------
+⛓️ **Hybrid Mode** | Combines token + sentence limits with guaranteed overlap — rare even in commercial stacks.  
+🌐 **Multilingual Fallbacks** | CRF > Moses > Regex, with dynamic confidence detection.  
+➿ **Contextual Overlap** | `overlap_fraction` preserves semantic flow between chunks.  
+⚡ **Parallel Batch Processing** | Multi-core acceleration with `mpire`.  
+♻️ **LRU Caching** | Smart memoization via `functools.lru_cache`.  
+🪄 **Pluggable Token Counters** | Swap in GPT-2, BPE, or your own tokenizer.
 
+---
 
-1. Clone the repo:
+## 🧩 Chunking Modes
 
-```
+Pick your flavor:
+
+- `"sentence"` — chunk by sentence count only  
+- `"token"` — chunk by token count only  
+- `"hybrid"` — sentence + token thresholds respected  
+
+---
+
+## 📦 Installation
+
+> PyPI coming soon.
+
+```bash
 git clone https://github.com/speed40/chunklet.git
 cd chunklet
-```
-
-2. Install dependencies:
-
-```
+pip install -r requirements.txt
+# or manually
 pip install mpire loguru sentence-splitter sentsplit langid
 ```
 
 ---
 
-💡 Example Usage
+💡 Example: Hybrid Mode
 ```
 from chunklet import Chunklet
 
-# Simple whitespace-based token counter
 def word_token_counter(text: str) -> int:
     return len(text.split())
 
-# Initialize Chunklet
-chunker = Chunklet(verbose=True, use_cache=True)
+chunker = Chunklet(verbose=True, use_cache=True, token_counter=word_token_counter)
 
-sample_text = """
-This is a long document about artificial intelligence.
-It discusses machine learning, neural networks, and deep learning.
-AI is rapidly advancing, with new breakthroughs happening constantly.
-Consider ethical implications. The future is exciting.
+sample = """
+This is a long document about AI. It discusses neural networks and deep learning.
+The future is exciting. Ethics must be considered. Let’s build wisely.
 """
 
-print("--- Hybrid Chunking Example ---")
 chunks = chunker.chunk(
-    text=sample_text,
+    text=sample,
     mode="hybrid",
     max_tokens=20,
     max_sentences=5,
-    token_counter=word_token_counter,
-    overlap_fraction=0.2  # Maintain 20% sentence overlap
+    overlap_fraction=0.3
 )
 
 for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} (Tokens: {word_token_counter(chunk)}, Sentences: {len(chunk.splitlines())}) ---")
+    print(f"--- Chunk {i+1} ---")
     print(chunk)
-    print("="*50)
 ```
 
 ---
 
-🔄 Batch Chunking
+🌀 Batch Chunking (Parallel)
 ```
 texts = [
-    "First document part one. Part two.",
-    "Second document: a short one.",
-    "Third document, much longer. It has many sentences to test the batching capability. This is a great feature."
+    "First document sentence. Second sentence.",
+    "Another one. Slightly longer. A third one here.",
+    "Final doc with multiple lines. Great for testing chunk overlap."
 ]
 
 results = chunker.batch_chunk(
     texts=texts,
     mode="hybrid",
     max_tokens=15,
-    max_sentences=3,
-    token_counter=word_token_counter,
+    max_sentences=4,
     overlap_fraction=0.2,
     n_jobs=2
 )
@@ -115,47 +93,63 @@ results = chunker.batch_chunk(
 for i, doc_chunks in enumerate(results):
     print(f"\n## Document {i+1}")
     for j, chunk in enumerate(doc_chunks):
-        print(f"Chunk {j+1} (Tokens: {word_token_counter(chunk)}):\n{chunk}")
-
+        print(f"Chunk {j+1}:\n{chunk}")
+```
 
 ---
 
-🛠 Custom Token Counters
-
-# For transformers-style BPE counting
+⚙️ GPT-2 Token Count Support
+```
 from transformers import GPT2TokenizerFast
 tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
 def gpt2_token_count(text: str) -> int:
     return len(tokenizer.encode(text))
+
+chunker = Chunklet(token_counter=gpt2_token_count)
 ```
 
 ---
 
-🧑‍💻 Contributing
+🧪 Planned Features
 
-Pull requests, feature ideas, and clean refactors are welcome.
-
-To contribute:
-
- 1. Fork the repo
- 2. Create a branch
- 3. Make your changes
- 4. Submit a pull request
-
+[ ] PDF/text/code content splitter support
+[ ] CLI interface with --file, --mode, --overlap, etc.
+[ ] Named chunking presets: "all", "random_gap" for downstream control
 
 
 ---
 
-🐛 Reporting Issues
+🌍 Language Support (27+)
 
-Found a bug? Missing language support?
-Open an issue on GitHub or ping the author directly.
+- CRF-based: en, fr, de, it, ru, zh, ja, ko, pt, tr, etc.
+- Heuristic-based: es, nl, da, fi, no, sv, cs, hu, el, ro, etc.
+- Fallback: All other languages via smart regex
+
+
+---
+
+## 🔗 Related Projects
+
+| Tool                      | Description                                                                                      |
+|---------------------------|--------------------------------------------------------------------------------------------------|
+| [**Jina Segmenter**](https://github.com/jina-ai/segmenter) | DL-based multilingual segmenter for paragraphs and sentences.         |
+| [**Semchunk**](https://github.com/cocktailpeanut/semchunk)  | Semantic-aware chunking using transformer embeddings.                  |
+| [**CintraAI Code Chunker**](https://github.com/CintraAI/code-chunker) | AST-based code chunker for intelligent code splitting.                 |
+
+
+---
+
+🤝 Contributing
+
+1. Fork this repo
+2. Create a new feature branch
+3. Code like a star
+4. Submit a pull request
 
 
 ---
 
 📜 License
 
-MIT License.
-Feel free to use, modify, and distribute with attribution.
+> MIT License. Use freely, modify boldly, and credit like a legend.
