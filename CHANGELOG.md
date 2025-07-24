@@ -2,59 +2,103 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [1.0.4.post4] - 2025-07-25
+
+### Added
+
+- **CLI Mode:** Implemented a command-line interface using `argparse` for direct execution of chunking operations.
+- **CLI Entry Point:** Added `[project.scripts]` entry point in `pyproject.toml` to enable running `chunklet` directly from the command line.
+
+### Changed
+
+- **Default Chunking Mode:** Changed the default `mode` in `chunk` and `batch_chunk` methods from `hybrid` to `sentence`.
+- **Author Information:** Updated author name to "Speedyk_005" in `src/chunklet/__init__.py`, `README.md`, and `pyproject.toml`.
+- **GitHub URLs:** Updated `Homepage`, `Repository`, and `Issues` URLs in `pyproject.toml` to reflect the new GitHub username.
+- **README Updates:** Marked CLI feature as checked and rephrased "Named chunking presets" in `README.md`.
+
+## [1.0.4] - 2025-07-25
+
+### Added
+
+- **License File:** Added the MIT License file (`LICENSE`) to the project.
+- **Batch Chunking Test:** Introduced `test_batch_chunk_method` to verify the functionality of the `batch_chunk` method, including its parallel processing.
+
+### Changed
+
+- **Clause-Level Overlap (Milestone):**    
+  Clauses are determined via punctuation triggers like (`; , ) ] ’ ” —`). 
+  Overlap is now performed at the **clause level**, not just on sentences.   
+  This ensures smoother, more context-rich chunk transitions
+- **Chunking logic Refactor:** Lots of methods have be modularized, Refactored, optimised.
+- **Test Assertions:** Adjusted tests to match the improved clause overlap logic.
+- Documentations and comments are refined.
+### Fixed
+
+- **Docstring Redundancy:** Removed redundant module-level docstring from `src/chunklet/core.py`.
+- **Token Counter Handling:** Fixed incorrect propagation of `token_counter` in `batch_chunk`, ensuring consistent behavior during multiprocessing.
+- Lots of bugs were fixed 
+
+---
 
 ## [1.0.2] - 2025-07-23
 
 ### Added
 
-- **New Caching Test:** Introduced `test_chunklet_cache` to validate chunk caching behavior and confirm performance consistency when reusing the same input.
-- **Readme Improvements:** Updated `README.md` with emoji-safe formatting, clearer usage sections, improved GPT-2 tokenizer example, and batch chunking illustration.
-- **Pytest Configuration in `pyproject.toml`:** Integrated `[tool.pytest.ini_options]` to avoid requiring `PYTHONPATH=./src` manually during test runs.
-- **Warning Suppression:** Applied filters to hide known deprecation warnings from `pkg_resources`, `coverage.tracer`, and others for cleaner test outputs.
-- **Setup Integration:** Provided full `pyproject.toml` configuration with editable install support, setuptools metadata, and dev dependencies under `[project.optional-dependencies.dev]`.
+- **New Caching Test:** Introduced `test_chunklet_cache` to validate chunk caching behavior.
+- **Readme Improvements:** Better formatting, emoji-safe layout, usage examples, and tokenizer documentation.
+- **Pytest Config:** Added `[tool.pytest.ini_options]` in `pyproject.toml` to support test discovery without modifying `PYTHONPATH`.
+- **Warning Suppression:** Filters added to hide known deprecation warnings.
+- **Setup Tools Integration:** Full `pyproject.toml` with editable install, metadata, and dev dependencies.
 
 ### Changed
 
-- **Core Token Counter Handling:** The `Chunklet` class now accepts the token counter directly during initialization (`__init__`), improving clarity and simplifying repeated use across methods.
-- **Fallback Splitter Formatting:** Adjusted `_fallback_splitter()` logic in the core to preserve whitespace formatting more faithfully across edge cases.
-- **Test Adjustments:** Reworked existing tests (`test_chunklet.py`) to align with internal refactors, improve readability, and ensure token counter alignment with new `__init__` signature.
-- **Removed deprecated** `License :: OSI Approved :: MIT License` **classifier in compliance with PEP 639 license expression standards.**
+- **Token Counter Injection:** `Chunklet` now takes the `token_counter` function in the constructor, simplifying reuse.
+- **Fallback Splitter:** Improved formatting for low-resource language cases.
+
+### Removed
+
+- **PEP 639 Compliance:** Removed deprecated `License :: OSI Approved` classifier.
 
 ### Fixed
 
-- **Format-Preserving Chunking:** Refined fallback sentence splitting to better preserve paragraph and newline structure in low-resource language cases.
-- **Token Counter Pass-Through:** Ensured consistent propagation of the user-defined `token_counter` throughout chunking and batch processing logic.
-- **Critical UTF-8 DecodeError fix:** Resolved `UnicodeDecodeError` during editable installs caused by invalid encoding in metadata files, enabling clean installation.
-- Editable install now runs cleanly without subprocess errors or warnings.
+- **UTF-8 DecodeError Fix:** Resolved encoding errors during editable install.
+- **Token Counter Propagation:** Corrected inconsistent usage across batch and core chunk methods.
+
+---
 
 ## [1.0.1] - 2025-07-23
 
 ### Added
 
--   **Unit Test Suite:** Introduced robust unit tests for `sentence`, `token`, and `hybrid` chunking modes with `pytest`, covering chunk count, overlap accuracy, acronym handling, and multilingual segmentation.
--   **Language-Aware Batch Testing:** Added tests verifying behavior across English, French, Spanish, and German inputs using both auto-detection and specified language parameters.
-
-### Fixed
-
--   **Sentence Overlap Verification:** Adjusted test overlap assertions to compare meaningful subsequences rather than relying on edge alignment alone.
--   **Minor Sentence Boundary Handling:** Improved handling for multilingual and acronym-heavy inputs by fine-tuning `sentence_splitter` fallback routing and whitespace normalization.
+- **Unit Tests:** Full coverage for sentence, token, and hybrid modes.
+- **Multilingual Testing:** English, French, Spanish, and German tests with auto-detection.
 
 ### Changed
 
--   **Chunklet Core Logic:** Refined internal overlap calculations and sentence accumulation logic for better precision in edge cases during chunk construction.
--   **Test Structure:** Sample inputs are now clearly grouped and reused across test cases for readability and DRY principles.
+- **Core Overlap Logic:** Improved overlap accuracy with better chunk boundary handling.
+- **Test Structure:** Sample inputs grouped and reused across test cases.
+
+### Fixed
+
+- **Sentence Boundary Handling:** Better handling of acronyms and edge punctuation.
+- **Overlap Verification:** Subsequence checks instead of naive boundary comparison.
+
+---
 
 ## [1.0.0] - 2025-07-22
 
 ### Added
 
--   **Initial Project Setup:** Established core project structure with `src/` directory and `chunklet.py`.
--   **Multilingual Sentence Splitter:** Integrated `sentsplit` (CRF-based) and `sentence_splitter` (rule-based) with language detection.
--   **Flexible Chunking Modes:** Implemented `sentence`, `token`, and `hybrid` chunking strategies.
--   **Configurable Overlap:** Added `overlap_fraction` for contextual chunking.
--   **Parallel Processing:** Integrated `mpire` for efficient batch chunking.
--   **LRU Caching:** Included caching for `_chunk` method for performance.
--   **Regex Fallback Splitter:** Provided a basic regex-based sentence splitter as a fallback for unsupported languages.
--   **Verbose Mode & Warnings:** Added options for verbose output and warnings for low language detection confidence.
+- **Initial Project Setup:** Core files, structure, and package skeleton under `src/`.
+- **Multilingual Splitters:** Integrated `sentsplit` and `sentence_splitter` with auto language detection.
+- **Chunking Modes:** Sentence, token, and hybrid support.
+- **Configurable Overlap:** Added `overlap_fraction` for contextual continuity.
+- **Parallel Processing:** Integrated `mpire` for fast batch chunking.
+- **Caching:** Added LRU caching for chunk operations.
+- **Regex Split Fallback:** Regex-based splitter for unsupported languages.
+- **Verbose Warnings:** Logged low-confidence language detection.

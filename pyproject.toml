@@ -1,21 +1,19 @@
 # Core Project Metadata
 [project]
 name = "chunklet"
-version = "1.0.2"
+version = "1.0.4.post5"
 description = "A smart multilingual text chunker for LLMs, RAG, and beyond."
 authors = [
-  { name = "Speed k.", email = "speedy40115719@gmail.com" }
+  { name = "Speedyk_005", email = "speedy40115719@gmail.com" }
 ]
 license = "MIT"
 readme = "README.md"
 requires-python = ">=3.9"
 
-# Removed deprecated license classifier to fix setuptools error
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
-  # "License :: OSI Approved :: MIT License",  <-- Removed this line
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -40,7 +38,10 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/speed40/chunklet"
 Repository = "https://github.com/speed40/chunklet"
-Issues = "https://github.com/speed40/chunklet/issues"
+Issues = "https://github.com/Speedyk-005/chunklet/issues"
+
+[project.scripts]
+chunklet = "chunklet.core:main"
 
 [project.optional-dependencies]
 dev = [
