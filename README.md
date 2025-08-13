@@ -112,8 +112,8 @@ text = (
     "We play chess. Books are fun. Robots are learning."
 )
 
-# Initialize Chunklet
-chunker = Chunklet()
+# Initialize Chunklet 
+chunker = Chunklet(verbose=False, use_cache=True) # Note: this are by default
 
 # 1. Preview the sentences
 sentences = chunker.preview_sentences(text)
@@ -122,7 +122,12 @@ for s in sentences:
     print(f"- {s}")
 
 # 2. Chunk the text by sentences
-chunks = chunker.chunk(text, mode="sentence", max_sentences=2)
+chunks = chunker.chunk(
+    text,
+    mode="hybrid",
+    max_sentences=2,
+    overlap_percent=20
+)
 
 # Print the chunks
 print("\nChunks:")
@@ -171,17 +176,26 @@ from chunklet import Chunklet
 def simple_token_counter(text: str) -> int:
     return len(text.split())
 
-# Initialize Chunklet with the custom counter
+# Initialize Chunklet with the custom counter (this will be the default for the instance)
 chunker = Chunklet(token_counter=simple_token_counter)
 
 text = "This is a sample text to demonstrate custom token counting."
 
-# Chunk by tokens
-chunks = chunker.chunk(text, mode="token", max_tokens=5)
+print("--- Using token_counter from Chunklet initialization ---")
+# Chunk by tokens, using the token_counter set during Chunklet initialization
+chunks_default = chunker.chunk(text, mode="token", max_tokens=5)
+for i, chunk in enumerate(chunks_default):
+    print(f"Chunk {i+1}: {chunk}")
 
-for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
-    print(chunk)
+print("\n--- Overriding token_counter in chunk method ---")
+# Define another token counter for overriding
+def another_token_counter(text: str) -> int:
+    return len(text.replace(" ", "")) # Counts characters without spaces
+
+# Chunk by tokens, overriding the token_counter for this specific call
+chunks_override = chunker.chunk(text, mode="token", max_tokens=5, token_counter=another_token_counter)
+for i, chunk in enumerate(chunks_override):
+    print(f"Chunk {i+1}: {chunk}")
 ```
 </details>
 
