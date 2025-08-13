@@ -13,6 +13,29 @@
 **License:** MIT
 
 
+## Table of Contents
+
+- [📌 What’s New in v1.1.0](#-whats-new-in-v110)
+- [🔥 Why Chunklet?](#-why-chunklet)
+- [🧩 Chunking Modes](#-chunking-modes)
+- [🌍 Language Support (36+)](#-language-support-36)
+- [🌊 Internal Workflow](#-internal-workflow)
+- [📦 Installation](#-installation)
+- [✨ Getting started](#-getting-started)
+  - [Advanced Usage](#advanced-usage)
+    - [Custom Token Counter](#custom-token-counter)
+    - [Hybrid Mode with Overlap](#hybrid-mode-with-overlap)
+    - [Batch Processing](#batch-processing)
+    - [CLI Examples](#cli-examples)
+- [📊 Benchmarks](#-benchmarks)
+  - [Chunk Modes](#chunk-modes)
+  - [Batch Chunking](#batch-chunking)
+- [🧪 Planned Features](#-planned-features)
+- [💡Projects that inspire me](#projects-that-inspire-me)
+- [🤝 Contributing](#-contributing)
+- [📜 Changelog](#-changelog)
+- [📜 License](#license)
+
 ## 📌 What’s New in v1.1.0
 - 🔄 **Primary sentence splitter replaced:** Replaced `sentsplit` with `pysbd` for improved sentence boundary detection.
 - ⚡ **Language Detection Upgrade:** Migrated from `langid` to `py3langid`, delivering identical accuracy but ~40× faster classification speeds in benchmarks, significantly reducing multilingual processing latency.
@@ -95,6 +118,8 @@ To install from source for development:
 git clone https://github.com/Speedyk-005/chunklet.git
 cd chunklet
 pip install -e .
+
+
 ```
 
 ---
@@ -102,6 +127,8 @@ pip install -e .
 ## ✨ Getting started
 
 Get started with `chunklet` in just a few lines of code. Here’s a basic example of how to chunk a text by sentences:
+
+
 
 ```python
 from chunklet import Chunklet
@@ -263,6 +290,52 @@ for i, doc_chunks in enumerate(results):
 ```
 </details>
 
+
+
+#### CLI Examples
+
+You can use `chunklet` directly from your command line.
+
+<details> 
+<summary>Click to see CLI Examples</summary>
+ 
+**Basic Chunking:**
+
+```bash
+chunklet "This is a sample sentence. This is another one."
+# Output will be printed to stdout
+```
+
+**Chunking from a File:**
+
+First, create a file named `input.txt` with your text:
+```
+This is the first paragraph. It has multiple sentences.
+This is the second paragraph. It also has multiple sentences.
+```
+
+Then, run:
+```bash
+chunklet --file input.txt --max-tokens 100 --mode hybrid --output-file output.txt
+# Output will be written to output.txt
+```
+
+**Batch Processing from a File:**
+
+Create a file named `batch_input.txt` with one text per line:
+```
+First document for batch processing.
+Second document for batch processing. This one is longer.
+Third document.
+```
+
+Then, run:
+```bash
+chunklet --file batch_input.txt --batch --max-sentences 1 --n-jobs 2 --output-file batch_output.txt
+# Output will be written to batch_output.txt
+```
+</details>
+ 
 
 ## 📊 Benchmarks
 
