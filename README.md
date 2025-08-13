@@ -1,9 +1,6 @@
 # 📦 Chunklet: Smart Multilingual Text Chunker
 
-<div style="display: flex; align-items: center; padding: 20px;">
-  <img src="logo.png" alt="Chunklet Logo" style="width: 20vw; height: 20vw; max-width: 300px; max-height: 300px;">
-  <span style="margin-left: 20px; font-size: 3em; font-weight: bold;">chunklet</span>
-</div>
+![Chunklet Logo](https://github.com/speedyk-005/chunklet/blob/main/logo.png?raw=true)
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/chunklet)](https://www.python.org/downloads/)
 [![PyPI](https://img.shields.io/pypi/v/chunklet)](https://pypi.org/project/chunklet)
