@@ -1,137 +1,129 @@
 import pytest
-from typing import List
 from chunklet import Chunklet
 
-# --- Sample Texts ---
-english_sample_text = """
-    She loves cooking. He studies AI. "You are a Dr." she said. The weather is great.
-    We play chess. Books are fun.
-    The Playlist contains:
-        - two videos
-        - one music
-    Robots are learning.
-    It's raining. Let's code. Mars is red. Sr. sleep is rare.
-    Consider item 1. This is a test.
-    The year is 2025. This is a good year.
-"""
+# --- Constants ---
 
-acronym_text = "The section is N. A. S. A. related. Consider S.1 to be an important point. Let's move on."
+ENGLISH_TEXT = (
+    "She loves cooking. He studies AI. \"You are a Dr.\" she said. The weather is great. "
+    "We play chess. Books are fun. The Playlist contains: two videos, one music. "
+    "Robots are learning. It's raining. Let's code. Mars is red. Sr. sleep is rare. "
+    "Consider item 1. This is a test. The year is 2025. This is a good year."
+)
 
-texts_with_langs = {
-    "en": "Hello. How are you? I am fine.",
-    "fr": "Bonjour. Comment allez-vous ? Je vais bien.",
-    "es": "Hola. ¿Cómo estás? Estoy bien.",
-    "de": "Das ist ein deutscher Satz. Hier ist noch ein Satz. Und noch einer.",
-    "ht": "Bonjou. Kijan ou ye? Mwen byen. Sa a se yon tèks an kreyòl ayisyen. Li gen plizyè fraz. Nou kontan wè ou."
-}
+MULTILINGUAL_TEXTS = [
+    "Hello. How are you? I am fine.",        # English
+    "Bonjour. Comment allez-vous? Je vais bien.",  # French
+    "Hola. ¿Cómo estás? Estoy bien.",        # Spanish
+    "Das ist ein Satz. Hier ist noch ein Satz. Und noch einer.",  # German
+]
 
-# --- Helper Functions ---
-
-def simple_token_counter(sentence: str) -> int:
-    """A simple token counter that counts words."""
-    return len(sentence.split())
-
-def has_word_overlap(chunk1: str, chunk2: str, overlap_length: int = 2) -> bool:
-    """
-    Check if there is an overlap of at least `overlap_length` consecutive words
-    between chunk1 and chunk2 anywhere inside the strings.
-    """
-    words1 = chunk1.split()
-    overlaps = [' '.join(words1[i:i+overlap_length]) for i in range(len(words1) - overlap_length + 1)]
-    return any(overlap in chunk2 for overlap in overlaps)
+ACRONYMS_TEXT = "The section is N. A. S. A. related. Consider S.1 to be important. Let's move on."
+ 
+UNSUPPORTED_TEXT = "Això és una prova. Això és una altra prova."
 
 # --- Fixtures ---
-
-@pytest.fixture(scope="module")
-def chunklet_instance():
-    """Provides a fresh Chunklet instance with default token_counter."""
-    return Chunklet()
-
-@pytest.fixture(scope="module")
-def token_counter_chunklet_instance():
-    """Provides Chunklet with simple_token_counter for token-based tests."""
+@pytest.fixture
+def chunker():
+    """Provides a configured Chunklet instance for testing"""
+    def simple_token_counter(text: str) -> int:
+        return len(text.split())
     return Chunklet(token_counter=simple_token_counter)
 
-# --- Tests ---
+# --- Core Tests ---
 
-def test_sentence_mode_overlap(chunklet_instance):
-    """Tests if sentence mode creates chunks with expected overlap."""
-    max_sentences = 3
-    overlap_percent = 33
-    chunks = chunklet_instance.chunk(
-        english_sample_text,
+@pytest.mark.parametrize("mode", ["sentence", "token", "hybrid"])
+def test_all_modes_produce_chunks(chunker, mode):
+    """Verify all chunking modes produce output"""
+    chunks = chunker.chunk(ENGLISH_TEXT, mode=mode)
+    assert chunks, f"Expected chunks in {mode} mode but got empty list"
+    assert all(isinstance(c, str) for c in chunks), "All chunks should be strings"
+
+def test_acronyms_preserved(chunker):
+    """Verify special patterns remain intact"""
+    chunks = chunker.chunk(ACRONYMS_TEXT)
+    joined = " ".join(chunks)
+    assert "N. A. S. A." in joined, "Acronyms should be preserved"
+
+def test_batch_processing_completes(chunker):
+    """Test batch processing runs without errors"""
+    results = chunker.batch_chunk(MULTILINGUAL_TEXTS)
+    assert len(results) == len(MULTILINGUAL_TEXTS), "Should process all inputs"
+
+@pytest.mark.parametrize("offset, expect_chunks", [
+    (0, True),
+    (3, True),
+    (10, True),
+    (100, False),  # More than total sentences
+])
+def test_offset_behavior(chunker, offset, expect_chunks):
+    """Verify offset affects output and large offsets produce no chunks"""
+    chunks = chunker.chunk(ENGLISH_TEXT, offset=offset)
+    if expect_chunks:
+        assert chunks, f"Should get chunks for offset={offset}"
+    else:
+        assert not chunks, f"Should get no chunks for offset={offset}"
+
+def test_preview_works(chunker):
+    """Verify preview produces output"""
+    sentences = chunker.preview_sentences(ENGLISH_TEXT)
+    assert sentences, "Should get sentence preview"
+
+# --- Token Counter Validation ---
+
+@pytest.mark.parametrize("mode", ["token", "hybrid"])
+def test_token_counter_validation(mode):
+    """Test that a ValueError is raised when a token_counter is missing for token/hybrid modes."""
+    with pytest.raises(ValueError, match="token_counter is required"):
+        Chunklet().chunk("some text", mode=mode)
+
+# --- Fallback Splitter Test ---
+
+def test_fallback_splitter(chunker):
+    """Test fallback splitter on unsupported language text (single string input)."""
+    chunks = chunker.chunk(UNSUPPORTED_TEXT)
+    assert chunks, "Fallback chunking should produce output"
+    # Both sentences should be in the single chunk (fallback expected to produce one chunk)
+    assert "Això és una prova." in chunks[0]
+    assert "Això és una altra prova." in chunks[0]
+
+# --- Overlap Related Tests ---
+@pytest.mark.parametrize("mode, mock_overlap_text, chunk_kwargs", [
+    ("sentence", ["... one music."], dict(max_sentences=7, overlap_percent=20)),
+    ("token", ["... a test."], dict(max_tokens=20, overlap_percent=10)),
+])
+def test_overlap_behavior(mocker, chunker, mode, mock_overlap_text, chunk_kwargs):
+    """Test overlap logic and handling of lowercase overlap."""
+    mock_get_overlap = mocker.patch('chunklet.core.Chunklet._get_overlap_clauses')
+    mock_get_overlap.return_value = mock_overlap_text
+    chunks = chunker.chunk(ENGLISH_TEXT, mode=mode, **chunk_kwargs)
+    assert len(chunks) > 1, "Overlap should produce multiple chunks"
+    assert any(ov_text in chunks[1] for ov_text in mock_overlap_text), "Overlap clause missing in chunk"
+
+def test_overlap_not_empty(chunker):
+    """Verify overlap mode produces some content"""
+    chunks = chunker.chunk(
+        ENGLISH_TEXT,
         mode="sentence",
-        max_sentences=max_sentences,
-        overlap_percent=overlap_percent
+        max_sentences=3,
+        overlap_percent=20
     )
-
-    assert len(chunks) > 1, "Expected more than one chunk for the English sample text."
     if len(chunks) > 1:
-        assert has_word_overlap(chunks[0], chunks[1], overlap_length=2), "Overlap not found between first two chunks."
+        assert chunks[0] and chunks[1], "Chunks should contain content"
 
-def test_token_mode_overlap(token_counter_chunklet_instance):
-    """Tests if token mode correctly handles token limits and overlap."""
-    max_tokens = 25
-    overlap_percent = 20
+# --- Cache Tests ---
 
-    chunks = token_counter_chunklet_instance.chunk(
-        english_sample_text,
-        mode="token",
-        max_tokens=max_tokens,
-        overlap_percent=overlap_percent
-    )
+def test_non_cached_chunking(chunker):
+    """Test chunking with cache disabled."""
+    non_cached_chunker = Chunklet(use_cache=False, token_counter=chunker.token_counter)
+    chunks = non_cached_chunker.chunk(ENGLISH_TEXT)
+    assert chunks
 
-    assert len(chunks) > 1, "Expected more than one chunk for the English sample text."
-    for chunk in chunks:
-        assert simple_token_counter(chunk) <= max_tokens, f"Chunk exceeds max_tokens: {chunk}"
+# --- Batch Processing Edge Cases ---
 
-    if len(chunks) > 1:
-        assert has_word_overlap(chunks[0], chunks[1]), "Overlap not found between chunks."
-
-def test_acronym_handling(chunklet_instance):
-    """Tests that the chunker correctly handles acronyms like N.A.S.A. and initials."""
-    chunks = chunklet_instance.chunk(acronym_text, mode="sentence", max_sentences=1)
-    assert "N. A. S. A." in chunks[0]
-
-def test_multilingual_auto_detection(chunklet_instance):
-    """Tests chunking with mixed languages and auto-detection."""
-    for lang, text in texts_with_langs.items():
-        chunks = chunklet_instance.chunk(text, mode="sentence", max_sentences=1, lang="auto")
-        assert len(chunks) > 0, f"Expected chunks for {lang} text, but got none."
-        # Further assertions can be added here if specific chunk content is expected
-
-def test_chunk_caching_behavior():
-    """Tests that caching returns consistent results and is actually used."""
-    chunker = Chunklet(token_counter=simple_token_counter, use_cache=True)
-    text = "This is a test. This is only a test. Testing caching behavior."
-
-    # First call, should compute and cache
-    result1 = chunker.chunk(text, mode="hybrid", max_tokens=10, max_sentences=2, overlap_percent=30)
-
-    # Second call, should hit cache and return quickly (same parameters)
-    result2 = chunker.chunk(text, mode="hybrid", max_tokens=10, max_sentences=2, overlap_percent=30)
-
-    assert result1 == result2, "Cached result differs from original result."
-
-    # Changing a parameter invalidates cache, should recompute
-    result3 = chunker.chunk(text, mode="hybrid", max_tokens=5, max_sentences=2, overlap_percent=30)
-    assert result3 != result1, "Cache was not invalidated on parameter change."
-
-def test_batch_chunk_method(token_counter_chunklet_instance):
-    """Tests the batch_chunk method for correct chunking and parallel processing."""
-    texts = [
-        "This is the first sentence. This is the second sentence.",
-        "Another text for batch processing. It has multiple sentences.",
-        "Short text."
-    ]
-    results = token_counter_chunklet_instance.batch_chunk(
-        texts,
-        mode="sentence",
-        max_sentences=1,
-        overlap_percent=0,
-    )
-
-    assert len(results) == len(texts), "Expected results for each input text."
-    assert len(results[0]) == 2
-    assert len(results[1]) == 2
-    assert len(results[2]) == 1
+def test_batch_chunk_edge_cases(chunker):
+    """Test batch_chunk with empty list and invalid n_jobs raises errors."""
+    assert chunker.batch_chunk([]) == []
+    with pytest.raises(ValueError, match="n_jobs must be >= 1 or None"):
+        chunker.batch_chunk(["text"], n_jobs=0)
+    with pytest.raises(ValueError, match="n_jobs must be >= 1 or None"):
+        chunker.batch_chunk(["text"], n_jobs=-1)

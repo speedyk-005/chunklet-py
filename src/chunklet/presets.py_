@@ -1,0 +1,46 @@
+PRESETS = {
+    # Retrieval-Augmented Generation (RAG) style chunks:
+    # Small, precise chunks with no overlap for crisp retrieval
+    "rag": {
+        "mode": "sentence",
+        "max_tokens": None,
+        "max_sentences": 1,
+        "overlap_percent": 0,
+    },
+
+    # Training data preparation:
+    # Larger chunks with overlap to maintain context in model training
+    "training": {
+        "mode": "hybrid",
+        "max_tokens": 512,
+        "max_sentences": 20,
+        "overlap_percent": 20,
+    },
+
+    # Summarization:
+    # Moderate chunks, limited sentences, minimal overlap to avoid info bleed
+    "summarization": {
+        "mode": "hybrid",
+        "max_tokens": 200,
+        "max_sentences": 5,
+        "overlap_percent": 10,
+    },
+
+    # Fast indexing / embedding:
+    # Token-limited, no overlap for speed in embedding large corpora
+    "indexing": {
+        "mode": "token",
+        "max_tokens": 128,
+        "max_sentences": None,
+        "overlap_percent": 0,
+    },
+
+    # QA / Chatbot context windows:
+    # Small chunks, some overlap for context continuity in responses
+    "chatbot": {
+        "mode": "hybrid",
+        "max_tokens": 256,
+        "max_sentences": 6,
+        "overlap_percent": 30,
+    },
+}

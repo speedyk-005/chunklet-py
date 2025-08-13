@@ -1,36 +1,38 @@
 # 📦 Chunklet: Smart Multilingual Text Chunker
 
-![Version](https://img.shields.io/badge/version-1.0.4-blue)
-![Stability](https://img.shields.io/badge/stability-stable-brightgreen)
-![License: MIT](https://img.shields.io/badge/license-MIT-yellow)
+<div style="display: flex; align-items: center; padding: 20px;">
+  <img src="logo.png" alt="Chunklet Logo" style="width: 20vw; height: 20vw; max-width: 300px; max-height: 300px;">
+  <span style="margin-left: 20px; font-size: 3em; font-weight: bold;">chunklet</span>
+</div>
+
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/chunklet)](https://www.python.org/downloads/)
+[![PyPI](https://img.shields.io/pypi/v/chunklet)](https://pypi.org/project/chunklet)
+[![Stability](https://img.shields.io/badge/stability-stable-brightgreen)](https://github.com/Speedyk-005/chunklet)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > Chunk smarter, not harder — built for LLMs, RAG pipelines, and beyond.  
-**Author:** Speedyk_005  
-**Version:** 1.0.4 (🎉 first stable release)  
+**Author:** speedyk_005  
+**Version:** 1.1.0  
 **License:** MIT
 
 
-## 🚀 What’s New in v1.0.4 (with cli support)
-
-- ✅ **Stable Release:** v1.0.4 marks the first fully stable version after extensive refactoring.
-- 🔄**Multiple Refactor Steps:** Core code reorganized for clarity, maintainability, and performance.
-- ➿ **True Clause-Level Overlap:** Overlap now occurs on natural clause boundaries (commas, semicolons, etc.) instead of just sentences, preserving semantic flow better.
-- 🛠️ **Improved Chunking Logic:** Enhanced fallback splitters and overlap calculations to handle edge cases gracefully.
-- ⚡ **Optimized Batch Processing:** Parallel chunking now consistently respects token counters and offsets.
-- 🧪 **Expanded Test Suite:** Comprehensive tests added for multilingual support, caching, and chunk correctness.
-- 🧹 **Cleaner Output:** Logging filters and redundant docstrings removed to reduce noise during runs.
+## 📌 What’s New in v1.1.0
+- 🔄 **Primary sentence splitter replaced:** Replaced `sentsplit` with `pysbd` for improved sentence boundary detection.
+- ⚡ **Language Detection Upgrade:** Migrated from `langid` to `py3langid`, delivering identical accuracy but ~40× faster classification speeds in benchmarks, significantly reducing multilingual processing latency.
+- 🧵 **Parallel Processing Optimization:** Replaced `mpire.WorkerPool` with Python’s built-in `concurrent.futures.ThreadPoolExecutor` for lower overhead and improved performance on small to medium-sized batches.
+- 🔧 **Multiple Refactor Steps:** Core code reorganized for clarity, maintainability, and performance.
 
 ---
 
 ## 🔥 Why Chunklet?
 
-Feature | Why it’s elite  
---------|----------------
-⛓️ **Hybrid Mode** | Combines token + sentence limits with guaranteed overlap — rare even in commercial stacks.  
-🌐 **Multilingual Fallbacks** | CRF > Moses > Regex, with dynamic confidence detection.  
-➿ **Clause-Level Overlap** | `overlap_percent` now operates at the **clause level**, preserving semantic flow across chunks using `, ; …` logic.  
-⚡ **Parallel Batch Processing** | Multi-core acceleration with `mpire`.  
-♻️ **LRU Caching** | Smart memoization via `functools.lru_cache`.  
+Feature                  | Why it’s elite  
+------------------------|----------------
+⛓️ **Hybrid Mode**          | Combines token + sentence limits with guaranteed overlap — rare even in commercial stacks.  
+🌐 **Multilingual Fallbacks** | Pysbd > SentenceSplitter > Regex, with dynamic confidence detection.  
+➿ **Clause-Level Overlap**   | `overlap_percent` now operates at the **clause level**, preserving semantic flow across chunks using `, ; …` logic.  
+⚡ **Parallel Batch Processing** | Efficient parallel processing with `ThreadPoolExecutor`, optimized for low overhead on small batches.  
+♻️ **LRU Caching**            | Smart memoization via `functools.lru_cache`.  
 🪄 **Pluggable Token Counters** | Swap in GPT-2, BPE, or your own tokenizer.
 
 ---
@@ -45,6 +47,43 @@ Pick your flavor:
 
 ---
 
+## 🌍 Language Support (36+)
+
+- **Primary (Pysbd):** Supports a wide range of languages for highly accurate sentence boundary detection.
+  (e.g., ar, pl, ja, da, zh, hy, my, ur, fr, it, fa, bg, el, mr, ru, nl, es, am, kk, en, hi, de)
+- **Secondary (SentenceSplitter):** Provides support for additional languages not covered by Pysbd.
+  (e.g., pt, no, cs, sk, lv, ro, ca, sl, sv, fi, lt, tr, hu, is)
+- **Fallback (Smart Regex):** For any language not explicitly supported by the above, a smart regex-based splitter is used as a reliable fallback.
+
+---
+
+## 🌊 Internal Workflow
+
+Here's a high-level overview of Chunklet's internal processing flow:
+
+```mermaid
+graph TD
+    A1["Chunk"]
+    A2["Batch (threaded)"]
+    A3["Preview Sentences"]
+
+    A1 --> B["Process Text"]
+    A2 --> B
+    A3 --> D["Split Text into Sentences"]
+
+    B --> E{"Language == Auto?"}
+    E -- Yes --> F["Detect Text Language"]
+    E -- No --> G
+
+    F --> G["Split Text into Sentences"]
+    G --> H["Group Sentences into Chunks"]
+    H --> I["Apply Overlap Between Chunks"]
+    I --> H
+    H --> J["Return Final Chunks"]
+```
+
+---
+
 ## 📦 Installation
 
 Install `chunklet` easily from PyPI:
@@ -56,96 +95,195 @@ pip install chunklet
 To install from source for development:
 
 ```bash
-git clone https://github.com/speed40/chunklet.git
+git clone https://github.com/Speedyk-005/chunklet.git
 cd chunklet
 pip install -e .
 ```
 
 ---
 
-💡 Example: Hybrid Mode
-```
+## ✨ Getting started
+
+Get started with `chunklet` in just a few lines of code. Here’s a basic example of how to chunk a text by sentences:
+
+```python
 from chunklet import Chunklet
 
-def word_token_counter(text: str) -> int:
+# Sample text
+text = (
+    "She loves cooking. He studies AI. The weather is great. "
+    "We play chess. Books are fun. Robots are learning."
+)
+
+# Initialize Chunklet
+chunker = Chunklet()
+
+# 1. Preview the sentences
+sentences = chunker.preview_sentences(text)
+print("Sentences to be chunked:")
+for s in sentences:
+    print(f"- {s}")
+
+# 2. Chunk the text by sentences
+chunks = chunker.chunk(text, mode="sentence", max_sentences=2)
+
+# Print the chunks
+print("\nChunks:")
+for i, chunk in enumerate(chunks):
+    print(f"--- Chunk {i+1} \")
+    print(chunk)
+```
+
+This will output:
+
+```
+Sentences to be chunked:
+- She loves cooking.
+- He studies AI.
+- The weather is great.
+- We play chess.
+- Books are fun.
+- Robots are learning.
+
+Chunks:
+--- Chunk 1 ---
+She loves cooking.
+He studies AI.
+--- Chunk 2 ---
+The weather is great.
+We play chess.
+--- Chunk 3 ---
+Books are fun.
+Robots are learning.
+```
+
+
+### Advanced Usage
+
+#### Custom Token Counter
+
+This example shows how to use a custom function to count tokens, which is essential for token-based chunking.
+
+<details>
+<summary>Click to see Custom Token Counter Example</summary>
+
+```python
+from chunklet import Chunklet
+
+# Define a custom token counter
+def simple_token_counter(text: str) -> int:
     return len(text.split())
 
-chunker = Chunklet(verbose=True, use_cache=True, token_counter=word_token_counter)
+# Initialize Chunklet with the custom counter
+chunker = Chunklet(token_counter=simple_token_counter)
 
-sample = """
-This is a long document about AI. It discusses neural networks and deep learning.
-The future is exciting. Ethics must be considered. Let’s build wisely.
-"""
+text = "This is a sample text to demonstrate custom token counting."
 
+# Chunk by tokens
+chunks = chunker.chunk(text, mode="token", max_tokens=5)
+
+for i, chunk in enumerate(chunks):
+    print(f"--- Chunk {i+1} ---")
+    print(chunk)
+```
+</details>
+
+#### Hybrid Mode with Overlap
+
+Combine sentence and token limits with overlap to maintain context between chunks.
+
+<details>
+<summary>Click to see Hybrid Mode with Overlap Example</summary>
+
+```python
+from chunklet import Chunklet
+
+def simple_token_counter(text: str) -> int:
+    return len(text.split())
+
+chunker = Chunklet(token_counter=simple_token_counter)
+
+text = (
+    "This is a long text to demonstrate hybrid chunking. "
+    "It combines both sentence and token limits for flexible chunking. "
+    "Overlap helps maintain context between chunks by repeating some clauses."
+)
+
+# Chunk with both sentence and token limits, and 20% overlap
 chunks = chunker.chunk(
-    text=sample,
+    text,
     mode="hybrid",
-    max_tokens=20,
-    max_sentences=5,
-    overlap_percent=30
+    max_sentences=2,
+    max_tokens=15,
+    overlap_percent=20
 )
 
 for i, chunk in enumerate(chunks):
     print(f"--- Chunk {i+1} ---")
     print(chunk)
 ```
+</details>
 
----
+#### Batch Processing
 
-🌀 Batch Chunking (Parallel)
-```
+Process multiple documents in parallel for improved performance.
+
+<details>
+<summary>Click to see Batch Processing Example</summary>
+
+```python
+from chunklet import Chunklet
+
 texts = [
-    "First document sentence. Second sentence.",
-    "Another one. Slightly longer. A third one here.",
-    "Final doc with multiple lines. Great for testing chunk overlap."
+    "First document. It has two sentences.",
+    "Second document. This one is slightly longer.",
+    "Third document. A final one to make a batch.",
 ]
 
-results = chunker.batch_chunk(
-    texts=texts,
-    mode="hybrid",
-    max_tokens=15,
-    max_sentences=4,
-    overlap_percent=20,
-    n_jobs=2
-)
+chunker = Chunklet()
+
+# Process texts in parallel
+results = chunker.batch_chunk(texts, mode="sentence", max_sentences=1, n_jobs=2)
 
 for i, doc_chunks in enumerate(results):
-    print(f"\n## Document {i+1}")
+    print(f"--- Document {i+1} ---")
     for j, chunk in enumerate(doc_chunks):
-        print(f"Chunk {j+1}:\n{chunk}")
+        print(f"Chunk {j+1}: {chunk}")
 ```
+</details>
+
+
+## 📊 Benchmarks
+
+Performance metrics for various chunking modes and language processing.
+
+### Chunk Modes
+
+| Mode     | Avg. time (s) |
+|----------|----------|
+| sentence | 0.0173   |
+| token    | 0.0177   |
+| hybrid   | 0.0179   |
+
+### Batch Chunking
+
+| Metric                   | Value   |
+|--------------------------|---------|
+| Iterations               | 256     |
+| Number of texts          | 3       |
+| Total text length (chars)| 81175   |
+| Avg. time (s)                 | 0.1846  |
+
+For detailed benchmark implementation, refer to the [`bench.py`](https://github.com/speedyk-005/chunklet/blob/main/bench.py) script.
 
 ---
 
-⚙️ GPT-2 Token Count Support
-```
-from transformers import GPT2TokenizerFast
-tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+## 🧪 Planned Features
 
-def gpt2_token_count(text: str) -> int:
-    return len(tokenizer.encode(text))
-
-chunker = Chunklet(token_counter=gpt2_token_count)
-```
-
----
-
-🧪 Planned Features
-
-[x] CLI interface with --file, --mode, --overlap, etc.
-[ ] code splitting based on interest point
-[ ] PDF splitter with metadata
-[ ] Named chunking presets (conceptually "all", "random_gap") for downstream control
-
-
----
-
-🌍 Language Support (30+)
-
-- CRF-based: en, fr, de, it, ru, zh, ja, ko, pt, tr, etc.
-- Heuristic-based: es, nl, da, fi, no, sv, cs, hu, el, ro, etc.
-- Fallback: All other languages via smart regex
-
+- [x] CLI interface with --file, --mode, --overlap, etc.
+- [ ] Named chunking presets (conceptually "all", "random_gap") for downstream control 
+- [ ] code splitting based on interest point
+- [ ] PDF splitter with metadata
 
 ---
 
@@ -159,13 +297,18 @@ chunker = Chunklet(token_counter=gpt2_token_count)
 
 ---
 
-🤝 Contributing
+## 🤝 Contributing
 
 1. Fork this repo
 2. Create a new feature branch
 3. Code like a star
 4. Submit a pull request
 
+-----
+
+## 📜 Changelog
+
+See the [CHANGELOG.md](https://github.com/speedyk-005/chunklet/blob/main/CHANGELOG.md) for a history of changes.
 
 ---
 

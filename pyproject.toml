@@ -1,10 +1,9 @@
-# Core Project Metadata
 [project]
 name = "chunklet"
-version = "1.0.4.post5"
+version = "1.1.0"
 description = "A smart multilingual text chunker for LLMs, RAG, and beyond."
 authors = [
-  { name = "Speedyk_005", email = "speedy40115719@gmail.com" }
+  { name = "speedyk_005", email = "speedy40115719@gmail.com" }
 ]
 license = "MIT"
 readme = "README.md"
@@ -14,13 +13,15 @@ classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
+  "Intended Audience :: Information Technology",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Topic :: Text Processing",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
-  "Operating System :: OS Independent"
+  "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 
 keywords = [
@@ -28,49 +29,50 @@ keywords = [
 ]
 
 dependencies = [
-  "mpire>=2.10.0",
-  "loguru>=0.7.2",
+  "pysbd>=0.3.0",
   "sentence-splitter>=1.4",
-  "sentsplit>=0.0.7",
-  "langid>=1.1.6"
+  "py3langid>=0.3.0",
+  "loguru>=0.7.2",
+  "pydantic>=2.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/speed40/chunklet"
-Repository = "https://github.com/speed40/chunklet"
-Issues = "https://github.com/Speedyk-005/chunklet/issues"
+Homepage = "https://github.com/speedyk-005/chunklet"
+Repository = "https://github.com/speedyk-005/chunklet"
+Documentation = "https://github.com/speedyk-005/chunklet/blob/main/README.md"
+Issues = "https://github.com/speedyk-005/chunklet/issues"
+Changelog = "https://github.com/speedyk-005/chunklet/blob/main/CHANGELOG.md"
 
 [project.scripts]
-chunklet = "chunklet.core:main"
+chunklet = "chunklet.cli:main"
 
 [project.optional-dependencies]
 dev = [
+  "rich>=13.0.0",
   "pytest>=7.0",
-  "pytest-cov"
+  "pytest-cov",
+  "pytest-mock"
 ]
 
-# Build System
 [build-system]
 requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
-# Setuptools Config
 [tool.setuptools]
 package-dir = { "" = "src" }
+packages = ["chunklet"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["chunklet"]
-
-# Mypy Config
-[tool.mypy]
-python_version = "3.9"
-ignore_missing_imports = true
-warn_unreachable = true
-no_implicit_optional = true
-
-# Pytest Config
 [tool.pytest.ini_options]
-minversion = "7.0"
-addopts = "--cov=src/chunklet --cov-report=term-missing --strict-markers"
+minversion = "7.4"
+addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --strict-markers --durations=0"
 testpaths = ["tests"]
+python_files = "test_*.py"
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning"
+]
+
+[tool.coverage.report]
+omit = [
+    "src/chunklet/cli.py"
+]

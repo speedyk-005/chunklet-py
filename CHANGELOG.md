@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2025-08-13
+
+### Changed
+
+- **Primary sentence splitter replaced:** Replaced `sentsplit` with `pysbd` for improved sentence boundary detection.
+- **Language Detection Engine:** Migrated from `langid` to `py3langid` due to significant performance improvements (~40× faster in benchmarks) while maintaining identical accuracy and confidence scores. This change greatly reduces classification latency in multilingual processing workflows.
+- **Language Support:** Updated language support details in `core.py` and `README.md` to reflect `pysbd` and `sentence-splitter` capabilities.
+- **CLI Refactoring:** Moved CLI logic from `core.py` to a separate `cli.py` file.
+- **Documentation:** Added comprehensive docstrings and comments to `core.py` for improved clarity and maintainability.
+- **README Updates:** Updated version numbers, badges, and language support sections in `README.md`.
+- **Performance Optimization:** Replaced `mpire.WorkerPool` with `concurrent.futures.ThreadPoolExecutor` for parallel batch processing to reduce overhead on small to medium-sized batches.
+- **Chunk Token Counter:** Added support in `chunk` for overriding the token counter set during initialization if a different one is provided.
+
+### Documentation
+
+- **README Update:** Embedded Mermaid flow diagram for internal workflow visualization.
+- **README Update:** Added a logo display with responsive HTML, custom sizing (300px), and accompanying "chunklet" text.
+
 ## [1.0.4.post4] - 2025-07-25
 
 ### Added

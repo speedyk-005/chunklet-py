@@ -35,4 +35,3 @@ Example Usage:
 
 from .core import Chunklet
 
-__version__ = "1.0.4"
