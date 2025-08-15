@@ -1,7 +1,7 @@
 import argparse
 import textwrap
 import sys
-from .core import Chunklet, simple_token_counter
+from .core import Chunklet
 
 
 def main(): 
