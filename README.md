@@ -1,4 +1,4 @@
-# 📦 Chunklet: Smart Multilingual Text Chunker
+# 🧩 Chunklet: Multi_strategy, Context-aware, Multilingual Text Chunker
 
 ![Chunklet Logo](https://github.com/speedyk-005/chunklet/blob/main/logo.png?raw=true)
 
@@ -9,48 +9,56 @@
 
 > Chunk smarter, not harder — built for LLMs, RAG pipelines, and beyond.  
 **Author:** speedyk_005  
-**Version:** 1.1.0  
+**Version:** 1.2.0 
 **License:** MIT
 
-
 ## Table of Contents
+- [What’s New in v1.2.0](#-whats-new-in-v111)
+- [Why Chunklet?](#-why-chunklet)
+- [Chunking Modes](#-chunking-modes)
+- [Language Support (36+)](#-language-support-36)
+- [Internal Workflow](#-internal-workflow)
+- [Installation](#-installation)
+- [Getting started](#-getting-started)
+- [Advanced Usage](#advanced-usage)
+  - [Custom Token Counter](#custom-token-counter)
+  - [Hybrid Mode with Overlap](#hybrid-mode-with-overlap)
+  - [Batch Processing](#batch-processing)
+- [CLI Usage](#-cli-usage)
+  - [Basic Chunking](#basic-chunking)
+  - [Chunking from a File](#chunking-from-a-file)
+  - [Specifying Chunking Mode and Parameters](#specifying-chunking-mode-and-parameters)
+  - [Using a Custom Tokenizer Command](#using-a-custom-tokenizer-command)
+  - [Batch Processing from a File](#batch-processing-from-a-file)
+- [Planned Features](#-planned-features)
+- [Projects that inspire me](#-projects-that-inspire-me)
+- [Contributing](#-contributing)
+- [Changelog](#-changelog)
+- [License](#license)
 
-- [📌 What’s New in v1.1.0](#-whats-new-in-v110)
-- [🔥 Why Chunklet?](#-why-chunklet)
-- [🧩 Chunking Modes](#-chunking-modes)
-- [🌍 Language Support (36+)](#-language-support-36)
-- [🌊 Internal Workflow](#-internal-workflow)
-- [📦 Installation](#-installation)
-- [✨ Getting started](#-getting-started)
-  - [Advanced Usage](#advanced-usage)
-    - [Custom Token Counter](#custom-token-counter)
-    - [Hybrid Mode with Overlap](#hybrid-mode-with-overlap)
-    - [Batch Processing](#batch-processing)
-    - [CLI Examples](#cli-examples)
-- [📊 Benchmarks](#-benchmarks)
-  - [Chunk Modes](#chunk-modes)
-  - [Batch Chunking](#batch-chunking)
-- [🧪 Planned Features](#-planned-features)
-- [💡Projects that inspire me](#projects-that-inspire-me)
-- [🤝 Contributing](#-contributing)
-- [📜 Changelog](#-changelog)
-- [📜 License](#license)
 
-## 📌 What’s New in v1.1.0
-- 🔄 **Primary sentence splitter replaced:** Replaced `sentsplit` with `pysbd` for improved sentence boundary detection.
-- ⚡ **Language Detection Upgrade:** Migrated from `langid` to `py3langid`, delivering identical accuracy but ~40× faster classification speeds in benchmarks, significantly reducing multilingual processing latency.
-- 🧵 **Parallel Processing Optimization:** Replaced `mpire.WorkerPool` with Python’s built-in `concurrent.futures.ThreadPoolExecutor` for lower overhead and improved performance on small to medium-sized batches.
-- 🔧 **Multiple Refactor Steps:** Core code reorganized for clarity, maintainability, and performance.
+## 📌 What’s New in v1.2.0
+
+- ✨ **Custom Tokenizer Command:** Added a `--tokenizer-command` CLI argument for using custom tokenizers.
+- 🌐 **Fallback Splitter Enhancement:** Improved the fallback splitter logic  to split more logically and handle more edge cases. That ensure about 18.2 % more accuracy.
+- 💡 **Simplified & Smarter Grouping Logic:** Simplified the grouping logic by eliminating unnecessary steps. The algorithm now split sentence further into clauses to ensure more logical overlap calculation and balanced groupings. The original formatting of the text is prioritized.
+- ✅ **Enhanced Input Validation:** Enforced a minimum value of 1 for `max_sentences` and 10 for `max_tokens`. Overlap percentage is cap at maximum to 75. all just to ensure more reasonable chuking
+- 🧪 **Enhanced Testing & Codebase Cleanup:** Improved test suite and removed dead code/unused imports for better maintainability.
+- 📚 **Documentation Overhaul:** Updated README, docstrings, and comments for improved clarity.
+- 📜 **Enhanced Verbosity:** Emits a higher number of logs when `verbose` is set to true to improve traceability.
+- ➕ **Aggregated Logging:** Warnings from parallel processing runs are now aggregated and displayed with a repetition count for better readability.
+- ⚖️ **Default Overlap Percentage:** 20% in all methods now to ensure consistency.
+- ⚡ **Parallel Processing Reversion:** Reverted previous change; replaced `concurrent.futures.ThreadPoolExecutor` with `mpire` for batch processing, leveraging true multiprocessing for improved performance.
 
 ---
 
-## 🔥 Why Chunklet?
+## 🤔 Why Chunklet?
 
 Feature                  | Why it’s elite  
 ------------------------|----------------
 ⛓️ **Hybrid Mode**          | Combines token + sentence limits with guaranteed overlap — rare even in commercial stacks.  
 🌐 **Multilingual Fallbacks** | Pysbd > SentenceSplitter > Regex, with dynamic confidence detection.  
-➿ **Clause-Level Overlap**   | `overlap_percent` now operates at the **clause level**, preserving semantic flow across chunks using `, ; …` logic.  
+➿ **Clause-Level Overlap**   | `overlap_percent operates at the **clause level**, preserving semantic flow across chunks using logic.  
 ⚡ **Parallel Batch Processing** | Efficient parallel processing with `ThreadPoolExecutor`, optimized for low overhead on small batches.  
 ♻️ **LRU Caching**            | Smart memoization via `functools.lru_cache`.  
 🪄 **Pluggable Token Counters** | Swap in GPT-2, BPE, or your own tokenizer.
@@ -61,9 +69,9 @@ Feature                  | Why it’s elite
 
 Pick your flavor:
 
-- `"sentence"` — chunk by sentence count only  
-- `"token"` — chunk by token count only  
-- `"hybrid"` — sentence + token thresholds respected with guaranteed overlap  
+- `"sentence"` — chunk by sentence count only # the minimum `max_sentences` is 1.
+- `"token"` — chunk by token count only # The minimum `max_tokens` is 10
+- `"hybrid"` — sentence + token thresholds respected with guaranteed overlap. Internally, the system estimates a residual capacity of 0-2 typical clauses per sentence to manage chunk boundaries effectively.  
 
 ---
 
@@ -118,8 +126,6 @@ To install from source for development:
 git clone https://github.com/Speedyk-005/chunklet.git
 cd chunklet
 pip install -e .
-
-
 ```
 
 ---
@@ -127,8 +133,6 @@ pip install -e .
 ## ✨ Getting started
 
 Get started with `chunklet` in just a few lines of code. Here’s a basic example of how to chunk a text by sentences:
-
-
 
 ```python
 from chunklet import Chunklet
@@ -162,30 +166,6 @@ for i, chunk in enumerate(chunks):
     print(f"--- Chunk {i+1} \")
     print(chunk)
 ```
-
-This will output:
-
-```
-Sentences to be chunked:
-- She loves cooking.
-- He studies AI.
-- The weather is great.
-- We play chess.
-- Books are fun.
-- Robots are learning.
-
-Chunks:
---- Chunk 1 ---
-She loves cooking.
-He studies AI.
---- Chunk 2 ---
-The weather is great.
-We play chess.
---- Chunk 3 ---
-Books are fun.
-Robots are learning.
-```
-
 
 ### Advanced Usage
 
@@ -290,82 +270,114 @@ for i, doc_chunks in enumerate(results):
 ```
 </details>
 
+---
 
+## 🚀 CLI Usage
 
-#### CLI Examples
+Chunklet provides a command-line interface for quick and easy text chunking.
 
-You can use `chunklet` directly from your command line.
+<details>
+<summary>Click to see examples</summary>
+### Basic Chunking
 
-<details> 
-<summary>Click to see CLI Examples</summary>
- 
-**Basic Chunking:**
+Chunk a single text directly from the command line:
 
 ```bash
-chunklet "This is a sample sentence. This is another one."
-# Output will be printed to stdout
+chunklet "She loves cooking. He studies AI. The weather is great."
 ```
 
-**Chunking from a File:**
+### Chunking from a File
 
-First, create a file named `input.txt` with your text:
-```
-This is the first paragraph. It has multiple sentences.
-This is the second paragraph. It also has multiple sentences.
-```
+Chunk text from an input file and optionally save the output to another file:
 
-Then, run:
 ```bash
-chunklet --file input.txt --max-tokens 100 --mode hybrid --output-file output.txt
-# Output will be written to output.txt
+# Chunk from input.txt and print to console
+chunklet --file input.txt
+
+# Chunk from input.txt and save to output.txt
+chunklet --file input.txt --output-file output.txt
 ```
 
-**Batch Processing from a File:**
+### Specifying Chunking Mode and Parameters
 
-Create a file named `batch_input.txt` with one text per line:
-```
-First document for batch processing.
-Second document for batch processing. This one is longer.
-Third document.
-```
+Control how text is chunked using various arguments:
 
-Then, run:
 ```bash
-chunklet --file batch_input.txt --batch --max-sentences 1 --n-jobs 2 --output-file batch_output.txt
-# Output will be written to batch_output.txt
+# Chunk by sentences, with a maximum of 3 sentences per chunk
+chunklet "Your long text here..." --mode sentence --max-sentences 3
+
+# Chunk by tokens, with a maximum of 50 tokens per chunk and 10% overlap
+chunklet "Your long text here..." --mode token --max-tokens 50 --overlap-percent 10
+
+# Chunk in hybrid mode, with specific language and offset
+chunklet "Tu texto largo aquí..." --mode hybrid --lang es --max-sentences 5 --max-tokens 100 --offset 1
+```
+
+### Using a Custom Tokenizer Command
+
+For token-based modes, you can provide an external shell command to count tokens. The command should accept text via stdin and output the token count as a number to stdout.
+
+#### Basic Example: Word Count
+
+A simple approach is to use `wc -w` to count words, which can be a rough approximation for tokens.
+
+```bash
+# Example using 'wc -w' as a simple word counter (approximation of tokens)
+chunklet "This is a sample text for token counting." --mode token --max-tokens 5 --tokenizer-command "wc -w"
+```
+
+#### Advanced Example: Using `tiktoken`
+
+For more accurate tokenization that matches OpenAI's models, you can use the `tiktoken` library.
+
+1.  **Install `tiktoken`:**
+    ```bash
+    pip install tiktoken
+    ```
+
+2.  **Create a tokenizer script (`my_tokenizer.py`):**
+    ```python
+    # my_tokenizer.py
+    import tiktoken
+    import sys
+
+    def count_tokens(text):
+        # Using cl100k_base encoding, suitable for gpt-3.5-turbo and gpt-4
+        encoding = tiktoken.get_encoding("cl100k_base")
+        return len(encoding.encode(text))
+
+    if __name__ == "__main__":
+        input_text = sys.stdin.read()
+        token_count = count_tokens(input_text)
+        print(token_count)
+    ```
+
+3.  **Use the script with `chunklet`:**
+    You'll need to use the python from your virtual environment if you are using one.
+    ```bash
+    chunklet "Your long text here..." --mode token --max-tokens 100 --tokenizer-command "python my_tokenizer.py"
+    ```
+
+
+### Batch Processing from a File
+
+Process multiple texts in parallel from a file where each line is a separate text.
+
+```bash
+# Assuming 'batch_input.txt' contains one text per line:
+# Text 1 line 1. Text 1 line 2.
+# Text 2 line 1.
+# Text 3 line 1. Text 3 line 2. Text 3 line 3.
+
+chunklet --file batch_input.txt --batch --mode sentence --max-sentences 1 --n-jobs 4
 ```
 </details>
- 
-
-## 📊 Benchmarks
-
-Performance metrics for various chunking modes and language processing.
-
-### Chunk Modes
-
-| Mode     | Avg. time (s) |
-|----------|----------|
-| sentence | 0.0173   |
-| token    | 0.0177   |
-| hybrid   | 0.0179   |
-
-### Batch Chunking
-
-| Metric                   | Value   |
-|--------------------------|---------|
-| Iterations               | 256     |
-| Number of texts          | 3       |
-| Total text length (chars)| 81175   |
-| Avg. time (s)                 | 0.1846  |
-
-For detailed benchmark implementation, refer to the [`bench.py`](https://github.com/speedyk-005/chunklet/blob/main/bench.py) script.
 
 ---
 
 ## 🧪 Planned Features
 
 - [x] CLI interface with --file, --mode, --overlap, etc.
-- [ ] Named chunking presets (conceptually "all", "random_gap") for downstream control 
 - [ ] code splitting based on interest point
 - [ ] PDF splitter with metadata
 
@@ -377,6 +389,7 @@ For detailed benchmark implementation, refer to the [`bench.py`](https://github.
 |---------------------------|--------------------------------------------------------------------------------------------------|
 | [**Semchunk**](https://github.com/cocktailpeanut/semchunk)  | Semantic-aware chunking using transformer embeddings.                  |
 | [**CintraAI Code Chunker**](https://github.com/CintraAI/code-chunker) | AST-based code chunker for intelligent code splitting.                 |
+| [**semantic-chunker**](https://github.com/Goldziher/semantic-chunker) | A strongly-typed semantic text chunking library that intelligently splits content while preserving structure and meaning.                |
 
 
 ---

@@ -1,6 +1,6 @@
 [project]
 name = "chunklet"
-version = "1.1.0.post1"
+version = "1.2.0"
 description = "A smart multilingual text chunker for LLMs, RAG, and beyond."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
@@ -19,6 +19,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Text Processing",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Topic :: Software Development :: Libraries :: Python Modules"
@@ -34,6 +35,7 @@ dependencies = [
   "py3langid>=0.3.0",
   "loguru>=0.7.2",
   "pydantic>=2.0",
+  "mpire>=0.3.0", 
 ]
 
 [project.urls]
@@ -51,7 +53,8 @@ dev = [
   "rich>=13.0.0",
   "pytest>=7.0",
   "pytest-cov",
-  "pytest-mock"
+  "pytest-mock",
+  "black",
 ]
 
 [build-system]
@@ -67,12 +70,11 @@ minversion = "7.4"
 addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --strict-markers --durations=0"
 testpaths = ["tests"]
 python_files = "test_*.py"
-filterwarnings = [
-    "error",
-    "ignore::DeprecationWarning"
-]
 
 [tool.coverage.report]
 omit = [
     "src/chunklet/cli.py"
 ]
+
+[tool.black]
+line-length = 88

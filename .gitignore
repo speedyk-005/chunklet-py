@@ -63,9 +63,6 @@ Thumbs.db
 *.temp
 temp/
 
-# Specific to this project
-test_results.txt
-
 # Ignore everything not part of source, tests, or docs
 !.gitignore
 !README.md

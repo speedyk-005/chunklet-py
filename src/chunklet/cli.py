@@ -1,10 +1,30 @@
 import argparse
 import textwrap
 import sys
+import subprocess
 from .core import Chunklet
 
 
-def main(): 
+def create_external_tokenizer(command):
+    def external_tokenizer(text):
+        try:
+            process = subprocess.run(
+                command,
+                shell=True,
+                input=text,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            return int(process.stdout.strip())
+        except (subprocess.CalledProcessError, ValueError) as e:
+            print(f"Error executing tokenizer command: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    return external_tokenizer
+
+
+def main():
     parser = argparse.ArgumentParser(
         description="Chunklet: Smart Multilingual Text Chunker for LLMs, RAG, and beyond.",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -59,7 +79,7 @@ def main():
         help="Starting sentence offset for chunking. (default: 0)",
     )
     parser.add_argument(
-        "--verbose", action="store_true", help="Enable verbose logging."
+        "-v", "--verbose", action="store_true", help="Enable verbose logging."
     )
     parser.add_argument("--no-cache", action="store_true", help="Disable LRU caching.")
     parser.add_argument(
@@ -72,6 +92,12 @@ def main():
         type=int,
         default=None,
         help="Number of parallel jobs for batch chunking. (default: None, uses all available cores)",
+    )
+    parser.add_argument(
+        "--tokenizer-command",
+        type=str,
+        default=None,
+        help="A shell command to use for token counting. The command should take text as stdin and output the token count as a number.",
     )
 
     args = parser.parse_args()
@@ -91,10 +117,14 @@ def main():
     elif args.text:
         input_texts = [args.text]
 
+    token_counter = None
+    if args.tokenizer_command:
+        token_counter = create_external_tokenizer(args.tokenizer_command)
+
     chunker = Chunklet(
         verbose=args.verbose,
         use_cache=not args.no_cache,
-        token_counter=simple_token_counter,
+        token_counter=token_counter,
     )
 
     results = []
@@ -134,11 +164,11 @@ def main():
             ""
         )  # Add a newline between documents/single chunk outputs
 
-    output_str = "\n".join(output_content)
+    output_str = "
+".join(output_content)
 
     if args.output_file:
         with open(args.output_file, "w", encoding="utf-8") as f:
             f.write(output_str)
     else:
         print(output_str)
-        
