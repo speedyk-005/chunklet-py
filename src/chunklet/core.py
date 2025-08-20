@@ -256,7 +256,12 @@ class Chunklet:
         sentence_count = 0
         index = 0
         while index < len(sentences):
-            sentence_tokens = config.token_counter(sentences[index])
+            # Only calculate sentence_tokens if needed for token-based chunking
+            if config.mode in {"token", "hybrid"}:
+                sentence_tokens = config.token_counter(sentences[index])
+            else: # mode is "sentence"
+                sentence_tokens = 0 # Not used for chunking logic in sentence mode
+
             if (
                 token_count + sentence_tokens > config.max_tokens
                 or sentence_count + 1 > config.max_sentences
@@ -278,9 +283,13 @@ class Chunklet:
                 )
                 curr_chunk = overlap_clauses + unfitted
 
-                token_count = sum(
-                    self.token_counter(s) for s in curr_chunk
-                )  # Calculate current token count
+                if config.mode in {"token", "hybrid"}:
+                    token_count = sum(
+                        self.token_counter(s) for s in curr_chunk
+                    )  # Calculate current token count
+                else: # mode is "sentence"
+                    token_count = 0 # Not used in sentence mode
+
                 # Estimation: 0 <= Residual capacity <= 2 (typical clauses per sentence)
                 sentence_count = len(curr_chunk)
 

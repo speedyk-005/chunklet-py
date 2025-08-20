@@ -1,6 +1,6 @@
 [project]
 name = "chunklet"
-version = "1.2.0"
+version = "1.2.0-post2"
 description = "A smart multilingual text chunker for LLMs, RAG, and beyond."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
@@ -63,7 +63,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
-packages = ["chunklet"]
+packages = ["chunklet", "chunklet.utils"]
 
 [tool.pytest.ini_options]
 minversion = "7.4"
