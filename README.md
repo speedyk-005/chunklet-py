@@ -459,7 +459,7 @@ chunklet --file batch_input.txt --batch --mode sentence --max-sentences 1 --n-jo
 
 ## 📊 Benchmarks
 
-See the [BENCHMARKS.md](https://github.com/speedyk-005/chunklet/blob/main/BENCHMARKS.md) for a detailed performance benchmark.
+See the [BENCHMARKS.md](https://github.com/speedyk-005/chunklet/blob/main/BENCHMARKS.md) for detailed performance benchmarks, and the [benchmark script](https://github.com/speedyk-005/chunklet/blob/main/benchmark.py) for the code used to generate them.
 
 ---
 
