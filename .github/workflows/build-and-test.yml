@@ -20,4 +20,4 @@ jobs:
         pip install -e .[dev]
     - name: Test with pytest
       run: |
-        pytest
+        PYTEST_ADDOPTS="" pytest tests
