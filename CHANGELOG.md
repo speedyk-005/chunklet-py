@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.1] - 2025-08-23
+
+### Added
+- Added an example for PDF chunking.
+- Added a `try...except` block for `pypdf` import in the example.
+- Updated the `README.md` to include the PDF chunking example and added it to the ToC.
+
+### Fixed
+- Refactored 'match' statement to 'if/elif/else' for Python 3.9 compatibility.
+- Fixed a warning in `core.py` where `language` was used instead of `lang`.
+
+---
+
 ## [1.3.0] - 2025-08-21
 
 ### Added

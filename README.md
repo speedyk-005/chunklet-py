@@ -10,11 +10,11 @@
 
 > Chunk smarter, not harder — built for LLMs, RAG pipelines, and beyond.  
 **Author:** speedyk_005  
-**Version:** 1.3.0
+**Version:** 1.3.1
 **License:** MIT
 
 ## Table of Contents
-- [What’s New in v1.3.0](#-whats-new-in-v130)
+- [What’s New in v1.3.x](#-whats-new-in-v13x)
 - [Why Chunklet?](#-why-chunklet)
 - [Benchmarks](#-benchmarks)
 - [Chunking Modes](#-chunking-modes)
@@ -41,7 +41,7 @@
 
 ---
 
-## 📌 What’s New in v1.3.0
+## 📌 What’s New in v1.3.x
 
 - 🐛 **Critical Bug Fixes**: Addressed an `IndexError` in overlap calculation and other bugs.
 - ✂️ **Custom Sentence Splitters**: Added support for integrating custom sentence splitting functions, allowing users to define their own logic for specific languages or requirements.
@@ -347,6 +347,7 @@ chunks_es = chunker_multi.chunk(text_es, lang="es", mode="sentence")
 print("\n--- Chunks using Multi-language Custom Splitter (Spanish) ---")
 for i, chunk in enumerate(chunks_es):
     print(f"Chunk {i+1}: {chunk}")
+
 ```
 </details>
 

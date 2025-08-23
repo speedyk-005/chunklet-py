@@ -142,7 +142,7 @@ class Chunklet:
         warnings = set()
 
         if lang == "auto":
-            warnings.add("The language is set to `auto`. Consider setting the `language` parameter to a specific language to improve performance.")
+            warnings.add("The language is set to `auto`. Consider setting the `lang` parameter to a specific language to improve performance.")
             lang_detected, confidence = detect_text_language(text)
             if self.verbose:
                 logger.debug("Attempting language detection.")
@@ -159,20 +159,19 @@ class Chunklet:
                         logger.debug("Using {} for language: {}. (Custom Splitter)", splitter.name, lang)
                     return splitter.callback(text), warnings
 
-        match lang:
-            case _ if lang in PYSBD_SUPPORTED_LANGUAGES:
-                if self.verbose:
-                    logger.debug("Using pysbd for language: {}.", lang)
-                return Segmenter(language=lang).segment(text), warnings
-            case _ if lang in SENTENCESPLITTER_UNIQUE_LANGUAGES:
-                if self.verbose:
-                    logger.debug("Using SentenceSplitter for language: {}. (SentenceSplitter)", lang)
-                return SentenceSplitter(language=lang).split(text), warnings
-            case _: # Fallback to universal regex splitter
-                warnings.add("Language not supported or detected with low confidence. Universal regex splitter was used.")
-                if self.verbose:
-                    logger.debug("Using a universal regex splitter.")
-                return self.universal_splitter.split(text), warnings
+        if lang in PYSBD_SUPPORTED_LANGUAGES:
+            if self.verbose:
+                logger.debug("Using pysbd for language: {}.", lang)
+            return Segmenter(language=lang).segment(text), warnings
+        elif lang in SENTENCESPLITTER_UNIQUE_LANGUAGES:
+            if self.verbose:
+                logger.debug("Using SentenceSplitter for language: {}. (SentenceSplitter)", lang)
+            return SentenceSplitter(language=lang).split(text), warnings
+        else: # Fallback to universal regex splitter
+            warnings.add("Language not supported or detected with low confidence. Universal regex splitter was used.")
+            if self.verbose:
+                logger.debug("Using a universal regex splitter.")
+            return self.universal_splitter.split(text), warnings
 
     def _get_overlap_clauses(
         self,
