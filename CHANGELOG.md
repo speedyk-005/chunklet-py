@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2025-08-21
+
+### Added
+
+- **Custom Sentence Splitters:** Added support for integrating custom sentence splitting functions, allowing users to define their own logic for specific languages or requirements.
+- **Robust fallback splitter:** Switched to a simpler, more robust and predictable sentence splitter fallback. Reduced over splitting and merging.  
+- **Custom Exception Types:** Introduced `ChunkletError`, `InvalidInputError`, and `TokenNotProvidedError` for more specific and robust error handling across the library.
+- **Progress Bar for Batch Processing**: Visual feedback for batch processing with a `rich` progress bar.
+- **Faster batching**: On `n_jobs=1`, mpire is not used to prevent overheads. on `n_jobs>=2` batch are process with group of 2 per process. 
+
+### Changed
+
+- **Fault-Tolerant Batch Processing**: In batch mode, if a task fails, `chunklet` will now stop processing and return the results of the tasks that completed successfully, preventing wasted work.
+- **_get_overlap_clauses Logic:** Simplified the logic for calculating overlap clauses by filtering empty clauses and improving the capitalization check.
+- **Improved fallback splitter:** Used `p{Lu}`, `p{Ll}` in `regex_splitter.py` to identify and handle abbreviations and acronyms more accurately across different languages.                
+- **Token Counter Error Handling:** Enhanced robustness by introducing a helper method to safely count tokens and handle potential errors from user-provided token counters. On error, operation is aborted.
+- **LRU Cache Optimization:** Increased `lru_cache` maxsize from 25 to 256 for improved caching performance.
+- **`preview_sentences` Enhanced Output:** The `preview_sentences` function now returns a tuple containing the list of sentences and any warnings encountered during processing, allowing for better insight into potential issues.
+  
+### Fixed
+
+- **Critical Bug Fixes:** Addressed an `IndexError` in overlap calculation and other bugs.
+
+
 ## [1.2.0] - 2025-08-19
 
 ### Added

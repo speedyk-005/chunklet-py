@@ -18,6 +18,8 @@ def detect_text_language(text: str) -> Tuple[str, float]:
     Returns:
         Tuple[str, float]: The top language code and its normalized probability.
     """
+    if not isinstance(text, str):
+        raise TypeError("Input 'text' must be a string.")
     ranked = py3langid.rank(text)  # List of (lang, log_prob)
     if not ranked:
         return "unknown", 0.0

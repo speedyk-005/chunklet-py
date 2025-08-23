@@ -12,6 +12,6 @@ Robots are learning. It's raining. Let's code. Mars is red. Sr. sleep is rare. C
 """
 chunker = Chunklet(verbose=True, token_counter=lambda x: len(x.split()))
 
-chunks = chunker.chunk(text, max_tokens=50, mode="token", overlap_percent="33.3")
+chunks = chunker.chunk(text, max_tokens=10, mode="token", overlap_percent="33.3")
 for i, cont in enumerate(chunks):
     print(f"---- chunk ({i}) ----\n{cont}\n")

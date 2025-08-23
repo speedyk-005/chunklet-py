@@ -6,15 +6,17 @@
 [![PyPI](https://img.shields.io/pypi/v/chunklet)](https://pypi.org/project/chunklet)
 [![Stability](https://img.shields.io/badge/stability-stable-brightgreen)](https://github.com/Speedyk-005/chunklet)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/speedyk-005/chunklet/actions)
 
 > Chunk smarter, not harder — built for LLMs, RAG pipelines, and beyond.  
 **Author:** speedyk_005  
-**Version:** 1.2.0 
+**Version:** 1.3.0
 **License:** MIT
 
 ## Table of Contents
-- [What’s New in v1.2.0](#-whats-new-in-v111)
+- [What’s New in v1.3.0](#-whats-new-in-v130)
 - [Why Chunklet?](#-why-chunklet)
+- [Benchmarks](#-benchmarks)
 - [Chunking Modes](#-chunking-modes)
 - [Language Support (36+)](#-language-support-36)
 - [Internal Workflow](#-internal-workflow)
@@ -24,6 +26,7 @@
   - [Custom Token Counter](#custom-token-counter)
   - [Hybrid Mode with Overlap](#hybrid-mode-with-overlap)
   - [Batch Processing](#batch-processing)
+  - [Custom Sentence Splitter](#custom-sentence-splitter)
 - [CLI Usage](#-cli-usage)
   - [Basic Chunking](#basic-chunking)
   - [Chunking from a File](#chunking-from-a-file)
@@ -36,21 +39,22 @@
 - [Changelog](#-changelog)
 - [License](#license)
 
-
-## 📌 What’s New in v1.2.0
-
-- ✨ **Custom Tokenizer Command:** Added a `--tokenizer-command` CLI argument for using custom tokenizers.
-- 🌐 **Fallback Splitter Enhancement:** Improved the fallback splitter logic  to split more logically and handle more edge cases. That ensure about 18.2 % more accuracy.
-- 💡 **Simplified & Smarter Grouping Logic:** Simplified the grouping logic by eliminating unnecessary steps. The algorithm now split sentence further into clauses to ensure more logical overlap calculation and balanced groupings. The original formatting of the text is prioritized.
-- ✅ **Enhanced Input Validation:** Enforced a minimum value of 1 for `max_sentences` and 10 for `max_tokens`. Overlap percentage is cap at maximum to 75. all just to ensure more reasonable chuking
-- 🧪 **Enhanced Testing & Codebase Cleanup:** Improved test suite and removed dead code/unused imports for better maintainability.
-- 📚 **Documentation Overhaul:** Updated README, docstrings, and comments for improved clarity.
-- 📜 **Enhanced Verbosity:** Emits a higher number of logs when `verbose` is set to true to improve traceability.
-- ➕ **Aggregated Logging:** Warnings from parallel processing runs are now aggregated and displayed with a repetition count for better readability.
-- ⚖️ **Default Overlap Percentage:** 20% in all methods now to ensure consistency.
-- ⚡ **Parallel Processing Reversion:** Reverted previous change; replaced `concurrent.futures.ThreadPoolExecutor` with `mpire` for batch processing, leveraging true multiprocessing for improved performance.
-
 ---
+
+## 📌 What’s New in v1.3.0
+
+- 🐛 **Critical Bug Fixes**: Addressed an `IndexError` in overlap calculation and other bugs.
+- ✂️ **Custom Sentence Splitters**: Added support for integrating custom sentence splitting functions, allowing users to define their own logic for specific languages or requirements.
+- ⚡ **Faster batching**: On `n_jobs=1`, mpire is not used to prevent overheads. on `n_jobs>=2` batch are process with group of 2 per process. 
+- 💡 **Improved Fallback Splitter**: Used `\p{Lu}`, `\p{Ll}` in `regex_splitter.py` to identify and handle abbreviations and acronyms more accurately across different languages.
+- 🌐 **Robust fallback splitter:** Switched to a simpler, more robust and predictable sentence splitter as fallback. Reduced over splitting and merging.
+- 📊 **Progress Bar for Batch Processing**: Get visual feedback on the progress of your batch chunking jobs with a `rich` progress bar.
+- 🚧 **Fault-Tolerant Batch Processing**: In batch mode, if a task fails, `chunklet` will now stop processing and return the results of the tasks that completed successfully, preventing wasted work.
+- ✨ **Improved Overlap Logic**: Refined the `_get_overlap_clauses` function for simpler, more robust clause handling and capitalization checks.
+- 🔢 **Token Counter Error Handling**: Enhanced robustness by introducing a helper method to safely count tokens and handle potential errors from user-provided token counters. On error, operation is aborted.
+- 🚀 **LRU Cache Optimization**: Increased `lru_cache` maxsize from 25 to 256 for improved caching performance.
+- 🚨 **Robust Error Handling**: Introduced custom exception types (`ChunkletError`, `InvalidInputError`, `TokenNotProvidedError`) for clearer and more specific error reporting, improving debugging and application stability.
+- 🔍 **`preview_sentences` Enhanced Output**: The `preview_sentences` function now returns a tuple containing the list of sentences and any warnings encountered during processing, allowing for better insight into potential issues.
 
 ## 🤔 Why Chunklet?
 
@@ -62,6 +66,7 @@ Feature                  | Why it’s elite
 ⚡ **Parallel Batch Processing** | Efficient parallel processing with `ThreadPoolExecutor`, optimized for low overhead on small batches.  
 ♻️ **LRU Caching**            | Smart memoization via `functools.lru_cache`.  
 🪄 **Pluggable Token Counters** | Swap in GPT-2, BPE, or your own tokenizer.
+✂️ **Pluggable Sentence splitters**  | Integrate custom splitters for more specific languages.
 
 ---
 
@@ -79,7 +84,9 @@ Pick your flavor:
 
 - **Primary (Pysbd):** Supports a wide range of languages for highly accurate sentence boundary detection.
   (e.g., ar, pl, ja, da, zh, hy, my, ur, fr, it, fa, bg, el, mr, ru, nl, es, am, kk, en, hi, de)
-- **Secondary (SentenceSplitter):** Provides support for additional languages not covered by Pysbd.
+  For more information: [PyPI](https://pypi.org/project/pysbd/) 
+- **Secondary (sentence_splitter):** Provides support for additional languages not covered by Pysbd.
+  For more information: [GitHub](https://github.com/mediacloud/sentence-splitter) 
   (e.g., pt, no, cs, sk, lv, ro, ca, sl, sv, fi, lt, tr, hu, is)
 - **Fallback (Smart Regex):** For any language not explicitly supported by the above, a smart regex-based splitter is used as a reliable fallback.
 
@@ -147,7 +154,8 @@ text = (
 chunker = Chunklet(verbose=False, use_cache=True) # Note: this are by default
 
 # 1. Preview the sentences
-sentences = chunker.preview_sentences(text)
+# Returns a tuple of sentences and warnings if any
+sentences, _ = chunker.preview_sentences(text)
 print("Sentences to be chunked:")
 for s in sentences:
     print(f"- {s}")
@@ -270,6 +278,80 @@ for i, doc_chunks in enumerate(results):
 ```
 </details>
 
+```
+
+#### Custom Sentence Splitter
+
+You can provide your own custom sentence splitting functions to Chunklet. This is useful if you have a specialized splitter for a particular language or domain that you want to prioritize over Chunklet's built-in splitters.
+
+To use a custom splitter, initialize `Chunklet` with the `custom_splitters` parameter. This parameter expects a list of dictionaries, where each dictionary defines a splitter:
+
+*   `name` (str): A unique name for your splitter.
+*   `languages` (str or Iterable[str]): The language code(s) this splitter supports (e.g., "en", or ["fr", "es"]).
+*   `callback` (Callable[[str], List[str]]): A function that takes the input text (string) and returns a list of sentences (list of strings).
+
+Custom splitters are checked before Chunklet's default `pysbd` and `sentence-splitter` implementations. If multiple custom splitters support the same language, the first one in the provided list will be used.
+
+<details>
+<summary>Click to see Custom Sentence Splitter Example</summary>
+
+```python
+from chunklet import Chunklet
+from typing import List
+
+# Define a simple custom sentence splitter
+def my_custom_splitter(text: str) -> List[str]:
+    # This is a very basic splitter for demonstration
+    # In a real scenario, this would be a more sophisticated function
+    return [s.strip() for s in text.split(". ") if s.strip()]
+
+# Initialize Chunklet with the custom splitter
+chunker = Chunklet(
+    custom_splitters=[
+        {
+            "name": "MyCustomEnglishSplitter",
+            "languages": "en",
+            "callback": my_custom_splitter,
+        }
+    ]
+)
+
+text = "This is the first sentence. This is the second sentence. And the third."
+chunks = chunker.chunk(text, mode="sentence")
+
+print("--- Chunks using Custom Splitter ---")
+for i, chunk in enumerate(chunks):
+    print(f"Chunk {i+1}: {chunk}")
+
+# Example with a custom splitter for multiple languages
+def multi_lang_splitter(text: str) -> List[str]:
+    # A more complex splitter that might handle specific rules for French and Spanish
+    return [s.strip() for s in text.split("! ") if s.strip()]
+
+chunker_multi = Chunklet(
+    custom_splitters=[
+        {
+            "name": "MultiLangExclamationSplitter",
+            "languages": ["fr", "es"],
+            "callback": multi_lang_splitter,
+        }
+    ]
+)
+
+text_fr = "Bonjour! Comment ça va! C'est super!"
+chunks_fr = chunker_multi.chunk(text_fr, lang="fr", mode="sentence")
+print("\n--- Chunks using Multi-language Custom Splitter (French) ---")
+for i, chunk in enumerate(chunks_fr):
+    print(f"Chunk {i+1}: {chunk}")
+
+text_es = "Hola! Qué tal! Muy bien!"
+chunks_es = chunker_multi.chunk(text_es, lang="es", mode="sentence")
+print("\n--- Chunks using Multi-language Custom Splitter (Spanish) ---")
+for i, chunk in enumerate(chunks_es):
+    print(f"Chunk {i+1}: {chunk}")
+```
+</details>
+
 ---
 
 ## 🚀 CLI Usage
@@ -375,6 +457,12 @@ chunklet --file batch_input.txt --batch --mode sentence --max-sentences 1 --n-jo
 
 ---
 
+## 📊 Benchmarks
+
+See the [BENCHMARKS.md](https://github.com/speedyk-005/chunklet/blob/main/BENCHMARKS.md) for a detailed performance benchmark.
+
+---
+
 ## 🧪 Planned Features
 
 - [x] CLI interface with --file, --mode, --overlap, etc.
@@ -383,7 +471,7 @@ chunklet --file batch_input.txt --batch --mode sentence --max-sentences 1 --n-jo
 
 ---
 
-## 💡Projects that inspire me
+## 💡Projects that inspired me
 
 | Tool                      | Description                                                                                      |
 |---------------------------|--------------------------------------------------------------------------------------------------|
