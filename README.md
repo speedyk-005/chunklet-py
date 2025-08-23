@@ -278,8 +278,6 @@ for i, doc_chunks in enumerate(results):
 ```
 </details>
 
-```
-
 #### Custom Sentence Splitter
 
 You can provide your own custom sentence splitting functions to Chunklet. This is useful if you have a specialized splitter for a particular language or domain that you want to prioritize over Chunklet's built-in splitters.
