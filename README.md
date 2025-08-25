@@ -7,7 +7,7 @@
 [![Stability](https://img.shields.io/badge/stability-stable-brightgreen)](https://github.com/Speedyk-005/chunklet)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/speedyk-005/chunklet/actions)
-[![Contributors](https://img.shields.io/badge/contributors-welcome-brightgreen.svg?style=flat)](CONTRIBUTORS.md)
+[![Contributors](https://contrib.rocks/image?repo=speedyk-005/chunklet)](https://github.com/speedyk-005/chunklet/graphs/contributors)
 
 > Chunk smarter, not harder — built for LLMs, RAG pipelines, and beyond.  
 **Author:** speedyk_005  
