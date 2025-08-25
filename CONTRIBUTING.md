@@ -1,6 +1,6 @@
 # Contributing to `chunklet`
 
-First off, thank you for considering contributing to SQAnnoy DB! It's people like you that make SQAnnoy DB such a great tool.
+First off, thank you for considering contributing to `Chunklet`! It's people like you that make `Chunklet` such a great tool.
 
 ## Where do I go from here?
 
