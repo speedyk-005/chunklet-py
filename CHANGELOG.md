@@ -7,16 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.2] - 2025-08-25
+
+### Changed 
+- **Validation Error:** Improved the readability of validation error messages.
+### Fixed
+- **Empty Chunk:** Resolved an issue where an empty chunk could be generated if the first sentence exceeded the `max_tokens` limit.
+- **Hybrid Chunking:** Fixed a bug in hybrid chunking mode where chunking limits were not correctly applied, leading to chunks being larger than intended.
+- **Custom Splitters:** Fixed an issue with custom splitters where extra spaces were added between sentences.
+- **CLI SyntaxError:** Fixed a `SyntaxError` in the CLI due to an unterminated string literal.
+- **Infinite Loop:** Fixed infinite loop bug caused by max sentences validation using 0 instead of 1 as minimum.
+
+---
+
 ## [1.3.1] - 2025-08-23
 
 ### Added
-- Added an example for PDF chunking.
-- Added a `try...except` block for `pypdf` import in the example.
-- Updated the `README.md` to include the PDF chunking example and added it to the ToC.
+- **PDF Chunking:** Added an example for PDF chunking.
+- **PyPDF Import:** Added a `try...except` block for `pypdf` import in the example.
+- **README Update:** Updated the `README.md` to include the PDF chunking example and added it to the ToC.
 
 ### Fixed
-- Refactored 'match' statement to 'if/elif/else' for Python 3.9 compatibility.
-- Fixed a warning in `core.py` where `language` was used instead of `lang`.
+- **Python 3.9 Compatibility:** Refactored 'match' statement to 'if/elif/else' for Python 3.9 compatibility.
+- **Core Warning:** Fixed a warning in `core.py` where `language` was used instead of `lang`.
 
 ---
 

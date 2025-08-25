@@ -69,7 +69,7 @@ pdf_path = "examples/Les-bases-de-la-theorie-musicale-EDMProduction 1.pdf"
 processor = PDFProcessor(pdf_path)
 
 # Chunk all pages by sentences
-pages_chunks = processor.batch_chunk_pages(max_sentences=5)
+pages_chunks = processor.batch_chunk_pages(max_sentences=15)
 
 # Print the chunks per page
 for i, page_chunks in enumerate(pages_chunks, start=1):

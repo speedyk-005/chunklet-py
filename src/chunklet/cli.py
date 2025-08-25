@@ -164,8 +164,7 @@ def main():
             ""
         )  # Add a newline between documents/single chunk outputs
 
-    output_str = "
-".join(output_content)
+    output_str = "\n".join(output_content)
 
     if args.output_file:
         with open(args.output_file, "w", encoding="utf-8") as f:

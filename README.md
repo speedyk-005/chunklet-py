@@ -10,7 +10,7 @@
 
 > Chunk smarter, not harder — built for LLMs, RAG pipelines, and beyond.  
 **Author:** speedyk_005  
-**Version:** 1.3.1
+**Version:** 1.3.2
 **License:** MIT
 
 ## Table of Contents
@@ -20,6 +20,7 @@
 - [Chunking Modes](#-chunking-modes)
 - [Language Support (36+)](#-language-support-36)
 - [Internal Workflow](#-internal-workflow)
+- [Configuration Models](#-configuration-models)
 - [Installation](#-installation)
 - [Getting started](#-getting-started)
 - [Advanced Usage](#advanced-usage)
@@ -43,7 +44,13 @@
 
 ## 📌 What’s New in v1.3.x
 
-- 🐛 **Critical Bug Fixes**: Addressed an `IndexError` in overlap calculation and other bugs.
+- 🐛 **Critical Bug Fixes (v1.3.2)**:
+  - **Validation Error:** Made validation error more readable and show cause.
+  - **Empty Chunk:** Resolved an issue where an empty chunk could be generated if the first sentence exceeded the `max_tokens` limit.
+  - **Hybrid Chunking:** Fixed a bug in hybrid chunking mode where chunking limits were not correctly applied, leading to chunks being larger than intended.
+  - **Custom Splitters:** Fixed an issue with custom splitters where extra spaces were added between sentences.
+  - **CLI SyntaxError:** Fixed a `SyntaxError` in the CLI due to an unterminated string literal.
+  - **Infinite Loop:** Fixed infinite loop bug caused by max sentences validation using 0 instead of 1 as minimum.
 - ✂️ **Custom Sentence Splitters**: Added support for integrating custom sentence splitting functions, allowing users to define their own logic for specific languages or requirements.
 - ⚡ **Faster batching**: On `n_jobs=1`, mpire is not used to prevent overheads. on `n_jobs>=2` batch are process with group of 2 per process. 
 - 💡 **Improved Fallback Splitter**: Used `\p{Lu}`, `\p{Ll}` in `regex_splitter.py` to identify and handle abbreviations and acronyms more accurately across different languages.
@@ -119,6 +126,18 @@ graph TD
 
 ---
 
+## ⚙️ Configuration Models
+
+For detailed definitions, refer to [`src/chunklet/models.py`](src/chunklet/models.py).
+
+`chunklet` leverages Pydantic models to define and validate its core configuration and data structures, ensuring type safety and robust handling of parameters. These models are central to how you interact with and configure the library:
+
+-   **`ChunkletInitConfig`**: Governs the initial setup of the `Chunklet` instance, including global settings like verbosity, caching behavior, and the default token counter to be used across chunking operations.
+-   **`ChunkingConfig`**: Specifies the parameters for individual chunking tasks. This includes the input text, language detection settings, the chosen chunking `mode` (sentence, token, or hybrid), and limits such as `max_tokens` (minimum 10), `max_sentences` (minimum 1), and `overlap_percent` (between 0 and 75). It also ensures that a `token_counter` is provided when necessary for token-based chunking.
+-   **`CustomSplitterConfig`**: Facilitates the integration of custom sentence splitting logic. It allows you to define external functions for specialized language handling, ensuring `chunklet` can adapt to unique linguistic requirements.
+
+---
+
 ## 📦 Installation
 
 Install `chunklet` easily from PyPI:
@@ -163,7 +182,7 @@ for s in sentences:
 # 2. Chunk the text by sentences
 chunks = chunker.chunk(
     text,
-    mode="hybrid",
+    mode="sentence",
     max_sentences=2,
     overlap_percent=20
 )
@@ -171,7 +190,7 @@ chunks = chunker.chunk(
 # Print the chunks
 print("\nChunks:")
 for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} \")
+    print(f"--- Chunk {i+1}")
     print(chunk)
 ```
 
@@ -187,6 +206,12 @@ This example shows how to use a custom function to count tokens, which is essent
 ```python
 from chunklet import Chunklet
 
+# Sample text
+text = (
+    "She loves cooking. He studies AI. The weather is great. "
+    "We play chess. Books are fun. Robots are learning."
+)
+
 # Define a custom token counter
 def simple_token_counter(text: str) -> int:
     return len(text.split())
@@ -194,11 +219,9 @@ def simple_token_counter(text: str) -> int:
 # Initialize Chunklet with the custom counter (this will be the default for the instance)
 chunker = Chunklet(token_counter=simple_token_counter)
 
-text = "This is a sample text to demonstrate custom token counting."
-
 print("--- Using token_counter from Chunklet initialization ---")
 # Chunk by tokens, using the token_counter set during Chunklet initialization
-chunks_default = chunker.chunk(text, mode="token", max_tokens=5)
+chunks_default = chunker.chunk(text, mode="token", max_tokens=10)
 for i, chunk in enumerate(chunks_default):
     print(f"Chunk {i+1}: {chunk}")
 
@@ -208,7 +231,7 @@ def another_token_counter(text: str) -> int:
     return len(text.replace(" ", "")) # Counts characters without spaces
 
 # Chunk by tokens, overriding the token_counter for this specific call
-chunks_override = chunker.chunk(text, mode="token", max_tokens=5, token_counter=another_token_counter)
+chunks_override = chunker.chunk(text, mode="token", max_tokens=10, token_counter=another_token_counter)
 for i, chunk in enumerate(chunks_override):
     print(f"Chunk {i+1}: {chunk}")
 ```
@@ -274,7 +297,7 @@ results = chunker.batch_chunk(texts, mode="sentence", max_sentences=1, n_jobs=2)
 for i, doc_chunks in enumerate(results):
     print(f"--- Document {i+1} ---")
     for j, chunk in enumerate(doc_chunks):
-        print(f"Chunk {j+1}: {chunk}")
+        print(f"Chunk {j+1}: {chunk}") 
 ```
 </details>
 
@@ -364,7 +387,7 @@ Chunklet provides a command-line interface for quick and easy text chunking.
 Chunk a single text directly from the command line:
 
 ```bash
-chunklet "She loves cooking. He studies AI. The weather is great."
+chunklet "She loves cooking. He studies AI. The weather is great." --max-sentences 2
 ```
 
 ### Chunking from a File
@@ -404,7 +427,7 @@ A simple approach is to use `wc -w` to count words, which can be a rough approxi
 
 ```bash
 # Example using 'wc -w' as a simple word counter (approximation of tokens)
-chunklet "This is a sample text for token counting." --mode token --max-tokens 5 --tokenizer-command "wc -w"
+chunklet "Hello world! You see that? This is a sample text for token counting." --mode token --max-tokens 10 --tokenizer-command "wc -w"
 ```
 
 #### Advanced Example: Using `tiktoken`

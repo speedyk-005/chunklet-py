@@ -105,7 +105,8 @@ class Chunklet:
                 custom_splitters=custom_splitters,
             )
         except ValidationError as e:
-            raise InvalidInputError(f"Invalid chunking configuration: {e}")
+            pretty_err = self.pretty_errors(e)
+            raise InvalidInputError(f"Invalid chunking configuration: {pretty_err}")
             
         self.verbose = config.verbose
         self.use_cache = config.use_cache
@@ -126,6 +127,15 @@ class Chunklet:
         # Universal sentence splitter for fallback
         self.universal_splitter = UniversalSplitter()
 
+    def pretty_errors(self, e: ValidationError):
+        """Makes pydantic validation error more readable"""
+        lines = []
+        for err in e.errors():
+            field = " ->  ".join(str(loc) for loc in err["loc"])
+            msg = err["msg"]
+            lines.append(f"[{field}] {msg}")
+        return "\n".join(lines)
+        
     def _split_by_sentence(self, text: str, lang: str) -> Tuple[List[str], Set[str]]:
         """
         Splits text into sentences using language-specific algorithms.
@@ -298,10 +308,10 @@ class Chunklet:
                             sentences[index], remaining_tokens, config.token_counter
                         )
                     )
-                    chunks.append(curr_chunk + fitted)  # Complete
+                    chunks.append(curr_chunk + fitted) # Considered complete
                     index += 1
                 else:
-                    chunks.append(curr_chunk)  # Complete
+                    chunks.append(curr_chunk) # Considered complete
                     unfitted = []
 
                 # Prepare data for next chunk
@@ -313,26 +323,21 @@ class Chunklet:
                 if config.mode in {"token", "hybrid"}:
                     token_count = sum(
                         self._count_tokens(s, config.token_counter) for s in curr_chunk
-                    )  # Calculate current token count
-                else:  # mode is "sentence"
-                    token_count = 0  # Not used in sentence mode
-                    
-                # Treat clasuses as sentences
-                # Estimation: 0 <= Residual capacity per chunk <= 2 (typical clauses per sentence)
+                    )
                 sentence_count = len(curr_chunk)
-
-            if index < len(sentences):
-                curr_chunk.append(sentences[index])
-            token_count += sentence_tokens
-            sentence_count += 1
-            index += 1
+            else:
+                if index < len(sentences):
+                    curr_chunk.append(sentences[index])
+                token_count += sentence_tokens
+                sentence_count += 1
+                index += 1
 
         # Add any remnants
         if curr_chunk:
             chunks.append(curr_chunk)
 
         # Flatten into strings
-        final_chunks = ["".join(chunk) for chunk in chunks]
+        final_chunks = [" ".join(chunk) for chunk in chunks if chunk]
         return final_chunks
 
     def _chunk(
@@ -351,6 +356,7 @@ class Chunklet:
         """
         all_warnings = set()
         sentences, split_warnings = self._split_by_sentence(config.text, config.lang)
+        sentences = [sent.rstrip() for sent in sentences if sent.strip()]
         all_warnings.update(split_warnings)
 
         if self.verbose:
@@ -449,7 +455,8 @@ class Chunklet:
                 use_cache=self.use_cache,
             )
         except ValidationError as e:
-            raise InvalidInputError(f"Invalid chunking configuration: {e}")
+            pretty_err = self.pretty_errors(e)
+            raise InvalidInputError(f"Invalid chunking configuration: {pretty_err}")
 
         if not config.text:
             if self.verbose:
