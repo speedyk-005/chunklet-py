@@ -7,7 +7,7 @@
 [![Stability](https://img.shields.io/badge/stability-stable-brightgreen)](https://github.com/Speedyk-005/chunklet)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/speedyk-005/chunklet/actions)
-[![Contributors](https://contrib.rocks/image?repo=speedyk-005/chunklet)](https://github.com/speedyk-005/chunklet/graphs/contributors)
+
 
 > Chunk smarter, not harder — built for LLMs, RAG pipelines, and beyond.  
 **Author:** speedyk_005  
@@ -39,7 +39,8 @@
 - [Projects that inspire me](#-projects-that-inspire-me)
 - [Contributing](#-contributing)
 - [Changelog](#-changelog)
-- [License](#license)
+- [License](#-license)
+- [Contributors](#-Contributors)
 
 ---
 
@@ -523,3 +524,9 @@ See the [CHANGELOG.md](https://github.com/speedyk-005/chunklet/blob/main/CHANGEL
 📜 License
 
 > MIT License. Use freely, modify boldly, and credit the legend (me. Just kidding!)
+
+---
+
+## 👤 Contributors 
+
+[![Contributors](https://contrib.rocks/image?repo=speedyk-005/chunklet)](https://github.com/speedyk-005/chunklet/graphs/contributors) 
