@@ -508,16 +508,20 @@ See the [BENCHMARKS.md](https://github.com/speedyk-005/chunklet/blob/main/BENCHM
 
 ## 🤝 Contributing
 
+Pull requests are welcome! Please open an issue first if you'd like to add a feature or fix a bug.
+
 1. Fork this repo
 2. Create a new feature branch
 3. Code like a star
 4. Submit a pull request
 
+See [CONTRIBUTING.md](https://github.com/speedyk-005/chunklet/blob/main/CONTRIBUTING.md) for more details.
+
 -----
 
 ## 📜 Changelog
 
-See the [CHANGELOG.md](https://github.com/speedyk-005/chunklet/blob/main/CHANGELOG.md) for a history of changes.
+See [CHANGELOG.md](https://github.com/speedyk-005/chunklet/blob/main/CHANGELOG.md) for a history of changes.
 
 ---
 
