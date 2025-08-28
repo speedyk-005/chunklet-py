@@ -2,8 +2,16 @@ import argparse
 import textwrap
 import sys
 import subprocess
+import os
+import glob
+import warnings
+from importlib.metadata import version, PackageNotFoundError # New import
 from .core import Chunklet
 
+try:
+    __version__ = version("chunklet")
+except PackageNotFoundError:
+    __version__ = "unknown"
 
 def create_external_tokenizer(command):
     def external_tokenizer(text):
@@ -25,23 +33,40 @@ def create_external_tokenizer(command):
 
 
 def main():
+    warnings.simplefilter('default', DeprecationWarning) # Add this line
     parser = argparse.ArgumentParser(
         description="Chunklet: Smart Multilingual Text Chunker for LLMs, RAG, and beyond.",
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
+    # New argument for version
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s v{__version__}",
+        help="Show program's version number and exit."
+    )
+
     parser.add_argument(
         "text",
         nargs="?",
-        help="The input text to chunk. If not provided, --file must be used.",
+        help="The input text to chunk. If not provided, --file or --input-file must be used.",
     )
     parser.add_argument(
-        "--file",
+        "--file", "--input-file", # Added --input-file as an alias
         help="Path to a text file to read input from. Overrides the 'text' argument.",
     )
     parser.add_argument(
         "--output-file",
         help="Path to a file to write the output chunks to. If not provided, output is printed to stdout.",
+    )
+    parser.add_argument(
+        "--input-dir",
+        help="Path to a directory to read input files from (e.g., *.txt, *.md).",
+    )
+    parser.add_argument(
+        "--output-dir",
+        help="Path to a directory to write the output chunks to. A separate file will be created for each input file.",
     )
     parser.add_argument(
         "--mode",
@@ -102,20 +127,55 @@ def main():
 
     args = parser.parse_args()
 
-    if not args.text and not args.file:
-        parser.error("Either 'text' argument or '--file' must be provided.")
-    if args.batch and not args.file:
-        parser.error("Batch mode (--batch) requires input from a file (--file).")
+    # Check if any input argument is provided
+    if sum([bool(args.text), bool(args.file), bool(args.input_dir)]) == 0:
+        print("Error: No input provided. Please specify text, a file, or an input directory.", file=sys.stderr)
+        print("See 'chunklet -h' for usage examples.", file=sys.stderr)
+        sys.exit(1) # Exit with an error code
 
-    input_texts = []
-    if args.file:
+    # Existing validation for exactly one input argument
+    if sum([bool(args.text), bool(args.file), bool(args.input_dir)]) != 1:
+        parser.error("Exactly one of 'text' argument, '--file', or '--input-dir' must be provided.")
+    if args.output_file and args.output_dir:
+        parser.error("Only one of '--output-file' or '--output-dir' can be specified.")
+    if args.batch and not (args.file or args.input_dir):
+        parser.error("Batch mode (--batch) requires input from '--file' or '--input-dir'.")
+
+    source_texts = []
+    is_batch = args.batch
+
+    if args.input_dir:
+        if not os.path.isdir(args.input_dir):
+            parser.error(f"Input directory not found: {args.input_dir}")
+        is_batch = True
+        # Use glob to find all .txt and .md files recursively
+        file_paths = glob.glob(os.path.join(args.input_dir, "**/*.txt"), recursive=True)
+        file_paths.extend(glob.glob(os.path.join(args.input_dir, "**/*.md"), recursive=True))
+        
+        for file_path in file_paths:
+            with open(file_path, "r", encoding="utf-8") as f:
+                source_texts.append((file_path, f.read()))
+
+    elif args.file:
         with open(args.file, "r", encoding="utf-8") as f:
             if args.batch:
-                input_texts = [line.strip() for line in f if line.strip()]
+                warnings.warn(
+                    "Using --batch with --file is deprecated. "
+                    "Please use --input-dir for batch processing multiple files, "
+                    "or provide a single text directly for single file chunking.",
+                    DeprecationWarning
+                )
+                lines = [line.strip() for line in f if line.strip()]
+                for i, line in enumerate(lines):
+                    source_texts.append((f"{args.file}_line_{i+1}", line))
             else:
-                input_texts = [f.read()]
+                source_texts.append((args.file, f.read()))
     elif args.text:
-        input_texts = [args.text]
+        source_texts.append(("stdin", args.text))
+
+    if not source_texts:
+        print("No input texts found to process.", file=sys.stderr)
+        sys.exit(0)
 
     token_counter = None
     if args.tokenizer_command:
@@ -127,10 +187,12 @@ def main():
         token_counter=token_counter,
     )
 
+    input_texts_only = [text for _, text in source_texts]
+
     results = []
-    if args.batch:
+    if is_batch:
         results = chunker.batch_chunk(
-            texts=input_texts,
+            texts=input_texts_only,
             lang=args.lang,
             mode=args.mode,
             max_tokens=args.max_tokens,
@@ -143,7 +205,7 @@ def main():
         # For single text, chunk returns a list of strings
         results = [
             chunker.chunk(
-                text=input_texts[0],
+                text=input_texts_only[0],
                 lang=args.lang,
                 mode=args.mode,
                 max_tokens=args.max_tokens,
@@ -153,21 +215,33 @@ def main():
             )
         ]  # Wrap in a list to match batch output structure for consistent printing
 
-    output_content = []
-    for i, doc_chunks in enumerate(results):
-        if args.batch:
-            output_content.append(f"## Document {i+1}")
-        for j, chunk in enumerate(doc_chunks):
-            output_content.append(f"--- Chunk {j+1} ---")
-            output_content.append(chunk)
-        output_content.append(
-            ""
-        )  # Add a newline between documents/single chunk outputs
-
-    output_str = "\n".join(output_content)
-
-    if args.output_file:
-        with open(args.output_file, "w", encoding="utf-8") as f:
-            f.write(output_str)
+    if args.output_dir:
+        os.makedirs(args.output_dir, exist_ok=True)
+        total_chunks_written = 0
+        for (source_path, _), doc_chunks in zip(source_texts, results):
+            base_name, _ = os.path.splitext(os.path.basename(source_path))
+            for j, chunk in enumerate(doc_chunks):
+                output_filename = f"{base_name}_chunk_{j+1}.txt"
+                output_path = os.path.join(args.output_dir, output_filename)
+                with open(output_path, "w", encoding="utf-8") as f:
+                    f.write(chunk + "\n")
+                total_chunks_written += 1
+        print(f"Successfully processed {len(source_texts)} file(s) and wrote {total_chunks_written} chunk file(s) to {args.output_dir}")
     else:
-        print(output_str)
+        output_content = []
+        for (source_name, _), doc_chunks in zip(source_texts, results):
+            if is_batch:
+                output_content.append(f"## Source: {source_name}")
+                output_content.append("")
+            for j, chunk in enumerate(doc_chunks):
+                output_content.append(f"--- Chunk {j+1} ---")
+                output_content.append(chunk)
+                output_content.append("")
+
+        output_str = "\n".join(output_content)
+
+        if args.output_file:
+            with open(args.output_file, "w", encoding="utf-8") as f:
+                f.write(output_str)
+        else:
+            print(output_str)

@@ -7,11 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2025-08-27
+
+### Added
+
+- **CLI Version Flag:** Implemented a `--version` flag to display the package version.
+- **Version Attribute:** Added `__version__` to the `__init__.py` file.
+- **CLI Directory Input:** Batch processing now supports reading input from a directory (`--input-dir`), automatically discovering `.txt` and `.md` files.
+- **CLI Flexible Output:** Chunks can now be written to a specified output directory (`--output-dir`), with each chunk saved as a separate file (e.g., `filename_chunk_1.txt`).
+- **CLI Input File Alias:** Added `--input-file` as an alias for `--file` for consistency with `--input-dir`.
+
+### Changed
+
+- **Project rebranding:** Renamed project from `chunklet` to `chunklet-py` to improve its online discovery and distinguish it from other unrelated projects that use the similar names.
+- **CLI Output Formatting:** Added a newline between each chunk in console and single-file output for improved readability.
+- **CLI Error Handling:** Improved the error message when no input arguments are provided, offering clearer guidance and examples.
+- **CLI Deprecation Warning:** Introduced a deprecation warning when using `--batch` with `--file` (or `--input-file`), encouraging the use of `--input-dir` for batch processing.
+- **Lazy Import of `mpire`:** Modified `core.py` to lazily import the `mpire` library, improving startup time by only importing it when batch processing is utilized. 
+
+---
+
 ## [1.3.2] - 2025-08-25
 
 ### Changed 
+
 - **Validation Error:** Improved the readability of validation error messages.
+- 
 ### Fixed
+
 - **Empty Chunk:** Resolved an issue where an empty chunk could be generated if the first sentence exceeded the `max_tokens` limit.
 - **Hybrid Chunking:** Fixed a bug in hybrid chunking mode where chunking limits were not correctly applied, leading to chunks being larger than intended.
 - **Custom Splitters:** Fixed an issue with custom splitters where extra spaces were added between sentences.
@@ -23,11 +46,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.1] - 2025-08-23
 
 ### Added
+
 - **PDF Chunking:** Added an example for PDF chunking.
 - **PyPDF Import:** Added a `try...except` block for `pypdf` import in the example.
 - **README Update:** Updated the `README.md` to include the PDF chunking example and added it to the ToC.
 
 ### Fixed
+
 - **Python 3.9 Compatibility:** Refactored 'match' statement to 'if/elif/else' for Python 3.9 compatibility.
 - **Core Warning:** Fixed a warning in `core.py` where `language` was used instead of `lang`.
 

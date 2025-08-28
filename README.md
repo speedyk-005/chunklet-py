@@ -8,14 +8,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/speedyk-005/chunklet/actions)
 
-
 > Chunk smarter, not harder — built for LLMs, RAG pipelines, and beyond.  
 **Author:** speedyk_005  
-**Version:** 1.3.2
+**Version:** 1.4.0
 **License:** MIT
 
 ## Table of Contents
-- [What’s New in v1.3.x](#-whats-new-in-v13x)
+- [What’s New in v1.4.0](#-whats-new-in-v140)
 - [Why Chunklet?](#-why-chunklet)
 - [Benchmarks](#-benchmarks)
 - [Chunking Modes](#-chunking-modes)
@@ -39,31 +38,20 @@
 - [Projects that inspire me](#-projects-that-inspire-me)
 - [Contributing](#-contributing)
 - [Changelog](#-changelog)
-- [License](#-license)
-- [Contributors](#-Contributors)
+- [License](#license)
 
 ---
 
-## 📌 What’s New in v1.3.x
+## 📌 What’s New in v1.4.0
 
-- 🐛 **Critical Bug Fixes (v1.3.2)**:
-  - **Validation Error:** Made validation error more readable and show cause.
-  - **Empty Chunk:** Resolved an issue where an empty chunk could be generated if the first sentence exceeded the `max_tokens` limit.
-  - **Hybrid Chunking:** Fixed a bug in hybrid chunking mode where chunking limits were not correctly applied, leading to chunks being larger than intended.
-  - **Custom Splitters:** Fixed an issue with custom splitters where extra spaces were added between sentences.
-  - **CLI SyntaxError:** Fixed a `SyntaxError` in the CLI due to an unterminated string literal.
-  - **Infinite Loop:** Fixed infinite loop bug caused by max sentences validation using 0 instead of 1 as minimum.
-- ✂️ **Custom Sentence Splitters**: Added support for integrating custom sentence splitting functions, allowing users to define their own logic for specific languages or requirements.
-- ⚡ **Faster batching**: On `n_jobs=1`, mpire is not used to prevent overheads. on `n_jobs>=2` batch are process with group of 2 per process. 
-- 💡 **Improved Fallback Splitter**: Used `\p{Lu}`, `\p{Ll}` in `regex_splitter.py` to identify and handle abbreviations and acronyms more accurately across different languages.
-- 🌐 **Robust fallback splitter:** Switched to a simpler, more robust and predictable sentence splitter as fallback. Reduced over splitting and merging.
-- 📊 **Progress Bar for Batch Processing**: Get visual feedback on the progress of your batch chunking jobs with a `rich` progress bar.
-- 🚧 **Fault-Tolerant Batch Processing**: In batch mode, if a task fails, `chunklet` will now stop processing and return the results of the tasks that completed successfully, preventing wasted work.
-- ✨ **Improved Overlap Logic**: Refined the `_get_overlap_clauses` function for simpler, more robust clause handling and capitalization checks.
-- 🔢 **Token Counter Error Handling**: Enhanced robustness by introducing a helper method to safely count tokens and handle potential errors from user-provided token counters. On error, operation is aborted.
-- 🚀 **LRU Cache Optimization**: Increased `lru_cache` maxsize from 25 to 256 for improved caching performance.
-- 🚨 **Robust Error Handling**: Introduced custom exception types (`ChunkletError`, `InvalidInputError`, `TokenNotProvidedError`) for clearer and more specific error reporting, improving debugging and application stability.
-- 🔍 **`preview_sentences` Enhanced Output**: The `preview_sentences` function now returns a tuple containing the list of sentences and any warnings encountered during processing, allowing for better insight into potential issues.
+- 📛 **Project Rebranded to `chunklet-py`:** To improve online discovery and avoid naming conflicts, the project has been renamed.
+- 🏷️ **CLI Version Flag:** You can now quickly check your installed version with the new `--version` flag.
+- 📂 **Enhanced CLI Input/Output:** The CLI now supports processing entire directories (`--input-dir`) and offers flexible output options, including saving each chunk to a separate file in a specified directory (`--output-dir`).
+- 💬 **Improved CLI Error Messages:** More user-friendly and directional error messages are now provided when input arguments are missing.
+- 🗂️ **CLI Input File Alias:** Added `--input-file` as an alias for `--file` for consistency with `--input-dir`.
+- ⚠️ **CLI Deprecation Warning:** Introduced a deprecation warning when using `--batch` with `--file` (or `--input-file`), encouraging the use of `--input-dir` for batch processing.
+- ⚡ **Lazy Import of `mpire`:** Modified `core.py` to lazily import the `mpire` library, improving startup time by only importing it when batch processing is utilized.
+
 
 ## 🤔 Why Chunklet?
 
@@ -380,10 +368,11 @@ for i, chunk in enumerate(chunks_es):
 
 ## 🚀 CLI Usage
 
-Chunklet provides a command-line interface for quick and easy text chunking.
+Chunklet provides a command-line interface for quick and easy text chunking. After installing via `pip install chunklet`, the `chunklet` command becomes directly available in your terminal.
 
 <details>
 <summary>Click to see examples</summary>
+
 ### Basic Chunking
 
 Chunk a single text directly from the command line:
@@ -394,14 +383,42 @@ chunklet "She loves cooking. He studies AI. The weather is great." --max-sentenc
 
 ### Chunking from a File
 
-Chunk text from an input file and optionally save the output to another file:
+Chunk text from an input file and optionally save the output to another file. You can use either `--file` or `--input-file`.
 
 ```bash
 # Chunk from input.txt and print to console
 chunklet --file input.txt
 
 # Chunk from input.txt and save to output.txt
-chunklet --file input.txt --output-file output.txt
+chunklet --input-file input.txt --output-file output.txt
+```
+
+### Chunking from a Directory
+
+Process all `.txt` and `.md` files within a specified directory.
+
+```bash
+# Process all text files in 'my_documents/' and print chunks to console
+chunklet --input-dir my_documents/ --mode sentence --max-sentences 3
+```
+
+### Saving Chunks to a Directory
+
+Save each generated chunk as a separate file in a specified output directory.
+
+```bash
+# Process 'input.txt' and save each chunk as a separate file in 'output_chunks/'
+chunklet --file input.txt --output-dir output_chunks/ --mode token --max-tokens 50
+# Example output files: output_chunks/input_chunk_1.txt, output_chunks/input_chunk_2.txt
+```
+
+### Combined Directory Input and Output
+
+Process files from an input directory and save their chunks to an output directory, with each chunk in its own file.
+
+```bash
+# Process all files in 'my_documents/' and save individual chunks to 'processed_chunks/'
+chunklet --input-dir my_documents/ --output-dir processed_chunks/ --mode hybrid --max-tokens 100
 ```
 
 ### Specifying Chunking Mode and Parameters
@@ -459,24 +476,10 @@ For more accurate tokenization that matches OpenAI's models, you can use the `ti
     ```
 
 3.  **Use the script with `chunklet`:**
-    You'll need to use the python from your virtual environment if you are using one.
     ```bash
     chunklet "Your long text here..." --mode token --max-tokens 100 --tokenizer-command "python my_tokenizer.py"
     ```
 
-
-### Batch Processing from a File
-
-Process multiple texts in parallel from a file where each line is a separate text.
-
-```bash
-# Assuming 'batch_input.txt' contains one text per line:
-# Text 1 line 1. Text 1 line 2.
-# Text 2 line 1.
-# Text 3 line 1. Text 3 line 2. Text 3 line 3.
-
-chunklet --file batch_input.txt --batch --mode sentence --max-sentences 1 --n-jobs 4
-```
 </details>
 
 ---
@@ -508,29 +511,19 @@ See the [BENCHMARKS.md](https://github.com/speedyk-005/chunklet/blob/main/BENCHM
 
 ## 🤝 Contributing
 
-Pull requests are welcome! Please open an issue first if you'd like to add a feature or fix a bug.
-
 1. Fork this repo
 2. Create a new feature branch
 3. Code like a star
 4. Submit a pull request
 
-See [CONTRIBUTING.md](https://github.com/speedyk-005/chunklet/blob/main/CONTRIBUTING.md) for more details.
-
 -----
 
 ## 📜 Changelog
 
-See [CHANGELOG.md](https://github.com/speedyk-005/chunklet/blob/main/CHANGELOG.md) for a history of changes.
+See the [CHANGELOG.md](https://github.com/speedyk-005/chunklet/blob/main/CHANGELOG.md) for a history of changes.
 
 ---
 
 📜 License
 
 > MIT License. Use freely, modify boldly, and credit the legend (me. Just kidding!)
-
----
-
-## 👤 Contributors 
-
-[![Contributors](https://contrib.rocks/image?repo=speedyk-005/chunklet)](https://github.com/speedyk-005/chunklet/graphs/contributors) 

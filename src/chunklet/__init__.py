@@ -14,6 +14,8 @@ from .core import Chunklet
 from .exceptions import ChunkletError, InvalidInputError, TokenNotProvidedError
 from .models import CustomSplitterConfig, ChunkletInitConfig, ChunkingConfig
 
+__version__ = "1.4.0"
+
 __all__ = [
     "Chunklet",
     "ChunkletError",

@@ -1,7 +1,6 @@
 import re
 import sys
 from collections import Counter
-from mpire import WorkerPool
 from functools import lru_cache, partial
 from typing import List, Dict, Any, Tuple, Callable, Optional, Union, Set
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
@@ -569,6 +568,7 @@ class Chunklet:
                         logger.error(f"A task in batch_chunk failed: {e}. Returning partial results.")
                         break
             else:
+                from mpire import WorkerPool # Lazy import, only needed there. 
                 with WorkerPool(n_jobs=n_jobs) as executor:
                     for result in executor.imap(chunk_func, texts):
                         results.append(result)

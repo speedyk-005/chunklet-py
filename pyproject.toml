@@ -1,6 +1,6 @@
 [project]
-name = "chunklet"
-version = "1.3.2"
+name = "chunklet-py"
+version = "1.4.0"
 description = "A smart multilingual text chunker for LLMs, RAG, and beyond."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
