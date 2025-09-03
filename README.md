@@ -17,15 +17,7 @@
 **Version:** 1.4.0
 **License:** MIT
 
-## 📌 What’s New in v1.4.0
-
-- 📛 **Project Rebranded to `chunklet-py`:** To improve online discovery and avoid naming conflicts, the project has been renamed.
-- 🏷️ **CLI Version Flag:** You can now quickly check your installed version with the new `--version` flag.
-- 📂 **Enhanced CLI Input/Output:** The CLI now supports processing entire directories (`--input-dir`) and offers flexible output options, including saving each chunk to a separate file in a specified directory (`--output-dir`).
-- 💬 **Improved CLI Error Messages:** More user-friendly and directional error messages are now provided when input arguments are missing.
-- 🗂️ **CLI Input File Alias:** Added `--input-file` as an alias for `--file` for consistency with `--input-dir`.
-- ⚠️ **CLI Deprecation Warning:** Introduced a deprecation warning when using `--batch` with `--file` (or `--input-file`), encouraging the use of `--input-dir` for batch processing.
-- ⚡ **Lazy Import of `mpire`:** Modified `core.py` to lazily import the `mpire` library, improving startup time by only importing it when batch processing is utilized.
+For a detailed history of changes, please see the [Changelog](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md).
 
 
 ## 🤔 Why Chunklet?
@@ -82,6 +74,8 @@ pip install -e .
 ## Getting Started
 
 See the [Getting Started](https://github.com/speedyk-005/chunklet-py/blob/main/docs/getting-started/index.md) guide to get started with Chunklet.
+
+For the full documentation, visit our [documentation site](https://speedyk-005.github.io/chunklet-py/).
 
 ## Benchmarks
 
