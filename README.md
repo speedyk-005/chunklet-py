@@ -6,7 +6,7 @@
 </p>
 ---
 
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/chunklet-oy)](https://www.python.org/downloads/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/chunklet-py)](https://www.python.org/downloads/)
 [![PyPI](https://img.shields.io/pypi/v/chunklet-py)](https://pypi.org/project/chunklet-py)
 [![Stability](https://img.shields.io/badge/stability-stable-brightgreen)](https://github.com/Speedyk-005/chunklet-py)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -48,9 +48,9 @@ Pick your flavor:
 
 - **Primary (Pysbd):** Supports a wide range of languages for highly accurate sentence boundary detection.
   (e.g., ar, pl, ja, da, zh, hy, my, ur, fr, it, fa, bg, el, mr, ru, nl, es, am, kk, en, hi, de)
-  For more information: [PyPI](https://pypi.org/project/pysbd/) 
+  For more information: [Pypi](https://pypi.org/project/pysbd/) 
 - **Secondary (sentence_splitter):** Provides support for additional languages not covered by Pysbd.
-  For more information: [GitHub](https://github.com/mediacloud/sentence-splitter) 
+  For more information: [Github](https://github.com/mediacloud/sentence-splitter) 
   (e.g., pt, no, cs, sk, lv, ro, ca, sl, sv, fi, lt, tr, hu, is)
 - **Fallback (Smart Regex):** For any language not explicitly supported by the above, a smart regex-based splitter is used as a reliable fallback.
 
@@ -115,7 +115,6 @@ See the [Changelog](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGEL
 | [**CintraAI Code Chunker**](https://github.com/CintraAI/code-chunker) | AST-based code chunker for intelligent code splitting.                 |
 | [**semantic-chunker**](https://github.com/Goldziher/semantic-chunker) | A strongly-typed semantic text chunking library that intelligently splits content while preserving structure and meaning.                |
 
-
 ---
 
 ## 🤝 Contributing
@@ -126,8 +125,18 @@ Want to help make Chunklet even better?
 2. Create a new feature branch
 3. Code like a star
 4. Submit a pull request
+   
+Check out the [issues](https://github.com/Speedyk-005/chunklet-py/issues) or open a PR!
 
 See our [Contributing Guidelines](https://github.com/speedyk-005/chunklet-py/blob/main/CONTRIBUTING.md) for details.
+
+---
+
+## 🙌 Contributors & Thanks
+
+Big thanks to the people who helped shape **Chunklet**:
+
+- [@jmbernabotto](https://github.com/jmbernabotto) — for spotting lots of bugs 🐞 and even convincing me to add some cool features 🚀  
 
 ---
 
@@ -136,3 +145,5 @@ See our [Contributing Guidelines](https://github.com/speedyk-005/chunklet-py/blo
 See the [LICENSE](https://github.com/speedyk-005/chunklet-py/blob/main/LICENSE) file for full details.
 
 > MIT License. Use freely, modify boldly, and credit the legend (me. Just kidding!)
+
+ 
