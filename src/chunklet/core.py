@@ -323,6 +323,8 @@ class Chunklet:
                     token_count = sum(
                         self._count_tokens(s, config.token_counter) for s in curr_chunk
                     )
+                # Considered all to be sentences
+                # Estimates a residual capacity of 0-2, typical clauses per sentence
                 sentence_count = len(curr_chunk)
             else:
                 if index < len(sentences):

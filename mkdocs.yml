@@ -1,0 +1,65 @@
+site_name: Chunklet Documentation
+repo_url: https://github.com/speedyk-005/chunklet-py
+
+theme:
+  name: material
+  logo: assets/logo.jpeg
+  custom_dir: docs/overrides
+  features:
+    - content.code.copy
+    - content.tabs.link
+    - content.tooltips
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.instant
+    - navigation.footer 
+    - header.autohide
+  palette:
+    # Light mode: Blue on White
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue 
+      accent: orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Dark mode: Orange on Black
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue 
+      accent: orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+        
+extra:
+  version:
+    provider: mike
+
+nav:
+  - 'Welcome': 'index.md'
+  - 'Installation': 'installation.md'
+  - 'Getting Started':
+      - 'Introduction': 'getting-started/index.md'
+      - 'Programmatic Usage': 'getting-started/programmatic.md'
+      - 'CLI Usage': 'getting-started/cli.md'
+  - 'Supported Languages': 'supported-languages.md'
+  - 'Models': 'models.md'
+  - 'Exceptions and Warnings': 'exceptions-and-warnings.md'
+  - 'Internal Flow': 'internal-flow.md'
+  - 'Utils': 'utils.md'
+
+plugins:
+  - search
+  - mike
+docs_dir: 'docs/'
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+  

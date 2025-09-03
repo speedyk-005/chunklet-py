@@ -45,11 +45,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/speedyk-005/chunklet"
-Repository = "https://github.com/speedyk-005/chunklet"
-Documentation = "https://github.com/speedyk-005/chunklet/blob/main/README.md"
-Issues = "https://github.com/speedyk-005/chunklet/issues"
-Changelog = "https://github.com/speedyk-005/chunklet/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/speedyk-005/chunklet-py"
+Repository = "https://github.com/speedyk-005/chunklet-py"
+Documentation = "https://github.com/speedyk-005/chunklet-py/blob/main/README.md"
+Issues = "https://github.com/speedyk-005/chunklet-py/issues"
+Changelog = "https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md"
 
 [project.scripts]
 chunklet = "chunklet.cli:main"

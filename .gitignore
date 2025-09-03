@@ -41,11 +41,6 @@ ENV/
 env.bak/
 venv.bak/
 
-# Logs and databases
-*.log
-*.sqlite3
-*.db
-
 # OS generated files
 .DS_Store
 .Trashes
@@ -62,12 +57,4 @@ Thumbs.db
 *.tmp
 *.temp
 temp/
-
-# Ignore everything not part of source, tests, or docs
-!.gitignore
-!README.md
-!LICENSE
-!CHANGELOG.md
-!pyproject.toml
-!src/
-!tests/
+site/
