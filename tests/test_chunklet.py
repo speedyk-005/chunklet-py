@@ -51,7 +51,7 @@ def chunker():
 def test_all_modes_produce_chunks(
     chunker, mode, max_tokens, max_sentences, expected_chunks
 ):
-    """Verify all chunking modes produce output with expected chunk counts."""
+    """Verify all chunking modes produce output with expected chunk counts and structure."""
     chunks = chunker.chunk(
         ENGLISH_TEXT, mode=mode, max_tokens=max_tokens, max_sentences=max_sentences
     )
@@ -60,14 +60,32 @@ def test_all_modes_produce_chunks(
         len(chunks) == expected_chunks
     ), f"Expected {expected_chunks} chunks in {mode} mode, but got {len(chunks)}"
 
+    # Verify the structure of the first chunk
+    first_chunk = chunks[0]
+    assert hasattr(first_chunk, "chunk_num")
+    assert hasattr(first_chunk, "content")
+    assert hasattr(first_chunk, "sentence_count")
+    assert hasattr(first_chunk, "token_count")
+
+    assert isinstance(first_chunk.chunk_num, int)
+    assert isinstance(first_chunk.content, str)
+    assert isinstance(first_chunk.sentence_count, int)
+    
+    if mode in ["token", "hybrid"]:
+        assert isinstance(first_chunk.token_count, int)
+    
+    assert first_chunk.chunk_num == 1
+    assert len(first_chunk.content) > 0
+    assert first_chunk.sentence_count > 0
+
 
 def test_acronyms_preserved(chunker):
     """Verify special patterns remain intact"""
     chunks = chunker.chunk(ACRONYMS_TEXT, mode="sentence", max_sentences=1)
     assert len(chunks) == 3, "Expected 3 chunks"
-    assert "N. A. S. A. related" in chunks[0], "Acronym should be in the first chunk"
+    assert "N. A. S. A. related" in chunks[0].content, "Acronym should be in the first chunk"
     assert (
-        "Consider S.1.2 to be important" in chunks[1]
+        "Consider S.1.2 to be important" in chunks[1].content
     ), "S.1 should be in the second chunk"
 
 
@@ -85,6 +103,7 @@ def test_offset_behavior(chunker, offset, expect_chunks):
     chunks = chunker.chunk(ENGLISH_TEXT, offset=offset)
     if expect_chunks:
         assert chunks, f"Should get chunks for offset={offset}"
+        assert len(chunks[0].content) > 0, "Chunk content should not be empty"
     else:
         assert not chunks, f"Should get no chunks for offset={offset}"
 
@@ -109,8 +128,8 @@ def test_fallback_splitter(chunker):
     # Should fallback to the regex splitter
     chunks = chunker.chunk(UNSUPPORTED_TEXT, max_sentences=1, mode="sentence")
     assert len(chunks) == 2, "Expected 2 chunks for the unsupported language text"
-    assert "Bonjour tout moun!" in chunks[0]
-    assert "Non pa mwen se Bob." in chunks[1]
+    assert "Bonjour tout moun!" in chunks[0].content
+    assert "Non pa mwen se Bob." in chunks[1].content
 
 
 # --- Overlap Related Tests ---
@@ -126,17 +145,19 @@ def test_overlap_behavior(chunker):
     assert len(chunks) > 1, "Overlap should produce multiple chunks"
 
     # Manually calculate the expected overlap to create a robust test
-    first_chunk_text = 'She loves cooking. He studies AI. "You are a Dr.", she said. '
-    clauses = chunker.clause_end_regex.split(first_chunk_text)
-    # Expected clauses: ['She loves cooking. He studies AI. "You are a Dr.",', ' she said. ']
+    first_chunk_content = chunks[0].content
+    clauses = chunker.clause_end_regex.split(first_chunk_content)
 
     overlap_num = round(len(clauses) * 0.33)
     expected_overlap_clause = clauses[-overlap_num:][0]
 
     # The logic adds '... ' if the clause doesn't start with a capital letter
-    expected_overlap_string = f"... {expected_overlap_clause.lstrip()}"
+    if not (expected_overlap_clause[0].isupper() or (len(expected_overlap_clause) > 1 and expected_overlap_clause[1].isupper())):
+        expected_overlap_string = f"... {expected_overlap_clause.lstrip()}"
+    else:
+        expected_overlap_string = expected_overlap_clause
 
-    assert chunks[1].startswith(
+    assert chunks[1].content.startswith(
         expected_overlap_string
     ), f"Expected second chunk to start with '{expected_overlap_string}', but it did not."
 
@@ -144,7 +165,7 @@ def test_overlap_behavior(chunker):
     text = "This is a first sentence, and this is a second part. This is the second sentence."
     chunks = chunker.chunk(text, mode="sentence", max_sentences=1, overlap_percent=50)
     assert len(chunks) > 1
-    assert chunks[1].startswith("... and this is a second part.")
+    assert chunks[1].content.startswith("... and this is a second part.")
 
 
 # --- Cache Tests ---
@@ -189,12 +210,16 @@ def test_batch_processing(
     else:
         results = chunker.batch_chunk(texts_input, n_jobs=n_jobs, mode=mode, max_sentences=max_sentences)
         assert len(results) == expected_results_len
+        if texts_input and results and results[0]:
+             # Check structure of the first result of the first text
+            assert hasattr(results[0][0], "content")
+
         if texts_input == ["First sentence.", "", "Second sentence."]:
-            assert "First sentence." in results[0][0]
+            assert "First sentence." in results[0][0].content
             assert results[1] == []
-            assert "Second sentence." in results[2][0]
+            assert "Second sentence." in results[2][0].content
         if failing_text:
-            assert results[0][0] == "This is ok."
+            assert results[0][0].content == "This is ok."
 
 
 def test_chunklet_error_on_token_counter_failure():

@@ -3,6 +3,7 @@ import sys
 from collections import Counter
 from functools import lru_cache, partial
 from typing import List, Dict, Any, Tuple, Callable, Optional, Union, Set
+from box import Box
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
 from pysbd import Segmenter
 from sentence_splitter import SentenceSplitter
@@ -270,7 +271,7 @@ class PlainTextChunker:
         self,
         sentences: List[str],
         config: ChunkingConfig,
-    ) -> Tuple[List[str], Set[str]]:
+    ) -> List[Box]:
         """
         Groups sentences into chunks based on the specified mode and constraints.
         Applies overlap logic between consecutive chunks.
@@ -280,10 +281,10 @@ class PlainTextChunker:
             config (ChunkingConfig): Configuration for chunking.
 
         Returns:
-            Tuple[List[str], Set[str]]: A list of chunks, where each chunk is a list of sentences, and a set of warning messages.
+            List[Box]: A list of Box objects, where each box represents a chunk with metadata.
         """
-        chunks = []
-        curr_chunk = []
+        chunks_of_sentences = []
+        curr_chunk_sentences = []
         token_count = 0
         sentence_count = 0
         index = 0
@@ -307,44 +308,60 @@ class PlainTextChunker:
                             sentences[index], remaining_tokens, config.token_counter
                         )
                     )
-                    chunks.append(curr_chunk + fitted) # Considered complete
+                    chunks_of_sentences.append(curr_chunk_sentences + fitted) # Considered complete
                     index += 1
                 else:
-                    chunks.append(curr_chunk) # Considered complete
+                    chunks_of_sentences.append(curr_chunk_sentences) # Considered complete
                     unfitted = []
 
                 # Prepare data for next chunk
                 overlap_clauses = self._get_overlap_clauses(
-                    chunks[-1], config.overlap_percent
+                    chunks_of_sentences[-1], config.overlap_percent
                 )
-                curr_chunk = overlap_clauses + unfitted
+                curr_chunk_sentences = overlap_clauses + unfitted
 
                 if config.mode in {"token", "hybrid"}:
                     token_count = sum(
-                        self._count_tokens(s, config.token_counter) for s in curr_chunk
+                        self._count_tokens(s, config.token_counter) for s in curr_chunk_sentences
                     )
-                # Considered all to be sentences
-                # Estimates a residual capacity of 0-2, typical clauses per sentence
-                sentence_count = len(curr_chunk)
+                sentence_count = len(curr_chunk_sentences)
             else:
                 if index < len(sentences):
-                    curr_chunk.append(sentences[index])
+                    curr_chunk_sentences.append(sentences[index])
                 token_count += sentence_tokens
                 sentence_count += 1
                 index += 1
 
         # Add any remnants
-        if curr_chunk:
-            chunks.append(curr_chunk)
+        if curr_chunk_sentences:
+            chunks_of_sentences.append(curr_chunk_sentences)
 
-        # Flatten into strings
-        final_chunks = [" ".join(chunk) for chunk in chunks if chunk]
+        # Create Box objects
+        final_chunks = []
+        for i, chunk_sentences in enumerate(chunks_of_sentences):
+            if not chunk_sentences:
+                continue
+
+            content = " ".join(chunk_sentences)
+            
+            chunk_token_count = None
+            if config.token_counter:
+                chunk_token_count = self._count_tokens(content, config.token_counter)
+
+            chunk_box = Box({
+                "chunk_num": i + 1,
+                "content": content,
+                "sentence_count": len(chunk_sentences),
+                "token_count": chunk_token_count,
+            })
+            final_chunks.append(chunk_box)
+            
         return final_chunks
 
     def _chunk(
         self,
         config: ChunkingConfig,
-    ) -> Tuple[Tuple[str], Tuple[str]]:
+    ) -> Tuple[Tuple[Box], Tuple[str]]:
         """
         Internal method to chunk a given text based on specified parameters.
         Performs sentence splitting and chunk grouping.
@@ -353,7 +370,7 @@ class PlainTextChunker:
             config (ChunkingConfig): The configuration for chunking.
 
         Returns:
-            Tuple[Tuple[str], Tuple[str]]: A tuple of text chunks and a tuple of warning messages.
+            Tuple[Tuple[Box], Tuple[str]]: A tuple of chunk Box objects and a tuple of warning messages.
         """
         all_warnings = set()
         sentences, split_warnings = self._split_by_sentence(config.text, config.lang)
@@ -362,7 +379,7 @@ class PlainTextChunker:
 
         if self.verbose:
             logger.debug(
-                "Text splitted into sentences. Total sentences detected: {}",
+                "Text splitted into sentences. Total sentences detected:જી",
                 len(sentences),
             )
         if not sentences:
@@ -390,7 +407,7 @@ class PlainTextChunker:
     def _chunk_cached(
         self,
         config: ChunkingConfig,
-    ) -> Tuple[Tuple[str], Tuple[str]]:
+    ) -> Tuple[Tuple[Box], Tuple[str]]:
         """
         Cached version of the `_chunk` method, leveraging LRU caching for performance.
         """
@@ -408,7 +425,7 @@ class PlainTextChunker:
         offset: int = 0,
         token_counter: Optional[Callable[[str], int]] = None,
         _batch_context: bool = False,
-    ) -> List[str]:
+    ) -> List[Box]:
         """
         Chunks a single text into smaller pieces based on specified parameters.
         Supports multiple chunking modes (sentence, token, hybrid), clause-level overlap,
@@ -425,7 +442,7 @@ class PlainTextChunker:
             offset (int): Starting sentence offset for chunking. Defaults to 0.
 
         Returns:
-            List[str]: A list of text chunks.
+            List[Box]: A list of Box objects, where each object represents a chunk with its metadata.
 
         Raises:
             InvalidInputError: If any chunking configuration parameter is invalid.
@@ -494,7 +511,7 @@ class PlainTextChunker:
         offset: int = 0,
         n_jobs: Optional[int] = None,
         token_counter: Optional[Callable[[str], int]] = None,
-    ) -> List[List[str]]:
+    ) -> List[List[Box]]:
         """
         Processes a batch of texts in parallel, splitting each into chunks.
         Leverages multiprocessing for efficient batch chunking.
@@ -513,7 +530,7 @@ class PlainTextChunker:
             token_counter: Optional token counting function. Required for token-based modes.
 
         Returns:
-            A list of lists, where each inner list contains the chunks for the corresponding input text.
+            A list of lists, where each inner list contains the Box objects for the corresponding input text.
             The order of texts is preserved in the output.
 
         Raises:
