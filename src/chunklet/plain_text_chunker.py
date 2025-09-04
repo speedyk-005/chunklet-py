@@ -9,10 +9,10 @@ from pysbd import Segmenter
 from sentence_splitter import SentenceSplitter
 from loguru import logger
 from pydantic import ValidationError
-from .utils.detect_text_language import detect_text_language
-from .utils.universal_splitter import UniversalSplitter
-from .models import CustomSplitterConfig, ChunkletInitConfig, ChunkingConfig
-from .exceptions import (
+from chunklet.utils.detect_text_language import detect_text_language
+from chunklet.utils.universal_splitter import UniversalSplitter
+from chunklet.models import CustomSplitterConfig, ChunkletInitConfig, ChunkingConfig
+from chunklet.exceptions import (
     ChunkletError,
     InvalidInputError,
     TokenNotProvidedError,

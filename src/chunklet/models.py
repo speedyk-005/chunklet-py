@@ -6,7 +6,7 @@ from pydantic import (
     model_validator,
     ConfigDict,
 )
-from .exceptions import TokenNotProvidedError
+from chunklet.exceptions import TokenNotProvidedError
 
 class CustomSplitterConfig(BaseModel):
     name: str

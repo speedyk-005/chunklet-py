@@ -6,7 +6,8 @@ import os
 import glob
 import warnings
 from importlib.metadata import version, PackageNotFoundError # New import
-from .plain_text_chunker import PlainTextChunker
+from chunklet import __version__
+from chunklet.plain_text_chunker import PlainTextChunker
 
 try:
     __version__ = version("chunklet")
