@@ -285,24 +285,23 @@ class PlainTextChunker:
         """
         chunks_of_sentences = []
         curr_chunk_sentences = []
-        token_count = 0
+        curr_chunk_token_count = 0 # New variable for incremental token count
         sentence_count = 0
         index = 0
         while index < len(sentences):
-            # Only calculate sentence_tokens if needed for token-based chunking
             if config.mode in {"token", "hybrid"}:
                 sentence_tokens = self._count_tokens(
                     sentences[index], config.token_counter
                 )
-            else:  # mode is "sentence"
-                sentence_tokens = 0  # Not used for chunking logic in sentence mode
+            else:
+                sentence_tokens = 0
 
             if (
-                token_count + sentence_tokens > config.max_tokens
+                curr_chunk_token_count + sentence_tokens > config.max_tokens
                 or sentence_count + 1 > config.max_sentences
             ):
-                if token_count + sentence_tokens > config.max_tokens:
-                    remaining_tokens = config.max_tokens - token_count
+                if curr_chunk_token_count + sentence_tokens > config.max_tokens:
+                    remaining_tokens = config.max_tokens - curr_chunk_token_count
                     fitted, unfitted = (
                         self._find_clauses_that_fit(
                             sentences[index], remaining_tokens, config.token_counter
@@ -319,16 +318,18 @@ class PlainTextChunker:
                     chunks_of_sentences[-1], config.overlap_percent
                 )
                 curr_chunk_sentences = overlap_clauses + unfitted
-
+                
+                # Incrementally update token_count for the new curr_chunk_sentences
                 if config.mode in {"token", "hybrid"}:
-                    token_count = sum(
-                        self._count_tokens(s, config.token_counter) for s in curr_chunk_sentences
-                    )
+                    curr_chunk_token_count = sum(self._count_tokens(s, config.token_counter) for s in overlap_clauses)
+                    if unfitted:
+                        curr_chunk_token_count += self._count_tokens(" ".join(unfitted), config.token_counter)
                 sentence_count = len(curr_chunk_sentences)
             else:
                 if index < len(sentences):
                     curr_chunk_sentences.append(sentences[index])
-                token_count += sentence_tokens
+                if config.mode in {"token", "hybrid"}:
+                    curr_chunk_token_count += sentence_tokens
                 sentence_count += 1
                 index += 1
 
@@ -511,6 +512,7 @@ class PlainTextChunker:
         offset: int = 0,
         n_jobs: Optional[int] = None,
         token_counter: Optional[Callable[[str], int]] = None,
+        show_progress: bool = True,
     ) -> List[List[Box]]:
         """
         Processes a batch of texts in parallel, splitting each into chunks.
@@ -569,20 +571,35 @@ class PlainTextChunker:
         chunk_func = partial(self.chunk, **params)
         results = []
 
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            transient=True,
-        ) as progress:
-            task = progress.add_task("[green]Processing...", total=len(texts))
+        if show_progress:
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                transient=True,
+            ) as progress:
+                task = progress.add_task("[green]Processing...", total=len(texts))
 
+                if n_jobs == 1:
+                    for text in texts:
+                        try:
+                            results.append(chunk_func(text))
+                            progress.update(task, advance=1)
+                        except Exception as e:
+                            logger.error(f"A task in batch_chunk failed: {e}. Returning partial results.")
+                            break
+                else:
+                    from mpire import WorkerPool # Lazy import, only needed there. 
+                    with WorkerPool(n_jobs=n_jobs) as executor:
+                        for result in executor.imap(chunk_func, texts):
+                            results.append(result)
+                            progress.update(task, advance=1)
+        else: # No progress bar
             if n_jobs == 1:
                 for text in texts:
                     try:
                         results.append(chunk_func(text))
-                        progress.update(task, advance=1)
                     except Exception as e:
                         logger.error(f"A task in batch_chunk failed: {e}. Returning partial results.")
                         break
@@ -591,7 +608,6 @@ class PlainTextChunker:
                 with WorkerPool(n_jobs=n_jobs) as executor:
                     for result in executor.imap(chunk_func, texts):
                         results.append(result)
-                        progress.update(task, advance=1)
         
         if not results:
             return []
