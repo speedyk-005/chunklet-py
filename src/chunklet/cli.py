@@ -6,7 +6,7 @@ import os
 import glob
 import warnings
 from importlib.metadata import version, PackageNotFoundError # New import
-from .core import Chunklet
+from .plain_text_chunker import PlainTextChunker
 
 try:
     __version__ = version("chunklet")
@@ -181,7 +181,7 @@ def main():
     if args.tokenizer_command:
         token_counter = create_external_tokenizer(args.tokenizer_command)
 
-    chunker = Chunklet(
+    chunker = PlainTextChunker(
         verbose=args.verbose,
         use_cache=not args.no_cache,
         token_counter=token_counter,

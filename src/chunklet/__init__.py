@@ -10,14 +10,14 @@ The core functionality is provided by the `Chunklet` class, which can be
 imported directly from the package alongside execptions and schemas models.
 """
 
-from .core import Chunklet
+from .plain_text_chunker import PlainTextChunker
 from .exceptions import ChunkletError, InvalidInputError, TokenNotProvidedError
 from .models import CustomSplitterConfig, ChunkletInitConfig, ChunkingConfig
 
 __version__ = "1.4.0"
 
 __all__ = [
-    "Chunklet",
+    "PlainTextChunker",
     "ChunkletError",
     "InvalidInputError",
     "TokenNotProvidedError",

@@ -4,7 +4,7 @@
 
 ---
 <p align="center">
-  <img src="https://github.com/speedyk-005/chunklet-py/blob/main/assets/logo.png?raw=true" alt="Chunklet Logo" width="300"/>
+  <img src="https://github.com/speedyk-005/chunklet-py/blob/main/assets/logo.png?raw=true" alt="Chunklet-py Logo" width="300"/>
 </p>
 ---
 
@@ -12,9 +12,9 @@
 
 So, you've got a mountain of text and a tiny little pickaxe? Fear not! You've stumbled upon the official (and slightly quirky) documentation for **Chunklet-py**, your new heavy machinery for demolishing text into perfectly sized, context-aware chunks. 
 
-At its core, Chunklet is a smart text chunking utility. Whether you're preparing data for Large Language Models (LLMs), building a Retrieval-Augmented Generation (RAG) system, or just need to break down a long document, Chunklet has your back. It handles the messy business of text segmentation so you don't have to.
+At its core, PlainTextChunker is a smart text chunking utility. Whether you're preparing data for Large Language Models (LLMs), building a Retrieval-Augmented Generation (RAG) system, or just need to break down a long document, Chunklet has your back. It handles the messy business of text segmentation so you don't have to.
 
-Chunklet is a Python library for multilingual, context-aware text chunking optimized for large language model (LLM) and retrieval-augmented generation (RAG) pipelines. It splits long documents into manageable segments while preserving semantic boundaries, enabling efficient indexing, embedding, and inference.
+Chunklet-py is a Python library for multilingual, context-aware text chunking optimized for large language model (LLM) and retrieval-augmented generation (RAG) pipelines. It splits long documents into manageable segments while preserving semantic boundaries, enabling efficient indexing, embedding, and inference.
 
 ## Did You Know?
 

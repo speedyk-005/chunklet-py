@@ -64,7 +64,7 @@ SENTENCESPLITTER_UNIQUE_LANGUAGES = {
 CLAUSE_END_TRIGGERS = r";,’：—)&"
 
 
-class Chunklet:
+class PlainTextChunker:
     """
     A powerful text chunking utility offering flexible strategies for optimal text segmentation.
 

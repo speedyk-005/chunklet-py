@@ -1,6 +1,6 @@
 import pytest
 from typing import List
-from chunklet import Chunklet, ChunkletError, InvalidInputError, TokenNotProvidedError, CustomSplitterConfig
+from chunklet import PlainTextChunker, ChunkletError, InvalidInputError, TokenNotProvidedError, CustomSplitterConfig
 from pydantic import ValidationError
 from loguru import logger
 
@@ -40,7 +40,7 @@ def chunker():
     def simple_token_counter(text: str) -> int:
         return len(text.split())
 
-    return Chunklet(token_counter=simple_token_counter)
+    return PlainTextChunker(token_counter=simple_token_counter)
 
 
 # --- Core Tests ---
@@ -100,7 +100,7 @@ def test_preview_works(chunker):
 def test_token_counter_validation(mode):
     """Test that a TokenNotProvidedError is raised when a token_counter is missing for token/hybrid modes."""
     with pytest.raises(TokenNotProvidedError):
-        Chunklet().chunk("some text", mode=mode)
+        PlainTextChunker().chunk("some text", mode=mode)
 
 
 # --- Fallback Splitter Test ---
@@ -150,7 +150,7 @@ def test_overlap_behavior(chunker):
 # --- Cache Tests ---
 def test_non_cached_chunking(chunker):
     """Test chunking with cache disabled."""
-    non_cached_chunker = Chunklet(use_cache=False, token_counter=chunker.token_counter)
+    non_cached_chunker = PlainTextChunker(use_cache=False, token_counter=chunker.token_counter)
     chunks = non_cached_chunker.chunk(ENGLISH_TEXT)
     assert chunks
 
@@ -203,7 +203,7 @@ def test_chunklet_error_on_token_counter_failure():
     def failing_token_counter(text: str) -> int:
         raise Exception("Token counter failed intentionally")
 
-    chunker = Chunklet(token_counter=failing_token_counter)
+    chunker = PlainTextChunker(token_counter=failing_token_counter)
     with pytest.raises(ChunkletError, match="Token counter failed for text:"):
         chunker.chunk("some text", mode="token")
 
@@ -234,7 +234,7 @@ def test_custom_splitter_basic_usage():
     ]
 
     # Initialize Chunklet with the custom splitter
-    chunker = Chunklet(custom_splitters=custom_splitters)
+    chunker = PlainTextChunker(custom_splitters=custom_splitters)
 
     text = "ThisXisXaXtestXstring."
     expected_sentences = ["This", "is", "a", "test", "string."]

@@ -1,4 +1,6 @@
-site_name: Chunklet Documentation
+site_name: chunklet-py Documentation
+site_url: https://speedyk-005.github.io/chunklet-py/
+site_description: A smart multilingual text chunker for LLMs, RAG, and beyond.
 repo_url: https://github.com/speedyk-005/chunklet-py
 
 theme:
