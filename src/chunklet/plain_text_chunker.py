@@ -380,7 +380,7 @@ class PlainTextChunker:
 
         if self.verbose:
             logger.debug(
-                "Text splitted into sentences. Total sentences detected:જી",
+                "Text splitted into sentences. Total sentences detected: {}",
                 len(sentences),
             )
         if not sentences:

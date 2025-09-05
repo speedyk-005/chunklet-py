@@ -12,7 +12,7 @@ def detect_text_language(text: str) -> Tuple[str, float]:
         - Uses log-sum-exp trick for numerical stability.
         - Ranking is trimmed to the top 10 candidates.
 
-    Parameters:
+    Args:
         text (str): The text to classify.
 
     Returns:

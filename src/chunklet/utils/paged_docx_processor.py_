@@ -1,0 +1,93 @@
+
+import zipfile
+import xml.etree.ElementTree as ET
+from io import BytesIO
+
+# XML namespaces used in DOCX files
+NAMESPACES = {
+    'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+}
+
+class PagedDOCXProcessor:
+    """
+    Extracts text from a DOCX file, preserving page breaks.
+
+    This processor reads the raw XML of a .docx file to reconstruct its
+    text content, inserting a form feed character ('\f') where manual
+    page breaks are found.
+
+    Note: This method does NOT convert content to Markdown (e.g., headings,
+    lists, bold) like the mammoth-based processor does. It extracts plain
+    text only.
+    """
+
+    def extract_text_with_pages(self, docx_path: str) -> str:
+        """
+        Extracts text and replaces page breaks with the form feed character.
+
+        Args:
+            docx_path: The path to the .docx file.
+
+        Returns:
+            A string containing the document's text with '\f' for page breaks.
+        """
+        text_parts = []
+        
+        try:
+            # Open the .docx file (which is a zip archive)
+            with zipfile.ZipFile(docx_path, 'r') as docx_zip:
+                # Read the main document XML
+                xml_content = docx_zip.read('word/document.xml')
+                
+                # Parse the XML content
+                tree = ET.fromstring(xml_content)
+                
+                # The body contains all the content
+                body = tree.find('w:body', NAMESPACES)
+                
+                if body is None:
+                    return ""
+
+                # Iterate through all paragraphs and other elements in the body
+                for elem in body.iter():
+                    # Check for a page break run
+                    if elem.tag == f"{{{NAMESPACES['w']}}}br":
+                        if elem.attrib.get(f"{{{NAMESPACES['w']}}}type") == 'page':
+                            text_parts.append('\f')
+                    # Check for a text run
+                    elif elem.tag == f"{{{NAMESPACES['w']}}}t":
+                        if elem.text:
+                            text_parts.append(elem.text)
+                    # Paragraphs add a newline for separation
+                    elif elem.tag == f"{{{NAMESPACES['w']}}}p":
+                        text_parts.append('\n')
+
+        except (zipfile.BadZipFile, KeyError):
+            raise FileNotFoundError(f"Could not read '{docx_path}'. It may not be a valid .docx file.")
+
+        # Join all parts and clean up whitespace
+        full_text = "".join(text_parts)
+        # Normalize newlines and remove leading/trailing whitespace
+        return full_text.strip()
+
+# Example Usage:
+if __name__ == '__main__':
+    # Path to the sample DOCX file
+    docx_file_path = "samples/Lorem.docx" 
+
+    # --- Now, use the processor ---
+    processor = PagedDOCXProcessor()
+        
+    print(f"\nExtracting text from '{docx_file_path}'...")
+        
+    content = processor.extract_text_with_pages(docx_file_path)
+        
+    print("\n--- Extracted Content (\f represents a page break) ---")
+    # The repr() function is used to make '\f' and '\n' visible
+    print(repr(content)) 
+        
+    print("\n--- Content split by page break ---")
+    pages = content.split('\f')
+    for i, page_content in enumerate(pages):
+        print(f"*** Page {i+1} ***")
+        print(page_content.strip())

@@ -4,7 +4,7 @@
 
 ---
 <p align="center">
-  <img src="https://github.com/speedyk-005/chunklet-py/blob/main/assets/logo.png?raw=true" alt="Chunklet-py Logo" width="300"/>
+  <img src="https://github.com/speedyk-005/chunklet-py/blob/main/logo.png?raw=true" alt="Chunklet-py Logo" width="300"/>
 </p>
 ---
 

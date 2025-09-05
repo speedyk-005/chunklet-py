@@ -1,5 +1,6 @@
 import pytest
 from typing import List
+from unittest.mock import patch
 from chunklet import PlainTextChunker, ChunkletError, InvalidInputError, TokenNotProvidedError, CustomSplitterConfig
 from pydantic import ValidationError
 from loguru import logger
@@ -52,6 +53,7 @@ def test_all_modes_produce_chunks(
     chunker, mode, max_tokens, max_sentences, expected_chunks
 ):
     """Verify all chunking modes produce output with expected chunk counts and structure."""
+    chunker.verbose = True
     chunks = chunker.chunk(
         ENGLISH_TEXT, mode=mode, max_tokens=max_tokens, max_sentences=max_sentences
     )
@@ -80,7 +82,7 @@ def test_all_modes_produce_chunks(
 
 
 def test_acronyms_preserved(chunker):
-    """Verify special patterns remain intact"""
+    """Verify special patterns like acronyms remain intact after chunking."""
     chunks = chunker.chunk(ACRONYMS_TEXT, mode="sentence", max_sentences=1)
     assert len(chunks) == 3, "Expected 3 chunks"
     assert "N. A. S. A. related" in chunks[0].content, "Acronym should be in the first chunk"
@@ -109,7 +111,7 @@ def test_offset_behavior(chunker, offset, expect_chunks):
 
 
 def test_preview_works(chunker):
-    """Verify preview produces output"""
+    """Verify preview_sentences produces a list of sentences."""
     sentences, _ = chunker.preview_sentences(ENGLISH_TEXT)
     assert len(sentences) == 19, "Should get sentence preview"
 
@@ -124,12 +126,17 @@ def test_token_counter_validation(mode):
 
 # --- Fallback Splitter Test ---
 def test_fallback_splitter(chunker):
-    """Test fallback splitter on unsupported language text (single string input)."""
+    """Test fallback splitter on unsupported language text and low confidence language detection."""
     # Should fallback to the regex splitter
     chunks = chunker.chunk(UNSUPPORTED_TEXT, max_sentences=1, mode="sentence")
     assert len(chunks) == 2, "Expected 2 chunks for the unsupported language text"
     assert "Bonjour tout moun!" in chunks[0].content
     assert "Non pa mwen se Bob." in chunks[1].content
+
+    # Test low confidence language detection
+    with patch("chunklet.plain_text_chunker.detect_text_language", return_value=("en", 0.5)):
+        sentences, warnings = chunker._split_by_sentence("This is a test.", "auto")
+        assert "Low confidence in language detected" in "".join(warnings)
 
 
 # --- Overlap Related Tests ---
@@ -166,6 +173,12 @@ def test_overlap_behavior(chunker):
     chunks = chunker.chunk(text, mode="sentence", max_sentences=1, overlap_percent=50)
     assert len(chunks) > 1
     assert chunks[1].content.startswith("... and this is a second part.")
+
+    # Test _get_overlap_clauses directly
+    sentences = ["This is the first sentence.", "This is the second sentence, with a clause.", "This is the third sentence."]
+    overlap = chunker._get_overlap_clauses(sentences, 50)
+    assert isinstance(overlap, list)
+    assert len(overlap) > 0
 
 
 # --- Cache Tests ---
@@ -246,6 +259,7 @@ def test_batch_chunk_invalid_n_jobs(chunker, n_jobs_value):
         chunker.batch_chunk(["some text"], n_jobs=n_jobs_value)
 
 def test_custom_splitter_basic_usage():
+    """Test basic usage of a custom splitter."""
     # Define a simple custom splitter that splits by 'X'
     def custom_x_splitter(text: str) -> List[str]:
         return [s.strip() for s in text.split('X') if s.strip()]
@@ -267,3 +281,11 @@ def test_custom_splitter_basic_usage():
     sentences, _ = chunker.preview_sentences(text, lang="en")
 
     assert sentences == expected_sentences
+
+def test_init_validation_error():
+    """Test that InvalidInputError is raised for invalid initialization parameters."""
+    with pytest.raises(InvalidInputError, match="Invalid chunking configuration"):
+        PlainTextChunker(custom_splitters=[
+            CustomSplitterConfig(name="invalid", languages="en", callback=lambda x: x)
+        ], token_counter="not a callable")
+

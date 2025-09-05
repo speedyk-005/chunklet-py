@@ -2,7 +2,7 @@
 
 ---
 <p align="center">
-  <img src="https://github.com/speedyk-005/chunklet-py/blob/main/assets/logo.png?raw=true" alt="Chunklet Logo" width="300"/>
+  <img src="https://github.com/speedyk-005/chunklet-py/blob/main/logo.png?raw=true" alt="Chunklet Logo" width="300"/>
 </p>
 ---
 
@@ -102,7 +102,7 @@ See the [Changelog](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGEL
 ## 🧪 Planned Features
 
 - [x] CLI interface with --file, --mode, --overlap-percent, etc.
-- [ ] Documents chunking with metadata.
+- [x] Documents chunking with metadata.
 - [ ] Code chunking based on interest point.
 
 ---

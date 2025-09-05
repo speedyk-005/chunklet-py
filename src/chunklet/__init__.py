@@ -11,14 +11,28 @@ imported directly from the package alongside execptions and schemas models.
 """
 
 from .plain_text_chunker import PlainTextChunker
+from .document_chunker import DocumentChunker
 from .exceptions import ChunkletError, InvalidInputError, TokenNotProvidedError
 from .models import CustomSplitterConfig, ChunkletInitConfig, ChunkingConfig
+from .utils import (
+    DOCXProcessor,
+    PDFProcessor,
+    rst_to_markdown,
+    UniversalSplitter,
+    detect_text_language,
+)
 
 __version__ = "1.4.0"
 
 __all__ = [
     "PlainTextChunker",
+    "DocumentChunker",
     "ChunkletError",
     "InvalidInputError",
     "TokenNotProvidedError",
+    "DOCXProcessor",
+    "PDFProcessor",
+    "rst_to_markdown",
+    "UniversalSplitter",
+    "detect_text_language",
 ]

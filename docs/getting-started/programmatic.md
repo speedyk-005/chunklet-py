@@ -517,7 +517,7 @@ class PDFProcessor:
 
 
 # --- Usage example ---
-pdf_path = "examples/Sample.pdf"
+pdf_path = "examples/sample.pdf"
 processor = PDFProcessor(pdf_path)
 
 # Chunk all pages by sentences
