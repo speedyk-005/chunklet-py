@@ -62,8 +62,8 @@ Parameters:
 - `text` (str): The input text to chunk.
 - `lang` (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
 - `mode` (str): Chunking mode ('sentence', 'token', or 'hybrid'). Defaults to "sentence".
-- `max_tokens` (int): Maximum number of tokens per chunk. Defaults to 512.
-- `max_sentences` (int): Maximum number of sentences per chunk. Defaults to 100.
+- `max_tokens` (int): Maximum number of tokens per chunk. Defaults to 256.
+- `max_sentences` (int): Maximum number of sentences per chunk. Defaults to 12.
 - `overlap_percent` (Union[int, float]): Percentage of overlap between chunks (0-85). Defaults to 20.
 - `offset` (int): Starting sentence offset for chunking. Defaults to 0.
 - `token_counter` (Optional[Callable[[str], int]]): A function to count tokens in a string.
@@ -99,7 +99,7 @@ chunks = chunker.chunk(
     text=text,
     mode="sentence",         # Chunking mode. Default is 'sentence'
     lang="auto",             # Language of the text. Default is 'auto'
-    max_sentences=2,         # Max sentences per chunk. Default is 100
+    max_sentences=2,         # Max sentences per chunk. Default is 12
     overlap_percent=0,       # Overlap between chunks. Default is 20
     offset=0                 # Start offset. Default is 0
 )
@@ -252,8 +252,8 @@ Parameters:
 - `texts` (List[str]): List of input texts to be chunked.
 - `lang` (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
 - `mode` (str): Chunking mode ('sentence', 'token', or 'hybrid'). Defaults to "sentence".
-- `max_tokens` (int): Maximum number of tokens per chunk. Defaults to 512.
-- `max_sentences` (int): Maximum number of sentences per chunk. Defaults to 100.
+- `max_tokens` (int): Maximum number of tokens per chunk. Defaults to 256.
+- `max_sentences` (int): Maximum number of sentences per chunk. Defaults to 12.
 - `overlap_percent` (Union[int, float]): Percentage of overlap between chunks (0-85). Defaults to 20.
 - `offset` (int): Starting sentence offset for chunking. Defaults to 0.
 - `n_jobs` (Optional[int]): Number of parallel workers to use. If None, uses all available CPUs. Must be >= 1 if specified.
@@ -587,3 +587,4 @@ To get the most out of Chunklet and ensure efficient and accurate text processin
 *   **Leverage Batch Processing:** For processing multiple documents, always prefer `batch_chunk()` over iterating and calling `chunk()` individually. `batch_chunk()` is optimized for parallel processing and will significantly speed up your workflow.
 *   **Monitor Warnings:** Pay attention to the warnings Chunklet emits. They often provide valuable insights into potential optimizations (e.g., language detection confidence) or inform you about fallback mechanisms being used.
 *   **Consider Custom Splitters for Niche Cases:** If you're working with highly specialized text (e.g., legal documents, medical transcripts) or languages not fully supported by `pysbd` or `sentence-splitter`, implementing a `custom_splitter` can provide superior sentence boundary detection tailored to your needs.
+

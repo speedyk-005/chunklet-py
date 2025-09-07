@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.0] - 2025-09-06
+
+### Added
+
+- **CLI Multiple Input Files:** Added an `--input-files` argument to allow processing of multiple specific files.
+- **CLI Metadata Flag:** Added a `-m, --metadata` flag to the CLI to display chunk metadata in the output.
+- **Document Chunker:** Introduced `DocumentChunker` to handle various file formats like `.pdf`, `.docx`, `.txt`, `.md`, `.rst`, `.rtf`, `.xls`, `.xlsx`, and `.csv`.
+- **Show Progress Parameter:** Added `show_progress` parameter to `batch_chunk` in `PlainTextChunker` to allow users to control the display of the progress bar.
+- **Custom Processors:** Introduced support for custom document processors, allowing users to define their own logic for extracting text from various file types.
+- **Test Coverage:** Improved test coverage for `PlainTextChunker`.
+
+### Changed
+
+- **Project Restructuring:**
+    - Renamed `src/chunklet/core.py` to `src/chunklet/plain_text_chunker.py`.
+    - Renamed `Chunklet` class to `PlainTextChunker`.
+- **Friendlier Initialization:** Updated `PlainTextChunker` to accept a a list of dict instead of a list of models for more beginner friendly initialization.
+- **Safer Tokenizer Command processing:** Changed `shell=True` to `shell=False` for the subprocess.run call in create_external_tokenizer for enhanced security and predictability. The shlex module is now implicitly used for command parsing when shell=False.
+- **Improved chunking format:** Added a newline between sentences for structured chunking format output. This helps preserving original format better.
+- **Performance Improvement:** Refactored `_group_by_chunk` in `PlainTextChunker` to use incremental token recalculation for better performance.
+- **Absolute Imports:** Converted all relative imports to absolute imports within the `chunklet` package for better clarity and to avoid potential import issues.
+- **Project Layout:** Restructured project by moving the logo to the root and adding a `samples/` directory to store the sample files.
+- **CLI Aliases:** Added `-f` as an alias for `--file` and `-d` as an alias for `--input-dir`.
+- **Default Limits:** Changed the default `max_tokens` from 512 to 256 and `max_sentences` from 100 to 12.
+
+
+### Removed
+
+- **CLI Argument:** Removed the deprecated `--batch` argument.
+
+---
+
 ## [1.4.0] - 2025-08-27
 
 ### Added

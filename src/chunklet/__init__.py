@@ -13,7 +13,12 @@ imported directly from the package alongside execptions and schemas models.
 from .plain_text_chunker import PlainTextChunker
 from .document_chunker import DocumentChunker
 from .exceptions import ChunkletError, InvalidInputError, TokenNotProvidedError
-from .models import CustomSplitterConfig, ChunkletInitConfig, ChunkingConfig
+from .models import (
+    CustomSplitterConfig,
+    PlainTextChunkerConfig,
+    CustomProcessorConfig,
+    ChunkingConfig
+)
 from .utils import (
     DOCXProcessor,
     PDFProcessor,
@@ -22,7 +27,7 @@ from .utils import (
     detect_text_language,
 )
 
-__version__ = "1.4.0"
+__version__ = "2.0.0"
 
 __all__ = [
     "PlainTextChunker",

@@ -2,6 +2,11 @@ try:
     from markdownify import markdownify as md
 except ImportError:
     md = None
+
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
         
 def rst_to_markdown(rst_text: str) -> str:
     """
@@ -36,15 +41,26 @@ def rst_to_markdown(rst_text: str) -> str:
     # Step 1: Convert RST => HTML
     html = publish_string(source=rst_text, writer="html").decode('utf-8')
 
+    if BeautifulSoup is None:
+        raise ImportError(
+            "The 'beautifulsoup4' library is not installed. "
+            "Please install it with 'pip install beautifulsoup4' or install the document processing extras "
+            "with 'pip install 'chunklet-py[document]''"
+        )
+    
+    # Parse HTML and extract body content to remove boilerplate
+    soup = BeautifulSoup(html, 'html.parser')
+    body_content = soup.body.prettify() if soup.body else html # Use prettify for better formatting
+
     # Step 2: Convert HTML => Markdown
-    markdown_text = md(html)
+    markdown_text = md(body_content)
 
     return markdown_text
 
 
 # --- Example usage ---
 if __name__ == "__main__":
-    with open("assets/sample.rst") as f:
+    with open("samples/What_is_rst.rst") as f:
         rst_sample = f.read()
     markdown_result = rst_to_markdown(rst_sample)
     print(markdown_result)

@@ -1,6 +1,6 @@
 [project]
 name = "chunklet-py"
-version = "1.4.0"
+version = "2.0.0"
 description = "A smart multilingual text chunker for LLMs, RAG, and beyond."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
@@ -68,6 +68,8 @@ document = [
   "openpyxl>=3.0.0",
   "docutils>=0.18.0",
   "markdownify>=0.11.0",
+  "striprtf>=0.0.5",
+  "beautifulsoup4>=4.10.0",
 ]
 
 [build-system]

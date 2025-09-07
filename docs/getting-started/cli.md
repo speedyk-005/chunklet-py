@@ -21,8 +21,8 @@ You're about to discover the various ways `chunklet` can dissect your text. We'l
 | `--output-dir` | | Path to a directory to write the output chunks to. | |
 | `--mode` | | Chunking mode: 'sentence', 'token', or 'hybrid'. | `sentence` |
 | `--lang` | | Language of the text (e.g., 'en', 'fr', 'auto'). | `auto` |
-| `--max-tokens` | | Maximum number of tokens per chunk. | `512` |
-| `--max-sentences` | | Maximum number of sentences per chunk. | `100` |
+| `--max-tokens` | | Maximum number of tokens per chunk. | `256` |
+| `--max-sentences` | | Maximum number of sentences per chunk. | `12` |
 | `--overlap-percent` | | Percentage of overlap between chunks (0-85). | `10` |
 | `--offset` | | Starting sentence offset for chunking. | `0` |
 | `-v` | `--verbose` | Enable verbose logging. | |
@@ -382,3 +382,4 @@ To get the most out of the `chunklet` CLI, consider these best practices:
 *   **Monitor Warnings:** Pay attention to the warnings `chunklet` emits. They often provide valuable insights into potential optimizations (e.g., language detection confidence) or inform you about fallback mechanisms being used.
 
 *   **Use a Custom Tokenizer for LLM Alignment:** If you're preparing text for a specific Large Language Model (LLM), integrate its tokenizer using `--tokenizer-command`. This ensures your chunks align perfectly with the LLM's tokenization strategy, preventing truncation issues and optimizing token usage.
+

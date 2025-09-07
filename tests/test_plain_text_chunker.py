@@ -1,10 +1,16 @@
 import pytest
 from typing import List
 from unittest.mock import patch
-from chunklet import PlainTextChunker, ChunkletError, InvalidInputError, TokenNotProvidedError, CustomSplitterConfig
+from chunklet import (
+    PlainTextChunker,
+    ChunkletError,
+    InvalidInputError,
+    TokenNotProvidedError,
+)
 from pydantic import ValidationError
 from loguru import logger
 
+# Silent logging
 logger.remove()
 
 # --- Constants ---
@@ -63,31 +69,18 @@ def test_all_modes_produce_chunks(
     ), f"Expected {expected_chunks} chunks in {mode} mode, but got {len(chunks)}"
 
     # Verify the structure of the first chunk
-    first_chunk = chunks[0]
-    assert hasattr(first_chunk, "chunk_num")
-    assert hasattr(first_chunk, "content")
-    assert hasattr(first_chunk, "sentence_count")
-    assert hasattr(first_chunk, "token_count")
-
-    assert isinstance(first_chunk.chunk_num, int)
-    assert isinstance(first_chunk.content, str)
-    assert isinstance(first_chunk.sentence_count, int)
-    
-    if mode in ["token", "hybrid"]:
-        assert isinstance(first_chunk.token_count, int)
-    
-    assert first_chunk.chunk_num == 1
-    assert len(first_chunk.content) > 0
-    assert first_chunk.sentence_count > 0
+    first_chunk = chunks[0] # first_chunk is now a string
+    assert isinstance(first_chunk, str)
+    assert len(first_chunk) > 0 # Check length of the string
 
 
 def test_acronyms_preserved(chunker):
     """Verify special patterns like acronyms remain intact after chunking."""
     chunks = chunker.chunk(ACRONYMS_TEXT, mode="sentence", max_sentences=1)
     assert len(chunks) == 3, "Expected 3 chunks"
-    assert "N. A. S. A. related" in chunks[0].content, "Acronym should be in the first chunk"
+    assert "N. A. S. A. related" in chunks[0], "Acronym should be in the first chunk"
     assert (
-        "Consider S.1.2 to be important" in chunks[1].content
+        "Consider S.1.2 to be important" in chunks[1]
     ), "S.1 should be in the second chunk"
 
 
@@ -105,7 +98,7 @@ def test_offset_behavior(chunker, offset, expect_chunks):
     chunks = chunker.chunk(ENGLISH_TEXT, offset=offset)
     if expect_chunks:
         assert chunks, f"Should get chunks for offset={offset}"
-        assert len(chunks[0].content) > 0, "Chunk content should not be empty"
+        assert len(chunks[0]) > 0, "Chunk content should not be empty"
     else:
         assert not chunks, f"Should get no chunks for offset={offset}"
 
@@ -130,8 +123,8 @@ def test_fallback_splitter(chunker):
     # Should fallback to the regex splitter
     chunks = chunker.chunk(UNSUPPORTED_TEXT, max_sentences=1, mode="sentence")
     assert len(chunks) == 2, "Expected 2 chunks for the unsupported language text"
-    assert "Bonjour tout moun!" in chunks[0].content
-    assert "Non pa mwen se Bob." in chunks[1].content
+    assert "Bonjour tout moun!" in chunks[0]
+    assert "Non pa mwen se Bob." in chunks[1]
 
     # Test low confidence language detection
     with patch("chunklet.plain_text_chunker.detect_text_language", return_value=("en", 0.5)):
@@ -152,7 +145,7 @@ def test_overlap_behavior(chunker):
     assert len(chunks) > 1, "Overlap should produce multiple chunks"
 
     # Manually calculate the expected overlap to create a robust test
-    first_chunk_content = chunks[0].content
+    first_chunk_content = chunks[0]
     clauses = chunker.clause_end_regex.split(first_chunk_content)
 
     overlap_num = round(len(clauses) * 0.33)
@@ -164,7 +157,7 @@ def test_overlap_behavior(chunker):
     else:
         expected_overlap_string = expected_overlap_clause
 
-    assert chunks[1].content.startswith(
+    assert chunks[1].startswith(
         expected_overlap_string
     ), f"Expected second chunk to start with '{expected_overlap_string}', but it did not."
 
@@ -172,7 +165,7 @@ def test_overlap_behavior(chunker):
     text = "This is a first sentence, and this is a second part. This is the second sentence."
     chunks = chunker.chunk(text, mode="sentence", max_sentences=1, overlap_percent=50)
     assert len(chunks) > 1
-    assert chunks[1].content.startswith("... and this is a second part.")
+    assert chunks[1].startswith("... and this is a second part.")
 
     # Test _get_overlap_clauses directly
     sentences = ["This is the first sentence.", "This is the second sentence, with a clause.", "This is the third sentence."]
@@ -186,7 +179,8 @@ def test_non_cached_chunking(chunker):
     """Test chunking with cache disabled."""
     non_cached_chunker = PlainTextChunker(use_cache=False, token_counter=chunker.token_counter)
     chunks = non_cached_chunker.chunk(ENGLISH_TEXT)
-    assert chunks
+    assert chunks # chunks is List[str], so this is fine
+    assert isinstance(chunks[0], str) # Add a check for string type
 
 
 # --- Batch Processing Tests ---
@@ -225,14 +219,14 @@ def test_batch_processing(
         assert len(results) == expected_results_len
         if texts_input and results and results[0]:
              # Check structure of the first result of the first text
-            assert hasattr(results[0][0], "content")
+            assert isinstance(results[0][0], str) # Check if it's a string
 
         if texts_input == ["First sentence.", "", "Second sentence."]:
-            assert "First sentence." in results[0][0].content
+            assert "First sentence." in results[0][0] # Direct access
             assert results[1] == []
-            assert "Second sentence." in results[2][0].content
+            assert "Second sentence." in results[2][0] # Direct access
         if failing_text:
-            assert results[0][0].content == "This is ok."
+            assert results[0][0] == "This is ok." # Direct access
 
 
 def test_chunklet_error_on_token_counter_failure():
@@ -265,11 +259,11 @@ def test_custom_splitter_basic_usage():
         return [s.strip() for s in text.split('X') if s.strip()]
 
     custom_splitters = [
-        CustomSplitterConfig(
-            name="XSplitter",
-            languages="en",
-            callback=custom_x_splitter
-        )
+        {
+            "name":"XSplitter",
+            "languages":"en",
+            "callback":custom_x_splitter,
+        }
     ]
 
     # Initialize Chunklet with the custom splitter
@@ -285,7 +279,11 @@ def test_custom_splitter_basic_usage():
 def test_init_validation_error():
     """Test that InvalidInputError is raised for invalid initialization parameters."""
     with pytest.raises(InvalidInputError, match="Invalid chunking configuration"):
-        PlainTextChunker(custom_splitters=[
-            CustomSplitterConfig(name="invalid", languages="en", callback=lambda x: x)
-        ], token_counter="not a callable")
-
+        invalid_splitters = [
+            {
+                "name":"XSplitter",
+                "languages":11,
+                "callback":"not a callable",
+            }
+        ]
+        PlainTextChunker(custom_splitters=invalid_splitters)

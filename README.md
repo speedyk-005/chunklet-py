@@ -91,20 +91,17 @@ For detailed definitions, refer to the [Models](https://github.com/speedyk-005/c
 
 ## Troubleshooting & Reference
 
-*   [**Exceptions and Warnings:**](https://github.com/speedyk-005/chunklet-py/blob/main/docs/exceptions-and-warnings.md) Understand the various errors and warnings Chunklet might throw your way, and how to deal with them.
+[**Exceptions and Warnings:**](https://github.com/speedyk-005/chunklet-py/blob/main/docs/exceptions-and-warnings.md) Understand the various errors and warnings Chunklet might throw your way, and how to deal with them.
 
-## Changelog
+## 🗺️ Roadmap
 
-See the [Changelog](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md) for a history of changes.
+- [ ] **Code Chunking:** Intelligent chunking of code based on points of interest (e.g., functions, classes).
+- [ ] **Memory Optimization:** Further improvements in memory handling for very large files.
 
----
+### Changelog
 
-## 🧪 Planned Features
-
-- [x] CLI interface with --file, --mode, --overlap-percent, etc.
-- [x] Documents chunking with metadata.
-- [ ] Code chunking based on interest point.
-
+For a detailed history of changes, please see the [Changelog](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md).
+          
 ---
 
 ## 💡Projects that inspired me

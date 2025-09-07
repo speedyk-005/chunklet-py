@@ -11,7 +11,8 @@ from loguru import logger
 from pydantic import ValidationError
 from chunklet.utils.detect_text_language import detect_text_language
 from chunklet.utils.universal_splitter import UniversalSplitter
-from chunklet.models import CustomSplitterConfig, ChunkletInitConfig, ChunkingConfig
+from chunklet.utils.error_utils import pretty_errors
+from chunklet.models import CustomSplitterConfig, PlainTextChunkerConfig, ChunkingConfig
 from chunklet.exceptions import (
     ChunkletError,
     InvalidInputError,
@@ -74,7 +75,7 @@ class PlainTextChunker:
     - Clause-Level Overlap: Ensures semantic continuity between chunks by overlapping at natural clause boundaries.
     - Multilingual Support: Automatically detects language and uses appropriate splitting algorithms for over 30 languages.
     - Pluggable Token Counters: Integrate custom token counting functions (e.g., for specific LLM tokenizers).
-    - Pluggable Sentence splitters: Integrate custom splitters for more specific languages.
+    - Pluggable Sentence splitters: Integrate custom splitters for languages or requirements.
     - Parallel Processing: Efficiently handles batch chunking of multiple texts using multiprocessing.
     - Caching: Speeds up repeated chunking operations with LRU caching.
     """
@@ -93,20 +94,34 @@ class PlainTextChunker:
             verbose (bool): Enable verbose logging.
             use_cache (bool): Enable caching on chunking.
             token_counter (Callable): Counts tokens in a sentence for token-based chunking.
-            custom_splitters (CustomSplitterConfig): A list of custom sentence splitters.
-                Each splitter should be a dictionary with 'name' (str), 'languages' (str or Iterable[str]), and a 'callback' (Callable[[str], List[str]]) keys. 
+            custom_splitters (Optional[List[Dict]]): A list of custom sentence splitters.
+                Each splitter should be a dictionary with 'name' (str),
+                'languages' (str or Iterable[str]) (e.g., 'en', ['en', 'fr'])."),
+                and a 'callback' (Callable[[str], List[str]])
+                (Where the input is a path string) keys. 
         """
         # Validate parameters
         try:
-            config = ChunkletInitConfig(
+            config = PlainTextChunkerConfig(
                 verbose=verbose,
                 use_cache=use_cache,
                 token_counter=token_counter,
                 custom_splitters=custom_splitters,
             )
         except ValidationError as e:
-            pretty_err = self.pretty_errors(e)
+            pretty_err = pretty_errors(e)
             raise InvalidInputError(f"Invalid chunking configuration: {pretty_err}")
+
+        if not custom_splitters:
+            custom_splitters = {}
+        try:
+            self.custom_splitters = [
+                CustomSplitterConfig.model_validate(proc)
+                for proc in custom_splitters
+            ]
+        except ValidationError as e:
+            pretty_err = pretty_errors(e)
+            raise InvalidInputError(pretty_err)
             
         self.verbose = config.verbose
         self.use_cache = config.use_cache
@@ -127,15 +142,6 @@ class PlainTextChunker:
         # Universal sentence splitter for fallback
         self.universal_splitter = UniversalSplitter()
 
-    def pretty_errors(self, e: ValidationError):
-        """Makes pydantic validation error more readable"""
-        lines = []
-        for err in e.errors():
-            field = " ->  ".join(str(loc) for loc in err["loc"])
-            msg = err["msg"]
-            lines.append(f"[{field}] {msg}")
-        return "\n".join(lines)
-        
     def _split_by_sentence(self, text: str, lang: str) -> Tuple[List[str], Set[str]]:
         """
         Splits text into sentences using language-specific algorithms.
@@ -271,7 +277,7 @@ class PlainTextChunker:
         self,
         sentences: List[str],
         config: ChunkingConfig,
-    ) -> List[Box]:
+    ) -> List[str]:
         """
         Groups sentences into chunks based on the specified mode and constraints.
         Applies overlap logic between consecutive chunks.
@@ -281,7 +287,7 @@ class PlainTextChunker:
             config (ChunkingConfig): Configuration for chunking.
 
         Returns:
-            List[Box]: A list of Box objects, where each box represents a chunk with metadata.
+            List[str]: A list of chunk strings.
         """
         chunks_of_sentences = []
         curr_chunk_sentences = []
@@ -337,32 +343,20 @@ class PlainTextChunker:
         if curr_chunk_sentences:
             chunks_of_sentences.append(curr_chunk_sentences)
 
-        # Create Box objects
         final_chunks = []
         for i, chunk_sentences in enumerate(chunks_of_sentences):
             if not chunk_sentences:
                 continue
 
-            content = " ".join(chunk_sentences)
-            
-            chunk_token_count = None
-            if config.token_counter:
-                chunk_token_count = self._count_tokens(content, config.token_counter)
-
-            chunk_box = Box({
-                "chunk_num": i + 1,
-                "content": content,
-                "sentence_count": len(chunk_sentences),
-                "token_count": chunk_token_count,
-            })
-            final_chunks.append(chunk_box)
+            content = "\n".join(chunk_sentences)
+            final_chunks.append(content)
             
         return final_chunks
 
     def _chunk(
         self,
         config: ChunkingConfig,
-    ) -> Tuple[Tuple[Box], Tuple[str]]:
+    ) -> Tuple[Tuple[str], Tuple[str]]:
         """
         Internal method to chunk a given text based on specified parameters.
         Performs sentence splitting and chunk grouping.
@@ -371,7 +365,7 @@ class PlainTextChunker:
             config (ChunkingConfig): The configuration for chunking.
 
         Returns:
-            Tuple[Tuple[Box], Tuple[str]]: A tuple of chunk Box objects and a tuple of warning messages.
+            Tuple[Tuple[str], Tuple[str]]: A tuple of chunk strings and a tuple of warning messages.
         """
         all_warnings = set()
         sentences, split_warnings = self._split_by_sentence(config.text, config.lang)
@@ -420,13 +414,13 @@ class PlainTextChunker:
         *,
         lang: str = "auto",
         mode: str = "sentence",
-        max_tokens: int = 512,
-        max_sentences: int = 100,
+        max_tokens: int = 256,
+        max_sentences: int = 12,
         overlap_percent: Union[int, float] = 20,
         offset: int = 0,
         token_counter: Optional[Callable[[str], int]] = None,
         _batch_context: bool = False,
-    ) -> List[Box]:
+    ) -> List[str]:
         """
         Chunks a single text into smaller pieces based on specified parameters.
         Supports multiple chunking modes (sentence, token, hybrid), clause-level overlap,
@@ -437,13 +431,13 @@ class PlainTextChunker:
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             mode (str): Chunking mode ('sentence', 'token', or 'hybrid'). Defaults to "sentence".
             max_tokens (int): Maximum number of tokens per chunk. Defaults to 512.
-            max_sentences (int): Maximum number of sentences per chunk. Defaults to 100.
+            max_sentences (int): Maximum number of sentences per chunk. Defaults to 12.
             overlap_percent (Union[int, float]): Percentage of overlap between chunks (0-85).
                 Defaults to 20
             offset (int): Starting sentence offset for chunking. Defaults to 0.
 
         Returns:
-            List[Box]: A list of Box objects, where each object represents a chunk with its metadata.
+            List[str]: A list of chunk strings.
 
         Raises:
             InvalidInputError: If any chunking configuration parameter is invalid.
@@ -474,13 +468,13 @@ class PlainTextChunker:
                 use_cache=self.use_cache,
             )
         except ValidationError as e:
-            pretty_err = self.pretty_errors(e)
+            pretty_err = pretty_errors(e)
             raise InvalidInputError(f"Invalid chunking configuration: {pretty_err}")
 
         if not config.text:
             if self.verbose:
                 logger.info("Input text is empty. Returning empty list.")
-            return [] if not _batch_context else ([], ())
+            return [] if not _batch_context else ([], ()) 
 
         if self.use_cache:
             chunks, warnings = self._chunk_cached(config)
@@ -506,14 +500,14 @@ class PlainTextChunker:
         *,
         lang: str = "auto",
         mode: str = "sentence",
-        max_tokens: int = 512,
-        max_sentences: int = 100,
+        max_tokens: int = 256,
+        max_sentences: int = 12,
         overlap_percent: Union[int, float] = 20,
         offset: int = 0,
-        n_jobs: Optional[int] = None,
         token_counter: Optional[Callable[[str], int]] = None,
+        n_jobs: Optional[int] = None,
         show_progress: bool = True,
-    ) -> List[List[Box]]:
+    ) -> List[List[str]]:
         """
         Processes a batch of texts in parallel, splitting each into chunks.
         Leverages multiprocessing for efficient batch chunking.
@@ -522,18 +516,18 @@ class PlainTextChunker:
             texts: List of input texts to be chunked. Each text will be processed independently.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             mode (str): Chunking mode ('sentence', 'token', or 'hybrid'). Defaults to "sentence".
-            max_tokens (int): Maximum number of tokens per chunk. Defaults to 512.
-            max_sentences (int): Maximum number of sentences per chunk. Defaults to 100.
+            max_tokens (int): Maximum number of tokens per chunk. 
+            max_sentences (int): Maximum number of sentences per chunk.
             overlap_percent (Union[int, float]): Percentage of overlap between chunks (0-85).
-                Defaults to 20.
             offset (int): Starting sentence offset for chunking. Defaults to 0.
+            token_counter: Optional token counting function. Required for token-based modes.
             n_jobs: Number of parallel workers to use. If None, uses all available CPUs.
                    Must be >= 1 if specified.
-            token_counter: Optional token counting function. Required for token-based modes.
+            show_progress (bool): Flag to show to enable or disable the loading bar.
 
         Returns:
-            A list of lists, where each inner list contains the Box objects for the corresponding input text.
-            The order of texts is preserved in the output.
+            List[List[str]]: A list of lists of chunk strings, where each inner list contains
+            the chunks for the corresponding input text.
 
         Raises:
             InvalidInputError: If `texts` is not a list or if `n_jobs` is less than 1.
@@ -627,6 +621,7 @@ class PlainTextChunker:
                 warning_message.append(f"  - ({count}/{len(texts)}) {msg}")
             # Log the entire formatted message as a single entry
             logger.warning("\n" + "\n".join(warning_message))
+        
         return list(collected_chunks)
 
     def preview_sentences(self, text: str, lang: str = "auto") -> Tuple[List[str], Set[str]]:
@@ -645,3 +640,4 @@ class PlainTextChunker:
                  - A set of wanings if any.
         """
         return self._split_by_sentence(text, lang)
+
