@@ -5,9 +5,8 @@ from chunklet import (
     PlainTextChunker,
     ChunkletError,
     InvalidInputError,
-    TokenNotProvidedError,
+    TokenCounterMissingError,
 )
-from pydantic import ValidationError
 from loguru import logger
 
 # Silent logging
@@ -112,8 +111,8 @@ def test_preview_works(chunker):
 # --- Token Counter Validation ---
 @pytest.mark.parametrize("mode", ["token", "hybrid"])
 def test_token_counter_validation(mode):
-    """Test that a TokenNotProvidedError is raised when a token_counter is missing for token/hybrid modes."""
-    with pytest.raises(TokenNotProvidedError):
+    """Test that a TokenCounterMissingError is raised when a token_counter is missing for token/hybrid modes."""
+    with pytest.raises(TokenCounterMissingError):
         PlainTextChunker().chunk("some text", mode=mode)
 
 
@@ -279,11 +278,4 @@ def test_custom_splitter_basic_usage():
 def test_init_validation_error():
     """Test that InvalidInputError is raised for invalid initialization parameters."""
     with pytest.raises(InvalidInputError, match="Invalid chunking configuration"):
-        invalid_splitters = [
-            {
-                "name":"XSplitter",
-                "languages":11,
-                "callback":"not a callable",
-            }
-        ]
-        PlainTextChunker(custom_splitters=invalid_splitters)
+        PlainTextChunker(token_counter="Not a callable")

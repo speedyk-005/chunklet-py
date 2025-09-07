@@ -17,9 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Show Progress Parameter:** Added `show_progress` parameter to `batch_chunk` in `PlainTextChunker` to allow users to control the display of the progress bar.
 - **Custom Processors:** Introduced support for custom document processors, allowing users to define their own logic for extracting text from various file types.
 - **Test Coverage:** Improved test coverage for `PlainTextChunker`.
+- **Custom Exception Types:** Introduced `FileProcessingError` for errors during file reading/processing and `UnsupportedFileTypeError` for unsupported file formats.
 
 ### Changed
 
+- **Dependency Versioning:** Updated `pyproject.toml` to include minimum version specifiers (`>=`) for all project dependencies, ensuring better reproducibility and stability.
+- **Linting:** Integrated `flake8` for code linting and updated `CONTRIBUTING.md` with instructions for running it.
+- **Code Quality:** Fixed various `pyflakes` linting issues across the `src/` and `tests/` directories, improving code cleanliness.
+- **Error Handling:** Renamed `TokenNotProvidedError` to `TokenCounterMissingError` for clearer semantics and updated all relevant usages.
 - **Project Restructuring:**
     - Renamed `src/chunklet/core.py` to `src/chunklet/plain_text_chunker.py`.
     - Renamed `Chunklet` class to `PlainTextChunker`.

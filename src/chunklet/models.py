@@ -1,12 +1,11 @@
-from typing import Union, Literal, Optional, Callable, List, Dict, Any, Iterable
+from typing import Union, Literal, Optional, Callable, List, Iterable
 from pydantic import (
     BaseModel,
     Field,
-    field_validator,
     model_validator,
     ConfigDict,
 )
-from chunklet.exceptions import TokenNotProvidedError
+from chunklet.exceptions import TokenCounterMissingError
 
 class CustomSplitterConfig(BaseModel):
     """Configuration for a custom sentence splitter."""
@@ -51,6 +50,6 @@ class ChunkingConfig(BaseModel):
     @model_validator(mode="after")
     def validate_token_counter(self) -> "ChunkingConfig":
         if self.mode in {"token", "hybrid"} and self.token_counter is None:
-            raise TokenNotProvidedError()
+            raise TokenCounterMissingError()
         return self
 

@@ -43,6 +43,12 @@ First and foremost, thank you for considering contributing to Chunklet! We appre
     black .
     ```
 
+5.  **Lint your code:** This project uses `flake8` for linting. Please run it before committing your changes.
+
+    ```bash
+    flake8 src/ tests/
+    ```
+
 ## Submitting a Pull Request
 
 When you are ready to submit your pull request, please ensure you have done the following:

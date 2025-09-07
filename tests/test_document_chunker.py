@@ -2,16 +2,12 @@ import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 from concurrent.futures import ThreadPoolExecutor
-from box import Box
 from chunklet import (
     PlainTextChunker,
     DocumentChunker,
     InvalidInputError,
-    ChunkletError,
-    CustomProcessorConfig,
+    UnsupportedFileTypeError,
 )
-import shutil
-import sys
 
 @pytest.fixture
 def mock_plain_text_chunker():
@@ -67,8 +63,8 @@ def test_document_chunker_init(input, expected_exception, match_string):
         ("file_without_extension", "general", InvalidInputError, None, None),
 
         # Failure Path: Existent files with incorrect modes (should raise ValueError)
-        ("samples/Lorem.docx", "table", ValueError, None, None),
-        ("samples/sample.xyz", "general", FileNotFoundError, None, None),
+        ("samples/Lorem.docx", "table", UnsupportedFileTypeError, None, None),
+        ("samples/sample.xyz", "general", UnsupportedFileTypeError, None, None),
 
         # Failure Path: Non-existent files (should raise FileNotFoundError)
         ("non_existent_file.txt", "general", FileNotFoundError, None, None),
@@ -81,6 +77,10 @@ def test_validate_path_correctly_handles_all_cases(document_chunker, path, mode,
     """Test file path validation for different modes and file types."""
     if "file_without_extension" in str(path):
         p = tmp_path / path
+        p.write_text("test")
+        path = p
+    elif "sample.xyz" in str(path):
+        p = tmp_path / "sample.xyz"
         p.write_text("test")
         path = p
 
@@ -125,11 +125,11 @@ def test_chunk_unsupported_file_type(document_chunker, tmp_path):
     # Test with a file type that is not in GENERAL_TEXT_EXTENSIONS
     unsupported_file = tmp_path / "test.xyz"
     unsupported_file.write_text("test")
-    with pytest.raises(ValueError, match="File type '.xyz' is not supported for general document chunking."):
+    with pytest.raises(UnsupportedFileTypeError, match="File type '.xyz' is not supported for general document chunking."):
         document_chunker.chunk(unsupported_file)
 
     # Test with a tabular file type
-    with pytest.raises(ValueError, match="File type '.csv' is not supported for general document chunking."):
+    with pytest.raises(UnsupportedFileTypeError, match="File type '.csv' is not supported for general document chunking."):
         document_chunker.chunk("samples/Registration-100.csv")
 
 

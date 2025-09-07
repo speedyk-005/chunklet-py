@@ -2,7 +2,7 @@ import re
 import sys
 from collections import Counter
 from functools import lru_cache, partial
-from typing import List, Dict, Any, Tuple, Callable, Optional, Union, Set
+from typing import List, Tuple, Callable, Optional, Union, Set
 from box import Box
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
 from pysbd import Segmenter
@@ -16,7 +16,6 @@ from chunklet.models import CustomSplitterConfig, PlainTextChunkerConfig, Chunki
 from chunklet.exceptions import (
     ChunkletError,
     InvalidInputError,
-    TokenNotProvidedError,
 )
 
 # Complete set of languages supported by pysbd (Python Sentence Boundary Disambiguation)
@@ -112,17 +111,6 @@ class PlainTextChunker:
             pretty_err = pretty_errors(e)
             raise InvalidInputError(f"Invalid chunking configuration: {pretty_err}")
 
-        if not custom_splitters:
-            custom_splitters = {}
-        try:
-            self.custom_splitters = [
-                CustomSplitterConfig.model_validate(proc)
-                for proc in custom_splitters
-            ]
-        except ValidationError as e:
-            pretty_err = pretty_errors(e)
-            raise InvalidInputError(pretty_err)
-            
         self.verbose = config.verbose
         self.use_cache = config.use_cache
         self.token_counter = config.token_counter
@@ -441,7 +429,7 @@ class PlainTextChunker:
 
         Raises:
             InvalidInputError: If any chunking configuration parameter is invalid.
-            TokenNotProvidedError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
+            TokenCounterMissingError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
             ChunkletError: If the provided `token_counter` callable raises an exception during token counting.
         """
         if self.verbose:

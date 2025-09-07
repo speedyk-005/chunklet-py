@@ -13,7 +13,11 @@ from chunklet.utils.docx_processor import DOCXProcessor
 from chunklet.utils.rst_to_md import rst_to_markdown
 from chunklet.utils.error_utils import pretty_errors
 from chunklet.models import CustomProcessorConfig 
-from chunklet.exceptions import InvalidInputError
+from chunklet.exceptions import (
+    InvalidInputError,
+    UnsupportedFileTypeError,
+    FileProcessingError,
+)
 from pydantic import ValidationError
 
 class DocumentChunker:
@@ -120,10 +124,10 @@ class DocumentChunker:
         if mode == "general":
             supported_extensions = self.GENERAL_TEXT_EXTENSIONS | self._custom_processor_extensions
             if extension not in supported_extensions:
-                raise ValueError(f"File type '{extension}' is not supported for general document chunking.")
+                raise UnsupportedFileTypeError(f"File type '{extension}' is not supported for general document chunking.")
         elif mode == "table":
             if extension not in self.TABULAR_FILE_EXTENSIONS:
-                raise ValueError(f"File type '{extension}' is not supported for tabular data chunking.")
+                raise UnsupportedFileTypeError(f"File type '{extension}' is not supported for tabular data chunking.")
 
         return path, extension
 
@@ -144,14 +148,17 @@ class DocumentChunker:
         if self.plain_text_chunker.verbose:
             logger.debug(f"Reading file: {path} with extension: {ext}")
 
-        with open(path, "r", encoding="utf-8") as f:
-            text_content = f.read()
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                text_content = f.read()
+        except (IOError, UnicodeDecodeError) as e:
+            raise FileProcessingError(f"Error reading file {path}: {e}") from e
             
         if ext == ".rst":
             text_content = rst_to_markdown(text_content)
         elif ext == ".rtf":
             if rtf_to_text is None:
-                raise ImportError("The 'striprtf' library is not installed. Please install it with 'pip install striprtf' or install the document processing extras with 'pip install chunklet-py[document]'")
+                raise FileProcessingError("The 'striprtf' library is not installed. Please install it with 'pip install striprtf' or install the document processing extras with 'pip install chunklet-py[document]'")
             text_content = rtf_to_text(text_content)
 
         return text_content
@@ -179,7 +186,7 @@ class DocumentChunker:
                 try:
                     return processor.callback(str(path))
                 except Exception as e:
-                    raise ValueError(f"Custom processor '{processor.name}' failed for file '{path}': {e}") from e
+                    raise FileProcessingError(f"Custom processor '{processor.name}' failed for file '{path}': {e}") from e
 
     def _create_chunk_boxes(
         self,
@@ -237,7 +244,11 @@ class DocumentChunker:
             content and metadata.
 
         Raises:
-            ValueError: If the file path or extension is invalid.
+            InvalidInputError: If the path is invalid or cannot be resolved.
+            FileNotFoundError: If provided file path not found.
+            UnsupportedFileTypeError: If the file extension is not supported for the given mode.
+            FileProcessingError: If an error occurs during file reading or processing.
+            TokenCounterMissingError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
         """
         # Capture all parameters
         params = {k: v for k, v in locals().items() if k not in ['self', 'path', 'n_jobs']}
@@ -352,6 +363,13 @@ class DocumentChunker:
         Returns:
             List[List[Box]]: A list of lists of `Box` objects, where each inner list contains
             chunks from a single processed document, in the same order as the input paths.
+
+        Raises:
+            InvalidInputError: If the path is invalid or cannot be resolved.
+            FileNotFoundError: If provided file path not found.
+            UnsupportedFileTypeError: If the file extension is not supported for the given mode.
+            FileProcessingError: If an error occurs during file reading or processing.
+            TokenCounterMissingError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
         """
         if self.plain_text_chunker.verbose:
             logger.info(f"Starting bulk chunking for {len(paths)} documents.")
@@ -367,7 +385,7 @@ class DocumentChunker:
             try:
                 validated_path, ext = self.validate_path(path, mode="general")
                 valid_paths_with_ext.append((validated_path, ext))
-            except (FileNotFoundError, ValueError) as e:
+            except (FileNotFoundError, UnsupportedFileTypeError) as e:
                 if self.plain_text_chunker.verbose:
                     logger.warning(f"Skipping file {path}: {e}")
 
@@ -459,12 +477,12 @@ class DocumentChunker:
         Raises:
             FileNotFoundError: If the specified path does not exist.
             InvalidInputError: If `max_lines` is not greater than 1.
-            RuntimeError: If there is an error processing the file.
+            FileProcessingError: If there is an error processing the file.
         """
         try:
             import openpyxl
         except ImportError:
-            raise ImportError(
+            raise FileProcessingError(
                 "The 'openpyxl' library is not installed. "
                 "Please install it with 'pip install openpyxl' or install the document processing extras "
                 "with 'pip install 'chunklet-py[document]''"
@@ -503,7 +521,7 @@ class DocumentChunker:
             header, *data_rows = rows
             
         except Exception as e:
-            raise RuntimeError(f"Error processing file {path}: {e}") from e
+            raise FileProcessingError(f"Error processing file {path}: {e}") from e
             
         chunks = []
         # chunk_size is the number of data rows per chunk

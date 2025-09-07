@@ -1,14 +1,11 @@
 import argparse
-import textwrap
 import sys
 import subprocess
 import os
 import glob
 import warnings
-import json
 import shlex
 from importlib.metadata import version, PackageNotFoundError
-from chunklet import __version__
 from chunklet.plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker import DocumentChunker
 

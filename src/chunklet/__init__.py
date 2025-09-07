@@ -12,12 +12,17 @@ imported directly from the package alongside execptions and schemas models.
 
 from .plain_text_chunker import PlainTextChunker
 from .document_chunker import DocumentChunker
-from .exceptions import ChunkletError, InvalidInputError, TokenNotProvidedError
+from .exceptions import (
+    ChunkletError,
+    InvalidInputError,
+    TokenCounterMissingError,
+    UnsupportedFileTypeError,
+)
 from .models import (
     CustomSplitterConfig,
     PlainTextChunkerConfig,
     CustomProcessorConfig,
-    ChunkingConfig
+    ChunkingConfig,
 )
 from .utils import (
     DOCXProcessor,
@@ -34,7 +39,7 @@ __all__ = [
     "DocumentChunker",
     "ChunkletError",
     "InvalidInputError",
-    "TokenNotProvidedError",
+    "TokenCounterMissingError",
     "DOCXProcessor",
     "PDFProcessor",
     "rst_to_markdown",

@@ -12,8 +12,24 @@ class InvalidInputError(ChunkletError):
         super().__init__(self.message)
 
 
-class TokenNotProvidedError(ChunkletError):
+class TokenCounterMissingError(ChunkletError):
     """Raised when a token_counter is required but not provided."""
 
     def __init__(self):
         super().__init__("A token_counter is required for token-based chunking.")
+
+
+class FileProcessingError(ChunkletError):
+    """Raised when an error occurs during file reading or processing."""
+
+    def __init__(self, message="Error processing file."):
+        self.message = message
+        super().__init__(self.message)
+
+
+class UnsupportedFileTypeError(InvalidInputError):
+    """Raised when a file type is not supported for a given operation."""
+
+    def __init__(self, message="Unsupported file type."):
+        self.message = message
+        super().__init__(self.message)
