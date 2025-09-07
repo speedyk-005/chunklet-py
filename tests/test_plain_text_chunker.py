@@ -5,7 +5,7 @@ from chunklet import (
     PlainTextChunker,
     ChunkletError,
     InvalidInputError,
-    TokenCounterMissingError,
+    MissingTokenCounterError,
 )
 from loguru import logger
 
@@ -111,8 +111,8 @@ def test_preview_works(chunker):
 # --- Token Counter Validation ---
 @pytest.mark.parametrize("mode", ["token", "hybrid"])
 def test_token_counter_validation(mode):
-    """Test that a TokenCounterMissingError is raised when a token_counter is missing for token/hybrid modes."""
-    with pytest.raises(TokenCounterMissingError):
+    """Test that a MissingTokenCounterError is raised when a token_counter is missing for token/hybrid modes."""
+    with pytest.raises(MissingTokenCounterError):
         PlainTextChunker().chunk("some text", mode=mode)
 
 

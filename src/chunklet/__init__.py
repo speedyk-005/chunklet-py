@@ -15,14 +15,9 @@ from .document_chunker import DocumentChunker
 from .exceptions import (
     ChunkletError,
     InvalidInputError,
-    TokenCounterMissingError,
+    MissingTokenCounterError,
     UnsupportedFileTypeError,
-)
-from .models import (
-    CustomSplitterConfig,
-    PlainTextChunkerConfig,
-    CustomProcessorConfig,
-    ChunkingConfig,
+    FileProcessingError,
 )
 from .utils import (
     DOCXProcessor,
@@ -39,7 +34,9 @@ __all__ = [
     "DocumentChunker",
     "ChunkletError",
     "InvalidInputError",
-    "TokenCounterMissingError",
+    "MissingTokenCounterError",
+    "UnsupportedFileTypeError",
+    "FileProcessingError",
     "DOCXProcessor",
     "PDFProcessor",
     "rst_to_markdown",

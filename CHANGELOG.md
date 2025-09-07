@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dependency Versioning:** Updated `pyproject.toml` to include minimum version specifiers (`>=`) for all project dependencies, ensuring better reproducibility and stability.
 - **Linting:** Integrated `flake8` for code linting and updated `CONTRIBUTING.md` with instructions for running it.
 - **Code Quality:** Fixed various `pyflakes` linting issues across the `src/` and `tests/` directories, improving code cleanliness.
-- **Error Handling:** Renamed `TokenNotProvidedError` to `TokenCounterMissingError` for clearer semantics and updated all relevant usages.
+- **Error Handling:** Renamed `TokenNotProvidedError` to `MissingTokenCounterError` for clearer semantics and updated all relevant usages.
 - **Project Restructuring:**
     - Renamed `src/chunklet/core.py` to `src/chunklet/plain_text_chunker.py`.
     - Renamed `Chunklet` class to `PlainTextChunker`.

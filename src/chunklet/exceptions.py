@@ -12,7 +12,7 @@ class InvalidInputError(ChunkletError):
         super().__init__(self.message)
 
 
-class TokenCounterMissingError(ChunkletError):
+class MissingTokenCounterError(InvalidInputError):
     """Raised when a token_counter is required but not provided."""
 
     def __init__(self):

@@ -429,7 +429,7 @@ class PlainTextChunker:
 
         Raises:
             InvalidInputError: If any chunking configuration parameter is invalid.
-            TokenCounterMissingError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
+            MissingTokenCounterError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
             ChunkletError: If the provided `token_counter` callable raises an exception during token counting.
         """
         if self.verbose:

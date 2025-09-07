@@ -248,7 +248,7 @@ class DocumentChunker:
             FileNotFoundError: If provided file path not found.
             UnsupportedFileTypeError: If the file extension is not supported for the given mode.
             FileProcessingError: If an error occurs during file reading or processing.
-            TokenCounterMissingError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
+            MissingTokenCounterError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
         """
         # Capture all parameters
         params = {k: v for k, v in locals().items() if k not in ['self', 'path', 'n_jobs']}
@@ -369,7 +369,7 @@ class DocumentChunker:
             FileNotFoundError: If provided file path not found.
             UnsupportedFileTypeError: If the file extension is not supported for the given mode.
             FileProcessingError: If an error occurs during file reading or processing.
-            TokenCounterMissingError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
+            MissingTokenCounterError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
         """
         if self.plain_text_chunker.verbose:
             logger.info(f"Starting bulk chunking for {len(paths)} documents.")
