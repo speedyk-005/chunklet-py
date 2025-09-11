@@ -14,8 +14,19 @@ try:
 except PackageNotFoundError:
     __version__ = "unknown"
 
+
 def create_external_tokenizer(command_str):
+    """
+    Creates a tokenizer function from an external command string.
+
+    Args:
+        command_str (str): The command string to execute.
+
+    Returns:
+        A function that takes text as input and returns the token count.
+    """
     command_list = shlex.split(command_str)
+
     def external_tokenizer(text):
         try:
             process = subprocess.run(
@@ -30,10 +41,13 @@ def create_external_tokenizer(command_str):
         except (subprocess.CalledProcessError, ValueError) as e:
             print(f"Error executing tokenizer command: {e}", file=sys.stderr)
             sys.exit(1)
+
     return external_tokenizer
 
+
 def main():
-    warnings.simplefilter('default', DeprecationWarning)
+    """The main entry point for the Chunklet CLI."""
+    warnings.simplefilter("default", DeprecationWarning)
     parser = argparse.ArgumentParser(
         description="Chunklet: Smart Multilingual Text Chunker for LLMs, RAG, and beyond.",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -43,7 +57,7 @@ def main():
         "--version",
         action="version",
         version=f"%(prog)s v{__version__}",
-        help="Show program's version number and exit."
+        help="Show program's version number and exit.",
     )
     parser.add_argument(
         "text",
@@ -51,7 +65,9 @@ def main():
         help="The input text to chunk. If not provided, --file or --input-file must be used.",
     )
     parser.add_argument(
-        "-f", "--file", "--input-file",
+        "-f",
+        "--file",
+        "--input-file",
         help="Path to a file to read input from. Overrides the 'text' argument.",
     )
     parser.add_argument(
@@ -64,7 +80,8 @@ def main():
         help="Path to a file to write the output chunks to. If not provided, output is printed to stdout.",
     )
     parser.add_argument(
-        "-d", "--input-dir",
+        "-d",
+        "--input-dir",
         help="Path to a directory to read input files from (e.g., *.txt, *.md).",
     )
     parser.add_argument(
@@ -123,20 +140,43 @@ def main():
         help="A shell command to use for token counting. The command should take text as stdin and output the token count as a number.",
     )
     parser.add_argument(
-        "--metadata",
-        action="store_true",
-        help="Include metadata in the output."
+        "--metadata", action="store_true", help="Include metadata in the output."
     )
 
     args = parser.parse_args()
 
-    if sum([bool(args.text), bool(args.file), bool(args.input_dir), bool(args.input_files)]) == 0:
-        print("Error: No input provided. Please specify text, a file, or an input directory.", file=sys.stderr)
+    if (
+        sum(
+            [
+                bool(args.text),
+                bool(args.file),
+                bool(args.input_dir),
+                bool(args.input_files),
+            ]
+        )
+        == 0
+    ):
+        print(
+            "Error: No input provided. Please specify text, a file, or an input directory.",
+            file=sys.stderr,
+        )
         print("See 'chunklet -h' for usage examples.", file=sys.stderr)
         sys.exit(1)
 
-    if sum([bool(args.text), bool(args.file), bool(args.input_dir), bool(args.input_files)]) != 1:
-        parser.error("Exactly one of 'text' argument, '--file', or '--input-dir' must be provided.")
+    if (
+        sum(
+            [
+                bool(args.text),
+                bool(args.file),
+                bool(args.input_dir),
+                bool(args.input_files),
+            ]
+        )
+        != 1
+    ):
+        parser.error(
+            "Exactly one of 'text' argument, '--file', or '--input-dir' must be provided."
+        )
     if args.output_file and args.output_dir:
         parser.error("Only one of '--output-file' or '--output-dir' can be specified.")
 
@@ -164,8 +204,6 @@ def main():
             overlap_percent=args.overlap_percent,
             offset=args.offset,
         )
-        for chunk_box in chunks:
-            chunk_box.metadata.source = "stdin"
         all_results.append(chunks)
         source_info.append(("stdin", None))
 
@@ -192,12 +230,48 @@ def main():
 
         file_paths = []
         for ext in document_chunker.GENERAL_TEXT_EXTENSIONS:
-            file_paths.extend(glob.glob(os.path.join(args.input_dir, f"**/*{ext}"), recursive=True))
+            file_paths.extend(
+                glob.glob(os.path.join(args.input_dir, f"**/*{ext}"), recursive=True)
+            )
 
         file_paths = sorted([p for p in file_paths if os.path.isfile(p)])
 
         if not file_paths:
-            print(f"No supported files found in directory: {args.input_dir}", file=sys.stderr)
+            print(
+                f"No supported files found in directory: {args.input_dir}",
+                file=sys.stderr,
+            )
+            sys.exit(0)
+
+        all_results = document_chunker.bulk_chunk(
+            paths=file_paths,
+            lang=args.lang,
+            mode=args.mode,
+            max_tokens=args.max_tokens,
+            max_sentences=args.max_sentences,
+            overlap_percent=args.overlap_percent,
+            offset=args.offset,
+            n_jobs=args.n_jobs,
+        )
+        source_info.extend([(os.path.basename(p), p) for p in file_paths])
+
+    elif args.input_dir:
+        if not os.path.isdir(args.input_dir):
+            parser.error(f"Input directory not found: {args.input_dir}")
+
+        file_paths = []
+        for ext in document_chunker.GENERAL_TEXT_EXTENSIONS:
+            file_paths.extend(
+                glob.glob(os.path.join(args.input_dir, f"**/*{ext}"), recursive=True)
+            )
+
+        file_paths = sorted([p for p in file_paths if os.path.isfile(p)])
+
+        if not file_paths:
+            print(
+                f"No supported files found in directory: {args.input_dir}",
+                file=sys.stderr,
+            )
             sys.exit(0)
 
         all_results = document_chunker.bulk_chunk(
@@ -239,7 +313,9 @@ def main():
         os.makedirs(args.output_dir, exist_ok=True)
         total_chunks_written = 0
         for (source_name, original_path), doc_chunks in zip(source_info, all_results):
-            base_name = os.path.splitext(source_name)[0] if original_path else source_name
+            base_name = (
+                os.path.splitext(source_name)[0] if original_path else source_name
+            )
 
             for j, chunk_box in enumerate(doc_chunks):
                 output_filename = f"{base_name}_chunk_{j+1}.txt"
@@ -247,7 +323,9 @@ def main():
                 with open(output_path, "w", encoding="utf-8") as f:
                     f.write(chunk_box.content + "\n")
                 total_chunks_written += 1
-        print(f"Successfully processed {len(source_info)} input(s) and wrote {total_chunks_written} chunk file(s) to {args.output_dir}")
+        print(
+            f"Successfully processed {len(source_info)} input(s) and wrote {total_chunks_written} chunk file(s) to {args.output_dir}"
+        )
     else:
         output_content = []
         for (source_name, _), doc_chunks in zip(source_info, all_results):
@@ -257,7 +335,7 @@ def main():
             for j, chunk_box in enumerate(doc_chunks):
                 output_content.append(f"--- Chunk {j+1} ---")
                 output_content.append(chunk_box.content)
-                if args.metadata and chunk_box.metadata:
+                if args.metadata and hasattr(chunk_box, 'metadata') and chunk_box.metadata:
                     output_content.append(f"Metadata: {chunk_box.metadata.to_dict()}")
                 output_content.append("")
 
@@ -268,6 +346,68 @@ def main():
                 f.write(output_str)
         else:
             print(output_str)
+
+    elif args.file:
+        if not os.path.isfile(args.file):
+            parser.error(f"File not found: {args.file}")
+
+        chunks = document_chunker.chunk(
+            path=args.file,
+            lang=args.lang,
+            mode=args.mode,
+            max_tokens=args.max_tokens,
+            max_sentences=args.max_sentences,
+            overlap_percent=args.overlap_percent,
+            offset=args.offset,
+            n_jobs=args.n_jobs,
+        )
+        for chunk_box in chunks:
+            chunk_box.metadata.source = os.path.basename(args.file)
+        all_results.append(chunks)
+        source_info.append((os.path.basename(args.file), args.file))
+
+    if not all_results:
+        print("No chunks generated.", file=sys.stderr)
+        sys.exit(0)
+
+    if args.output_dir:
+        os.makedirs(args.output_dir, exist_ok=True)
+        total_chunks_written = 0
+        for (source_name, original_path), doc_chunks in zip(source_info, all_results):
+            base_name = (
+                os.path.splitext(source_name)[0] if original_path else source_name
+            )
+
+            for j, chunk_box in enumerate(doc_chunks):
+                output_filename = f"{base_name}_chunk_{j+1}.txt"
+                output_path = os.path.join(args.output_dir, output_filename)
+                with open(output_path, "w", encoding="utf-8") as f:
+                    f.write(chunk_box.content + "\n")
+                total_chunks_written += 1
+        print(
+            f"Successfully processed {len(source_info)} input(s) and wrote {total_chunks_written} chunk file(s) to {args.output_dir}"
+        )
+    else:
+        output_content = []
+        for (source_name, _), doc_chunks in zip(source_info, all_results):
+            if len(source_info) > 1 or source_name != "stdin":
+                output_content.append(f"## Source: {source_name}")
+                output_content.append("")
+            for j, chunk_box in enumerate(doc_chunks):
+                output_content.append(f"--- Chunk {j+1} ---")
+                output_content.append(chunk_box.content)
+                if args.metadata and hasattr(chunk_box, 'metadata') and chunk_box.metadata:
+                    output_content.append(f"Metadata: {chunk_box.metadata.to_dict()}")
+                output_content.append("")
+
+        output_str = "\n".join(output_content)
+
+        if args.output_file:
+            with open(args.output_file, "w", encoding="utf-8") as f:
+                f.write(output_str)
+        else:
+            print(output_str)
+
 
 if __name__ == "__main__":
     main()

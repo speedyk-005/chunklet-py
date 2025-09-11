@@ -7,36 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0.0] - 2025-09-06
+## [2.0.0] - 2025-09-11
 
 ### Added
 
+- **Code Chunker Introduction:** Introduced `CodeChunker` for syntax-aware chunking of source code, with support for multiple programming languages by leveraging `src/libs/code_etructure_extractor` to dispatch code into structural elements.
 - **CLI Multiple Input Files:** Added an `--input-files` argument to allow processing of multiple specific files.
 - **CLI Metadata Flag:** Added a `-m, --metadata` flag to the CLI to display chunk metadata in the output.
-- **Document Chunker:** Introduced `DocumentChunker` to handle various file formats like `.pdf`, `.docx`, `.txt`, `.md`, `.rst`, `.rtf`, `.xls`, `.xlsx`, and `.csv`.
+- **Document Chunker:** Introduced `DocumentChunker` to handle various file formats like `.pdf`, `.docx`, `.txt`, `.md`, `.rst`, `.rtf`.
 - **Show Progress Parameter:** Added `show_progress` parameter to `batch_chunk` in `PlainTextChunker` to allow users to control the display of the progress bar.
 - **Custom Processors:** Introduced support for custom document processors, allowing users to define their own logic for extracting text from various file types.
-- **Test Coverage:** Improved test coverage for `PlainTextChunker`.
-- **Custom Exception Types:** Introduced `FileProcessingError` for errors during file reading/processing and `UnsupportedFileTypeError` for unsupported file formats.
+- **Custom Exception Types:** Introduced `TextProcessingError` for errors during text processing, `FileProcessingError`, during file processing and `UnsupportedFileTypeError` for unsupported file formats.
 
 ### Changed
 
-- **Dependency Versioning:** Updated `pyproject.toml` to include minimum version specifiers (`>=`) for all project dependencies, ensuring better reproducibility and stability.
+- **Project Structure:** Moved several utility modules to a new `src/chunklet/libs` directory.
 - **Linting:** Integrated `flake8` for code linting and updated `CONTRIBUTING.md` with instructions for running it.
 - **Code Quality:** Fixed various `pyflakes` linting issues across the `src/` and `tests/` directories, improving code cleanliness.
-- **Error Handling:** Renamed `TokenNotProvidedError` to `MissingTokenCounterError` for clearer semantics and updated all relevant usages.
+- **Error rebranding:** Renamed `TokenNotProvidedError` to `MissingTokenCounterError` for clearer semantics and updated all relevant usages.
+- **Error Handling:**
+    - Modified `_count_tokens` to return `TextProcessingError` instead of `ChunkletError`.
+    - Catched errors raised by the usage of `custom_splitters`'s callback and reraised as `TextProcessingError` instead.
 - **Project Restructuring:**
     - Renamed `src/chunklet/core.py` to `src/chunklet/plain_text_chunker.py`.
     - Renamed `Chunklet` class to `PlainTextChunker`.
 - **Friendlier Initialization:** Updated `PlainTextChunker` to accept a a list of dict instead of a list of models for more beginner friendly initialization.
 - **Safer Tokenizer Command processing:** Changed `shell=True` to `shell=False` for the subprocess.run call in create_external_tokenizer for enhanced security and predictability. The shlex module is now implicitly used for command parsing when shell=False.
 - **Improved chunking format:** Added a newline between sentences for structured chunking format output. This helps preserving original format better.
-- **Performance Improvement:** Refactored `_group_by_chunk` in `PlainTextChunker` to use incremental token recalculation for better performance.
+- **Grouping improvements:**
+    - Improved logic for handling sentences that exceed max_tokens or max_sentences. The `_find_clauses_that_fit` method's output (fitted, unfitted) is now more accurately integrated, ensuring that sentences are correctly split and assigned to chunks.
+    - Modified `_find_clauses_that_fit` to return a list of str instead of a tuple of list of str for easier control. That Ensures that unfitted sentences are properly joined and accounted for when starting a new chunk after an overlap.
+    - Use incremental token recalculation for better performance.
+    - Artifacts handling: Ignore the last chars after the first 100 ones in the loop around sentences. Reason: if the original text to chunk has parts not well written. (e.g. long text stream without punctuations, embeded images urls, ...)
 - **Absolute Imports:** Converted all relative imports to absolute imports within the `chunklet` package for better clarity and to avoid potential import issues.
 - **Project Layout:** Restructured project by moving the logo to the root and adding a `samples/` directory to store the sample files.
 - **CLI Aliases:** Added `-f` as an alias for `--file` and `-d` as an alias for `--input-dir`.
 - **Default Limits:** Changed the default `max_tokens` from 512 to 256 and `max_sentences` from 100 to 12.
-
+- **Model renamed:** Renamed `ChunkingConfig` to `TextChunkingConfig`.
+- **Continuation marker:** Exposed continuation marker so users can define thier own or set it to an empty str to disabled it.
 
 ### Removed
 

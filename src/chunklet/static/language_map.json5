@@ -1,0 +1,131 @@
+{
+  "python": {
+    "block_type": "indent",
+    "import": "^\\s*(import|from)\\b",
+    "class": "^\\s*class\\s+(\\w+)\\s*(\\(.*\\))?:",
+    "function": "^\\s*def\\s+(\\w+)\\s*\\((?!\\s*(self|cls)\\b).*\\):",
+    "method": "^\\s*def\\s+(\\w+)\\s*\\(\\s*(self|cls)\\b.*\\):",
+    "comment_single": "#.*",
+    "comment_multi": ""
+  },
+
+  "javascript": {
+    "block_type": "brace",
+    "import": "^\\s*import\\b",
+    "class": "^\\s*class\\s+(\\w+)",
+    "function": "^\\s*function\\s+(\\w+)\\s*\\(",
+    "method": "^\\s*(\\w+)\\s*\\(",
+    "comment_single": "//.*",
+    "comment_multi": "/\\*[\\s\\S]*?\\*/"
+  },
+
+  "typescript": {
+    "block_type": "brace",
+    "import": "^\\s*import\\b",
+    "class": "^\\s*class\\s+(\\w+)",
+    "function": "^\\s*function\\s+(\\w+)\\s*\\(",
+    "method": "^\\s*(\\w+)\\s*\\(",
+    "comment_single": "//.*",
+    "comment_multi": "/\\*[\\s\\S]*?\\*/"
+  },
+
+  "java": {
+    "block_type": "brace",
+    "import": "^\\s*import\\b",
+    "class": "^\\s*class\\s+(\\w+)",
+    "function": "^\\s*(?:public|private|protected)?\\s*(?:static\\s+)?[\\w<>,\\[\\]\\s]+\\s+(\\w+)\\s*\\(",
+    "method": "^\\s*(?:public|private|protected)?\\s*(?:static\\s+)?[\\w<>,\\[\\]\\s]+\\s+(\\w+)\\s*\\(",
+    "comment_single": "//.*",
+    "comment_multi": "/\\*[\\s\\S]*?\\*/"
+  },
+
+  "csharp": {
+    "block_type": "brace",
+    "import": "^\\s*using\\b",
+    "class": "^\\s*class\\s+(\\w+)",
+    "function": "^\\s*(?:public|private|protected)?\\s*(?:static\\s+)?[\\w<>,\\[\\]\\s]+\\s+(\\w+)\\s*\\(",
+    "method": "^\\s*(?:public|private|protected)?\\s*(?:static\\s+)?[\\w<>,\\[\\]\\s]+\\s+(\\w+)\\s*\\(",
+    "comment_single": "//.*",
+    "comment_multi": "/\\*[\\s\\S]*?\\*/"
+  },
+
+  "go": {
+    "block_type": "brace",
+    "import": "^\\s*import\\b",
+    "class": "^\\s*type\\s+(\\w+)\\s+struct",
+    "function": "^\\s*func\\s+(\\w+)\\s*\\(",
+    "method": "^\\s*func\\s*\\([^)]*\\)\\s*(\\w+)\\s*\\(",
+    "comment_single": "//.*",
+    "comment_multi": "/\\*[\\s\\S]*?\\*/"
+  },
+
+  "rust": {
+    "block_type": "brace",
+    "import": "^\\s*use\\b",
+    "class": "^\\s*struct\\s+(\\w+)",
+    "function": "^\\s*fn\\s+(\\w+)\\s*\\((?![^)]*self)",
+    "method": "^\\s*fn\\s+(\\w+)\\s*\\([^)]*self",
+    "comment_single": "//.*",
+    "comment_multi": "/\\*[\\s\\S]*?\\*/"
+  },
+
+  "swift": {
+    "block_type": "brace",
+    "import": "^\\s*import\\b",
+    "class": "^\\s*class\\s+(\\w+)",
+    "function": "^\\s*func\\s+(\\w+)\\s*\\((?!\\s*self\\b)",
+    "method": "^\\s*func\\s+(\\w+)\\s*\\(\\s*self\\b",
+    "comment_single": "//.*",
+    "comment_multi": "/\\*[\\s\\S]*?\\*/"
+  },
+
+  "c": {
+    "block_type": "brace",
+    "import": "^\\s*#include\\b",
+    "class": "",
+    "function": "^\\s*[\\w\\*\\s]+\\s+(\\w+)\\s*\\(",
+    "method": "^\\s*[\\w\\*\\s]+\\s+(\\w+)\\s*\\(",
+    "comment_single": "//.*",
+    "comment_multi": "/\\*[\\s\\S]*?\\*/"
+  },
+
+  "cpp": {
+    "block_type": "brace",
+    "import": "^\\s*#include\\b",
+    "class": "^\\s*class\\s+(\\w+)",
+    "function": "^\\s*[\\w:\\<\\>\\*\\&\\s]+\\s+(\\w+)\\s*\\(",
+    "method": "^\\s*[\\w:\\<\\>\\*\\&\\s]+\\s+(\\w+)\\s*\\(",
+    "comment_single": "//.*",
+    "comment_multi": "/\\*[\\s\\S]*?\\*/"
+  },
+
+  "php": {
+    "block_type": "brace",
+    "import": "^\\s*(use|require|include|require_once|include_once)\\b",
+    "class": "^\\s*class\\s+(\\w+)",
+    "function": "^\\s*function\\s+(\\w+)\\s*\\((?!\\s*\\$this\\b)",
+    "method": "^\\s*function\\s+(\\w+)\\s*\\(\\s*\\$this\\b",
+    "comment_single": "//.*|#.*",
+    "comment_multi": "/\\*[\\s\\S]*?\\*/"
+  },
+
+  "kotlin": {
+    "block_type": "brace",
+    "import": "^\\s*import\\b",
+    "class": "^\\s*class\\s+(\\w+)",
+    "function": "^\\s*fun\\s+(\\w+)\\s*\\((?!\\s*this\\b)",
+    "method": "^\\s*fun\\s+(\\w+)\\s*\\(\\s*this\\b",
+    "comment_single": "//.*",
+    "comment_multi": "/\\*[\\s\\S]*?\\*/"
+  },
+
+  "ruby": {
+    "block_type": "indent",
+    "import": "^\\s*require\\b",
+    "class": "^\\s*class\\s+(\\w+)",
+    "function": "^\\s*def\\s+(?!self\\.)\\w+",
+    "method": "^\\s*def\\s+(?:self\\.)?(\\w+)",
+    "comment_single": "#.*",
+    "comment_multi": "=begin[\\s\\S]*?=end"
+  }
+}

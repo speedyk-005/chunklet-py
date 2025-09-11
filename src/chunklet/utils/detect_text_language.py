@@ -1,9 +1,9 @@
+from __future__ import annotations
 import math
 import py3langid
-from typing import Tuple
 
 
-def detect_text_language(text: str) -> Tuple[str, float]:
+def detect_text_language(text: str) -> tuple[str, float]:
     """
     Classify the input text using py3langid and return the top language
     with its normalized probability.
@@ -16,7 +16,7 @@ def detect_text_language(text: str) -> Tuple[str, float]:
         text (str): The text to classify.
 
     Returns:
-        Tuple[str, float]: The top language code and its normalized probability.
+        tuple[str, float]: The top language code and its normalized probability.
     """
     if not isinstance(text, str):
         raise TypeError("Input 'text' must be a string.")

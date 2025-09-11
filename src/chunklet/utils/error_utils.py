@@ -1,5 +1,6 @@
 from pydantic import ValidationError
 
+
 def pretty_errors(e: ValidationError) -> str:
     """Makes pydantic validation error more readable"""
     lines = []

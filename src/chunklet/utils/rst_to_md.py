@@ -7,7 +7,8 @@ try:
     from bs4 import BeautifulSoup
 except ImportError:
     BeautifulSoup = None
-        
+
+
 def rst_to_markdown(rst_text: str) -> str:
     """
     Converts reStructuredText (RST) content into Markdown.
@@ -28,18 +29,18 @@ def rst_to_markdown(rst_text: str) -> str:
             "Please install it with 'pip install markdownify' or install the document processing extras "
             "with 'pip install 'chunklet-py[document]''"
         )
-        
-    try: # Lazy imports
+
+    try:  # Lazy imports
         from docutils.core import publish_string
-    except ImportError:
+    except ImportError as e:
         raise ImportError(
             "The 'docutils' library is not installed. "
             "Please install it with 'pip install docutils' or install the document processing extras "
             "with 'pip install 'chunklet-py[document]''"
-        )
-        
+        ) from e
+
     # Step 1: Convert RST => HTML
-    html = publish_string(source=rst_text, writer="html").decode('utf-8')
+    html = publish_string(source=rst_text, writer="html").decode("utf-8")
 
     if BeautifulSoup is None:
         raise ImportError(
@@ -47,10 +48,12 @@ def rst_to_markdown(rst_text: str) -> str:
             "Please install it with 'pip install beautifulsoup4' or install the document processing extras "
             "with 'pip install 'chunklet-py[document]''"
         )
-    
+
     # Parse HTML and extract body content to remove boilerplate
-    soup = BeautifulSoup(html, 'html.parser')
-    body_content = soup.body.prettify() if soup.body else html # Use prettify for better formatting
+    soup = BeautifulSoup(html, "html.parser")
+    body_content = (
+        soup.body.prettify() if soup.body else html
+    )  # Use prettify for better formatting
 
     # Step 2: Convert HTML => Markdown
     markdown_text = md(body_content)

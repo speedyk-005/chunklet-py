@@ -68,9 +68,9 @@ def test_all_modes_produce_chunks(
     ), f"Expected {expected_chunks} chunks in {mode} mode, but got {len(chunks)}"
 
     # Verify the structure of the first chunk
-    first_chunk = chunks[0] # first_chunk is now a string
+    first_chunk = chunks[0]  # first_chunk is now a string
     assert isinstance(first_chunk, str)
-    assert len(first_chunk) > 0 # Check length of the string
+    assert len(first_chunk) > 0  # Check length of the string
 
 
 def test_acronyms_preserved(chunker):
@@ -126,7 +126,9 @@ def test_fallback_splitter(chunker):
     assert "Non pa mwen se Bob." in chunks[1]
 
     # Test low confidence language detection
-    with patch("chunklet.plain_text_chunker.detect_text_language", return_value=("en", 0.5)):
+    with patch(
+        "chunklet.plain_text_chunker.detect_text_language", return_value=("en", 0.5)
+    ):
         sentences, warnings = chunker._split_by_sentence("This is a test.", "auto")
         assert "Low confidence in language detected" in "".join(warnings)
 
@@ -151,7 +153,10 @@ def test_overlap_behavior(chunker):
     expected_overlap_clause = clauses[-overlap_num:][0]
 
     # The logic adds '... ' if the clause doesn't start with a capital letter
-    if not (expected_overlap_clause[0].isupper() or (len(expected_overlap_clause) > 1 and expected_overlap_clause[1].isupper())):
+    if not (
+        expected_overlap_clause[0].isupper()
+        or (len(expected_overlap_clause) > 1 and expected_overlap_clause[1].isupper())
+    ):
         expected_overlap_string = f"... {expected_overlap_clause.lstrip()}"
     else:
         expected_overlap_string = expected_overlap_clause
@@ -167,7 +172,11 @@ def test_overlap_behavior(chunker):
     assert chunks[1].startswith("... and this is a second part.")
 
     # Test _get_overlap_clauses directly
-    sentences = ["This is the first sentence.", "This is the second sentence, with a clause.", "This is the third sentence."]
+    sentences = [
+        "This is the first sentence.",
+        "This is the second sentence, with a clause.",
+        "This is the third sentence.",
+    ]
     overlap = chunker._get_overlap_clauses(sentences, 50)
     assert isinstance(overlap, list)
     assert len(overlap) > 0
@@ -176,10 +185,12 @@ def test_overlap_behavior(chunker):
 # --- Cache Tests ---
 def test_non_cached_chunking(chunker):
     """Test chunking with cache disabled."""
-    non_cached_chunker = PlainTextChunker(use_cache=False, token_counter=chunker.token_counter)
+    non_cached_chunker = PlainTextChunker(
+        use_cache=False, token_counter=chunker.token_counter
+    )
     chunks = non_cached_chunker.chunk(ENGLISH_TEXT)
-    assert chunks # chunks is List[str], so this is fine
-    assert isinstance(chunks[0], str) # Add a check for string type
+    assert chunks  # chunks is List[str], so this is fine
+    assert isinstance(chunks[0], str)  # Add a check for string type
 
 
 # --- Batch Processing Tests ---
@@ -187,45 +198,113 @@ def test_non_cached_chunking(chunker):
     "texts_input, n_jobs, mode, max_sentences, expected_exception, expected_match, expected_results_len, failing_text",
     [
         # Successful run
-        (MULTILINGUAL_TEXTS, None, "sentence", 100, None, None, len(MULTILINGUAL_TEXTS), None),
+        (
+            MULTILINGUAL_TEXTS,
+            None,
+            "sentence",
+            100,
+            None,
+            None,
+            len(MULTILINGUAL_TEXTS),
+            None,
+        ),
         # Edge cases from test_batch_chunk_various_inputs
         ([], None, "sentence", 1, None, None, 0, None),
-        ("this is a string, not a list", None, "sentence", 1, InvalidInputError, "Input 'texts' must be a list.", None, None),
-        (123, None, "sentence", 1, InvalidInputError, "Input 'texts' must be a list.", None, None),
-        (None, None, "sentence", 1, InvalidInputError, "Input 'texts' must be a list.", None, None),
-        (["First sentence.", "", "Second sentence."], None, "sentence", 1, None, None, 3, None),
+        (
+            "this is a string, not a list",
+            None,
+            "sentence",
+            1,
+            InvalidInputError,
+            "Input 'texts' must be a list.",
+            None,
+            None,
+        ),
+        (
+            123,
+            None,
+            "sentence",
+            1,
+            InvalidInputError,
+            "Input 'texts' must be a list.",
+            None,
+            None,
+        ),
+        (
+            None,
+            None,
+            "sentence",
+            1,
+            InvalidInputError,
+            "Input 'texts' must be a list.",
+            None,
+            None,
+        ),
+        (
+            ["First sentence.", "", "Second sentence."],
+            None,
+            "sentence",
+            1,
+            None,
+            None,
+            3,
+            None,
+        ),
         # Error handling from test_batch_chunk_n_jobs_1_with_error
-        (["This is ok.", "This one will fail.", "This will not be processed."], 1, "token", 100, None, None, 1, "fail"),
+        (
+            ["This is ok.", "This one will fail.", "This will not be processed."],
+            1,
+            "token",
+            100,
+            None,
+            None,
+            1,
+            "fail",
+        ),
     ],
 )
 def test_batch_processing(
-    chunker, texts_input, n_jobs, mode, max_sentences, expected_exception, expected_match, expected_results_len, failing_text
+    chunker,
+    texts_input,
+    n_jobs,
+    mode,
+    max_sentences,
+    expected_exception,
+    expected_match,
+    expected_results_len,
+    failing_text,
 ):
     """Comprehensive test for batch processing."""
 
     if failing_text:
+
         def failing_token_counter(text: str) -> int:
             if failing_text in text:
                 raise ValueError("Intentional failure")
             return len(text.split())
+
         chunker.token_counter = failing_token_counter
 
     if expected_exception:
         with pytest.raises(expected_exception, match=expected_match):
-            chunker.batch_chunk(texts_input, n_jobs=n_jobs, mode=mode, max_sentences=max_sentences)
+            chunker.batch_chunk(
+                texts_input, n_jobs=n_jobs, mode=mode, max_sentences=max_sentences
+            )
     else:
-        results = chunker.batch_chunk(texts_input, n_jobs=n_jobs, mode=mode, max_sentences=max_sentences)
+        results = chunker.batch_chunk(
+            texts_input, n_jobs=n_jobs, mode=mode, max_sentences=max_sentences
+        )
         assert len(results) == expected_results_len
         if texts_input and results and results[0]:
-             # Check structure of the first result of the first text
-            assert isinstance(results[0][0], str) # Check if it's a string
+            # Check structure of the first result of the first text
+            assert isinstance(results[0][0], str)  # Check if it's a string
 
         if texts_input == ["First sentence.", "", "Second sentence."]:
-            assert "First sentence." in results[0][0] # Direct access
+            assert "First sentence." in results[0][0]  # Direct access
             assert results[1] == []
-            assert "Second sentence." in results[2][0] # Direct access
+            assert "Second sentence." in results[2][0]  # Direct access
         if failing_text:
-            assert results[0][0] == "This is ok." # Direct access
+            assert results[0][0] == "This is ok."  # Direct access
 
 
 def test_chunklet_error_on_token_counter_failure():
@@ -251,17 +330,19 @@ def test_batch_chunk_invalid_n_jobs(chunker, n_jobs_value):
     with pytest.raises(InvalidInputError, match="n_jobs must be >= 1 or None"):
         chunker.batch_chunk(["some text"], n_jobs=n_jobs_value)
 
+
 def test_custom_splitter_basic_usage():
     """Test basic usage of a custom splitter."""
+
     # Define a simple custom splitter that splits by 'X'
     def custom_x_splitter(text: str) -> List[str]:
-        return [s.strip() for s in text.split('X') if s.strip()]
+        return [s.strip() for s in text.split("X") if s.strip()]
 
     custom_splitters = [
         {
-            "name":"XSplitter",
-            "languages":"en",
-            "callback":custom_x_splitter,
+            "name": "XSplitter",
+            "languages": "en",
+            "callback": custom_x_splitter,
         }
     ]
 
@@ -275,7 +356,10 @@ def test_custom_splitter_basic_usage():
 
     assert sentences == expected_sentences
 
+
 def test_init_validation_error():
     """Test that InvalidInputError is raised for invalid initialization parameters."""
-    with pytest.raises(InvalidInputError, match="Invalid chunking configuration"):
+    with pytest.raises(
+        InvalidInputError, match="\[token_counter\] Input should be callable"
+    ):
         PlainTextChunker(token_counter="Not a callable")

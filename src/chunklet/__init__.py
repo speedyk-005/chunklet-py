@@ -7,24 +7,19 @@ Language Models (LLMs), Retrieval-Augmented Generation (RAG) pipelines, and
 other context-aware Natural Language Processing (NLP) tasks in mind.
 
 The core functionality is provided by the `Chunklet` class, which can be
-imported directly from the package alongside execptions and schemas models.
+imported directly from the package alongside execptions.
 """
 
 from .plain_text_chunker import PlainTextChunker
 from .document_chunker import DocumentChunker
+from .code_chunker import CodeChunker
 from .exceptions import (
     ChunkletError,
     InvalidInputError,
     MissingTokenCounterError,
     UnsupportedFileTypeError,
     FileProcessingError,
-)
-from .utils import (
-    DOCXProcessor,
-    PDFProcessor,
-    rst_to_markdown,
-    UniversalSplitter,
-    detect_text_language,
+    TextProcessingError,
 )
 
 __version__ = "2.0.0"
@@ -32,14 +27,11 @@ __version__ = "2.0.0"
 __all__ = [
     "PlainTextChunker",
     "DocumentChunker",
+    "CodeChunker",
     "ChunkletError",
     "InvalidInputError",
     "MissingTokenCounterError",
     "UnsupportedFileTypeError",
     "FileProcessingError",
-    "DOCXProcessor",
-    "PDFProcessor",
-    "rst_to_markdown",
-    "UniversalSplitter",
-    "detect_text_language",
+    "TextProcessingError",
 ]
