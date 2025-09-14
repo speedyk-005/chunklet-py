@@ -14,7 +14,10 @@ class CodeStructureExtractor:
     """
 
     def __init__(
-        self, language: str, include_comments: bool = True, include_docstrings: bool = True
+        self,
+        language: str,
+        include_comments: bool = True,
+        include_docstrings: bool = True,
     ):
         """
         Initialize the extractor with language settings.
@@ -40,10 +43,12 @@ class CodeStructureExtractor:
 
         # Compile regex patterns for efficiency
         self.docstring_pattern = re.compile(
-            r'(\"\"\"[\s\S]*?\"\"\"|\'\'\'[\s\S]*?\'\'\')',
+            r"(\"\"\"[\s\S]*?\"\"\"|\'\'\'[\s\S]*?\'\'\')",
             re.MULTILINE,
         )
-        self.comment_single_pattern = re.compile(self.patterns.get("comment_single", ""))
+        self.comment_single_pattern = re.compile(
+            self.patterns.get("comment_single", "")
+        )
         self.comment_multi_pattern = (
             re.compile(self.patterns.get("comment_multi", ""), re.MULTILINE)
             if self.patterns.get("comment_multi")
@@ -87,8 +92,12 @@ class CodeStructureExtractor:
                     i += 1
                     matched = True
                     break
-                
-                if kind == "comment" and self.include_comments and self._is_comment(line):
+
+                if (
+                    kind == "comment"
+                    and self.include_comments
+                    and self._is_comment(line)
+                ):
                     chunks.append(self._build_chunk("comment", line, None, None, i, i))
                     i += 1
                     matched = True
@@ -99,17 +108,22 @@ class CodeStructureExtractor:
                     if m:
                         name = m.group(1)
                         block_lines, end_index = self._extract_block(lines, i)
-                        
+
                         # Split the block into its header, body, docstring, etc.
-                        header, docstring, body_lines, comments_str = self._split_block_content(block_lines)
+                        header, docstring, body_lines, comments_str = (
+                            self._split_block_content(block_lines)
+                        )
 
                         methods = []
                         if kind == "class":
-                            methods = self._extract_methods(body_lines, i + (len(block_lines) - len(body_lines)))
+                            methods = self._extract_methods(
+                                body_lines,
+                                i + (len(block_lines) - len(body_lines)),
+                            )
 
                         # Reassemble the body without the methods for the main class body
                         body_text = self._rebuild_body_text(body_lines, methods)
-                        
+
                         chunks.append(
                             self._build_chunk(
                                 kind,
@@ -138,12 +152,8 @@ class CodeStructureExtractor:
         """Check if a line is a single or multi-line comment."""
         stripped = line.strip()
         return (
-            (self.comment_single_pattern and self.comment_single_pattern.match(stripped))
-            or (
-                self.comment_multi_pattern
-                and self.comment_multi_pattern.match(stripped)
-            )
-        )
+            self.comment_single_pattern and self.comment_single_pattern.match(stripped)
+        ) or (self.comment_multi_pattern and self.comment_multi_pattern.match(stripped))
 
     def _match(self, kind: str, line: str, return_match: bool = False):
         """Match a line against a regex pattern for a specific kind of element."""
@@ -160,81 +170,93 @@ class CodeStructureExtractor:
             return self._extract_indent_block(lines, start)
         return self._extract_brace_block(lines, start)
 
-    def _extract_indent_block(self, lines: list[str], start: int) -> tuple[list[str], int]:
+    def _extract_indent_block(
+        self, lines: list[str], start: int
+    ) -> tuple[list[str], int]:
         """Extract a block of code based on indentation (Python/Ruby style)."""
         base_indent = self._indent_level(lines[start])
         block = [lines[start]]
         i = start + 1
-        
+
         while i < len(lines):
             line = lines[i]
             if not line.strip():
                 block.append(line)
                 i += 1
                 continue
-            
+
             current_indent = self._indent_level(line)
-            
+
             if self.language == "ruby" and line.strip() == "end":
                 if current_indent < base_indent:
                     break
                 block.append(line)
                 i += 1
                 continue
-                
+
             if current_indent <= base_indent:
                 break
-                
+
             block.append(line)
             i += 1
-            
+
         return block, i - 1
 
-    def _extract_brace_block(self, lines: list[str], start: int) -> tuple[list[str], int]:
+    def _extract_brace_block(
+        self, lines: list[str], start: int
+    ) -> tuple[list[str], int]:
         """Extract a block of code based on curly braces (C/Java style)."""
         block = [lines[start]]
         depth = lines[start].count("{") - lines[start].count("}")
         i = start + 1
-        
+
         while i < len(lines) and depth > 0:
             line = lines[i]
             block.append(line)
             depth += line.count("{") - line.count("}")
             i += 1
-            
+
         return block, i - 1
 
     def _indent_level(self, line: str) -> int:
         """Calculate the indentation level of a line."""
         return len(line) - len(line.lstrip())
 
-    def _split_block_content(self, block: list[str]) -> tuple[str, str | None, list[str], str | None]:
+    def _split_block_content(
+        self, block: list[str]
+    ) -> tuple[str, str | None, list[str], str | None]:
         """Split a block into header, docstring, comments, and body lines."""
         header = block[0]
         docstring, comments, start_body_idx = self._get_initial_doc_and_comments(block)
         body_lines = block[start_body_idx:]
-        
+
         comments_str = "\n".join(comments) if comments else None
-        
+
         return header, docstring, body_lines, comments_str
 
-    def _get_initial_doc_and_comments(self, lines: list[str]) -> tuple[str | None, list[str], int]:
+    def _get_initial_doc_and_comments(
+        self, lines: list[str]
+    ) -> tuple[str | None, list[str], int]:
         """
         Extract the docstring and initial comments immediately following a header.
         Returns the docstring, a list of comment lines, and the index where the body begins.
         """
         docstring = None
         comments = []
-        i = 1 # Start after the header line
-        
+        i = 1  # Start after the header line
+
         while i < len(lines):
             line = lines[i]
             stripped_line = line.strip()
 
-            is_docstring = self.include_docstrings and not docstring and self.docstring_pattern.match(stripped_line)
+            is_docstring = (
+                self.include_docstrings
+                and not docstring
+                and self.docstring_pattern.match(stripped_line)
+            )
             is_comment = self.include_comments and self._is_comment(line)
             is_empty = not stripped_line
-            
+
             if is_docstring:
                 # Capture the full docstring block
                 ds_lines = [line]
@@ -252,13 +274,15 @@ class CodeStructureExtractor:
             elif is_empty:
                 i += 1
                 continue
-            
+
             # If we hit any code that isn't a docstring or comment, we're done
             break
-            
+
         return docstring, comments, i
 
-    def _extract_methods(self, body_lines: list[str], start_line_offset: int) -> list[dict]:
+    def _extract_methods(
+        self, body_lines: list[str], start_line_offset: int
+    ) -> list[dict]:
         """Extract method definitions from a list of body lines."""
         methods = []
         i = 0
@@ -271,11 +295,18 @@ class CodeStructureExtractor:
                 end_line = start_line_offset + end_index_local
 
                 # Now, split the method block itself
-                method_header, method_docstring, method_body_lines, method_comments_str = self._split_block_content(block_lines)
+                (
+                    method_header,
+                    method_docstring,
+                    method_body_lines,
+                    method_comments_str,
+                ) = self._split_block_content(block_lines)
 
-                method_body = "\n".join(method_body_lines) if method_body_lines else None
+                method_body = (
+                    "\n".join(method_body_lines) if method_body_lines else None
+                )
                 name = m.group(1)
-                
+
                 methods.append(
                     self._build_chunk(
                         "method",
@@ -293,14 +324,16 @@ class CodeStructureExtractor:
                 i += 1
         return methods
 
-    def _rebuild_body_text(self, body_lines: list[str], methods: list[dict]) -> str | None:
+    def _rebuild_body_text(
+        self, body_lines: list[str], methods: list[dict]
+    ) -> str | None:
         """
         Rebuilds the body text by removing lines that are part of extracted methods.
         This ensures the main class/function body only contains what's left.
         """
         if not methods:
             return "\n".join(body_lines) if body_lines else None
-        
+
         method_lines = set()
         for method in methods:
             start = method["start_line"] - method["start_line"]
@@ -310,7 +343,7 @@ class CodeStructureExtractor:
         cleaned_body_lines = [
             line for i, line in enumerate(body_lines) if i not in method_lines
         ]
-        
+
         return "\n".join(cleaned_body_lines) if cleaned_body_lines else None
 
     def _build_chunk(
@@ -421,6 +454,8 @@ class Circle(Geometry):
 # Top-level statement
 print("Geometry module loaded")
 '''
-    extractor = CodeStructureExtractor("python", include_comments=True, include_docstrings=True)
+    extractor = CodeStructureExtractor(
+        "python", include_comments=True, include_docstrings=True
+    )
     structures = extractor.dispatch(python_code)
     extractor.print_chunks(structures)

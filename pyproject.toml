@@ -36,6 +36,7 @@ keywords = [
 dependencies = [
   "pysbd>=0.3.0",
   "sentence-splitter>=1.4",
+  "sentencex>=0.6.0",
   "py3langid>=0.3.0",
   "loguru>=0.7.0",
   "pydantic>=2.0.0",
@@ -43,6 +44,7 @@ dependencies = [
   "rich>=13.0.0",
   "regex>=2024.11.6",
   "json5>=0.9.0",
+  "cachetools>=5.5.2"
 ]
 
 [project.urls]

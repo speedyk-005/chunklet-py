@@ -28,10 +28,11 @@ def test_code_chunker_init_invalid_input():
     """
     Test that CodeChunker raises InvalidInputError for an unsupported language for an invalid token counter.
     """
-    
-    with pytest.raises(InvalidInputError, match="Unsupported language: unsupported_lang"):
+
+    with pytest.raises(
+        InvalidInputError, match="Unsupported language: unsupported_lang"
+    ):
         CodeChunker(language="unsupported_lang")
-        
 
     with pytest.raises(InvalidInputError, match="token_counter"):
         CodeChunker(token_counter="not_a_callable")
@@ -59,6 +60,7 @@ class MyClass:
     # Verify content of some chunks
     assert "def func_a():" in chunks[0]["content"]
     assert "class MyClass:" in chunks[1]["content"]
+
 
 def test_code_chunker_element_exceeds_limit(code_chunker):
     """Test that InvalidInputError is raised when an element exceeds the hard token limit."""
@@ -96,7 +98,9 @@ def handle_command(command, state):
             print("Unknown command.")
     return state
 '''
-    with pytest.raises(InvalidInputError, match="is too large to fit in a single chunk"):
+    with pytest.raises(
+        InvalidInputError, match="is too large to fit in a single chunk"
+    ):
         code_chunker.chunk(long_body_code, max_tokens=30)
 
 
@@ -107,15 +111,16 @@ def test_code_chunker_missing_token_counter():
         chunker_no_default_tc.chunk("def func(): pass", token_counter=None)
 
 
-
-
-
 def test_code_chunker_no_docstrings():
     """Test that docstrings are excluded when include_docstrings is False."""
     code = '''def func_a():
     """This is a docstring."""
     pass'''
-    chunker = CodeChunker(language="python", include_docstrings=False, token_counter=lambda s: len(s.split()))
+    chunker = CodeChunker(
+        language="python",
+        include_docstrings=False,
+        token_counter=lambda s: len(s.split()),
+    )
     chunks = chunker.chunk(code, max_tokens=10)
     print(chunks)
     assert "This is a docstring." not in chunks[0]["content"]
@@ -123,10 +128,14 @@ def test_code_chunker_no_docstrings():
 
 def test_code_chunker_no_comments():
     """Test that comments are excluded when include_comments is False."""
-    code = '''# This is a comment
+    code = """# This is a comment
 def func_a():
-    pass'''
-    chunker = CodeChunker(language="python", include_comments=False, token_counter=lambda s: len(s.split()))
+    pass"""
+    chunker = CodeChunker(
+        language="python",
+        include_comments=False,
+        token_counter=lambda s: len(s.split()),
+    )
     chunks = chunker.chunk(code, max_tokens=10)
     print(chunks)
     assert "This is a comment" not in chunks[0]["content"]

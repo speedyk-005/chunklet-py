@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0.0] - 2025-09-11
+## [2.0.0 beta] - 2025-09-12
 
 ### Added
 
+- **Expanded Language Support with `sentencex`:** Integrated the `sentencex` library as a new sentence splitter. This officially boosts language support from 36+ to over 232 languages, providing more reliable sentence segmentation for many languages that were previously handled by the generic fallback splitter.
 - **Code Chunker Introduction:** Introduced `CodeChunker` for syntax-aware chunking of source code, with support for multiple programming languages by leveraging `src/libs/code_etructure_extractor` to dispatch code into structural elements.
 - **CLI Multiple Input Files:** Added an `--input-files` argument to allow processing of multiple specific files.
 - **CLI Metadata Flag:** Added a `-m, --metadata` flag to the CLI to display chunk metadata in the output.
@@ -21,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Memory Optimization:** Refactored `PlainTextChunker` to fully utilize generators, yielding chunks one at a time to reduce memory footprint, especially for large documents. That also means you dont have to wait for the chunks fully be processed before start using them.
+- **Memory Friendly caching:** Replaced `functools.lrucache` with `cachetools.cache` to avoid instance references in cache keys to prevent unnecessary memory retention.
 - **Project Structure:** Moved several utility modules to a new `src/chunklet/libs` directory.
 - **Linting:** Integrated `flake8` for code linting and updated `CONTRIBUTING.md` with instructions for running it.
 - **Code Quality:** Fixed various `pyflakes` linting issues across the `src/` and `tests/` directories, improving code cleanliness.
@@ -28,9 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Error Handling:**
     - Modified `_count_tokens` to return `TextProcessingError` instead of `ChunkletError`.
     - Catched errors raised by the usage of `custom_splitters`'s callback and reraised as `TextProcessingError` instead.
+    - Improves the exception hierarchy by removing `MissingTokenCounterError` as subclass of `InvalidInputError`.
 - **Project Restructuring:**
     - Renamed `src/chunklet/core.py` to `src/chunklet/plain_text_chunker.py`.
     - Renamed `Chunklet` class to `PlainTextChunker`.
+- **Improved Error Messages:** Improved error messages across the library to be more user-friendly and provide hints for fixing the issues.  
 - **Friendlier Initialization:** Updated `PlainTextChunker` to accept a a list of dict instead of a list of models for more beginner friendly initialization.
 - **Safer Tokenizer Command processing:** Changed `shell=True` to `shell=False` for the subprocess.run call in create_external_tokenizer for enhanced security and predictability. The shlex module is now implicitly used for command parsing when shell=False.
 - **Improved chunking format:** Added a newline between sentences for structured chunking format output. This helps preserving original format better.
@@ -48,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- **CLI Argument:** Removed the `--no-cache` command-line argument.
 - **CLI Argument:** Removed the deprecated `--batch` argument.
 
 ---

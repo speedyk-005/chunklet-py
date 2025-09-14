@@ -14,6 +14,7 @@ from loguru import logger
 # Silent logging
 logger.remove()
 
+
 @pytest.fixture
 def mock_plain_text_chunker():
     """Mock PlainTextChunker to isolate DocumentChunker logic"""
@@ -108,9 +109,7 @@ def test_chunk_pdf(document_chunker, mock_plain_text_chunker):
         "samples/complex-layout.rtf",
     ],
 )
-def test_chunk_files(
-    document_chunker, mock_plain_text_chunker, path
-):
+def test_chunk_files(document_chunker, mock_plain_text_chunker, path):
     """Test the main chunk method with various supported file types."""
     mock_plain_text_chunker.reset_mock()
     mock_plain_text_chunker.verbose = True

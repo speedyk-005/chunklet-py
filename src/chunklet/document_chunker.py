@@ -8,7 +8,7 @@ try:
     from striprtf.striprtf import rtf_to_text
 except ImportError:
     rtf_to_text = None
-    
+
 from chunklet.plain_text_chunker import PlainTextChunker
 from chunklet.libs.pdf_processor import PDFProcessor
 from chunklet.libs.docx_processor import DOCXProcessor
@@ -43,7 +43,7 @@ class DocumentChunker:
 
     # Supported file extensions for general-purpose text documents
     SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md", ".rst", ".rtf"}
-    
+
     def __init__(
         self,
         plain_text_chunker: PlainTextChunker,
@@ -76,7 +76,9 @@ class DocumentChunker:
             ]
         except ValidationError as e:
             pretty_err = pretty_errors(e)
-            raise InvalidInputError(f"Invalid configuration.\n Details: {pretty_err}") from e
+            raise InvalidInputError(
+                f"Invalid configuration.\n Details: {pretty_err}"
+            ) from e
 
         # Prepare a set of supported extensions for custom processors
         self._custom_processor_extensions = set()
@@ -85,7 +87,9 @@ class DocumentChunker:
                 if isinstance(processor.file_extensions, str):
                     self._custom_processor_extensions.add(processor.file_extensions)
                 else:
-                    self._custom_processor_extensions.update(set(processor.file_extensions))
+                    self._custom_processor_extensions.update(
+                        set(processor.file_extensions)
+                    )
 
         self.pdf_processor = PDFProcessor()
         self.docx_processor = DOCXProcessor()
@@ -96,7 +100,7 @@ class DocumentChunker:
 
         Args:
             path (str | Path): The path to the document file.
-    
+
         Returns:
             tuple[Path, str]: A tuple containing the resolved `Path` object and the
             file's lowercase extension.
@@ -107,7 +111,7 @@ class DocumentChunker:
         """
         path = Path(str(path))
         extension = path.suffix.lower()
-        
+
         if not extension:
             raise InvalidInputError(
                 f"Invalid path '{path}' provided. Path must have a recognizable extension."
@@ -116,14 +120,14 @@ class DocumentChunker:
         if not path.is_file():
             raise FileNotFoundError(f"The file '{path}' can't be found.")
 
-        
         if (
             extension not in self.SUPPORTED_EXTENSIONS
             and extension not in self._custom_processor_extensions
         ):
             raise UnsupportedFileTypeError(
-                f"File type '{extension}' is not supported."
-                f"\nThe supported extensions are {self.SUPPORTED_EXTENSIONS}"
+                f"File type '{extension}' is not supported.\n"
+                f"Supported extensions are: {self.SUPPORTED_EXTENSIONS}\n"
+                "💡 Hint: You can add support for other file types by providing a custom processor."
             )
 
         return path, extension
@@ -143,13 +147,15 @@ class DocumentChunker:
             str: The content of the file as a string.
         """
         if self.plain_text_chunker.verbose:
-            logger.debug(f"Reading file: {path} with extension: {ext}")
+            logger.debug("Reading file: {} with extension: {}", path, ext)
 
         try:
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 text_content = f.read()
         except Exception as e:
-            raise FileProcessingError(f"Error reading file {path}.\n Details: {e}") from e
+            raise FileProcessingError(
+                f"Error reading file {path}.\n Details: {e}"
+            ) from e
 
         if ext == ".rst":
             text_content = rst_to_markdown(text_content)
@@ -185,7 +191,9 @@ class DocumentChunker:
             if ext in supported_extensions:
                 if self.plain_text_chunker.verbose:
                     logger.debug(
-                        f"Using custom processor '{processor.name}' for file type: {ext}"
+                        "Using custom processor '{}' for file type: {}",
+                        processor.name,
+                        ext,
                     )
                 try:
                     return processor.callback(str(path))
@@ -195,13 +203,15 @@ class DocumentChunker:
                     ) from e
 
     def _create_chunk_boxes(
-        self, chunks_str: list[str], base_metadata: dict[str, Any]
+        self,
+        chunks: list[str],
+        base_metadata: dict[str, Any],
     ) -> list[Box]:
         """
-        Helper to create a list of Box objects for chunks with embedded metadata and auto-assigned chunk numbers.
+        Helper to create a generator of Box objects for chunks with embedded metadata and auto-assigned chunk numbers.
         """
         final_chunks = []
-        for i, chunk_str in enumerate(chunks_str):
+        for i, chunk_str in enumerate(chunks):
             chunk_box = Box(
                 {
                     "content": chunk_str,
@@ -225,7 +235,6 @@ class DocumentChunker:
         overlap_percent: int | float = 20,
         offset: int = 0,
         token_counter: Callable[[str], int] | None = None,
-        n_jobs: int | None = None,  # only used for pdf
     ) -> list[Box]:
         """
         Chunks a single document from a given path.
@@ -243,10 +252,10 @@ class DocumentChunker:
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
             offset (int): Starting sentence offset for chunking. Defaults to 0.
             token_counter (callable | None): Optional token counting function. Required for token-based modes only.
-            
+
         Returns:
-            list[Box]: A list of `Box` objects, each representing a chunk with its
-            content and metadata.
+            list[Box]: A list of `Box` objects, each representing
+            a chunk with its content and metadata.
 
         Raises:
             InvalidInputError: If the input arguments aren't valid.
@@ -263,7 +272,11 @@ class DocumentChunker:
         validated_path, ext = self.validate_path(path)
 
         if self.plain_text_chunker.verbose:
-            logger.debug(f"Validated path: {validated_path}, detected extension: {ext}")
+            logger.debug(
+                "Validated path: {}, detected extension: {}",
+                validated_path,
+                ext,
+            )
 
         text_content = ""  # This will hold the text for chunking
         document_metadata = {"source": str(validated_path)}
@@ -272,66 +285,43 @@ class DocumentChunker:
         if ext in self._custom_processor_extensions:
             text_content = self._use_custom_processor(validated_path, ext)
             # Process as a single block of text
-            chunks_str = self.plain_text_chunker.chunk(text=text_content, **params)
+            chunks = self.plain_text_chunker.chunk(text=text_content, **params)
 
-            final_chunks = self._create_chunk_boxes(chunks_str, document_metadata)
+            chunk_boxes_gen = self._create_chunk_boxes(chunks, document_metadata)
 
             if self.plain_text_chunker.verbose:
                 logger.info(
-                    f"Generated {len(final_chunks)} chunks for {validated_path} using custom processor"
+                    "Generated chunks for {} using custom processor",
+                    validated_path,
                 )
 
-            return final_chunks
-
-        if ext in {".txt", ".md", ".rst", ".docx", ".rtf"}:
+        elif ext in {".txt", ".md", ".rst", ".docx", ".rtf"}:
             if self.plain_text_chunker.verbose:
-                logger.debug(f"Processing text-based file: {ext}")
+                logger.debug("Processing text-based file: {}", ext)
             if ext == ".docx":
                 text_content = self.docx_processor.extract_text(validated_path)
             else:
                 text_content = self._read_file(validated_path, ext)
 
             # Process as a single block of text
-            chunks_str = self.plain_text_chunker.chunk(text=text_content, **params)
+            chunks = self.plain_text_chunker.chunk(text=text_content, **params)
 
-            final_chunks = self._create_chunk_boxes(chunks_str, document_metadata)
+            chunk_boxes = self._create_chunk_boxes(chunks, document_metadata)
 
             if self.plain_text_chunker.verbose:
                 logger.info(
-                    f"Generated {len(final_chunks)} chunks for {validated_path}"
+                    "Generated chunks for {} (from PDF)",
+                    validated_path,
                 )
 
             return final_chunks
 
-        elif ext == ".pdf":
-            if self.plain_text_chunker.verbose:
-                logger.debug("Processing PDF file with PDFProcessor")
-            pdf_data = self.pdf_processor.extract_text(str(validated_path))
-
-            # Prepare texts for plain_text_chunker.batch_chunk
-            pages_texts = pdf_data.pop("pages", [])
-            document_metadata.update(pdf_data)
-
-            # Call plain_text_chunker.batch_chunk
-            params["show_progress"] = False  # Dont show progress
-            all_pages_chunks = self.plain_text_chunker.batch_chunk(
-                texts=pages_texts, n_jobs=n_jobs, **params
+        else:
+            raise InvalidInputError(
+                "You cannot use the general chunk method for pdf chunking."
+                "\n💡 Hint: use 'chunker.batch_chunk([\"exemple.pdf\", ...], ...)' instead."
+                "\n Reason: pdfs are made of pages and each page text need to be process in parallel."
             )
-
-            final_chunks = []
-            for page_num, chunks_str_list in enumerate(all_pages_chunks, start=1):
-                page_metadata = document_metadata.copy()
-                page_metadata["page_num"] = page_num 
-                final_chunks.extend(
-                    self._create_chunk_boxes(chunks_str_list, page_metadata)
-                )
-
-            if self.plain_text_chunker.verbose:
-                logger.info(
-                    f"Generated {len(final_chunks)} chunks for {validated_path} (from PDF)"
-                )
-
-            return final_chunks
 
     def batch_chunk(
         self,
@@ -404,7 +394,9 @@ class DocumentChunker:
 
             if self.plain_text_chunker.verbose:
                 logger.debug(
-                    f"Processing file: {validated_path}, detected extension: {ext}"
+                    "Processing file: {}, detected extension: {}",
+                    validated_path,
+                    ext,
                 )
 
             # Prioritize custom processors
@@ -462,7 +454,8 @@ class DocumentChunker:
 
         if self.plain_text_chunker.verbose:
             logger.info(
-                f"Finished bulk chunking. Generated {len(final_results_per_document)} document chunk lists from {len(valid_paths_with_ext)} documents."
+                "Finished bulk chunking. Generated {} document chunk lists from {} documents.",
+                len(final_results_per_document),
+                len(valid_paths_with_ext),
             )
         return final_results_per_document
-

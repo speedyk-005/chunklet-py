@@ -1,4 +1,4 @@
-from __future__ import annotations   
+from __future__ import annotations
 import regex as re
 
 # Extended sentence-ending punctuation triggers.

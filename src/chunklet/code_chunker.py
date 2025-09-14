@@ -5,7 +5,11 @@ from pydantic import ValidationError
 from chunklet.libs.code_structure_extractor import CodeStructureExtractor
 from chunklet.utils.error_utils import pretty_errors
 from chunklet.models import CodeChunkerConfig, CodeChunkingConfig
-from chunklet.exceptions import ChunkletError, InvalidInputError, MissingTokenCounterError
+from chunklet.exceptions import (
+    ChunkletError,
+    InvalidInputError,
+    MissingTokenCounterError,
+)
 
 
 class CodeChunker:
@@ -49,7 +53,9 @@ class CodeChunker:
                 token_counter=token_counter,
             )
         except Exception as e:
-            raise InvalidInputError(f"Validation Error: {str(e)}")
+            raise InvalidInputError(
+                f"Error: Invalid configuration provided.\nDetails: {pretty_errors(e)}"
+            )
 
         try:
             self.extractor = CodeStructureExtractor(
@@ -64,7 +70,7 @@ class CodeChunker:
     def _count_tokens(self, text: str, token_counter: Callable[[str], int]) -> int:
         """
         Safely count tokens, handling potential errors from the token_counter.
-        
+
         Args:
             text (str): The text to count tokens from.
             token_counter (Callable[[str], int]): The token counter function.
@@ -79,9 +85,10 @@ class CodeChunker:
             return token_counter(text)
         except Exception as e:
             raise ChunkletError(
-                f"Token counter failed for text: '{text[:100]}'. Error: {e}"
+                f"Token counter failed while processing text starting with: '{text[:100]}...'.\n"
+                f"💡 Hint: Please ensure the token counter function handles all edge cases and returns an integer.\nDetails: {e}"
             ) from e
-            
+
     def chunk(
         self,
         code: str,
@@ -123,9 +130,7 @@ class CodeChunker:
         current_tokens = 0
 
         if self.config.verbose:
-            logger.info(
-                f"Starting chunking with limits: max_tokens={max_tokens}"
-            )
+            logger.info(f"Starting chunking with limits: max_tokens={max_tokens}")
 
         # Extract the code into structural elements
         extracted_elements = self.extractor.dispatch(code)
@@ -137,7 +142,11 @@ class CodeChunker:
             # Handle class elements specially - they contain methods
             if element["type"] == "class" and element.get("methods"):
                 class_chunks = self._handle_class_element(
-                    element, current_chunk, current_tokens, max_tokens, token_counter
+                    element,
+                    current_chunk,
+                    current_tokens,
+                    max_tokens,
+                    token_counter,
                 )
 
                 if class_chunks:
@@ -161,7 +170,7 @@ class CodeChunker:
                     raise InvalidInputError(
                         f"The element '{element.get('name', element['type'])}' ({element_tokens} tokens) "
                         f"is too large to fit in a single chunk with a max limit of {max_tokens}. "
-                        "Consider increasing the 'max_tokens' parameter or refactoring the element."
+                        "\n💡 Hint: Consider increasing the 'max_tokens' parameter or refactoring the element."
                     )
                 else:
                     chunks.append(self._create_chunk(current_chunk))
@@ -245,7 +254,7 @@ class CodeChunker:
                 raise InvalidInputError(
                     f"The method '{method.get('name', 'unnamed')}' ({method_tokens} tokens) is "
                     f"too large to fit in a single chunk with a max limit of {max_tokens}. "
-                    "Consider increasing the 'max_tokens' parameter or refactoring the method."
+                    "\n💡 Hint: Consider increasing the 'max_tokens' parameter or refactoring the method."
                 )
 
             # If method doesn't fit in current class chunk, create continuation
@@ -285,7 +294,9 @@ class CodeChunker:
                     },
                     method,
                 ]
-                current_class_tokens = self._count_tokens(element["header"], token_counter) + method_tokens
+                current_class_tokens = (
+                    self._count_tokens(element["header"], token_counter) + method_tokens
+                )
             else:
                 current_class_elements.append(method)
                 current_class_tokens += method_tokens
@@ -328,7 +339,7 @@ class CodeChunker:
     def _create_chunk(self, elements: List[Dict]) -> Dict:
         """Create a final chunk from a list of elements, returning a dictionary with text and metadata."""
         chunk_text = "\n".join([self._element_to_text(element) for element in elements])
-        
+
         start_line = None
         for element in elements:
             if "start_line" in element and element["start_line"] is not None:
@@ -340,8 +351,12 @@ class CodeChunker:
             if "end_line" in element and element["end_line"] is not None:
                 end_line = element["end_line"]
                 break
-                
-        return {"content": chunk_text, "startline": start_line, "endline": end_line}
+
+        return {
+            "content": chunk_text,
+            "startline": start_line,
+            "endline": end_line,
+        }
 
 
 # -- Example usage --

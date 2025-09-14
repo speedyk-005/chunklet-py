@@ -74,7 +74,11 @@ def get_batch_chunks(text: str, lang: str, mode: str, repeat: int = 100):
     chunker_single = Chunklet(token_counter=simple_word_counter)
     if mode == "sentence":
         chunks = chunker_single.batch_chunk(
-            texts, lang=lang, mode="sentence", max_sentences=5, progress_bar=False
+            texts,
+            lang=lang,
+            mode="sentence",
+            max_sentences=5,
+            progress_bar=False,
         )
     elif mode == "token":
         chunks = chunker_single.batch_chunk(

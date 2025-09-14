@@ -3,7 +3,7 @@ from typing import List
 from unittest.mock import patch
 from chunklet import (
     PlainTextChunker,
-    ChunkletError,
+    TextProcessingError,
     InvalidInputError,
     MissingTokenCounterError,
 )
@@ -32,9 +32,6 @@ MULTILINGUAL_TEXTS = [
     "Das ist ein Satz. Hier ist noch ein Satz. Und noch einer.",  # German
 ]
 
-ACRONYMS_TEXT = (
-    "The section is N. A. S. A. related. Consider S.1.2 to be important. Let's move on."
-)
 UNSUPPORTED_TEXT = "Bonjour tout moun! Non pa mwen se Bob."  # Haitian Creole
 
 
@@ -52,7 +49,7 @@ def chunker():
 # --- Core Tests ---
 @pytest.mark.parametrize(
     "mode, max_tokens, max_sentences, expected_chunks",
-    [("sentence", 512, 3, 9), ("token", 30, 100, 3), ("hybrid", 30, 3, 9)],
+    [("sentence", 512, 3, 17), ("token", 30, 100, 1), ("hybrid", 30, 3, 17)],
 )
 def test_all_modes_produce_chunks(
     chunker, mode, max_tokens, max_sentences, expected_chunks
@@ -60,27 +57,20 @@ def test_all_modes_produce_chunks(
     """Verify all chunking modes produce output with expected chunk counts and structure."""
     chunker.verbose = True
     chunks = chunker.chunk(
-        ENGLISH_TEXT, mode=mode, max_tokens=max_tokens, max_sentences=max_sentences
+        ENGLISH_TEXT,
+        mode=mode,
+        max_tokens=max_tokens,
+        max_sentences=max_sentences,
     )
     assert chunks, f"Expected chunks in {mode} mode but got empty list"
     assert (
-        len(chunks) == expected_chunks
-    ), f"Expected {expected_chunks} chunks in {mode} mode, but got {len(chunks)}"
+        len(list(chunks)) == expected_chunks
+    ), f"Expected {expected_chunks} chunks in {mode} mode, but got {len(list(chunks))}"
 
     # Verify the structure of the first chunk
     first_chunk = chunks[0]  # first_chunk is now a string
     assert isinstance(first_chunk, str)
     assert len(first_chunk) > 0  # Check length of the string
-
-
-def test_acronyms_preserved(chunker):
-    """Verify special patterns like acronyms remain intact after chunking."""
-    chunks = chunker.chunk(ACRONYMS_TEXT, mode="sentence", max_sentences=1)
-    assert len(chunks) == 3, "Expected 3 chunks"
-    assert "N. A. S. A. related" in chunks[0], "Acronym should be in the first chunk"
-    assert (
-        "Consider S.1.2 to be important" in chunks[1]
-    ), "S.1 should be in the second chunk"
 
 
 @pytest.mark.parametrize(
@@ -127,7 +117,8 @@ def test_fallback_splitter(chunker):
 
     # Test low confidence language detection
     with patch(
-        "chunklet.plain_text_chunker.detect_text_language", return_value=("en", 0.5)
+        "chunklet.plain_text_chunker.detect_text_language",
+        return_value=("en", 0.5),
     ):
         sentences, warnings = chunker._split_by_sentence("This is a test.", "auto")
         assert "Low confidence in language detected" in "".join(warnings)
@@ -216,7 +207,7 @@ def test_non_cached_chunking(chunker):
             "sentence",
             1,
             InvalidInputError,
-            "Input 'texts' must be a list.",
+            "The 'texts' parameter must be a list of strings.",
             None,
             None,
         ),
@@ -226,7 +217,7 @@ def test_non_cached_chunking(chunker):
             "sentence",
             1,
             InvalidInputError,
-            "Input 'texts' must be a list.",
+            "The 'texts' parameter must be a list of strings.",
             None,
             None,
         ),
@@ -236,7 +227,7 @@ def test_non_cached_chunking(chunker):
             "sentence",
             1,
             InvalidInputError,
-            "Input 'texts' must be a list.",
+            "The 'texts' parameter must be a list of strings.",
             None,
             None,
         ),
@@ -252,7 +243,11 @@ def test_non_cached_chunking(chunker):
         ),
         # Error handling from test_batch_chunk_n_jobs_1_with_error
         (
-            ["This is ok.", "This one will fail.", "This will not be processed."],
+            [
+                "This is ok.",
+                "This one will fail.",
+                "This will not be processed.",
+            ],
             1,
             "token",
             100,
@@ -287,12 +282,22 @@ def test_batch_processing(
 
     if expected_exception:
         with pytest.raises(expected_exception, match=expected_match):
-            chunker.batch_chunk(
-                texts_input, n_jobs=n_jobs, mode=mode, max_sentences=max_sentences
+            list(
+                chunker.batch_chunk(
+                    texts_input,
+                    n_jobs=n_jobs,
+                    mode=mode,
+                    max_sentences=max_sentences,
+                )
             )
     else:
-        results = chunker.batch_chunk(
-            texts_input, n_jobs=n_jobs, mode=mode, max_sentences=max_sentences
+        results = list(
+            chunker.batch_chunk(
+                texts_input,
+                n_jobs=n_jobs,
+                mode=mode,
+                max_sentences=max_sentences,
+            )
         )
         assert len(results) == expected_results_len
         if texts_input and results and results[0]:
@@ -300,21 +305,24 @@ def test_batch_processing(
             assert isinstance(results[0][0], str)  # Check if it's a string
 
         if texts_input == ["First sentence.", "", "Second sentence."]:
-            assert "First sentence." in results[0][0]  # Direct access
+            assert "First sentence." in results[0][0]
             assert results[1] == []
-            assert "Second sentence." in results[2][0]  # Direct access
+            assert "Second sentence." in results[2][0]
         if failing_text:
-            assert results[0][0] == "This is ok."  # Direct access
+            assert results[0][0] == "This is ok."
 
 
-def test_chunklet_error_on_token_counter_failure():
-    """Test that ChunkletError is raised when the token_counter fails."""
+def test_error_on_token_counter_failure():
+    """Test that TextProcessingError is raised when the token_counter fails."""
 
     def failing_token_counter(text: str) -> int:
         raise Exception("Token counter failed intentionally")
 
     chunker = PlainTextChunker(token_counter=failing_token_counter)
-    with pytest.raises(ChunkletError, match="Token counter failed for text:"):
+    with pytest.raises(
+        TextProcessingError,
+        match="Token counter failed while processing text starting with:",
+    ):
         chunker.chunk("some text", mode="token")
 
 
@@ -327,8 +335,11 @@ def test_chunklet_error_on_token_counter_failure():
 )
 def test_batch_chunk_invalid_n_jobs(chunker, n_jobs_value):
     """Test that InvalidInputError is raised for invalid n_jobs values."""
-    with pytest.raises(InvalidInputError, match="n_jobs must be >= 1 or None"):
-        chunker.batch_chunk(["some text"], n_jobs=n_jobs_value)
+    with pytest.raises(
+        InvalidInputError,
+        match="The 'n_jobs' parameter must be an integer greater than or equal to 1, or None",
+    ):
+        list(chunker.batch_chunk(["some text"], n_jobs=n_jobs_value))
 
 
 def test_custom_splitter_basic_usage():

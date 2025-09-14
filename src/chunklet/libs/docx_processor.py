@@ -10,10 +10,12 @@ except ImportError:
 # as the collections.Hashable ABC was removed from the main module.
 try:
     import collections.abc
+
     collections.Hashable = collections.abc.Hashable
 except (ImportError, AttributeError):
     pass
-    
+
+
 class DOCXProcessor:
     """
     A utility for extracting text content from DOCX files and converting it
@@ -39,7 +41,7 @@ class DOCXProcessor:
             str: The extracted and cleaned content of the DOCX file in
                  Markdown format.
         """
-        try: # Lazy import
+        try:  # Lazy import
             from pydocx import PyDocX
         except ImportError as e:
             raise ImportError(
@@ -59,9 +61,10 @@ class DOCXProcessor:
             )
 
         # Convert HTML to Markdown, explicitly stripping all <img> tags.
-        markdown_content = md(html_content, strip=['img'])
-        
+        markdown_content = md(html_content, strip=["img"])
+
         return markdown_content
+
 
 # Usage Example
 if __name__ == "__main__":

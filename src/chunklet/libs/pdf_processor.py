@@ -3,7 +3,8 @@ import subprocess
 from pathlib import Path
 import regex as re
 from loguru import logger
-from typing import Any 
+from typing import Any
+
 
 class PDFProcessor:
     """
@@ -43,19 +44,15 @@ class PDFProcessor:
         self.multiple_newline_pattern = re.compile(r"(?:\n\s*){3,}")
 
         # Pattern to remove lines containing only numbers
-        self.standalone_number_pattern = re.compile(
-            r"\n\s*\p{N}+\s*\n",
-            re.UNICODE
-        )
+        self.standalone_number_pattern = re.compile(r"\n\s*\p{N}+\s*\n", re.UNICODE)
 
         # Pattern to normalize two or more spaces into a single space
         self.multiple_space_pattern = re.compile(r"[ ]{2,}")
-        
+
         # Split a word that's immediately followed by a number
         # e.g., "report.1." -> "report.\n1."
         self.word_number_split_pattern = re.compile(
-            r"(\p{L}+)(\p{P})(\p{N}[.\-)*])",
-            re.UNICODE
+            r"(\p{L}+)(\p{P})(\p{N}[.\-)*])", re.UNICODE
         )
 
     def _cleanup_text(self, text: str) -> str:
@@ -74,7 +71,7 @@ class PDFProcessor:
 
         Returns:
             str: The cleaned and normalized text.
-        """ 
+        """
         if not text:
             return ""
 
@@ -87,7 +84,7 @@ class PDFProcessor:
         # Merge accidental single newlines inside paragraphs
         text = self.single_newline_pattern.sub(" ", text)
 
-        # Detach words from numbers, 
+        # Detach words from numbers,
         text = self.word_number_split_pattern.sub(r"\1\2 \n\3", text)
 
         # Normalize multiple spaces into one
@@ -99,7 +96,7 @@ class PDFProcessor:
         """
         Extracts and cleans text from all pages of a PDF, along with its metadata.
 
-        This method uses `pypdf` for extraction then clean each page's content. 
+        This method uses `pypdf` for extraction then clean each page's content.
         It also extracts the document metadata alongside.
 
         Args:
@@ -111,29 +108,26 @@ class PDFProcessor:
                 - Other metadata like page_count, Author, ...
         """
         try:
-            from pypdf import PdfReader # Lazy import
+            from pypdf import PdfReader  # Lazy import
         except ImportError as e:
             raise ImportError(
                 "The 'pypdf' library is not installed. Please install it with 'pip install pypdf' or install the document processing extras with 'pip install chunklet-py[document]'"
             ) from e
-            
+
         # Extract text and metadat then combine them.
         with open(pdf_path, "rb") as file:
             reader = PdfReader(file)
             page_count = len(reader.pages)
 
             # Extract metadata from the document
-            metadata = {
-                    "source": pdf_path,
-                    "page_count": page_count  
-                }
+            metadata = {"source": pdf_path, "page_count": page_count}
             doc_metadata = reader.metadata
 
             if doc_metadata:
                 # Add all metadata fields to our dictionary
                 for key, value in doc_metadata.items():
                     # Sanitize keys by removing leading slash if present
-                    clean_key = key[1:] if key.startswith('/') else key
+                    clean_key = key[1:] if key.startswith("/") else key
                     metadata[clean_key] = value
 
             # Extract pages content
@@ -142,8 +136,8 @@ class PDFProcessor:
                 text = page.extract_text()
                 if text:
                     cleaned_text = self._cleanup_text(text)
-                    pages.append(cleaned_text)  
-                
+                    pages.append(cleaned_text)
+
         return {"pages": pages, **metadata}
 
 
@@ -157,11 +151,11 @@ if __name__ == "__main__":
     # The extract_text method returns a dictionary
     result = processor.extract_text(pdf_path)
     pages_text = result["pages"]
-    
+
     for k, v in result.items():
         if k != "pages":
             print(f"{k}: {v}")
-            
+
     for i, page_text in enumerate(pages_text, start=1):
         print(f"\n--- Page {i} ---")
         print(page_text)

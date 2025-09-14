@@ -1,0 +1,9 @@
+- add sentencex in the project
+- modify document chunker to use stream text content
+
+
+# done
+- **Improved Error Messages:** Improved error messages across the library to be more user-friendly and provide hints for fixing the issues.  
+- **Memory Friendly caching:** Replaced `functools.lrucache` with `cachetools.cache` to avoid instance references in cache keys to prevent unnecessary memory retention.
+- Improves the exception hierarchy by removing `MissingTokenCounterError` as subclass of `InvalidInputError`.
+- replacing cahing for generator

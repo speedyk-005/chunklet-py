@@ -43,11 +43,12 @@ class CustomProcessorConfig(BaseModel):
 
 class PlainTextChunkerConfig(BaseModel):
     """Configuration for PlainTextChunker initialization."""
-     
+
     verbose: bool = Field(default=False, description="Enable verbose logging.")
     use_cache: bool = Field(default=True, description="Enable caching on chunking.")
     token_counter: Callable[[str], int] | None = Field(
-        default=None, description="Counts tokens in a sentence for token-based chunking."
+        default=None,
+        description="Counts tokens in a sentence for token-based chunking.",
     )
     custom_splitters: list[CustomSplitterConfig] | None = Field(
         default=None, description="A list of custom sentence splitters."
@@ -55,7 +56,6 @@ class PlainTextChunkerConfig(BaseModel):
     continuation_marker: str = Field(
         default="...", description="The marker to prepend to unfitted clauses."
     )
- 
 
 
 class CodeChunkerConfig(BaseModel):
@@ -89,7 +89,6 @@ class TextChunkingConfig(BaseModel):
     overlap_percent: int | float = Field(default=10, ge=0, le=75)
     offset: int = Field(default=0, ge=0)
     verbose: bool = Field(default=False, description="Enable verbose logging.")
-    use_cache: bool = Field(default=True, description="Enable caching on chunking.")
     token_counter: Callable[[str], int] | None = Field(
         None, description="The token counter function."
     )
@@ -105,8 +104,14 @@ class CodeChunkingConfig(BaseModel):
     """Pydantic model for code chunking configuration validation"""
 
     code: str = Field(..., description="The code to chunk.")
-    token_counter: Callable | None = Field(default=None, description="The token counter function.")
-    max_tokens: int = Field(default=256, ge=10, description="The maximum number of tokens allowed per chunk.")
+    token_counter: Callable | None = Field(
+        default=None, description="The token counter function."
+    )
+    max_tokens: int = Field(
+        default=256,
+        ge=10,
+        description="The maximum number of tokens allowed per chunk.",
+    )
 
     @model_validator(mode="after")
     def validate_token_counter(self) -> "CodeChunkingConfig":
