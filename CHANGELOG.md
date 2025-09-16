@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Expanded Language Support with `sentencex`:** Integrated the `sentencex` library as a new sentence splitter. This officially boosts language support from 36+ to over 232 languages, providing more reliable sentence segmentation for many languages that were previously handled by the generic fallback splitter.
-- **Code Chunker Introduction:** Introduced `CodeChunker` for syntax-aware chunking of source code, with support for multiple programming languages by leveraging `src/libs/code_etructure_extractor` to dispatch code into structural elements.
+- **Faster Language Detection**: Optimized language detection by using only the first 500 characters of the input text. This significantly improves performance, especially for large documents, without compromising accuracy for language identification.
+- **Expanded Language Support with `sentencex`:** Integrated the `sentencex` library as a new sentence splitter. This officially boosts language support from 36+ to over 226 languages, providing more reliable sentence segmentation for many languages that were previously handled by the generic fallback splitter.
+- **Code Chunker Introduction:** Introduced `CodeChunker` for syntax-aware chunking of source code, with support for multiple programming languages by leveraging `src/libs/code_structure_extractor` to dispatch code into structural elements.
 - **CLI Multiple Input Files:** Added an `--input-files` argument to allow processing of multiple specific files.
 - **CLI Metadata Flag:** Added a `-m, --metadata` flag to the CLI to display chunk metadata in the output.
 - **Document Chunker:** Introduced `DocumentChunker` to handle various file formats like `.pdf`, `.docx`, `.txt`, `.md`, `.rst`, `.rtf`.
@@ -22,7 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Memory Optimization:** Refactored `PlainTextChunker` to fully utilize generators, yielding chunks one at a time to reduce memory footprint, especially for large documents. That also means you dont have to wait for the chunks fully be processed before start using them.
+- **Batch Chunking Flexibility:** Modified `PlainTextChunker.batch_chunk` to accept any `Iterable` of strings for the `texts` parameter, instead of being restricted to `list`. Improved input validation for `texts` to provide clearer error messages.
+- **Memory Optimization:** Refactored all batch methods in the lib to fully utilize generators, yielding chunks one at a time to reduce memory footprint, especially for large documents. That also means you dont have to wait for the chunks fully be processed before start using them.
 - **Memory Friendly caching:** Replaced `functools.lrucache` with `cachetools.cache` to avoid instance references in cache keys to prevent unnecessary memory retention.
 - **Project Structure:** Moved several utility modules to a new `src/chunklet/libs` directory.
 - **Linting:** Integrated `flake8` for code linting and updated `CONTRIBUTING.md` with instructions for running it.
@@ -43,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Improved logic for handling sentences that exceed max_tokens or max_sentences. The `_find_clauses_that_fit` method's output (fitted, unfitted) is now more accurately integrated, ensuring that sentences are correctly split and assigned to chunks.
     - Modified `_find_clauses_that_fit` to return a list of str instead of a tuple of list of str for easier control. That Ensures that unfitted sentences are properly joined and accounted for when starting a new chunk after an overlap.
     - Use incremental token recalculation for better performance.
-    - Artifacts handling: Ignore the last chars after the first 100 ones in the loop around sentences. Reason: if the original text to chunk has parts not well written. (e.g. long text stream without punctuations, embeded images urls, ...)
+    - Artifacts handling: Ignore the last chars after the first 150 ones in the loop around sentences. Reason: if the original text to chunk has parts not well written. (e.g. long text stream without punctuations, embeded images urls, ...)
 - **Absolute Imports:** Converted all relative imports to absolute imports within the `chunklet` package for better clarity and to avoid potential import issues.
 - **Project Layout:** Restructured project by moving the logo to the root and adding a `samples/` directory to store the sample files.
 - **CLI Aliases:** Added `-f` as an alias for `--file` and `-d` as an alias for `--input-dir`.
@@ -53,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- **Python 3.8 Support:** Dropped official support for Python 3.8. The minimum required Python version is now 3.9.
 - **CLI Argument:** Removed the `--no-cache` command-line argument.
 - **CLI Argument:** Removed the deprecated `--batch` argument.
 

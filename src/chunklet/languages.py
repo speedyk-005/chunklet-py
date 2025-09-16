@@ -3,7 +3,7 @@ This module contains the language sets for the supported sentence splitters.
 Each set is filtered to contain only the languages truly unique to that library.
 """
 
-# Complete set of languages supported by pysbd (Python Sentence Boundary Disambiguation)
+# Complete set of languages supported by pysbd (Python Sentence Boundary Disambiguation) (22)
 PYSBD_SUPPORTED_LANGUAGES = {
     "en",  # English
     "mr",  # Marathi
@@ -29,7 +29,7 @@ PYSBD_SUPPORTED_LANGUAGES = {
     "kk",  # Kazakh
 }
 
-# Languages unique to SentenceSplitter that are NOT supported by pysbd
+# Languages unique to SentenceSplitter that are NOT supported by pysbd (14)
 SENTENCESPLITTER_UNIQUE_LANGUAGES = {
     "ca",  # Catalan
     "cs",  # Czech
@@ -47,7 +47,7 @@ SENTENCESPLITTER_UNIQUE_LANGUAGES = {
     "tr",  # Turkish
 }
 
-# Languages unique to Sentencex that are NOT supported by pysbd or sentence-splitter
+# Languages unique to Sentencex that are NOT supported by pysbd or sentence-splitter (191)
 SENTENCESX_UNIQUE_LANGUAGES = {
     "ab",  # Abkhazian
     "abs",  # Ambonese Malay
@@ -63,8 +63,8 @@ SENTENCESX_UNIQUE_LANGUAGES = {
     "arq",  # Algerian Arabic
     "ary",  # Moroccan Arabic
     "arz",  # Egyptian Arabic
-    "ast",  # Asturian
     "as",  # Assamese
+    "ast",  # Asturian
     "atj",  # Atikamekw
     "av",  # Avar
     "avk",  # Kotava
@@ -74,10 +74,8 @@ SENTENCESX_UNIQUE_LANGUAGES = {
     "ba",  # Bashkir
     "ban",  # Balinese
     "bar",  # Bavarian
-    "bbc",  # Batak Toba
-    "bcc",  # Southern Balochi
+    "bbc",  # Batak Toba/Southern Balochi
     "be",  # Belarusian
-    "bgn",  # Western Balochi
     "bh",  # Bihari
     "bi",  # Bislama
     "bjn",  # Banjar
@@ -93,8 +91,6 @@ SENTENCESX_UNIQUE_LANGUAGES = {
     "crh",  # Crimean Tatar
     "csb",  # Kashubian
     "cv",  # Chuvash
-    "dsb",  # Lower Sorbian
-    "dtp",  # Central Dusun
     "dty",  # Dotyali
     "egl",  # Emilian
     "eml",  # Emilian-Romagnol
@@ -125,7 +121,6 @@ SENTENCESX_UNIQUE_LANGUAGES = {
     "io",  # Ido
     "iu",  # Inuktitut
     "jam",  # Jamaican Patois
-    "jut",  # Jutish
     "jv",  # Javanese
     "kaa",  # Karakalpak
     "kab",  # Kabyle
@@ -162,6 +157,7 @@ SENTENCESX_UNIQUE_LANGUAGES = {
     "lzz",  # Laz
     "mad",  # Madurese
     "mai",  # Maithili
+    "map-bms", # Banjaronesian
     "mdf",  # Moksha
     "mg",  # Malagasy
     "mhr",  # Eastern Mari
@@ -177,7 +173,6 @@ SENTENCESX_UNIQUE_LANGUAGES = {
     "nap",  # Neapolitan
     "nds",  # Low German
     "nia",  # Nias
-    "nn",  # Norwegian Nynorsk
     "nrm",  # Norman
     "oc",  # Occitan
     "olo",  # Livvi-Karelian
@@ -193,7 +188,7 @@ SENTENCESX_UNIQUE_LANGUAGES = {
     "qug",  # Chimborazo Highland Quichua
     "rgn",  # Romagnol
     "rmy",  # Romani
-    "roa",  # Romagnol
+    "roa-tara", # Targumic Aramaic
     "rue",  # Rusyn
     "rup",  # Aromanian
     "ruq",  # Megleno-Romanian
@@ -208,11 +203,9 @@ SENTENCESX_UNIQUE_LANGUAGES = {
     "sgs",  # Samogitian
     "sh",  # Serbo-Croatian
     "shi",  # Tachelhit
-    "shy",  # Tachelhit
     "skr",  # Saraiki
     "sli",  # Lower Silesian
     "smn",  # Inari Sami
-    "sr",  # Serbian
     "srn",  # Sranan Tongo
     "stq",  # Saterland Frisian
     "sty",  # Siberian Tatar
@@ -253,7 +246,3 @@ SUPPORTED_LANGUAGES = (
     | SENTENCESPLITTER_UNIQUE_LANGUAGES
     | SENTENCESX_UNIQUE_LANGUAGES
 )
-
-# Print the final, de-duplicated set of languages
-print(f"Total languages supported: {len(SUPPORTED_LANGUAGES)}")
-print(SUPPORTED_LANGUAGES)

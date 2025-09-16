@@ -1,9 +1,35 @@
-- add sentencex in the project
-- modify document chunker to use stream text content
+- add support for multiple dir in cli
+- rm path from returning in validated path
+- allow any iterable instead of list for all public batch methods
+- update preview sentences
+- add a preview text in document chunker
+- change cache from 256 to 50 to prevent bloating memory
 
 
+
+
+- add test for
+# If curr_chunk contains only the base but limit is reached
+                # That might mean a long text without punctuation.
+                if chunk_base_count == sentence_count:
+                    sent_head = (
+                        # Ignore last chars
+                        sentences[index][:100]
+                        + self.continuation_marker
+                    )
+                    curr_chunk.append(sent_head)
+                    index += 1
+                    continue
+
+                    
 # done
-- **Improved Error Messages:** Improved error messages across the library to be more user-friendly and provide hints for fixing the issues.  
+  
 - **Memory Friendly caching:** Replaced `functools.lrucache` with `cachetools.cache` to avoid instance references in cache keys to prevent unnecessary memory retention.
 - Improves the exception hierarchy by removing `MissingTokenCounterError` as subclass of `InvalidInputError`.
-- replacing cahing for generator
+- **Batch Chunking Flexibility:** Modified `PlainTextChunker.batch_chunk` to accept any `Iterable` of  strings for the `texts` parameter, instead of being  restricted to `list`. Improved input validation for `texts` to provide clearer error messages. 
+- **Python 3.8 Support:** Dropped official support for Python 3.8. The minimum required Python version is now 3.9.
+- and the other improvements
+- **Faster Language Detection** Use only the first 500 characters of the text provided for faster language detection.
+
+
+# done, not yet changelog

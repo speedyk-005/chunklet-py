@@ -1,7 +1,7 @@
 from chunklet import DocumentChunker
 from chunklet import PlainTextChunker
 
-text = """
+text =  """
 She loves cooking. He studies AI. "You are a Dr.", she said. The weather is great. We play chess. Books are fun, aren't they?
  
 The Playlist contains:
@@ -14,13 +14,15 @@ Robots are learning. It's raining. Let's code. Mars is red. Sr. sleep is rare. C
 
 pdf_path = "samples/sample-pdf-a4-size.pdf"
 docx_path = "samples/Lorem.docx"
+rtf_path = "samples/complex-layout.rtf"
 
 chunker = PlainTextChunker()
-# chunker = DocumentChunker(PlainTextChunker())
+#chunker = DocumentChunker(chunker)
 
-chunks = chunker.batch_chunk([text] * 3, lang="en")
+#chunks = chunker.chunk_pdfs([pdf_path], lang="en", max_sentences=4)
 
+chunks = chunker.chunk(text, max_sentences=4)
 for ch in chunks:
-    # print(ch["content"])
+    #print(ch["content"])
     print(ch)
     print("--------")

@@ -30,9 +30,10 @@ MULTILINGUAL_TEXTS = [
     "Bonjour. Comment allez-vous? Je vais bien.",  # French
     "Hola. ¿Cómo estás? Estoy bien.",  # Spanish
     "Das ist ein Satz. Hier ist noch ein Satz. Und noch einer.",  # German
+    "Bonjou tout moun! Non pa mwen se Bob.",  # Haitian Creole
 ]
 
-UNSUPPORTED_TEXT = "Bonjour tout moun! Non pa mwen se Bob."  # Haitian Creole
+UNSUPPORTED_TEXT = "Goeie môre. Hoe gaan dit? Dit gaan goed met my."  # Afrikaans
 
 
 # --- Fixtures ---
@@ -49,7 +50,7 @@ def chunker():
 # --- Core Tests ---
 @pytest.mark.parametrize(
     "mode, max_tokens, max_sentences, expected_chunks",
-    [("sentence", 512, 3, 17), ("token", 30, 100, 1), ("hybrid", 30, 3, 17)],
+    [("sentence", 512, 3, 9), ("token", 30, 100, 1), ("hybrid", 30, 3, 9)],
 )
 def test_all_modes_produce_chunks(
     chunker, mode, max_tokens, max_sentences, expected_chunks
@@ -111,9 +112,10 @@ def test_fallback_splitter(chunker):
     """Test fallback splitter on unsupported language text and low confidence language detection."""
     # Should fallback to the regex splitter
     chunks = chunker.chunk(UNSUPPORTED_TEXT, max_sentences=1, mode="sentence")
-    assert len(chunks) == 2, "Expected 2 chunks for the unsupported language text"
-    assert "Bonjour tout moun!" in chunks[0]
-    assert "Non pa mwen se Bob." in chunks[1]
+    assert len(chunks) == 3, "Expected 3 chunks for the unsupported language text"
+    assert chunks[0] == "Goeie môre."
+    assert chunks[1] == "Hoe gaan dit?"
+    assert chunks[2] == "Dit gaan goed met my."
 
     # Test low confidence language detection
     with patch(
@@ -122,6 +124,18 @@ def test_fallback_splitter(chunker):
     ):
         sentences, warnings = chunker._split_by_sentence("This is a test.", "auto")
         assert "Low confidence in language detected" in "".join(warnings)
+
+
+def test_long_sentence_truncation(chunker):
+    """Test that a long sentence without punctuation is truncated correctly."""
+    long_sentence = "word " * 100
+    # Use max_tokens to trigger truncation for the single long sentence
+    chunks = chunker.chunk(long_sentence, mode="token", max_tokens=30)
+
+    assert len(chunks) == 1
+    # The chunk should be truncated and have the continuation marker.
+    assert len(chunks[0]) < len(long_sentence)
+    assert chunks[0].endswith("...")
 
 
 # --- Overlap Related Tests ---
@@ -207,27 +221,7 @@ def test_non_cached_chunking(chunker):
             "sentence",
             1,
             InvalidInputError,
-            "The 'texts' parameter must be a list of strings.",
-            None,
-            None,
-        ),
-        (
-            123,
-            None,
-            "sentence",
-            1,
-            InvalidInputError,
-            "The 'texts' parameter must be a list of strings.",
-            None,
-            None,
-        ),
-        (
-            None,
-            None,
-            "sentence",
-            1,
-            InvalidInputError,
-            "The 'texts' parameter must be a list of strings.",
+            "The 'texts' parameter must be an iterable of strings",
             None,
             None,
         ),

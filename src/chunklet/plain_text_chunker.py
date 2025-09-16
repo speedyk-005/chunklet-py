@@ -1,19 +1,22 @@
 from __future__ import annotations
-from typing import Generator
-import re
+from typing import Generator, Callable, Optional
+import regex as re
 import sys
+from collections.abc import Iterable, Iterator
 from collections import Counter
 from functools import partial
 from cachetools import cached, LRUCache
 from cachetools.keys import hashkey
-from typing import Callable, Optional
+from itertools import tee
+from more_itertools import ilen
 from box import Box
-from pysbd import Segmenter
-from sentence_splitter import SentenceSplitter
-from sentencex import segment
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
 from loguru import logger
 from pydantic import ValidationError
+from pysbd import Segmenter
+from sentence_splitter import SentenceSplitter
+from sentencex import segment
+
 from chunklet.libs.universal_splitter import UniversalSplitter
 from chunklet.utils.detect_text_language import detect_text_language
 from chunklet.utils.error_utils import pretty_errors
@@ -299,7 +302,7 @@ class PlainTextChunker:
 
         if len(unfitted) == 1:
             # This is likely a long string with no clause breaks. Truncate it.
-            unfitted = [unfitted[0][:100]]
+            unfitted = [unfitted[0][:150]]
 
         return " ".join(fitted), " ".join(unfitted)
 
@@ -344,10 +347,11 @@ class PlainTextChunker:
             ):
                 # If curr_chunk contains only the base but limit is reached
                 # That might mean a long text without punctuation.
+                # Note: That could happen when we are in token-based mode.
                 if chunk_base_count == sentence_count:
                     sent_head = (
                         # Ignore last chars
-                        sentences[index][:100]
+                        sentences[index][:150]
                         + self.continuation_marker
                     )
                     curr_chunk.append(sent_head)
@@ -367,7 +371,7 @@ class PlainTextChunker:
                         index += 1
                     else:
                         unfitted = ""
-                else:
+                else: # If in mode sentence
                     chunks.append("\n".join(curr_chunk))  # Considered complete
                     unfitted = ""
 
@@ -376,15 +380,16 @@ class PlainTextChunker:
                     curr_chunk, config.overlap_percent
                 )
                 # New current chunk
-                curr_chunk = overlap_clauses + [unfitted]
+                unfitted = [unfitted] if unfitted else []
+                curr_chunk = overlap_clauses + unfitted
 
                 # Incrementally update token_count for the new curr_chunk
                 if config.mode in {"token", "hybrid"}:
                     curr_token_count = sum(
                         self._count_tokens(s, config.token_counter)
-                        for s in overlap_clauses + [unfitted]
+                        for s in overlap_clauses + unfitted
                     )
-                sentence_count = len(curr_chunk)
+                sentence_count = len(curr_chunk) # considered as sentences
                 chunk_base_count = sentence_count
             else:
                 if index < len(sentences):
@@ -414,9 +419,19 @@ class PlainTextChunker:
             tuple[Tuple[str], tuple[str]]: A tuple of chunk strings and a tuple of warning messages.
         """
         all_warnings = set()
-        sentences, split_warnings = self._split_by_sentence(config.text, config.lang)
-        sentences = [sent.rstrip() for sent in sentences if sent.strip()]
+        detected_sentences, split_warnings = self._split_by_sentence(config.text, config.lang)
         all_warnings.update(split_warnings)
+
+
+        # Post-processing: Filters empty string and rejoin some left over punctuations.
+        sentences = []
+        for sent in detected_sentences:
+            stripped_sent = sent.strip()
+            if stripped_sent:
+                if re.fullmatch(r"[\p{P}\p{S}]+", stripped_sent):
+                    sentences[-1] += stripped_sent[:5] # Only the first 5 ones
+                else:
+                    sentences.append(sent.rstrip())
 
         if self.verbose:
             logger.debug(
@@ -545,7 +560,7 @@ class PlainTextChunker:
 
     def batch_chunk(
         self,
-        texts: list[str],
+        texts: Iterable[str],
         *,
         lang: str = "auto",
         mode: str = "sentence",
@@ -575,7 +590,7 @@ class PlainTextChunker:
             token_counter (callable | None): The token counting function. Required for token-based modes only.
             n_jobs (int | None): Number of parallel workers to use. If None, uses all available CPUs.
                    Must be >= 1 if specified.
-            show_progress (bool): Flag to show to enable or disable the loading bar.
+            show_progress (bool): Flag to show or disable the loading bar.
 
         yields:
             list[str]: A list of chunk strings, where each list contains the chunks
@@ -584,23 +599,36 @@ class PlainTextChunker:
         Raises:
             InvalidInputError: If `texts` is not a list or if `n_jobs` is less than 1.
         """
-        if not isinstance(texts, list):
+        # Validate that texts is an iterable and contains only strings
+        if isinstance(texts, str) or not (
+            isinstance(texts, Iterable) 
+            or all(isinstance(t, str) for t in texts)
+        ):
             raise InvalidInputError(
-                "The 'texts' parameter must be a list of strings.\n"
-                "💡 Hint: Please provide a list of strings to the 'batch_chunk' method, like `chunker.batch_chunk(['text1', 'text2'])`."
+                "The 'texts' parameter must be an iterable of strings (e.g., list, tuple, generator of strings).\n" 
+                "💡 Hint: Ensure the provided input is an iterable and all its elements are strings."
             )
+
+        # Use tee to create two independent iterators
+        if isinstance(texts, Iterator):
+            texts_for_total, texts_for_processing = tee(texts)
+        else:
+            texts_for_total, texts_for_processing = (texts, texts)
+
+        # Calculate total number of texts using ilen
+        total_texts = ilen(texts_for_total)
 
         if self.verbose:
             logger.info(
                 "Processing {} texts in batch mode with n_jobs={}.",
-                len(texts),
+                total_texts,
                 n_jobs if n_jobs is not None else "default",
             )
 
-        if not texts:
+        if total_texts == 0:
             if self.verbose:
                 logger.info("Input texts is empty. Returning empty list.")
-            return []
+            return
 
         # Validate n_jobs parameter
         if n_jobs is not None and n_jobs < 1:
@@ -631,10 +659,10 @@ class PlainTextChunker:
             transient=True,
             disable=not show_progress,
         ) as progress:
-            task = progress.add_task("[green]Processing...", total=len(texts))
+            task = progress.add_task("[green]Processing...", total=total_texts)
 
             if n_jobs == 1:  # Use for loop when n_jobs=1 instead of mpire
-                for text in texts:
+                for text in texts_for_processing:
                     try:
                         chunks, warnings = chunk_func(text)
                         yield chunks
@@ -650,7 +678,9 @@ class PlainTextChunker:
                 from mpire import WorkerPool  # Lazy import, only needed there.
 
                 with WorkerPool(n_jobs=n_jobs) as executor:
-                    for chunks, warnings in executor.imap(chunk_func, texts):
+                    for chunks, warnings in executor.imap(
+                        chunk_func, texts_for_processing
+                    ):
                         yield chunks
                         collected_warnings.append(warnings)
                         progress.update(task, advance=1)
@@ -665,10 +695,10 @@ class PlainTextChunker:
             # Build a multi-line warning message for the logger
             warning_message = [
                 f"Found {len(warnings_counter)} unique warning(s) "
-                "during batch processing of {len(texts)} texts:"
+                "during batch processing of {total_texts} texts:"
             ]
             for msg, count in warnings_counter.items():
-                warning_message.append(f"  - ({count}/{len(texts)}) {msg}")
+                warning_message.append(f"  - ({count}/{total_texts}) {msg}")
             # Log the entire formatted message as a single entry
             logger.warning("\n" + "\n".join(warning_message))
 
