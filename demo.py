@@ -16,13 +16,13 @@ pdf_path = "samples/sample-pdf-a4-size.pdf"
 docx_path = "samples/Lorem.docx"
 rtf_path = "samples/complex-layout.rtf"
 
-chunker = PlainTextChunker()
-#chunker = DocumentChunker(chunker)
+chunker = PlainTextChunker(verbose=True)
+chunker = DocumentChunker(chunker)
 
-#chunks = chunker.chunk_pdfs([pdf_path], lang="en", max_sentences=4)
+chunks = chunker.batch_chunk([rtf_path, docx_path], lang="en", max_sentences=5, n_jobs=1)
 
-chunks = chunker.chunk(text, max_sentences=4)
+#chunks = chunker.chunk(text, max_sentences=4)
 for ch in chunks:
-    #print(ch["content"])
-    print(ch)
+    print(ch["content"])
+    #print(ch)
     print("--------")

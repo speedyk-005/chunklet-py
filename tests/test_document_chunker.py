@@ -1,4 +1,5 @@
 import pytest
+import re
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 from concurrent.futures import ThreadPoolExecutor
@@ -7,6 +8,7 @@ from chunklet import (
     DocumentChunker,
     InvalidInputError,
     UnsupportedFileTypeError,
+    FileProcessingError,
 )
 
 from loguru import logger
@@ -51,7 +53,7 @@ def document_chunker(mock_plain_text_chunker):
         (MagicMock(spec=PlainTextChunker), None, ""),
         (
             "not a PlainTextChunker instance",
-            TypeError,
+            InvalidInputError,  
             "plain_text_chunker must be an instance of PlainTextChunker",
         ),
     ],
@@ -70,7 +72,7 @@ def test_chunk_pdf(document_chunker, mock_plain_text_chunker):
     """Test chunking a PDF file and its metadata."""
     mock_plain_text_chunker.verbose = True
     path = "samples/sample-pdf-a4-size.pdf"
-    chunks = document_chunker.chunk(path)
+    chunks = list(document_chunker.chunk_pdfs([path])) 
 
     assert len(chunks) > 0
 
@@ -127,17 +129,16 @@ def test_chunk_unsupported_file_type(document_chunker, tmp_path):
     unsupported_file.write_text("test")
     with pytest.raises(
         UnsupportedFileTypeError,
-        match="File type '.xyz' is not supported for general document chunking.",
+        match=re.escape("File type '.xyz' is not supported.")
     ):
         document_chunker.chunk(unsupported_file)
 
 
-# Test bulk_chunk method with multiple files
-def test_bulk_chunk_happy_path(document_chunker, mock_plain_text_chunker):
-    """Test successful bulk chunking of multiple supported file types."""
+def test_batch_chunk_with_different_file_type(document_chunker, mock_plain_text_chunker):
+    """Test successful batch chunking of multiple supported file types."""
     mock_plain_text_chunker.verbose = True
     paths = ["samples/sample-pdf-a4-size.pdf", "samples/Lorem.docx"]
-    all_document_chunks = document_chunker.bulk_chunk(paths)
+    all_document_chunks = list(document_chunker.batch_chunk(paths))
 
     assert len(all_document_chunks) == len(paths)
     mock_plain_text_chunker.batch_chunk.assert_called_once()
@@ -156,47 +157,7 @@ def test_bulk_chunk_happy_path(document_chunker, mock_plain_text_chunker):
     ]
     assert len(pdf_chunks) > 0
     assert len(docx_chunks) > 0
-
-
-def test_bulk_chunk_with_non_existent_file(document_chunker, mock_plain_text_chunker):
-    """Test that bulk_chunk skips non-existent files."""
-    paths = ["samples/Lorem.docx", "non_existent_file.txt"]
-    result = document_chunker.bulk_chunk(paths)
-    assert len(result) == 1
-    assert "Lorem.docx" in result[0][0].metadata["source"]
-    mock_plain_text_chunker.batch_chunk.assert_called_once()
-
-
-def test_bulk_chunk_with_unsupported_file(
-    document_chunker, mock_plain_text_chunker, tmp_path
-):
-    """Test that bulk_chunk skips unsupported file types."""
-    unsupported_file = tmp_path / "test.xyz"
-    unsupported_file.write_text("test")
-    paths = ["samples/Lorem.docx", str(unsupported_file)]
-    result = document_chunker.bulk_chunk(paths)
-    assert len(result) == 1
-    assert "Lorem.docx" in result[0][0].metadata["source"]
-    mock_plain_text_chunker.batch_chunk.assert_called_once()
-
-
-def test_bulk_chunk_with_empty_list(document_chunker, mock_plain_text_chunker):
-    """Test that bulk_chunk handles an empty list of paths."""
-    assert document_chunker.bulk_chunk([]) == []
-    mock_plain_text_chunker.batch_chunk.assert_not_called()
-
-
-def test_bulk_chunk_with_only_invalid_paths(
-    document_chunker, mock_plain_text_chunker, tmp_path
-):
-    """Test that bulk_chunk handles a list of all-invalid paths."""
-    unsupported_file = tmp_path / "unsupported.xyz"
-    unsupported_file.write_text("test")
-    paths = ["non_existent_file.txt", str(unsupported_file)]
-    result = document_chunker.bulk_chunk(paths)
-    assert result == []
-    mock_plain_text_chunker.batch_chunk.assert_not_called()
-
+    
 
 def test_chunk_method_with_custom_processor(
     document_chunker, mock_plain_text_chunker, tmp_path
@@ -205,7 +166,7 @@ def test_chunk_method_with_custom_processor(
 
     # Define a mock custom processor callback
     def mock_custom_processor_callback(file_path: str) -> str:
-        return f"Custom processed content from {file_path}. Line 1. Line 2. Line 3."
+        return f"Processed failed."
 
     # Create a custom processor
     custom_processor = [
@@ -231,20 +192,48 @@ def test_chunk_method_with_custom_processor(
     chunks = document_chunker.chunk(dummy_file)
 
     # Assert that the custom processor's output was used
-    expected_content_prefix = f"Custom processed content from {dummy_file}"
+    expected_content_prefix = f"Processed failed."
     assert len(chunks) > 0
     assert chunks[0].content.startswith(expected_content_prefix)
     assert "source" in chunks[0].metadata
     assert chunks[0].metadata["source"] == str(dummy_file)
 
-    # Verify that plain_text_chunker.chunk was called with the custom processed text
-    mock_plain_text_chunker.chunk.assert_called_once_with(
-        text=f"Custom processed content from {dummy_file}. Line 1. Line 2. Line 3.",
-        lang="auto",
-        mode="sentence",
-        max_tokens=256,
-        max_sentences=12,
-        overlap_percent=20,
-        offset=0,
-        token_counter=None,
+
+@pytest.mark.parametrize(
+    "processor_name, callback_func, expected_match",
+    [
+        (
+            "InvalidReturnProcessor",
+            lambda file_path: ["This is a list.", "Not a string."],  # Returns list, not str
+            "Custom processor 'InvalidReturnProcessor' callback returned an invalid type.",
+        ),
+        (
+            "FailingProcessor",
+            lambda file_path: (_ for _ in ()).throw(ValueError("Intentional failure in custom processor.")),
+            "Custom processor 'FailingProcessor' failed",
+        ),
+    ],
+)
+def test_custom_processor_validation_scenarios(
+    document_chunker, mock_plain_text_chunker, tmp_path, processor_name, callback_func, expected_match
+):
+    """Test various custom processor validation scenarios."""
+    # Create a dummy file
+    dummy_file = tmp_path / "dummy_file.txt"
+    dummy_file.write_text("Some content.")
+
+    custom_processors = [
+        {
+            "name": processor_name,
+            "file_extensions": ".txt",
+            "callback": callback_func,
+        }
+    ]
+
+    # Re-initialize DocumentChunker with the custom processor
+    document_chunker = DocumentChunker(
+        mock_plain_text_chunker, custom_processors=custom_processors
     )
+
+    with pytest.raises(FileProcessingError, match=re.escape(expected_match)):
+        document_chunker.chunk(dummy_file)

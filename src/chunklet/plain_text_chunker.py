@@ -10,13 +10,24 @@ from cachetools.keys import hashkey
 from itertools import tee
 from more_itertools import ilen
 from box import Box
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
-from loguru import logger
 from pydantic import ValidationError
 from pysbd import Segmenter
 from sentence_splitter import SentenceSplitter
 from sentencex import segment
+# mpire is lazy imported
+from rich.progress import (
+    Progress,
+    SpinnerColumn,
+    BarColumn,
+    TextColumn,
+    TimeRemainingColumn
+)
 
+from chunklet.languages import (
+    PYSBD_SUPPORTED_LANGUAGES,
+    SENTENCESPLITTER_UNIQUE_LANGUAGES,
+    SENTENCESX_UNIQUE_LANGUAGES,
+)
 from chunklet.libs.universal_splitter import UniversalSplitter
 from chunklet.utils.detect_text_language import detect_text_language
 from chunklet.utils.error_utils import pretty_errors
@@ -29,13 +40,10 @@ from chunklet.exceptions import (
     InvalidInputError,
     TextProcessingError,
 )
-from .languages import (
-    PYSBD_SUPPORTED_LANGUAGES,
-    SENTENCESPLITTER_UNIQUE_LANGUAGES,
-    SENTENCESX_UNIQUE_LANGUAGES,
-)
+from chunklet.utils.logger import logger
 
-CLAUSE_END_TRIGGERS = r";,’：—)&"
+# for clauses overlapping and fitting
+CLAUSE_END_TRIGGERS = r";,’：—)&…"
 
 # In-memory cache
 cache = LRUCache(maxsize=256)
@@ -59,7 +67,7 @@ class PlainTextChunker:
 
     def __init__(
         self,
-        verbose: bool = False,
+        verbose: bool = True,
         use_cache: bool = True,
         token_counter: Callable[[str], int] | None = None,
         custom_splitters: CustomSplitterConfig = None,
@@ -110,7 +118,7 @@ class PlainTextChunker:
 
         if self.verbose:
             logger.debug(
-                "Initialized with verbose={}, Default token counter is {}provided.",
+                "Initialized with verbose=%s, Default token counter is %sprovided.",
                 self.verbose,
                 "not " if self.token_counter is None else "",
             )
@@ -142,19 +150,13 @@ class PlainTextChunker:
                 else splitter.languages
             )
             if lang in supported_languages:
-                try:
-                    if self.verbose:
-                        logger.debug(
-                            "Using {} for language: {}. (Custom Splitter)",
-                            splitter.name,
-                            lang,
-                        )
-                    return splitter.callback(text)
-                except Exception as e:
-                    raise TextProcessingError(
-                        f"Custom splitter '{splitter.name}' failed while processing text starting with: '{text[:100]}...'.\n"
-                        f"💡 Hint: Please check the custom splitter's implementation for potential issues.\nDetails: {e}"
-                    ) from e
+                if self.verbose:
+                    logger.debug(
+                        "Using %s for language: %s. (Custom Splitter)",
+                        splitter.name,
+                        lang,
+                    )
+                return splitter.split(text)
 
     def _split_by_sentence(self, text: str, lang: str) -> tuple[list[str], set[str]]:
         """
@@ -172,9 +174,6 @@ class PlainTextChunker:
         warnings = set()
 
         if lang == "auto":
-            warnings.add(
-                "The language is set to `auto`. Consider setting the `lang` parameter to a specific language to improve performance."
-            )
             lang_detected, confidence = detect_text_language(text)
             if self.verbose:
                 logger.debug("Attempting language detection.")
@@ -190,18 +189,18 @@ class PlainTextChunker:
 
         if lang in PYSBD_SUPPORTED_LANGUAGES:
             if self.verbose:
-                logger.debug("Using pysbd for language: {}.", lang)
+                logger.debug("Using pysbd for language: %s.", lang)
             return Segmenter(language=lang).segment(text), warnings
         elif lang in SENTENCESPLITTER_UNIQUE_LANGUAGES:
             if self.verbose:
                 logger.debug(
-                    "Using SentenceSplitter for language: {}. (SentenceSplitter)",
+                    "Using SentenceSplitter for language: %s. (SentenceSplitter)",
                     lang,
                 )
             return SentenceSplitter(language=lang).split(text), warnings
         elif lang in SENTENCESX_UNIQUE_LANGUAGES:
             if self.verbose:
-                logger.debug("Using sentencex for language: {}.", lang)
+                logger.debug("Using sentencex for language: %s.", lang)
             return segment(lang, text), warnings
         else:  # Fallback to universal regex splitter
             warnings.add(
@@ -260,8 +259,8 @@ class PlainTextChunker:
         except Exception as e:
             raise TextProcessingError(
                 f"Token counter failed while processing text starting with: '{text[:100]}...'.\n"
-                f"💡 Hint: Please ensure the token counter function handles "
-                "all edge cases and returns an integer.\nDetails: {e}"
+                "💡 Hint: Please ensure the token counter function handles "
+                f"all edge cases and returns an integer. \nDetails: {e}"
             ) from e
 
     def _find_clauses_that_fit(
@@ -435,7 +434,7 @@ class PlainTextChunker:
 
         if self.verbose:
             logger.debug(
-                "Text splitted into sentences. Total sentences detected: {}",
+                "Text splitted into sentences. Total sentences detected: %s",
                 len(sentences),
             )
         if not sentences:
@@ -445,7 +444,7 @@ class PlainTextChunker:
         if offset >= len(sentences):
             if self.verbose:
                 logger.info(
-                    "Offset {} >= total sentences {}. Returning empty list.",
+                    "Offset %s >= total sentences %s. Returning empty list.",
                     offset,
                     len(sentences),
                 )
@@ -455,7 +454,7 @@ class PlainTextChunker:
         sentences = sentences[offset:]
         chunks = self._group_by_chunk(sentences, config)
         if self.verbose:
-            logger.info("Finished chunking text. Generated {} chunks.\n", len(chunks))
+            logger.info("Finished chunking text. Generated %s chunks.\n", len(chunks))
         # Make them immutable to be safe with caching if enabled.
         return tuple(chunks), tuple(all_warnings)
 
@@ -538,7 +537,7 @@ class PlainTextChunker:
         if not config.text:
             if self.verbose:
                 logger.info("Input text is empty. Returning empty list.")
-            return [] if not _batch_context else ([], ())
+            return [] if not _batch_context else ([], ()) # type: ignore
 
         if self.use_cache:
             chunks, warnings = self._chunk_cached(config)
@@ -571,7 +570,9 @@ class PlainTextChunker:
         token_counter: Callable[[str], int] | None = None,
         n_jobs: Optional[int] = None,
         show_progress: bool = True,
-    ) -> Generator[[list[str], None, None]]:
+        on_errors: str = "raise",
+        _document_context: bool = False,
+    ) -> Generator[str, None, None]:
         """
         Processes a batch of texts in parallel, splitting each into chunks.
         Leverages multiprocessing for efficient batch chunking.
@@ -591,10 +592,10 @@ class PlainTextChunker:
             n_jobs (int | None): Number of parallel workers to use. If None, uses all available CPUs.
                    Must be >= 1 if specified.
             show_progress (bool): Flag to show or disable the loading bar.
+            on_errors (str): How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
 
         yields:
-            list[str]: A list of chunk strings, where each list contains the chunks
-            for the corresponding input text.
+            str: chunk string.
 
         Raises:
             InvalidInputError: If `texts` is not a list or if `n_jobs` is less than 1.
@@ -606,21 +607,20 @@ class PlainTextChunker:
         ):
             raise InvalidInputError(
                 "The 'texts' parameter must be an iterable of strings (e.g., list, tuple, generator of strings).\n" 
-                "💡 Hint: Ensure the provided input is an iterable and all its elements are strings."
             )
 
         # Use tee to create two independent iterators
+        # Then calculate total number of texts using ilen
         if isinstance(texts, Iterator):
             texts_for_total, texts_for_processing = tee(texts)
+            total_texts = ilen(texts_for_total)
         else:
-            texts_for_total, texts_for_processing = (texts, texts)
-
-        # Calculate total number of texts using ilen
-        total_texts = ilen(texts_for_total)
+            texts_for_processing = texts
+            total_texts = len(texts)
 
         if self.verbose:
             logger.info(
-                "Processing {} texts in batch mode with n_jobs={}.",
+                "Processing %s texts in batch mode with n_jobs=%s.",
                 total_texts,
                 n_jobs if n_jobs is not None else "default",
             )
@@ -637,53 +637,68 @@ class PlainTextChunker:
                 "💡 Hint: Use `n_jobs=None` to use all available CPU cores."
             )
 
-        params = {
-            "lang": lang,
-            "mode": mode,
-            "max_tokens": max_tokens,
-            "max_sentences": max_sentences,
-            "overlap_percent": overlap_percent,
-            "offset": offset,
-            "token_counter": token_counter,
-            "_batch_context": True,
-        }
-
-        chunk_func = partial(self.chunk, **params)
+        # Wrapper to capture result/exception
+        def chunk_func(text: str):
+            try:
+                res = self.chunk(
+                    text=text,
+                    lang=lang,
+                    mode=mode,
+                    max_tokens=max_tokens,
+                    max_sentences=max_sentences,
+                    overlap_percent=overlap_percent,
+                    offset=offset,
+                    token_counter=token_counter,
+                    _batch_context=True,
+               )
+                return res, None
+            except Exception as e:
+                return None, e
+                
         collected_warnings = []
 
         with Progress(
-            SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
+            TextColumn("[bold blue]{task.percentage:>3.0f}%"), # Percentage
             BarColumn(),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            transient=True,
-            disable=not show_progress,
+            TimeRemainingColumn(),
+            transient=True, # Cleans up after completion
+            disable=not show_progress, 
         ) as progress:
             task = progress.add_task("[green]Processing...", total=total_texts)
 
-            if n_jobs == 1:  # Use for loop when n_jobs=1 instead of mpire
-                for text in texts_for_processing:
-                    try:
-                        chunks, warnings = chunk_func(text)
-                        yield chunks
-                        collected_warnings.append(warnings)
-                        progress.update(task, advance=1)
-                    except Exception as e:
-                        logger.error(
-                            f"A task in 'batch_chunk' failed. Returning partial results.\n"
-                            f"💡 Hint: Check the logs for more details about the failed task.\nReason: {e}"
-                        )
-                        break
-            else:
-                from mpire import WorkerPool  # Lazy import, only needed there.
+            from mpire import WorkerPool  # Lazy import, only needed there.
 
-                with WorkerPool(n_jobs=n_jobs) as executor:
-                    for chunks, warnings in executor.imap(
-                        chunk_func, texts_for_processing
-                    ):
-                        yield chunks
-                        collected_warnings.append(warnings)
-                        progress.update(task, advance=1)
+            with WorkerPool(n_jobs=n_jobs) as executor:
+                    task_iter = executor.imap(
+                        func=chunk_func,
+                        iterable_of_args=texts_for_processing,
+                        iterable_len=total_texts, # Provided for Iterators
+                    )
+
+                    for result, error in task_iter:
+                        if error:
+                            if on_errors == "raise":
+                                raise error
+                            elif on_errors == "break":
+                                logger.error(
+                                    "A task in 'batch_chunk' failed. Returning partial results.\n"
+                                    f"💡 Hint: Check the logs for more details about the failed task. \nReason: {error}"
+                                )
+                                break
+                            else: # ignore
+                                logger.warning(f"Skipping a failed task. \nReason: {error}")
+                                continue
+                        else:
+                            chunks, warnings = result
+                            if _document_context: # Needed by document chunker
+                                yield chunks
+                            else:
+                                yield from chunks
+                            collected_warnings.append(warnings)
+                            progress.update(task, advance=1)
+                        
+                                
 
         # Count the occurencies of warnings
         warnings_counter = Counter()
@@ -701,6 +716,13 @@ class PlainTextChunker:
                 warning_message.append(f"  - ({count}/{total_texts}) {msg}")
             # Log the entire formatted message as a single entry
             logger.warning("\n" + "\n".join(warning_message))
+
+    @staticmethod
+    def clear_cache():
+        """
+        Clears the global in-memory cache used for chunking operations.
+        """
+        cache.clear()
 
     def preview_sentences(
         self, text: str, lang: str = "auto"

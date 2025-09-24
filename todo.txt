@@ -1,35 +1,16 @@
+- - custom processors should only work if not for pdfs, ot rm custom processor at all
+- rm sentencex, use nltk_punkt
+- return a gen of list instead of a gen of string
+-  replace argparse with typer
 - add support for multiple dir in cli
-- rm path from returning in validated path
-- allow any iterable instead of list for all public batch methods
-- update preview sentences
-- add a preview text in document chunker
-- change cache from 256 to 50 to prevent bloating memory
 
 
+# what we have done
 
-
-- add test for
-# If curr_chunk contains only the base but limit is reached
-                # That might mean a long text without punctuation.
-                if chunk_base_count == sentence_count:
-                    sent_head = (
-                        # Ignore last chars
-                        sentences[index][:100]
-                        + self.continuation_marker
-                    )
-                    curr_chunk.append(sent_head)
-                    index += 1
-                    continue
-
-                    
-# done
-  
-- **Memory Friendly caching:** Replaced `functools.lrucache` with `cachetools.cache` to avoid instance references in cache keys to prevent unnecessary memory retention.
-- Improves the exception hierarchy by removing `MissingTokenCounterError` as subclass of `InvalidInputError`.
-- **Batch Chunking Flexibility:** Modified `PlainTextChunker.batch_chunk` to accept any `Iterable` of  strings for the `texts` parameter, instead of being  restricted to `list`. Improved input validation for `texts` to provide clearer error messages. 
-- **Python 3.8 Support:** Dropped official support for Python 3.8. The minimum required Python version is now 3.9.
-- and the other improvements
-- **Faster Language Detection** Use only the first 500 characters of the text provided for faster language detection.
-
-
+- **Logging**: Replaced `loguru` with the standard `logging` module and `RichHandler` to allow the output of the built-in logging module to be displayed above a progress bar, preventing the output from being scrambled.
+- **Clause Delimiters**: Added ellipsis to the list of clause delimiters for more accurate chunking. 
+- **Error Handling**: Added an `on_errors` parameter to `batch_chunk` to allow for more flexible error handling (raise, ignore, or break).   
+- **Cache Management**: Added a static method `clear_cache` to `PlainTextChunker` to allow programmatic clearing of the shared in-memory cache.
+- **Custom Splitter Validation**: Refactored custom splitter callback validation into a `split` method with `CustomSplitterConfig`, providing a safer wrapper for callback execution and clearer error messages.  
+ 
 # done, not yet changelog

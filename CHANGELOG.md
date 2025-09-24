@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Error Handling**: Added an `on_errors` parameter to `batch_chunk` to allow for more flexible error handling (raise, ignore, or break).
 - **Faster Language Detection**: Optimized language detection by using only the first 500 characters of the input text. This significantly improves performance, especially for large documents, without compromising accuracy for language identification.
 - **Expanded Language Support with `sentencex`:** Integrated the `sentencex` library as a new sentence splitter. This officially boosts language support from 36+ to over 226 languages, providing more reliable sentence segmentation for many languages that were previously handled by the generic fallback splitter.
 - **Code Chunker Introduction:** Introduced `CodeChunker` for syntax-aware chunking of source code, with support for multiple programming languages by leveraging `src/libs/code_structure_extractor` to dispatch code into structural elements.
@@ -20,10 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Show Progress Parameter:** Added `show_progress` parameter to `batch_chunk` in `PlainTextChunker` to allow users to control the display of the progress bar.
 - **Custom Processors:** Introduced support for custom document processors, allowing users to define their own logic for extracting text from various file types.
 - **Custom Exception Types:** Introduced `TextProcessingError` for errors during text processing, `FileProcessingError`, during file processing and `UnsupportedFileTypeError` for unsupported file formats.
+- **Cache Management**: Added a static method `clear_cache` to `PlainTextChunker` to allow programmatic clearing of the shared in-memory cache.
 
 ### Changed
 
-- **Batch Chunking Flexibility:** Modified `PlainTextChunker.batch_chunk` to accept any `Iterable` of strings for the `texts` parameter, instead of being restricted to `list`. Improved input validation for `texts` to provide clearer error messages.
+- **Clause Delimiters**: Added ellipsis to the list of clause delimiters for more accurate chunking.
+- **Logging**: Replaced `loguru` with the standard `logging` module and `RichHandler` for a cleaner and more beautiful logging experience that integrates seamlessly with progress bars.
+- **Batch Chunking Flexibility:** Modified `PlainTextChunker.batch_chunk` to accept any `Iterable` of strings for the `texts` parameter, instead of being restricted to `list`.
 - **Memory Optimization:** Refactored all batch methods in the lib to fully utilize generators, yielding chunks one at a time to reduce memory footprint, especially for large documents. That also means you dont have to wait for the chunks fully be processed before start using them.
 - **Memory Friendly caching:** Replaced `functools.lrucache` with `cachetools.cache` to avoid instance references in cache keys to prevent unnecessary memory retention.
 - **Project Structure:** Moved several utility modules to a new `src/chunklet/libs` directory.
@@ -52,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Default Limits:** Changed the default `max_tokens` from 512 to 256 and `max_sentences` from 100 to 12.
 - **Model renamed:** Renamed `ChunkingConfig` to `TextChunkingConfig`.
 - **Continuation marker:** Exposed continuation marker so users can define thier own or set it to an empty str to disabled it.
+- **Custom Splitter Validation**: Refactored custom splitter callback validation into a `split` method within `CustomSplitterConfig`, providing a safer wrapper for callback execution and clearer error messages.
 
 ### Removed
 

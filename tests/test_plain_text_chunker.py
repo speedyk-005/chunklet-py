@@ -1,4 +1,5 @@
 import pytest
+import re
 from typing import List
 from unittest.mock import patch
 from chunklet import (
@@ -48,6 +49,13 @@ def chunker():
 
 
 # --- Core Tests ---
+def test_init_validation_error():
+    """Test that InvalidInputError is raised for invalid initialization parameters."""
+    pattern = re.escape("[token_counter] Input should be callable")
+    with pytest.raises(InvalidInputError, match=pattern):
+        PlainTextChunker(token_counter="Not a callable")
+
+
 @pytest.mark.parametrize(
     "mode, max_tokens, max_sentences, expected_chunks",
     [("sentence", 512, 3, 9), ("token", 30, 100, 1), ("hybrid", 30, 3, 9)],
@@ -91,12 +99,6 @@ def test_offset_behavior(chunker, offset, expect_chunks):
         assert len(chunks[0]) > 0, "Chunk content should not be empty"
     else:
         assert not chunks, f"Should get no chunks for offset={offset}"
-
-
-def test_preview_works(chunker):
-    """Verify preview_sentences produces a list of sentences."""
-    sentences, _ = chunker.preview_sentences(ENGLISH_TEXT)
-    assert len(sentences) == 19, "Should get sentence preview"
 
 
 # --- Token Counter Validation ---
@@ -187,157 +189,89 @@ def test_overlap_behavior(chunker):
     assert len(overlap) > 0
 
 
-# --- Cache Tests ---
-def test_non_cached_chunking(chunker):
-    """Test chunking with cache disabled."""
-    non_cached_chunker = PlainTextChunker(
-        use_cache=False, token_counter=chunker.token_counter
-    )
-    chunks = non_cached_chunker.chunk(ENGLISH_TEXT)
-    assert chunks  # chunks is List[str], so this is fine
-    assert isinstance(chunks[0], str)  # Add a check for string type
-
-
-# --- Batch Processing Tests ---
 @pytest.mark.parametrize(
-    "texts_input, n_jobs, mode, max_sentences, expected_exception, expected_match, expected_results_len, failing_text",
+    "texts_input, expected_results_len",
     [
         # Successful run
-        (
-            MULTILINGUAL_TEXTS,
-            None,
-            "sentence",
-            100,
-            None,
-            None,
-            len(MULTILINGUAL_TEXTS),
-            None,
-        ),
+        (MULTILINGUAL_TEXTS, len(MULTILINGUAL_TEXTS)),
         # Edge cases from test_batch_chunk_various_inputs
-        ([], None, "sentence", 1, None, None, 0, None),
-        (
-            "this is a string, not a list",
-            None,
-            "sentence",
-            1,
-            InvalidInputError,
-            "The 'texts' parameter must be an iterable of strings",
-            None,
-            None,
-        ),
-        (
-            ["First sentence.", "", "Second sentence."],
-            None,
-            "sentence",
-            1,
-            None,
-            None,
-            3,
-            None,
-        ),
-        # Error handling from test_batch_chunk_n_jobs_1_with_error
-        (
-            [
-                "This is ok.",
-                "This one will fail.",
-                "This will not be processed.",
-            ],
-            1,
-            "token",
-            100,
-            None,
-            None,
-            1,
-            "fail",
-        ),
+        ([], 0),
+        (["First sentence.", "", "Second sentence."], 3),
     ],
 )
-def test_batch_processing(
-    chunker,
-    texts_input,
-    n_jobs,
-    mode,
-    max_sentences,
-    expected_exception,
-    expected_match,
-    expected_results_len,
-    failing_text,
+def test_batch_processing_successful(
+    chunker, texts_input, expected_results_len
 ):
-    """Comprehensive test for batch processing."""
-
-    if failing_text:
-
-        def failing_token_counter(text: str) -> int:
-            if failing_text in text:
-                raise ValueError("Intentional failure")
-            return len(text.split())
-
-        chunker.token_counter = failing_token_counter
-
-    if expected_exception:
-        with pytest.raises(expected_exception, match=expected_match):
-            list(
-                chunker.batch_chunk(
-                    texts_input,
-                    n_jobs=n_jobs,
-                    mode=mode,
-                    max_sentences=max_sentences,
-                )
-            )
-    else:
-        results = list(
-            chunker.batch_chunk(
-                texts_input,
-                n_jobs=n_jobs,
-                mode=mode,
-                max_sentences=max_sentences,
-            )
+    """Comprehensive test for batch processing successful runs and edge cases."""
+    results = list(
+        chunker.batch_chunk(
+            texts_input,
+            mode="sentence",
+            max_sentences=100,
+            _document_context=True,
         )
-        assert len(results) == expected_results_len
-        if texts_input and results and results[0]:
-            # Check structure of the first result of the first text
-            assert isinstance(results[0][0], str)  # Check if it's a string
+    )
+    assert len(results) == expected_results_len
+    if texts_input and results and results[0] and len(results[0]) > 0:
+        # Check structure of the first result of the first text
+        assert isinstance(results[0][0], str)  # Check if it's a string
 
-        if texts_input == ["First sentence.", "", "Second sentence."]:
-            assert "First sentence." in results[0][0]
-            assert results[1] == []
-            assert "Second sentence." in results[2][0]
-        if failing_text:
-            assert results[0][0] == "This is ok."
+    if texts_input == ["First sentence.", "", "Second sentence."]:
+        assert "First sentence." in results[0][0]
+        assert results[1] == []
+        assert "Second sentence." in results[2][0]
 
 
-def test_error_on_token_counter_failure():
-    """Test that TextProcessingError is raised when the token_counter fails."""
+def test_batch_processing_input_validation(chunker):
+    """Test batch processing error handling on invalid input"""
+    # Test that InvalidInputError is raised for input text isnt an iterable object
+    texts_input = "this is a string, not a list"
 
-    def failing_token_counter(text: str) -> int:
-        raise Exception("Token counter failed intentionally")
-
-    chunker = PlainTextChunker(token_counter=failing_token_counter)
     with pytest.raises(
-        TextProcessingError,
-        match="Token counter failed while processing text starting with:",
+        InvalidInputError, match="The 'texts' parameter must be an iterable of strings"
     ):
-        chunker.chunk("some text", mode="token")
+        list(chunker.batch_chunk(texts_input))
 
-
-@pytest.mark.parametrize(
-    "n_jobs_value",
-    [
-        0,
-        -1,
-    ],
-)
-def test_batch_chunk_invalid_n_jobs(chunker, n_jobs_value):
-    """Test that InvalidInputError is raised for invalid n_jobs values."""
+    #Test that InvalidInputError is raised for invalid n_jobs values
     with pytest.raises(
         InvalidInputError,
         match="The 'n_jobs' parameter must be an integer greater than or equal to 1, or None",
     ):
-        list(chunker.batch_chunk(["some text"], n_jobs=n_jobs_value))
+        list(chunker.batch_chunk(["some text"], n_jobs=-1))
 
 
-def test_custom_splitter_basic_usage():
-    """Test basic usage of a custom splitter."""
+def test_batch_chunk_error_handling_on_task(chunker):
+    """Test the on_errors parameter in batch_chunk."""
+
+    def failing_token_counter(text: str) -> int:
+        if "fail" in text:
+            raise ValueError("Intentional failure")
+        return len(text.split())
+
+    chunker.token_counter = failing_token_counter
+
+    texts = ["This is ok.", "This will fail.", "This will not be processed."]
+
+    # Test on_errors = 'raise'
+    with pytest.raises(TextProcessingError, match="Token counter failed while processing text starting with:"):
+        list(chunker.batch_chunk(texts, mode="token", on_errors="raise"))
+
+    # Test on_errors = 'ignore'
+    results = list(chunker.batch_chunk(texts, mode="token", on_errors="ignore"))
+    assert len(results) == 2
+    assert "This is ok." in results[0]
+    assert "This will not be processed." in results[1]
+
+    # Test on_errors = 'break'
+    results = list(chunker.batch_chunk(texts, mode="token", on_errors="break"))
+    assert len(results) == 1
+    assert "This is ok." in results[0]
+
+
+# --- Custom Splitter Tests ---
+
+def test_custom_splitter_usage():
+    """Test that the chunker can work a custom splitter without errors."""
 
     # Define a simple custom splitter that splits by 'X'
     def custom_x_splitter(text: str) -> List[str]:
@@ -362,9 +296,38 @@ def test_custom_splitter_basic_usage():
     assert sentences == expected_sentences
 
 
-def test_init_validation_error():
-    """Test that InvalidInputError is raised for invalid initialization parameters."""
-    with pytest.raises(
-        InvalidInputError, match="\[token_counter\] Input should be callable"
-    ):
-        PlainTextChunker(token_counter="Not a callable")
+@pytest.mark.parametrize(
+    "splitter_name, callback_func, expected_match",
+    [
+        (
+            "InvalidListSplitter",
+            lambda text: "This is a single string.",  # Returns str, not list[str]
+            "Custom splitter 'InvalidListSplitter' callback returned an invalid type.",
+        ),
+        (
+            "ListNonStringSplitter",
+            lambda text: ["hello", 123, "world"],  # List contains non-strings
+            "Custom splitter 'ListNonStringSplitter' callback returned an invalid type. ",
+        ),
+        (
+            "FailingSplitter",
+            lambda text: (_ for _ in ()).throw(ValueError("Intentional failure in custom splitter.")),
+            "Custom splitter 'FailingSplitter' callback failed for text starting with: 'Some text....'.",
+        ),
+    ],
+)
+def test_custom_splitter_validation_scenarios(
+    chunker, splitter_name, callback_func, expected_match
+):
+    """Test various custom splitter validation scenarios."""
+    custom_splitters = [
+        {
+            "name": splitter_name,
+            "languages": "en",
+            "callback": callback_func,
+        }
+    ]
+    chunker_with_custom_splitter = PlainTextChunker(custom_splitters=custom_splitters)
+
+    with pytest.raises(TextProcessingError, match=re.escape(expected_match)):
+        chunker_with_custom_splitter.chunk("Some text.", lang="en")

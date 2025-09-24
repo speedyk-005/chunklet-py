@@ -7,7 +7,8 @@ from pydantic import (
     ConfigDict,
     field_validator,
 )
-from chunklet.exceptions import MissingTokenCounterError, InvalidInputError
+import chunklet
+from chunklet.exceptions import MissingTokenCounterError, InvalidInputError, TextProcessingError, FileProcessingError
 
 
 class CustomSplitterConfig(BaseModel):
@@ -22,6 +23,36 @@ class CustomSplitterConfig(BaseModel):
         ...,
         description="Callable function that takes text (str) and returns a list of sentences (List[str]).",
     )
+
+    def split(self, text: str) -> list[str]:
+        """
+        Executes the custom splitter's callback and validates its output.
+
+        Ensures the callback returns a list of strings, handling execution errors.
+
+        Args:
+            text (str): The input text for the callback.
+
+        Returns:
+            list[str]: The validated list of strings.
+
+        Raises:
+            TextProcessingError: If the callback fails or returns an invalid type.
+        """
+        try:
+            result = self.callback(text)
+        except Exception as e:
+            raise TextProcessingError(
+                f"Custom splitter '{self.name}' callback failed for text starting with: '{text[:100]}...'.\n"
+                f"Details: {e}"
+            ) from e
+
+        if not isinstance(result, list) or not all(isinstance(item, str) for item in result):
+            raise TextProcessingError(
+                f"Custom splitter '{self.name}' callback returned an invalid type. "
+                f"Expected a list of strings, but got {type(result)} with elements of mixed types."
+            )
+        return result
 
 
 class CustomProcessorConfig(BaseModel):
@@ -39,6 +70,39 @@ class CustomProcessorConfig(BaseModel):
         ...,
         description="Callable function that takes file path (str) and returns extracted text (str).",
     )
+
+    def extract_text(self, file_path: str) -> str:
+        """
+        Safely executes this custom processor's callback and validates its output.
+
+        This method acts as a wrapper, executing the provided callback function
+        with the given file path and then validating that the returned value is a string.
+        It catches any exceptions raised by the callback and re-raises them as FileProcessingError.
+
+        Args:
+            file_path (str): The path to the file to be processed by the callback.
+
+        Returns:
+            str: The validated extracted text.
+
+        Raises:
+            FileProcessingError: If the callback raises an exception or if its output
+                                 is not a string.
+        """
+        try:
+            result = self.callback(file_path)
+        except Exception as e:
+            raise chunklet.exceptions.FileProcessingError(
+                f"Custom processor '{self.name}' callback failed for file: '{file_path}'. "
+                f"Details: {e}"
+            ) from e
+
+        if not isinstance(result, str):
+            raise chunklet.exceptions.FileProcessingError(
+                f"Custom processor '{self.name}' callback returned an invalid type. "
+                f"Expected a string, but got {type(result)}."
+            )
+        return result
 
 
 class PlainTextChunkerConfig(BaseModel):
@@ -118,3 +182,6 @@ class CodeChunkingConfig(BaseModel):
         if self.token_counter is None:
             raise MissingTokenCounterError()
         return self
+
+
+    

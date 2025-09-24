@@ -52,8 +52,8 @@ class UniversalSplitter:
                 fixed_sentences[-1] += curr_sent
             elif (
                 self.abbreviation_pattern.fullmatch(prev_sent)
-                or self.abbreviation_pattern.search(prev_sent)
-                and not curr_sent[0].isupper()
+                or (self.abbreviation_pattern.search(prev_sent)
+                and not curr_sent[0].isupper())
             ):  # Avoid splitting after an abbreviation
                 fixed_sentences[-1] += " " + curr_sent
             else:
@@ -67,8 +67,7 @@ class UniversalSplitter:
 if __name__ == "__main__":
     import textwrap
 
-    complex_text = textwrap.dedent(
-        """
+    complex_text = textwrap.dedent("""
     Dr. Smith, the lead researcher at the U.S.A. Space Agency, said: "We've reached 123.45 light-years… incredible!" 
     He added, Consider the following points (They are special.):
       1. All systems are operational.

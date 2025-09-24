@@ -1,8 +1,9 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Callable, Any, Generator, Iterable
+from collections.abc import Iterable
 from box import Box
-from loguru import logger
+from pydantic import ValidationError
 
 try:
     from striprtf.striprtf import rtf_to_text
@@ -20,8 +21,7 @@ from chunklet.exceptions import (
     UnsupportedFileTypeError,
     FileProcessingError,
 )
-from pydantic import ValidationError
-
+from chunklet.utils.logger import logger
 
 class DocumentChunker:
     """
@@ -42,7 +42,7 @@ class DocumentChunker:
     """
 
     # Supported file extensions for general-purpose text documents
-    SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md", ".rst", ".rtf"}
+    SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.txt', '.md', '.rst', '.rtf'}
     
     def __init__(
         self,
@@ -144,7 +144,7 @@ class DocumentChunker:
         """
         if self.plain_text_chunker.verbose:
             logger.debug(
-                "Extracting text from file: {} with extension: {}", path, ext
+                "Extracting text from file: %s with extension: %s", path, ext
             )
 
         text_content = ""
@@ -193,7 +193,7 @@ class DocumentChunker:
             if ext in supported_extensions:
                 if self.plain_text_chunker.verbose:
                     logger.debug(
-                        "Using custom processor '{}' for file type: {}",
+                        "Using custom processor '%s' for file type: %s",
                         processor.name,
                         ext,
                     )
@@ -208,21 +208,23 @@ class DocumentChunker:
         self,
         chunks: Iterable[str],
         base_metadata: dict[str, Any],
-    ) -> Generator[Box, None, None]:
+    ) -> list[Box]:
         """
-        Helper to create a generator of Box objects for chunks with embedded metadata and auto-assigned chunk numbers.
+        Helper to create a list of Box objects for chunks with embedded metadata and auto-assigned chunk numbers.
         """
-        for i, chunk_str in enumerate(chunks):
+        chunk_boxes = []
+        for i, chunk_str in enumerate(chunks, start=1):
             chunk_box = Box(
                 {
                     "content": chunk_str,
                     "metadata": {
-                        "chunk_num": i + 1,
+                        "chunk_num": i,
                     },
                 }
             )
             chunk_box.metadata.update(base_metadata)
-            yield chunk_box
+            chunk_boxes.append(chunk_box)
+        return chunk_boxes
                 
     def chunk(
         self,
@@ -275,7 +277,7 @@ class DocumentChunker:
 
         if self.plain_text_chunker.verbose:
             logger.debug(
-                "Validated path: {}, detected extension: {}",
+                "Validated path: %s, detected extension: %s",
                 validated_path,
                 ext,
             )
@@ -286,13 +288,19 @@ class DocumentChunker:
         # Prioritize custom processors
         if ext in self._custom_processor_extensions:
             text_content = self._use_custom_processor(validated_path, ext)
-        elif ext in self.SUPPORTED_EXTENSIONS - {".pdf"}:
+        elif ext in self.SUPPORTED_EXTENSIONS - {'.pdf'}:
             text_content = self._extract_text(validated_path, ext)
-        else:
-            raise InvalidInputError(
-                "You cannot use the general chunk method for pdf chunking."
-                "\n💡 Hint: use `chunker.chunk_pdfs(['example.pdf', ...])` instead."
+        elif ext == ".pdf":
+            raise UnsupportedFileTypeError(
+                "File type '.pdf' is not supported by the general chunk method. "
                 "\n Reason: pdfs are made of pages and each page text needs to be processed in parallel."
+                "\n💡 Hint: use `chunker.chunk_pdfs(['example.pdf', ...])` instead."
+            )
+        else:
+            raise UnsupportedFileTypeError(
+                f"File type '{ext}' is not supported.\n"
+                f"Supported extensions are: {self.SUPPORTED_EXTENSIONS}\n"
+                "💡 Hint: You can add support for other file types by providing a custom processor."
             )
 
         # Process as a single block of text
@@ -301,16 +309,16 @@ class DocumentChunker:
 
         if self.plain_text_chunker.verbose:
             logger.info(
-                "Generated chunks for {} (from {})",
+                "Generated chunks for %s (from %s)",
                 validated_path,
-                "text-based file" if ext in self.SUPPORTED_EXTENSIONS - {".pdf"} else "custom processor"
+                "text-based file" if ext in self.SUPPORTED_EXTENSIONS - {'.pdf'} else "custom processor"
             )
 
         return chunk_boxes
 
     def chunk_pdfs(
         self,
-        paths: list[str | Path],
+        paths: Iterable[str | Path],
         *,
         lang: str = "auto",
         mode: str = "sentence",
@@ -321,6 +329,7 @@ class DocumentChunker:
         token_counter: Callable[[str], int] | None = None,
         n_jobs: int | None = None,
         show_progress: bool = True,
+        on_errors: str = "raise",
     ) -> Generator[Box, None, None]:
         """
         Chunks multiple PDF documents from a list of file paths.
@@ -340,10 +349,10 @@ class DocumentChunker:
             n_jobs (int | None): Number of parallel workers to use. If None, uses all available CPUs.
                    Must be >= 1 if specified.
             show_progress (bool): Flag to show or disable the loading bar.
+            on_errors (str): How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
 
-        Returns:
-            Generator[Box, None, None]: A generator that yields `Box` objects, each representing
-            a chunk with its content and metadata.
+        yields:
+            Box: `Box` object, representing a chunk with its content and metadata.
 
         Raises:
             InvalidInputError: If the input arguments aren't valid.
@@ -352,8 +361,12 @@ class DocumentChunker:
             FileProcessingError: If an error occurs during file reading or processing.
             MissingTokenCounter: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
         """
+        # Validate that paths is an iterable
+        if not isinstance(paths, Iterable):
+            raise InvalidInputError("The 'paths' parameter must be an iterable (e.g., a list or tuple) of file paths.")
+
         if self.plain_text_chunker.verbose:
-            logger.info(f"Starting batch PDF chunking for {len(paths)} documents.")
+            logger.info("Starting batch PDF chunking for %s documents.", len(paths))
 
         # Capture all parameters for the plain text chunker
         chunk_params = {
@@ -364,19 +377,30 @@ class DocumentChunker:
         pdf_metadatas = []
         page_counts = []
 
-        def _extract_pdf_pages():
-            for path in paths:
+        # Validate all paths upfront
+        validated_paths_with_ext = []
+        for i, path in enumerate(paths):
+            try:
                 ext = self.validate_path_extension(path)
                 if ext != ".pdf":
                     raise UnsupportedFileTypeError(
                         f"File type '{ext}' is not supported by chunk_pdfs. "
                         "All files in the list must be .pdf files."
                     )
-                
-                validated_path = Path(str(path))
-                pdf_data = self.pdf_processor.extract_data(str(validated_path))
+                validated_paths_with_ext.append((str(path), ext))
+            except (FileNotFoundError, UnsupportedFileTypeError, InvalidInputError) as e:
+                if self.plain_text_chunker.verbose:
+                    logger.warning("Skipping file %s at index %s. Reason: %s", path, i, e)
+                continue
+        
+        if not validated_paths_with_ext:
+            logger.warning("No valid PDF files found after validation. Returning empty generator.")
+
+        def _extract_pdf_pages():
+            for validated_path, ext in validated_paths_with_ext:
+                pdf_data = self.pdf_processor.extract_data(validated_path)
                 document_metadata = pdf_data.get("metadata", {})
-                pages_generator = pdf_data.get("pages")
+                pages_generator = pdf_data["pages"]
                 
                 page_counts.append(document_metadata.get("page_count", 0))
                 pdf_metadatas.append(document_metadata)
@@ -384,30 +408,34 @@ class DocumentChunker:
                 yield from pages_generator
 
         all_pages_chunks_gen = self.plain_text_chunker.batch_chunk(
-            texts=_extract_pdf_pages(), **chunk_params
+            texts=_extract_pdf_pages(),
+            _document_context=True,
+            **chunk_params,
         )
 
-        for pdf_metadata, page_count in zip(pdf_metadatas, page_counts):
-            for page_num in range(1, page_count + 1):
-                try:
-                    chunks_list = next(all_pages_chunks_gen)
-                    page_metadata = pdf_metadata.copy()
-                    page_metadata["page_num"] = page_num
-                    yield from self._create_chunk_boxes(chunks_list, page_metadata)
-                except StopIteration:
-                    if self.plain_text_chunker.verbose:
-                        logger.warning("Chunk generator exhausted prematurely.")
-                    break
+        # To track pdf files since, since they are processed at iterations
+        pdf_index = 0  
+        for page_num, chunks_list in enumerate(all_pages_chunks_gen, start=1):
+            page_count = page_counts[pdf_index]
+            pdf_metadata = pdf_metadatas[pdf_index]
+
+            if page_num % page_count == 0:
+                pdf_index += 1
             
-            if self.plain_text_chunker.verbose:
-                logger.info(
-                    "Finished generating chunks for {} (from PDF)",
-                    pdf_metadata.get("source")
-                )
+            page_metadata = pdf_metadata.copy()
+            page_metadata["page_num"] = page_num
+            yield from self._create_chunk_boxes(chunks_list, page_metadata)
+
+        if self.plain_text_chunker.verbose:
+            logger.info(
+                "Finished generating chunks for %s (from PDF)",
+                pdf_metadata.get("source")
+            )
+
 
     def batch_chunk(
         self,
-        paths: list[str | Path],
+        paths: Iterable[str | Path],
         *,
         lang: str = "auto",
         mode: str = "sentence",
@@ -418,6 +446,7 @@ class DocumentChunker:
         token_counter: Callable[[str], int] | None = None,
         n_jobs: int | None = None,
         show_progress: bool = True,
+        on_errors: str = "raise",
     ) -> Generator[Box, None, None]:
         """
         Chunks multiple documents from a list of file paths.
@@ -427,7 +456,7 @@ class DocumentChunker:
         handles various file types, but not PDFs.
 
         Args:
-            paths (list[str | Path]): A list of paths to the document files.
+            paths (Iterable[str | Path]): An iterable of paths to the document files.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             mode (str): Chunking mode ('sentence', 'token', or 'hybrid'). Defaults to "sentence".
             max_tokens (int): Maximum number of tokens per chunk.
@@ -438,10 +467,10 @@ class DocumentChunker:
             n_jobs (int | None): Number of parallel workers to use. If None, uses all available CPUs.
                    Must be >= 1 if specified.
             show_progress (bool): Flag to show or disable the loading bar.
+            on_errors (str): How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
 
-        Returns:
-            Generator[Box, None, None]: A generator that yields `Box` objects, each representing
-            a chunk with its content and metadata.
+        yields:
+            Box: `Box` object, representing a chunk with its content and metadata.
 
         Raises:
             InvalidInputError: If the input arguments aren't valid.
@@ -451,8 +480,12 @@ class DocumentChunker:
             FileProcessingError: If an error occurs during file reading or processing.
             MissingTokenCounter: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
         """
+        # Validate that paths is an iterable
+        if not isinstance(paths, Iterable):
+            raise InvalidInputError("The 'paths' parameter must be an iterable (e.g., a list or tuple) of file paths.")
+
         if self.plain_text_chunker.verbose:
-            logger.info(f"Starting batch chunking for {len(paths)} documents.")
+            logger.info("Starting batch chunking for %s documents.", len(paths))
 
         # Capture all parameters for the plain text chunker
         chunk_params = {
@@ -462,29 +495,37 @@ class DocumentChunker:
         
         doc_metadatas = []
 
+        # Validate all paths upfront
+        validated_paths_with_ext = []
+        for i, path in enumerate(paths):
+            try:
+                ext = self.validate_path_extension(path)
+                validated_paths_with_ext.append((str(path), ext))
+            except (FileNotFoundError, UnsupportedFileTypeError, InvalidInputError) as e:
+                if self.plain_text_chunker.verbose:
+                    logger.warning("Skipping file %s at index %s. Reason: %s", path, i, e)
+                continue
+
+        if not validated_paths_with_ext:
+            logger.warning("No valid files found after validation. Returning empty generator.")
+            return
+
         def _extract_texts() -> Generator[str, None, None]:
-            for path in paths:
-                try:
-                    ext = self.validate_path_extension(path)
-                    validated_path = Path(str(path))
-                except (FileNotFoundError, UnsupportedFileTypeError) as e:
-                    if self.plain_text_chunker.verbose:
-                        logger.warning(f"Skipping file {path}. Reason: {e}")
-                    continue
+            for validated_path, ext in validated_paths_with_ext:
 
                 if ext == ".pdf":
                     if self.plain_text_chunker.verbose:
-                        logger.warning(f"Skipping file {path}. Reason: batch_chunk does not support .pdf files. Use chunk_pdfs instead.")
+                        logger.warning("Skipping file %s. Reason: batch_chunk does not support .pdf files. Use chunk_pdfs instead.", path)
                     continue
 
                 if self.plain_text_chunker.verbose:
                     logger.debug(
-                        "Processing file: {}, detected extension: {}",
+                        "Processing file: %s, detected extension: %s",
                         validated_path,
                         ext,
                     )
                 
-                base_metadata = {"source": str(validated_path)}
+                base_metadata = {"source": validated_path}
                 doc_metadatas.append(base_metadata)
 
                 if ext in self._custom_processor_extensions:
@@ -493,13 +534,17 @@ class DocumentChunker:
                     yield self._extract_text(validated_path, ext)
 
         all_docs_chunks_gen = self.plain_text_chunker.batch_chunk(
-            texts=_extract_texts(), **chunk_params
+            texts=_extract_texts(),
+            _document_context=True,
+            **chunk_params,
         )
 
-        for metadata, chunks_list in zip(doc_metadatas, all_docs_chunks_gen):
+        for i, chunks_list in enumerate(all_docs_chunks_gen):
+            metadata = doc_metadatas[i]
             yield from self._create_chunk_boxes(chunks_list, metadata)
             if self.plain_text_chunker.verbose:
                 logger.info(
-                    "Finished generating chunks for {}",
+                    "Finished generating chunks for %s",
                     metadata.get("source")
                 )
+                

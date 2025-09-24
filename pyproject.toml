@@ -37,7 +37,6 @@ dependencies = [
   "sentence-splitter>=1.4",
   "sentencex>=0.6.0",
   "py3langid>=0.3.0",
-  "loguru>=0.7.0",
   "pydantic>=2.0.0",
   "mpire>=2.10.0",
   "rich>=13.0.0",
