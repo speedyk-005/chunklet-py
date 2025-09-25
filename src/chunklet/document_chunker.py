@@ -197,12 +197,8 @@ class DocumentChunker:
                         processor.name,
                         ext,
                     )
-                try:
-                    return processor.callback(str(path))
-                except Exception as e:
-                    raise FileProcessingError(
-                        f"Custom processor '{processor.name}' failed for file '{path}'.\n Details: {e}"
-                    ) from e
+                # The extract_text method on the processor model handles validation and error wrapping.
+                return processor.extract_text(str(path))
 
     def _create_chunk_boxes(
         self,
@@ -396,6 +392,7 @@ class DocumentChunker:
         if not validated_paths_with_ext:
             logger.warning("No valid PDF files found after validation. Returning empty generator.")
 
+        # Generator needed to process the pdfs pages one by one
         def _extract_pdf_pages():
             for validated_path, ext in validated_paths_with_ext:
                 pdf_data = self.pdf_processor.extract_data(validated_path)
@@ -407,29 +404,36 @@ class DocumentChunker:
 
                 yield from pages_generator
 
+        
         all_pages_chunks_gen = self.plain_text_chunker.batch_chunk(
             texts=_extract_pdf_pages(),
             _document_context=True,
             **chunk_params,
         )
 
-        # To track pdf files since, since they are processed at iterations
-        pdf_index = 0  
+        # To track pdf file and insert the correct metadata
+        pdf_index = 0
+        pages_so_far = 0
         for page_num, chunks_list in enumerate(all_pages_chunks_gen, start=1):
-            page_count = page_counts[pdf_index]
-            pdf_metadata = pdf_metadatas[pdf_index]
-
-            if page_num % page_count == 0:
+            # Move to the next pdf if we have processed all pages from the current one
+            if (
+                pdf_index < len(page_counts)
+                and pages_so_far + page_counts[pdf_index] < page_num
+            ):
+                pages_so_far += page_counts[pdf_index]
                 pdf_index += 1
+
+            pdf_metadata = pdf_metadatas[pdf_index]
+            page_num_in_doc = page_num - pages_so_far
             
             page_metadata = pdf_metadata.copy()
-            page_metadata["page_num"] = page_num
+            page_metadata["page_num"] = page_num_in_doc
             yield from self._create_chunk_boxes(chunks_list, page_metadata)
 
-        if self.plain_text_chunker.verbose:
+        if self.plain_text_chunker.verbose and pdf_metadatas:
             logger.info(
-                "Finished generating chunks for %s (from PDF)",
-                pdf_metadata.get("source")
+                "Finished generating chunks for %d PDF document(s).",
+                len(pdf_metadatas)
             )
 
 
@@ -515,7 +519,7 @@ class DocumentChunker:
 
                 if ext == ".pdf":
                     if self.plain_text_chunker.verbose:
-                        logger.warning("Skipping file %s. Reason: batch_chunk does not support .pdf files. Use chunk_pdfs instead.", path)
+                        logger.warning("Skipping file %s. Reason: batch_chunk does not support .pdf files. Use chunk_pdfs instead.", validated_path)
                     continue
 
                 if self.plain_text_chunker.verbose:

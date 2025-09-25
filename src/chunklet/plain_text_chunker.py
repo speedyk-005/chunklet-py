@@ -156,6 +156,7 @@ class PlainTextChunker:
                         splitter.name,
                         lang,
                     )
+                # The split method on the splitter model handles validation and error wrapping.     
                 return splitter.split(text)
 
     def _split_by_sentence(self, text: str, lang: str) -> tuple[list[str], set[str]]:

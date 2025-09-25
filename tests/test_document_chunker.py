@@ -136,27 +136,27 @@ def test_chunk_unsupported_file_type(document_chunker, tmp_path):
 
 def test_batch_chunk_with_different_file_type(document_chunker, mock_plain_text_chunker):
     """Test successful batch chunking of multiple supported file types."""
+    from collections import defaultdict
+
     mock_plain_text_chunker.verbose = True
-    paths = ["samples/sample-pdf-a4-size.pdf", "samples/Lorem.docx"]
+    paths = ["samples/Lorem.docx", "samples/What_is_rst.rst"]
     all_document_chunks = list(document_chunker.batch_chunk(paths))
 
-    assert len(all_document_chunks) == len(paths)
-    mock_plain_text_chunker.batch_chunk.assert_called_once()
-    mock_plain_text_chunker.chunk.assert_called()
+    # Check that we got some chunks
+    assert len(all_document_chunks) > 0
 
-    all_chunks_flat = [
-        chunk for doc_chunks in all_document_chunks for chunk in doc_chunks
-    ]
-    pdf_chunks = [
-        chunk
-        for chunk in all_chunks_flat
-        if "sample-pdf-a4-size.pdf" in chunk.metadata["source"]
-    ]
-    docx_chunks = [
-        chunk for chunk in all_chunks_flat if "Lorem.docx" in chunk.metadata["source"]
-    ]
-    assert len(pdf_chunks) > 0
-    assert len(docx_chunks) > 0
+    # Group chunks by source file
+    chunks_by_source = defaultdict(list)
+    for chunk in all_document_chunks:
+        chunks_by_source[chunk.metadata.source].append(chunk)
+
+    # Check that we have chunks from all input files
+    assert len(chunks_by_source) == len(paths)
+    for path in paths:
+        assert path in chunks_by_source
+        assert len(chunks_by_source[path]) > 0
+
+    mock_plain_text_chunker.batch_chunk.assert_called_once()
     
 
 def test_chunk_method_with_custom_processor(
@@ -210,8 +210,7 @@ def test_chunk_method_with_custom_processor(
         (
             "FailingProcessor",
             lambda file_path: (_ for _ in ()).throw(ValueError("Intentional failure in custom processor.")),
-            "Custom processor 'FailingProcessor' failed",
-        ),
+                            "Custom processor 'FailingProcessor' callback failed",        ),
     ],
 )
 def test_custom_processor_validation_scenarios(
