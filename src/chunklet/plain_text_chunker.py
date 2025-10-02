@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Generator, Callable, Optional
-import regex as re
 import sys
+import regex as re
 from collections.abc import Iterable, Iterator
 from collections import Counter
 from functools import partial
@@ -12,8 +12,9 @@ from more_itertools import ilen
 from box import Box
 from pydantic import ValidationError
 from pysbd import Segmenter
-from sentence_splitter import SentenceSplitter
+from sentsplit.segment import SentSplit
 from sentencex import segment
+from indicnlp.tokenize import sentence_tokenize
 # mpire is lazy imported
 from rich.progress import (
     Progress,
@@ -25,8 +26,9 @@ from rich.progress import (
 
 from chunklet.languages import (
     PYSBD_SUPPORTED_LANGUAGES,
-    SENTENCESPLITTER_UNIQUE_LANGUAGES,
-    SENTENCESX_UNIQUE_LANGUAGES,
+    SENTSPLIT_UNIQUE_LANGUAGES,
+    SENTENCEX_UNIQUE_LANGUAGES,
+    INDIC_NLP_UNIQUE_LANGUAGES,
 )
 from chunklet.libs.universal_splitter import UniversalSplitter
 from chunklet.utils.detect_text_language import detect_text_language
@@ -42,11 +44,15 @@ from chunklet.exceptions import (
 )
 from chunklet.utils.logger import logger
 
+
 # for clauses overlapping and fitting
 CLAUSE_END_TRIGGERS = r";,’：—)&…"
 
 # In-memory cache
 cache = LRUCache(maxsize=256)
+
+# Sentinel to serve as the default value for the separator args in batch chunking
+_sentinel = object()   
 
 
 class PlainTextChunker:
@@ -188,21 +194,35 @@ class PlainTextChunker:
         if lang in self.custom_splitters_languages:
             return self._use_custom_splitter(text, lang), warnings
 
-        if lang in PYSBD_SUPPORTED_LANGUAGES:
+        elif lang in PYSBD_SUPPORTED_LANGUAGES:
             if self.verbose:
                 logger.debug("Using pysbd for language: %s.", lang)
             return Segmenter(language=lang).segment(text), warnings
-        elif lang in SENTENCESPLITTER_UNIQUE_LANGUAGES:
+
+        elif lang in SENTSPLIT_UNIQUE_LANGUAGES:
             if self.verbose:
                 logger.debug(
-                    "Using SentenceSplitter for language: %s. (SentenceSplitter)",
+                    "Using SentSplit for language: %s. (sentsplit)",
                     lang,
                 )
-            return SentenceSplitter(language=lang).split(text), warnings
-        elif lang in SENTENCESX_UNIQUE_LANGUAGES:
+            return SentSplit(lang).segment(text), warnings
+
+        elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
             if self.verbose:
-                logger.debug("Using sentencex for language: %s.", lang)
+                logger.debug(
+                    "Using Indic NLP for language: %s. (indic-nlp-library)",
+                    lang,
+                )
+            return sentence_tokenize.sentence_split(text, lang), warnings
+
+        elif lang in SENTENCEX_UNIQUE_LANGUAGES:
+            if self.verbose:
+                logger.debug(
+                    "Using Sentencex for language: %s. (sentencex)",
+                    lang,
+                )
             return segment(lang, text), warnings
+
         else:  # Fallback to universal regex splitter
             warnings.add(
                 "Language not supported or detected with low confidence. Universal regex splitter was used."
@@ -572,8 +592,9 @@ class PlainTextChunker:
         n_jobs: Optional[int] = None,
         show_progress: bool = True,
         on_errors: str = "raise",
+        separator: Any = _sentinel,
         _document_context: bool = False,
-    ) -> Generator[str, None, None]:
+    ) -> Generator[Any, None, None]:
         """
         Processes a batch of texts in parallel, splitting each into chunks.
         Leverages multiprocessing for efficient batch chunking.
@@ -594,9 +615,10 @@ class PlainTextChunker:
                    Must be >= 1 if specified.
             show_progress (bool): Flag to show or disable the loading bar.
             on_errors (str): How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
+            separator (Any): A value to be yielded after the chunks of each text are processed.
 
         yields:
-            str: chunk string.
+            str or Any: A chunk string, or the separator value.
 
         Raises:
             InvalidInputError: If `texts` is not a list or if `n_jobs` is less than 1.
@@ -696,6 +718,8 @@ class PlainTextChunker:
                                 yield chunks
                             else:
                                 yield from chunks
+                                if separator is not _sentinel:
+                                    yield separator
                             collected_warnings.append(warnings)
                             progress.update(task, advance=1)
                         

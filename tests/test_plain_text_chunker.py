@@ -1,6 +1,5 @@
 import pytest
 import re
-from typing import List
 from unittest.mock import patch
 from chunklet import (
     PlainTextChunker,
@@ -10,8 +9,10 @@ from chunklet import (
 )
 from loguru import logger
 
+
 # Silent logging
 logger.remove()
+
 
 # --- Constants ---
 
@@ -101,7 +102,6 @@ def test_offset_behavior(chunker, offset, expect_chunks):
         assert not chunks, f"Should get no chunks for offset={offset}"
 
 
-# --- Token Counter Validation ---
 @pytest.mark.parametrize("mode", ["token", "hybrid"])
 def test_token_counter_validation(mode):
     """Test that a MissingTokenCounterError is raised when a token_counter is missing for token/hybrid modes."""
@@ -189,6 +189,7 @@ def test_overlap_behavior(chunker):
     assert len(overlap) > 0
 
 
+# --- Batch chunking Tests---
 @pytest.mark.parametrize(
     "texts_input, expected_results_len",
     [
@@ -268,14 +269,29 @@ def test_batch_chunk_error_handling_on_task(chunker):
     assert "This is ok." in results[0]
 
 
-# --- Custom Splitter Tests ---
+@pytest.mark.parametrize(
+    "separator, texts, expected_output",
+    [
+        # Case 1: Simple string separator
+        ("---", ["First sentence.", "Second sentence."], ["First sentence.", "---", "Second sentence.", "---"]),
+        # Case 2: None as separator
+        (None, ["First sentence.", "Second sentence."], ["First sentence.", None, "Second sentence.", None]),
+    ],
+)
+def test_batch_chunk_with_separator(chunker, separator, texts, expected_output):
+    """Test the separator functionality in batch_chunk with real chunking."""
+    result = list(chunker.batch_chunk(texts, separator=separator))
 
+    assert result == expected_output
+
+
+# --- Custom Splitter Tests ---
 def test_custom_splitter_usage():
     """Test that the chunker can work a custom splitter without errors."""
 
     # Define a simple custom splitter that splits by 'X'
-    def custom_x_splitter(text: str) -> List[str]:
-        return [s.strip() for s in text.split("X") if s.strip()]
+    def custom_x_splitter(text: str):
+        return text.split("X")
 
     custom_splitters = [
         {

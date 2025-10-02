@@ -11,9 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Expanded Language Support:** Integrated `sentsplit`, `sentencex`, and `indic-nlp-library` for more accurate and comprehensive sentence splitting across a wider range of languages.
+This officially boosts language support from 36+ to 40+.
 - **Error Handling**: Added an `on_errors` parameter to `batch_chunk` to allow for more flexible error handling (raise, ignore, or break).
 - **Faster Language Detection**: Optimized language detection by using only the first 500 characters of the input text. This significantly improves performance, especially for large documents, without compromising accuracy for language identification.
-- **Expanded Language Support with `sentencex`:** Integrated the `sentencex` library as a new sentence splitter. This officially boosts language support from 36+ to over 226 languages, providing more reliable sentence segmentation for many languages that were previously handled by the generic fallback splitter.
 - **Code Chunker Introduction:** Introduced `CodeChunker` for syntax-aware chunking of source code, with support for multiple programming languages by leveraging `src/libs/code_structure_extractor` to dispatch code into structural elements.
 - **CLI Multiple Input Files:** Added an `--input-files` argument to allow processing of multiple specific files.
 - **CLI Metadata Flag:** Added a `-m, --metadata` flag to the CLI to display chunk metadata in the output.
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Improved Universal Splitter:** Replaced the existing universal sentence splitter with a more robust, multi-stage version. The new splitter offers more accurate handling of abbreviations, numbered lists, and complex punctuation, and has a larger punctuation coverage, improving fallback support for unsupported languages.
 - **Clause Delimiters**: Added ellipsis to the list of clause delimiters for more accurate chunking.
 - **Logging**: Replaced `loguru` with the standard `logging` module and `RichHandler` for a cleaner and more beautiful logging experience that integrates seamlessly with progress bars.
 - **Batch Chunking Flexibility:** Modified `PlainTextChunker.batch_chunk` to accept any `Iterable` of strings for the `texts` parameter, instead of being restricted to `list`.
@@ -63,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Python 3.8 Support:** Dropped official support for Python 3.8. The minimum required Python version is now 3.9.
 - **CLI Argument:** Removed the `--no-cache` command-line argument.
 - **CLI Argument:** Removed the deprecated `--batch` argument.
+- **Sentence-splitter removed:** Removed `sentence-splitter` and replaced by other libs. 
 
 ---
 

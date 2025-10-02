@@ -40,7 +40,7 @@ def rst_to_markdown(rst_text: str) -> str:
         ) from e
 
     # Step 1: Convert RST => HTML
-    html = publish_string(source=rst_text, writer="html").decode("utf-8")
+    html = publish_string(source=rst_text, writer_name="html").decode("utf-8")
 
     if BeautifulSoup is None:
         raise ImportError(

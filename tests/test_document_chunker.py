@@ -17,6 +17,7 @@ from loguru import logger
 logger.remove()
 
 
+# --- Fixtures ---
 @pytest.fixture
 def mock_plain_text_chunker():
     """Mock PlainTextChunker to isolate DocumentChunker logic"""
@@ -46,7 +47,7 @@ def document_chunker(mock_plain_text_chunker):
     return DocumentChunker(mock_plain_text_chunker)
 
 
-# Test DocumentChunker Initialization
+# --- Core Tests ---
 @pytest.mark.parametrize(
     "input, expected_exception, match_string",
     [
@@ -102,7 +103,6 @@ def test_chunk_pdf(document_chunker, mock_plain_text_chunker):
     mock_plain_text_chunker.chunk.assert_called()
 
 
-# Test chunk method for different file types
 @pytest.mark.parametrize(
     "path",
     [
@@ -157,8 +157,9 @@ def test_batch_chunk_with_different_file_type(document_chunker, mock_plain_text_
         assert len(chunks_by_source[path]) > 0
 
     mock_plain_text_chunker.batch_chunk.assert_called_once()
-    
 
+
+# --- Custom Processor Tests ---
 def test_chunk_method_with_custom_processor(
     document_chunker, mock_plain_text_chunker, tmp_path
 ):
@@ -198,7 +199,6 @@ def test_chunk_method_with_custom_processor(
     assert "source" in chunks[0].metadata
     assert chunks[0].metadata["source"] == str(dummy_file)
 
-
 @pytest.mark.parametrize(
     "processor_name, callback_func, expected_match",
     [
@@ -210,7 +210,8 @@ def test_chunk_method_with_custom_processor(
         (
             "FailingProcessor",
             lambda file_path: (_ for _ in ()).throw(ValueError("Intentional failure in custom processor.")),
-                            "Custom processor 'FailingProcessor' callback failed",        ),
+            "Custom processor 'FailingProcessor' callback failed",
+        ),
     ],
 )
 def test_custom_processor_validation_scenarios(

@@ -1,12 +1,14 @@
-- - custom processors should only work if not for pdfs, ot rm custom processor at all
-- rm sentencex, use nltk_punkt
-- return a gen of list instead of a gen of string
+- restructure thr libs
+
 -  replace argparse with typer
 - add support for multiple dir in cli
 
 
 # what we have done
 
+- **Expanded Language Support:** Integrated `sentsplit`, `sentencex`, and `indic-nlp-library` for more accurate and comprehensive sentence splitting across a wider range of languages.
+This officially boosts language support from 36+ to 40+.
+- **Improved Universal Splitter:** Replaced the existing universal sentence splitter with a more robust, multi-stage version. The new splitter offers more accurate handling of abbreviations, numbered lists, and complex punctuation, and has a larger punctuation coverage, improving fallback support for unsupported languages.
 - **Logging**: Replaced `loguru` with the standard `logging` module and `RichHandler` to allow the output of the built-in logging module to be displayed above a progress bar, preventing the output from being scrambled.
 - **Clause Delimiters**: Added ellipsis to the list of clause delimiters for more accurate chunking. 
 - **Error Handling**: Added an `on_errors` parameter to `batch_chunk` to allow for more flexible error handling (raise, ignore, or break).   

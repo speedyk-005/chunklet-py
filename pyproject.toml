@@ -33,9 +33,10 @@ keywords = [
 ]
 
 dependencies = [
-  "pysbd>=0.3.0",
-  "sentence-splitter>=1.4",
+  "pysbd>=0.3.4",
+  "sentsplit>=1.0.7",
   "sentencex>=0.6.0",
+  "indic-nlp-library>=0.90",
   "py3langid>=0.3.0",
   "pydantic>=2.0.0",
   "mpire>=2.10.0",
