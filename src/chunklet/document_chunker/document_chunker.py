@@ -10,16 +10,18 @@ try:
 except ImportError:
     rtf_to_text = None
     
-from chunklet.plain_text_chunker import PlainTextChunker
-from chunklet.libs.pdf_processor import PDFProcessor
-from chunklet.libs.docx_processor import DOCXProcessor
+from chunklet import PlainTextChunker
+from chunklet.sentence_splitter import SentenceSplitter
+from .pdf_processor import PDFProcessor
+from .docx_processor import DOCXProcessor
 from chunklet.utils.rst_to_md import rst_to_markdown
 from chunklet.utils.error_utils import pretty_errors
-from chunklet.models import CustomProcessorConfig
+from chunklet.models import DocumentChunkerInitConfig, CustomProcessorConfig
 from chunklet.exceptions import (
     InvalidInputError,
     UnsupportedFileTypeError,
     FileProcessingError,
+    CallbackExecutionError,
 )
 from chunklet.utils.logger import logger
 
@@ -46,49 +48,87 @@ class DocumentChunker:
     
     def __init__(
         self,
-        plain_text_chunker: PlainTextChunker,
-        custom_processors: list[CustomProcessorConfig] | None = None,
+        verbose: bool = True,
+        use_cache: bool = True,
+        continuation_marker: str = "...",
+        sentence_splitter: SentenceSplitter | None = None,
+        custom_processors: list[dict] | None = None,
     ):
         """
         Initializes the DocumentChunker.
 
         Args:
-            plain_text_chunker (PlainTextChunker): An instance of `PlainTextChunker` to be
-                used for chunking the text extracted from documents.
-            custom_processors (list[dict] | None): A list of custom document processors.
-                Each processor should be a dictionary with
-                'name' (str), 'File extensions' (Union[str, Iterable[str]])
-                (e.g., '.json', ['.xml', '.json'])."),
-                and a 'callback' (Callable[[str], List[str]])
-                (Where the input is a path string) keys.
+            verbose (bool): If True, enables verbose logging. Defaults to True.
+            use_cache (bool): If True, enables caching for chunking operations. Defaults to True.
+            continuation_marker (str): The marker to prepend to unfitted clauses. Defaults to '...'.
+            sentence_splitter (SentenceSplitter | None): An optional SentenceSplitter instance.
+                If None, a default SentenceSplitter will be initialized.
+            custom_processors (list[dict] | None): List of custom document processors.
         """
-        if not isinstance(plain_text_chunker, PlainTextChunker):
-            raise InvalidInputError(
-                "Invalid configuration: plain_text_chunker must be an instance of PlainTextChunker"
-            )
-        self.plain_text_chunker = plain_text_chunker
-
-        self.custom_processors = custom_processors if custom_processors else []
+        # Validate parameters
         try:
-            self.custom_processors = [
-                CustomProcessorConfig.model_validate(proc)
-                for proc in self.custom_processors
-            ]
+            config = DocumentChunkerInitConfig(
+                verbose=verbose,
+                use_cache=use_cache,
+                continuation_marker=continuation_marker,
+                custom_processors=custom_processors,
+            )
         except ValidationError as e:
             pretty_err = pretty_errors(e)
-            raise InvalidInputError(f"Invalid configuration.\n Details: {pretty_err}") from e
+            raise InvalidInputError(
+                f"Invalid configuration.\n Details: {pretty_err}"
+            ) from e
+
+        self.verbose = verbose
+        self.use_cache = use_cache
+        self.continuation_marker = continuation_marker
+        self._custom_processors = config.custom_processors
+        
+        if self.verbose:
+            logger.debug(
+                "Initialized with verbose=%s, use_cache=%s, continuation_marker='%s'",
+                self.verbose,
+                self.use_cache,
+                self.continuation_marker,
+            )
+
+        # Use provided SentenceSplitter or create a default one
+        self.sentence_splitter = (
+            sentence_splitter
+            if sentence_splitter
+            else SentenceSplitter(verbose=self.verbose)
+        )
+
+        # Create PlainTextChunker internally, using the (provided or default) SentenceSplitter
+        self.plain_text_chunker = PlainTextChunker(
+            verbose=self.verbose,
+            use_cache=self.use_cache,
+            continuation_marker=self.continuation_marker,
+            sentence_splitter=self.sentence_splitter,
+        )
 
         # Prepare a set of supported extensions for custom processors
         self._custom_processor_extensions = set()
-        if self.custom_processors:
-            for processor in self.custom_processors:
+        if self._custom_processors:
+            for processor in self._custom_processors:
                 if isinstance(processor.file_extensions, str):
-                    self._custom_processor_extensions.add(processor.file_extensions)
+                    self._custom_processor_extensions.add(
+                        processor.file_extensions
+                    )
                 else:
-                    self._custom_processor_extensions.update(set(processor.file_extensions))
+                    self._custom_processor_extensions.update(
+                        set(processor.file_extensions)
+                    )       
 
         self.pdf_processor = PDFProcessor()
         self.docx_processor = DOCXProcessor()
+
+    @property
+    def custom_processors(self) -> list[CustomProcessorConfig] | None:
+        """
+        Returns the list of custom processor configurations.
+        """
+        return self._custom_processors
 
     def validate_path_extension(self, path: str | Path) -> str:
         """
@@ -184,7 +224,7 @@ class DocumentChunker:
         Raises:
              FileProcessingError: If a custom processor fails during execution.
         """
-        for processor in self.custom_processors:
+        for processor in self._custom_processors:
             supported_extensions = (
                 [processor.file_extensions]
                 if isinstance(processor.file_extensions, str)
@@ -197,8 +237,23 @@ class DocumentChunker:
                         processor.name,
                         ext,
                     )
-                # The extract_text method on the processor model handles validation and error wrapping.
-                return processor.extract_text(str(path))
+                # Handle validation and error wrapping.
+                file_path = str(path)
+                try:
+                    result = processor.callback(file_path)
+                except Exception as e:
+                    raise CallbackExecutionError(
+                       f"Custom processor '{processor.name}' callback failed for file: '{file_path}'. "
+                        f"Details: {e}"
+                    ) from e
+
+                if not isinstance(result, str):
+                    raise CallbackExecutionError(
+                        f"Custom processor '{processor.name}' callback returned an invalid type. "
+                        f"Expected a string, but got {type(result)}."
+                    )
+                return result
+        
 
     def _create_chunk_boxes(
         self,

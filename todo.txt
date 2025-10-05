@@ -1,18 +1,12 @@
-- restructure thr libs
-
+- add blingfire in plain text chunker and document chunker
 -  replace argparse with typer
 - add support for multiple dir in cli
 
 
 # what we have done
+- Modified `_count_tokens` to return `CallbackExcecutionError` instead of `ChunkletError`.
+- **Sentence Splitting Logic:** The core sentence splitting logic, including language-specific algorithms, custom splitter integration, and fallback mechanisms, has been consolidated into a dedicated SentenceSplitter module for improved modularity, reusability, and maintainability.
+- restructure the libs template
 
-- **Expanded Language Support:** Integrated `sentsplit`, `sentencex`, and `indic-nlp-library` for more accurate and comprehensive sentence splitting across a wider range of languages.
-This officially boosts language support from 36+ to 40+.
-- **Improved Universal Splitter:** Replaced the existing universal sentence splitter with a more robust, multi-stage version. The new splitter offers more accurate handling of abbreviations, numbered lists, and complex punctuation, and has a larger punctuation coverage, improving fallback support for unsupported languages.
-- **Logging**: Replaced `loguru` with the standard `logging` module and `RichHandler` to allow the output of the built-in logging module to be displayed above a progress bar, preventing the output from being scrambled.
-- **Clause Delimiters**: Added ellipsis to the list of clause delimiters for more accurate chunking. 
-- **Error Handling**: Added an `on_errors` parameter to `batch_chunk` to allow for more flexible error handling (raise, ignore, or break).   
-- **Cache Management**: Added a static method `clear_cache` to `PlainTextChunker` to allow programmatic clearing of the shared in-memory cache.
-- **Custom Splitter Validation**: Refactored custom splitter callback validation into a `split` method with `CustomSplitterConfig`, providing a safer wrapper for callback execution and clearer error messages.  
- 
+
 # done, not yet changelog

@@ -1,0 +1,30 @@
+exceptions.py
+
+class ChunkletError(Exception):
+&nbsp;&nbsp;&nbsp;&nbsp;"""Base exception for chunking and splitting
+operations."""
+&nbsp;&nbsp;&nbsp;&nbsp;pass
+
+class InvalidInputError(ChunkletError):
+&nbsp;&nbsp;&nbsp;&nbsp;"""Raised when one or multiple invalid input(s) are
+encountered."""
+&nbsp;&nbsp;&nbsp;&nbsp;pass
+
+class MissingTokenCounterError(InvalidInputError):
+&nbsp;&nbsp;&nbsp;&nbsp;"""Raised when a token_counter is required but not
+provided."""
+&nbsp;&nbsp;&nbsp;&nbsp;pass
+
+class TokenLimitError(ChunkletError):
+&nbsp;&nbsp;&nbsp;&nbsp;"""Raised when max_tokens constraint is exceeded."""
+&nbsp;&nbsp;&nbsp;&nbsp;pass
+
+class FileProcessingError(ChunkletError):
+&nbsp;&nbsp;&nbsp;&nbsp;"""Raised when a file cannot be loaded, opened, or
+accessed."""
+&nbsp;&nbsp;&nbsp;&nbsp;pass
+
+class CallbackExecutionError(ChunkletError):
+&nbsp;&nbsp;&nbsp;&nbsp;"""Raised when a callback function provided to chunker
+or splitter fails during execution."""
+&nbsp;&nbsp;&nbsp;&nbsp;pass

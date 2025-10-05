@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0.0 beta] - 2025-09-12
+## [2.0.0 alpha] - 2025-09-12
 
 ### Added
 
@@ -21,25 +21,25 @@ This officially boosts language support from 36+ to 40+.
 - **Document Chunker:** Introduced `DocumentChunker` to handle various file formats like `.pdf`, `.docx`, `.txt`, `.md`, `.rst`, `.rtf`.
 - **Show Progress Parameter:** Added `show_progress` parameter to `batch_chunk` in `PlainTextChunker` to allow users to control the display of the progress bar.
 - **Custom Processors:** Introduced support for custom document processors, allowing users to define their own logic for extracting text from various file types.
-- **Custom Exception Types:** Introduced `TextProcessingError` for errors during text processing, `FileProcessingError`, during file processing and `UnsupportedFileTypeError` for unsupported file formats.
+- **New Custom Exception Types:** Introduced more specific error types like `FileProcessingError`, `UnsupportedFileTypeError`, `TokenLimitError` and `CallbackExecutionError`.
 - **Cache Management**: Added a static method `clear_cache` to `PlainTextChunker` to allow programmatic clearing of the shared in-memory cache.
 
 ### Changed
 
 - **Improved Universal Splitter:** Replaced the existing universal sentence splitter with a more robust, multi-stage version. The new splitter offers more accurate handling of abbreviations, numbered lists, and complex punctuation, and has a larger punctuation coverage, improving fallback support for unsupported languages.
+- **SentenceSplitter Extraction:** The core sentence splitting logic, previously embedded within `PlainTextChunker`, has been extracted and consolidated into a dedicated `SentenceSplitter` module. This significantly improves modularity, reusability, and maintainability across the library.
 - **Clause Delimiters**: Added ellipsis to the list of clause delimiters for more accurate chunking.
 - **Logging**: Replaced `loguru` with the standard `logging` module and `RichHandler` for a cleaner and more beautiful logging experience that integrates seamlessly with progress bars.
 - **Batch Chunking Flexibility:** Modified `PlainTextChunker.batch_chunk` to accept any `Iterable` of strings for the `texts` parameter, instead of being restricted to `list`.
 - **Memory Optimization:** Refactored all batch methods in the lib to fully utilize generators, yielding chunks one at a time to reduce memory footprint, especially for large documents. That also means you dont have to wait for the chunks fully be processed before start using them.
 - **Memory Friendly caching:** Replaced `functools.lrucache` with `cachetools.cache` to avoid instance references in cache keys to prevent unnecessary memory retention.
-- **Project Structure:** Moved several utility modules to a new `src/chunklet/libs` directory.
 - **Linting:** Integrated `flake8` for code linting and updated `CONTRIBUTING.md` with instructions for running it.
 - **Code Quality:** Fixed various `pyflakes` linting issues across the `src/` and `tests/` directories, improving code cleanliness.
 - **Error rebranding:** Renamed `TokenNotProvidedError` to `MissingTokenCounterError` for clearer semantics and updated all relevant usages.
 - **Error Handling:**
-    - Modified `_count_tokens` to return `TextProcessingError` instead of `ChunkletError`.
+    - Modified `_count_tokens` to return `CallbackExcecutionError` instead of `ChunkletError`.
     - Catched errors raised by the usage of `custom_splitters`'s callback and reraised as `TextProcessingError` instead.
-    - Improves the exception hierarchy by removing `MissingTokenCounterError` as subclass of `InvalidInputError`.
+    - Re-parented `MissingTokenCounterError` under `InvalidInputError`. `UnsupportedFileTypeError` was also added to the new hierarchy.
 - **Project Restructuring:**
     - Renamed `src/chunklet/core.py` to `src/chunklet/plain_text_chunker.py`.
     - Renamed `Chunklet` class to `PlainTextChunker`.
@@ -65,7 +65,7 @@ This officially boosts language support from 36+ to 40+.
 - **Python 3.8 Support:** Dropped official support for Python 3.8. The minimum required Python version is now 3.9.
 - **CLI Argument:** Removed the `--no-cache` command-line argument.
 - **CLI Argument:** Removed the deprecated `--batch` argument.
-- **Sentence-splitter removed:** Removed `sentence-splitter` and replaced by other libs. 
+- **Removed `preview_sentences` method:** The `preview_sentences` method was removed from `PlainTextChunker` as the `SentenceSplitter` is now exposed as a separate, dedicated utility.
 
 ---
 

@@ -1,17 +1,17 @@
 from __future__ import annotations
 import regex as re
 from typing import List
-from chunklet.libs.terminators import GLOBAL_SENTENCE_TERMINATORS
+from .terminators import GLOBAL_SENTENCE_TERMINATORS
 
 
-class UniversalSplitter:
+class FallbackSplitter:
     """
     Rule-based, language-agnostic sentence boundary detector.
     
     A rule-based, sentence boundary detection tool that doesn't rely on hardcoded lists of 
     abbreviations or sentence terminators, making it adaptable to various text formats and domains.
     
-    UniversalSplitter uses regex patterns to split text into sentences, handling:
+    FallbackSplitter uses regex patterns to split text into sentences, handling:
       - Common sentence-ending punctuation (., !, ?)
       - Abbreviations and acronyms (e.g., Dr., Ph.D., U.S.)
       - Numbered lists and headings
@@ -104,7 +104,7 @@ if __name__ == "__main__":
           - Music: Space-themed track  
     """)
 
-    splitter = UniversalSplitter()
+    splitter = FallbackSplitter()
     sentences = splitter.split(complex_text)
 
     print("\n=== Final Sentences ===")

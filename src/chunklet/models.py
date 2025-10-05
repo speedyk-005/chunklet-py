@@ -7,8 +7,7 @@ from pydantic import (
     ConfigDict,
     field_validator,
 )
-import chunklet
-from chunklet.exceptions import MissingTokenCounterError, InvalidInputError, TextProcessingError, FileProcessingError
+from chunklet.exceptions import MissingTokenCounterError
 
 
 class CustomSplitterConfig(BaseModel):
@@ -23,36 +22,6 @@ class CustomSplitterConfig(BaseModel):
         ...,
         description="Callable function that takes text (str) and returns a list of sentences (List[str]).",
     )
-
-    def split(self, text: str) -> list[str]:
-        """
-        Executes the custom splitter's callback and validates its output.
-
-        Ensures the callback returns a list of strings, handling execution errors.
-
-        Args:
-            text (str): The input text for the callback.
-
-        Returns:
-            list[str]: The validated list of strings.
-
-        Raises:
-            TextProcessingError: If the callback fails or returns an invalid type.
-        """
-        try:
-            result = self.callback(text)
-        except Exception as e:
-            raise TextProcessingError(
-                f"Custom splitter '{self.name}' callback failed for text starting with: '{text[:100]}...'.\n"
-                f"Details: {e}"
-            ) from e
-
-        if not isinstance(result, list) or not all(isinstance(item, str) for item in result):
-            raise TextProcessingError(
-                f"Custom splitter '{self.name}' callback returned an invalid type. "
-                f"Expected a list of strings, but got {type(result)} with elements of mixed types."
-            )
-        return result
 
 
 class CustomProcessorConfig(BaseModel):
@@ -71,41 +40,8 @@ class CustomProcessorConfig(BaseModel):
         description="Callable function that takes file path (str) and returns extracted text (str).",
     )
 
-    def extract_text(self, file_path: str) -> str:
-        """
-        Safely executes this custom processor's callback and validates its output.
 
-        This method acts as a wrapper, executing the provided callback function
-        with the given file path and then validating that the returned value is a string.
-        It catches any exceptions raised by the callback and re-raises them as FileProcessingError.
-
-        Args:
-            file_path (str): The path to the file to be processed by the callback.
-
-        Returns:
-            str: The validated extracted text.
-
-        Raises:
-            FileProcessingError: If the callback raises an exception or if its output
-                                 is not a string.
-        """
-        try:
-            result = self.callback(file_path)
-        except Exception as e:
-            raise chunklet.exceptions.FileProcessingError(
-                f"Custom processor '{self.name}' callback failed for file: '{file_path}'. "
-                f"Details: {e}"
-            ) from e
-
-        if not isinstance(result, str):
-            raise chunklet.exceptions.FileProcessingError(
-                f"Custom processor '{self.name}' callback returned an invalid type. "
-                f"Expected a string, but got {type(result)}."
-            )
-        return result
-
-
-class PlainTextChunkerConfig(BaseModel):
+class PlainTextChunkerInitConfig(BaseModel):
     """Configuration for PlainTextChunker initialization."""
 
     verbose: bool = Field(default=False, description="Enable verbose logging.")
@@ -114,15 +50,24 @@ class PlainTextChunkerConfig(BaseModel):
         default=None,
         description="Counts tokens in a sentence for token-based chunking.",
     )
-    custom_splitters: list[CustomSplitterConfig] | None = Field(
-        default=None, description="A list of custom sentence splitters."
-    )
     continuation_marker: str = Field(
         default="...", description="The marker to prepend to unfitted clauses."
     )
 
+class DocumentChunkerInitConfig(BaseModel):
+    """Configuration for DocumentChunker initialization."""
 
-class CodeChunkerConfig(BaseModel):
+    verbose: bool = Field(default=False, description="Enable verbose logging.")
+    use_cache: bool = Field(default=True, description="Enable caching on chunking.")
+    continuation_marker: str = Field(
+        default="...", description="The marker to prepend to unfitted clauses."
+    )
+    custom_processors: list[CustomProcessorConfig] | None = Field(
+        default=None, description="List of custom document processors."
+    )
+
+
+class CodeChunkingInitConfig(BaseModel):
     """Configuration model for CodeChunker."""
 
     model_config = ConfigDict(frozen=True)
@@ -139,8 +84,8 @@ class CodeChunkerConfig(BaseModel):
     )
 
 
-class TextChunkingConfig(BaseModel):
-    """Pydantic model for chunking configuration validation"""
+class TextChunkingParams(BaseModel):
+    """Pydantic model for the text chunking method's params validation"""
 
     model_config = ConfigDict(frozen=True)
     text: str = Field(..., description="The text to chunk.")
@@ -160,12 +105,16 @@ class TextChunkingConfig(BaseModel):
     @model_validator(mode="after")
     def validate_token_counter(self) -> "TextChunkingConfig":
         if self.mode in {"token", "hybrid"} and self.token_counter is None:
-            raise MissingTokenCounterError()
+            raise MissingTokenCounterError(
+                "A `token_counter` function is required for 'token' or 'hybrid' chunking modes.\n"
+                "💡 Hint: Pass a token counting function to the `chunk` method, like `chunker.chunk(..., token_counter=len)`\n"
+                "or configure it in the class initialization: `.*Chunker(token_counter=...)`"
+            )
         return self
 
 
-class CodeChunkingConfig(BaseModel):
-    """Pydantic model for code chunking configuration validation"""
+class CodeChunkingParams(BaseModel):
+    """Pydantic model for the code chunking method's params validation"""
 
     code: str = Field(..., description="The code to chunk.")
     token_counter: Callable | None = Field(
@@ -180,7 +129,11 @@ class CodeChunkingConfig(BaseModel):
     @model_validator(mode="after")
     def validate_token_counter(self) -> "CodeChunkingConfig":
         if self.token_counter is None:
-            raise MissingTokenCounterError()
+            raise MissingTokenCounterError(
+                "A `token_counter` function is required.\n"
+                "💡 Hint: Pass a token counting function to the `chunk` method, like `chunker.chunk(..., token_counter=len)`\n"
+                "or configure it in the class initialization: `CodeChunker(token_counter=...)`"
+            )
         return self
 
 

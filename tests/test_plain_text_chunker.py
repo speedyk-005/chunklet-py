@@ -1,12 +1,13 @@
+"""
+This module contains unit tests for the PlainTextChunker class,
+covering its core functionality, various chunking modes, overlap behavior,
+and batch processing capabilities.
+"""
 import pytest
 import re
-from unittest.mock import patch
-from chunklet import (
-    PlainTextChunker,
-    TextProcessingError,
-    InvalidInputError,
-    MissingTokenCounterError,
-)
+from chunklet.sentence_splitter import SentenceSplitter
+from chunklet.plain_text_chunker import PlainTextChunker
+from chunklet.exceptions import InvalidInputError, CallbackExecutionError, MissingTokenCounterError
 from loguru import logger
 
 
@@ -26,16 +27,6 @@ The Playlist contains:
 
 Robots are learning. It's raining. Let's code. Mars is red. Sr. sleep is rare. Consider item 1. This is a test. The year is 2025. This is a good year since N.A.S.A. reached 123.4 light year more.
 """
-
-MULTILINGUAL_TEXTS = [
-    "Hello. How are you? I am fine.",  # English
-    "Bonjour. Comment allez-vous? Je vais bien.",  # French
-    "Hola. ¿Cómo estás? Estoy bien.",  # Spanish
-    "Das ist ein Satz. Hier ist noch ein Satz. Und noch einer.",  # German
-    "Bonjou tout moun! Non pa mwen se Bob.",  # Haitian Creole
-]
-
-UNSUPPORTED_TEXT = "Goeie môre. Hoe gaan dit? Dit gaan goed met my."  # Afrikaans
 
 
 # --- Fixtures ---
@@ -109,25 +100,6 @@ def test_token_counter_validation(mode):
         PlainTextChunker().chunk("some text", mode=mode)
 
 
-# --- Fallback Splitter Test ---
-def test_fallback_splitter(chunker):
-    """Test fallback splitter on unsupported language text and low confidence language detection."""
-    # Should fallback to the regex splitter
-    chunks = chunker.chunk(UNSUPPORTED_TEXT, max_sentences=1, mode="sentence")
-    assert len(chunks) == 3, "Expected 3 chunks for the unsupported language text"
-    assert chunks[0] == "Goeie môre."
-    assert chunks[1] == "Hoe gaan dit?"
-    assert chunks[2] == "Dit gaan goed met my."
-
-    # Test low confidence language detection
-    with patch(
-        "chunklet.plain_text_chunker.detect_text_language",
-        return_value=("en", 0.5),
-    ):
-        sentences, warnings = chunker._split_by_sentence("This is a test.", "auto")
-        assert "Low confidence in language detected" in "".join(warnings)
-
-
 def test_long_sentence_truncation(chunker):
     """Test that a long sentence without punctuation is truncated correctly."""
     long_sentence = "word " * 100
@@ -194,8 +166,8 @@ def test_overlap_behavior(chunker):
     "texts_input, expected_results_len",
     [
         # Successful run
-        (MULTILINGUAL_TEXTS, len(MULTILINGUAL_TEXTS)),
-        # Edge cases from test_batch_chunk_various_inputs
+        (["Hello. How are you?", "I am fine."], 2),
+        # Edge cases
         ([], 0),
         (["First sentence.", "", "Second sentence."], 3),
     ],
@@ -254,7 +226,7 @@ def test_batch_chunk_error_handling_on_task(chunker):
     texts = ["This is ok.", "This will fail.", "This will not be processed."]
 
     # Test on_errors = 'raise'
-    with pytest.raises(TextProcessingError, match="Token counter failed while processing text starting with:"):
+    with pytest.raises(CallbackExecutionError, match="Token counter failed while processing text starting with:"):
         list(chunker.batch_chunk(texts, mode="token", on_errors="raise"))
 
     # Test on_errors = 'ignore'
@@ -283,67 +255,3 @@ def test_batch_chunk_with_separator(chunker, separator, texts, expected_output):
     result = list(chunker.batch_chunk(texts, separator=separator))
 
     assert result == expected_output
-
-
-# --- Custom Splitter Tests ---
-def test_custom_splitter_usage():
-    """Test that the chunker can work a custom splitter without errors."""
-
-    # Define a simple custom splitter that splits by 'X'
-    def custom_x_splitter(text: str):
-        return text.split("X")
-
-    custom_splitters = [
-        {
-            "name": "XSplitter",
-            "languages": "en",
-            "callback": custom_x_splitter,
-        }
-    ]
-
-    # Initialize Chunklet with the custom splitter
-    chunker = PlainTextChunker(custom_splitters=custom_splitters)
-
-    text = "ThisXisXaXtestXstring."
-    expected_sentences = ["This", "is", "a", "test", "string."]
-
-    sentences, _ = chunker.preview_sentences(text, lang="en")
-
-    assert sentences == expected_sentences
-
-
-@pytest.mark.parametrize(
-    "splitter_name, callback_func, expected_match",
-    [
-        (
-            "InvalidListSplitter",
-            lambda text: "This is a single string.",  # Returns str, not list[str]
-            "Custom splitter 'InvalidListSplitter' callback returned an invalid type.",
-        ),
-        (
-            "ListNonStringSplitter",
-            lambda text: ["hello", 123, "world"],  # List contains non-strings
-            "Custom splitter 'ListNonStringSplitter' callback returned an invalid type. ",
-        ),
-        (
-            "FailingSplitter",
-            lambda text: (_ for _ in ()).throw(ValueError("Intentional failure in custom splitter.")),
-            "Custom splitter 'FailingSplitter' callback failed for text starting with: 'Some text....'.",
-        ),
-    ],
-)
-def test_custom_splitter_validation_scenarios(
-    chunker, splitter_name, callback_func, expected_match
-):
-    """Test various custom splitter validation scenarios."""
-    custom_splitters = [
-        {
-            "name": splitter_name,
-            "languages": "en",
-            "callback": callback_func,
-        }
-    ]
-    chunker_with_custom_splitter = PlainTextChunker(custom_splitters=custom_splitters)
-
-    with pytest.raises(TextProcessingError, match=re.escape(expected_match)):
-        chunker_with_custom_splitter.chunk("Some text.", lang="en")

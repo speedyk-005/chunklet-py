@@ -1,39 +1,32 @@
 class ChunkletError(Exception):
-    """Base class for all Chunklet-specific errors."""
-
+    """Base exception for chunking and splitting
+operations."""
     pass
-
 
 class InvalidInputError(ChunkletError):
-    """Raised when an input is invalid."""
-
+    """Raised when one or multiple invalid input(s) are
+encountered."""
     pass
 
-
-class MissingTokenCounterError(ChunkletError):
-    """Raised when a token_counter is required but not provided."""
-
-    def __init__(self):
-        super().__init__(
-            "A `token_counter` function is required for 'token' or 'hybrid' chunking modes.\n"
-            "💡 Hint: Pass a token counting function to the `chunk` method, like `chunker.chunk(..., token_counter=len)`\n"
-            "or configure it in the class initialization: `Chunker(token_counter=...)`"
-        )
-
+class MissingTokenCounterError(InvalidInputError):
+    """Raised when a token_counter is required but not
+provided."""
+    pass
 
 class UnsupportedFileTypeError(InvalidInputError):
     """Raised when a file type is not supported for a given operation."""
-
     pass
 
+class TokenLimitError(ChunkletError):
+    """Raised when max_tokens constraint is exceeded."""
+    pass
 
 class FileProcessingError(ChunkletError):
-    """Raised when an error occurs during file reading or processing."""
-
+    """Raised when a file cannot be loaded, opened, or
+accessed."""
     pass
 
-
-class TextProcessingError(ChunkletError):
-    """Raised when an error occurs during text processing."""
-
+class CallbackExecutionError(ChunkletError):
+    """Raised when a callback function provided to chunker
+or splitter fails during execution."""
     pass

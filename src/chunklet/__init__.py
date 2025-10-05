@@ -10,28 +10,33 @@ The core functionality is provided by the `Chunklet` class, which can be
 imported directly from the package alongside execptions.
 """
 
+from .sentence_splitter import SentenceSplitter
 from .plain_text_chunker import PlainTextChunker
 from .document_chunker import DocumentChunker
-from .code_chunker import CodeChunker
+# from .code_chunker import CodeChunker
 from .exceptions import (
     ChunkletError,
     InvalidInputError,
     MissingTokenCounterError,
     UnsupportedFileTypeError,
+    TokenLimitError,
     FileProcessingError,
-    TextProcessingError,
+    CallbackExecutionError,
 )
 
 __version__ = "2.0.0"
 
 __all__ = [
+    "SentenceSplitter",
     "PlainTextChunker",
     "DocumentChunker",
+    #"CodeChunker",
     "CodeChunker",
     "ChunkletError",
     "InvalidInputError",
     "MissingTokenCounterError",
     "UnsupportedFileTypeError",
+    "TokenLimitError",
     "FileProcessingError",
-    "TextProcessingError",
+    "CallbackExecutionError",
 ]

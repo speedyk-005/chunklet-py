@@ -1,16 +1,21 @@
+"""
+This module contains unit tests for the DocumentChunker class,
+covering its core functionality, document processing, and custom processor integration.
+"""
 import pytest
 import re
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 from concurrent.futures import ThreadPoolExecutor
 from chunklet import (
+    SentenceSplitter,
     PlainTextChunker,
     DocumentChunker,
     InvalidInputError,
     UnsupportedFileTypeError,
     FileProcessingError,
+    CallbackExecutionError,
 )
-
 from loguru import logger
 
 # Silent logging
@@ -43,31 +48,13 @@ def mock_plain_text_chunker():
 
 
 @pytest.fixture
-def document_chunker(mock_plain_text_chunker):
-    return DocumentChunker(mock_plain_text_chunker)
+def document_chunker(mock_plain_text_chunker, mocker):
+    # Patch PlainTextChunker and SentenceSplitter within the document_chunker module
+    mocker.patch('chunklet.document_chunker.document_chunker.PlainTextChunker', return_value=mock_plain_text_chunker)
+    mocker.patch('chunklet.document_chunker.document_chunker.SentenceSplitter', return_value=MagicMock(spec=SentenceSplitter))
+    return DocumentChunker()
 
-
-# --- Core Tests ---
-@pytest.mark.parametrize(
-    "input, expected_exception, match_string",
-    [
-        (MagicMock(spec=PlainTextChunker), None, ""),
-        (
-            "not a PlainTextChunker instance",
-            InvalidInputError,  
-            "plain_text_chunker must be an instance of PlainTextChunker",
-        ),
-    ],
-)
-def test_document_chunker_init(input, expected_exception, match_string):
-    """Test DocumentChunker initialization with valid and invalid PlainTextChunker instances."""
-    if expected_exception:
-        with pytest.raises(expected_exception, match=match_string):
-            DocumentChunker(input)
-    else:
-        chunker = DocumentChunker(input)
-        assert isinstance(chunker.plain_text_chunker, PlainTextChunker)
-
+ # --- Core Tests ---   
 
 def test_chunk_pdf(document_chunker, mock_plain_text_chunker):
     """Test chunking a PDF file and its metadata."""
@@ -161,9 +148,13 @@ def test_batch_chunk_with_different_file_type(document_chunker, mock_plain_text_
 
 # --- Custom Processor Tests ---
 def test_chunk_method_with_custom_processor(
-    document_chunker, mock_plain_text_chunker, tmp_path
+    mock_plain_text_chunker, tmp_path, mocker
 ):
     """Test that the chunk method correctly uses a custom processor."""
+
+    # Patch PlainTextChunker and SentenceSplitter within DocumentChunker module
+    mocker.patch('chunklet.document_chunker.document_chunker.PlainTextChunker', return_value=mock_plain_text_chunker)
+    mocker.patch('chunklet.document_chunker.document_chunker.SentenceSplitter', return_value=MagicMock(spec=SentenceSplitter))
 
     # Define a mock custom processor callback
     def mock_custom_processor_callback(file_path: str) -> str:
@@ -178,10 +169,8 @@ def test_chunk_method_with_custom_processor(
         }
     ]
 
-    # Re-initialize DocumentChunker with the custom processor
-    document_chunker = DocumentChunker(
-        mock_plain_text_chunker, custom_processors=custom_processor
-    )
+    # Initialize DocumentChunker with the custom processor
+    document_chunker = DocumentChunker(custom_processors=custom_processor)
 
     # Create a dummy file with the custom extension
     dummy_file = tmp_path / "test.mock"
@@ -215,9 +204,13 @@ def test_chunk_method_with_custom_processor(
     ],
 )
 def test_custom_processor_validation_scenarios(
-    document_chunker, mock_plain_text_chunker, tmp_path, processor_name, callback_func, expected_match
+    mock_plain_text_chunker, tmp_path, processor_name, callback_func, expected_match, mocker
 ):
     """Test various custom processor validation scenarios."""
+    # Patch PlainTextChunker and SentenceSplitter within DocumentChunker module
+    mocker.patch('chunklet.document_chunker.document_chunker.PlainTextChunker', return_value=mock_plain_text_chunker)
+    mocker.patch('chunklet.document_chunker.document_chunker.SentenceSplitter', return_value=MagicMock(spec=SentenceSplitter))
+
     # Create a dummy file
     dummy_file = tmp_path / "dummy_file.txt"
     dummy_file.write_text("Some content.")
@@ -231,9 +224,7 @@ def test_custom_processor_validation_scenarios(
     ]
 
     # Re-initialize DocumentChunker with the custom processor
-    document_chunker = DocumentChunker(
-        mock_plain_text_chunker, custom_processors=custom_processors
-    )
+    document_chunker = DocumentChunker(custom_processors=custom_processors)
 
-    with pytest.raises(FileProcessingError, match=re.escape(expected_match)):
+    with pytest.raises(CallbackExecutionError, match=re.escape(expected_match)):
         document_chunker.chunk(dummy_file)

@@ -11,11 +11,6 @@ from itertools import tee
 from more_itertools import ilen
 from box import Box
 from pydantic import ValidationError
-from pysbd import Segmenter
-from sentsplit.segment import SentSplit
-from sentencex import segment
-from indicnlp.tokenize import sentence_tokenize
-# mpire is lazy imported
 from rich.progress import (
     Progress,
     SpinnerColumn,
@@ -23,24 +18,19 @@ from rich.progress import (
     TextColumn,
     TimeRemainingColumn
 )
+# mpire is lazy imported 
 
-from chunklet.languages import (
-    PYSBD_SUPPORTED_LANGUAGES,
-    SENTSPLIT_UNIQUE_LANGUAGES,
-    SENTENCEX_UNIQUE_LANGUAGES,
-    INDIC_NLP_UNIQUE_LANGUAGES,
-)
-from chunklet.libs.universal_splitter import UniversalSplitter
-from chunklet.utils.detect_text_language import detect_text_language
+from chunklet.sentence_splitter import SentenceSplitter
 from chunklet.utils.error_utils import pretty_errors
 from chunklet.models import (
     CustomSplitterConfig,
-    PlainTextChunkerConfig,
-    TextChunkingConfig,
+    PlainTextChunkerInitConfig,
+    TextChunkingParams,
 )
 from chunklet.exceptions import (
     InvalidInputError,
-    TextProcessingError,
+    MissingTokenCounterError,
+    CallbackExecutionError,
 )
 from chunklet.utils.logger import logger
 
@@ -63,9 +53,8 @@ class PlainTextChunker:
     - Multiple Chunking Modes: Split text by sentence count, token count, or a hybrid approach.
     - Clause-Level Overlap: Ensures semantic continuity between chunks by overlapping
     at natural clause boundaries with Customizable continuation marker.
-    - Multilingual Support: Automatically detects language and uses appropriate splitting algorithms for over 30 languages.
+    - Multilingual Support: Leverages language-specific algorithms and detection for broad coverage.
     - Pluggable Token Counters: Integrate custom token counting functions (e.g., for specific LLM tokenizers).
-    - Pluggable Sentence splitters: Integrate custom splitters for languages or requirements.
     - Parallel Processing: Efficiently handles batch chunking of multiple texts using multiprocessing.
     - Caching: Speeds up repeated chunking operations with LRU caching.
     - Memory friendly batching: Yields chunks one at a time, reducing memory usage, especially for very large documents.
@@ -75,9 +64,9 @@ class PlainTextChunker:
         self,
         verbose: bool = True,
         use_cache: bool = True,
-        token_counter: Callable[[str], int] | None = None,
-        custom_splitters: CustomSplitterConfig = None,
         continuation_marker: str = "...",
+        token_counter: Callable[[str], int] | None = None,
+        sentence_splitter: SentenceSplitter | None = None,
     ):
         """
         Initialize Chunklet settings.
@@ -85,20 +74,16 @@ class PlainTextChunker:
         Args:
             verbose (bool): Enable verbose logging.
             use_cache (bool): Enable caching on chunking.
-            token_counter (Callable): Counts tokens in a sentence for token-based chunking.
-            custom_splitters [list[dict]] | None: A list of custom sentence splitters.
-                Each splitter should be a dictionary with 'name' (str),
-                'languages' (str or Iterable[str]) (e.g., 'en', ['en', 'fr'])."),
-                and a 'callback' (Callable[[str], list[str]])
-                (Where the input is a path string) keys.
             continuation_marker (str): The marker to prepend to unfitted clauses. Defaults to '...'.
+            token_counter (Callable): Counts tokens in a sentence for token-based chunking.
+            sentence_splitter (SentenceSplitter | None): An optional SentenceSplitter instance.
+                If None, a default SentenceSplitter will be initialized.
         """
         # Validate parameters
         try:
-            config = PlainTextChunkerConfig(
+            config = PlainTextChunkerInitConfig(
                 verbose=verbose,
                 token_counter=token_counter,
-                custom_splitters=custom_splitters,
                 continuation_marker=continuation_marker,
             )
         except ValidationError as e:
@@ -107,20 +92,10 @@ class PlainTextChunker:
                 f"Invalid configuration.\n Details: {pretty_err}"
             ) from e
 
-        self.verbose = config.verbose
+        self.verbose = verbose
         self.use_cache = use_cache
-        self.token_counter = config.token_counter
-        self.custom_splitters = config.custom_splitters
-        self.continuation_marker = config.continuation_marker
-
-        # Prepare a set of supported extensions from custom splitters
-        self.custom_splitters_languages = set()
-        if self.custom_splitters:
-            for splitter in self.custom_splitters:
-                if isinstance(splitter.languages, str):
-                    self.custom_splitters_languages.add(splitter.languages)
-                else:
-                    self.custom_splitters_languages.update(set(splitter.languages))
+        self.token_counter = token_counter
+        self.continuation_marker = continuation_marker
 
         if self.verbose:
             logger.debug(
@@ -132,104 +107,8 @@ class PlainTextChunker:
         # Regex to split clauses inside sentences by clause-ending punctuation
         self.clause_end_regex = re.compile(rf"(?<=[{CLAUSE_END_TRIGGERS}])\s")
 
-        # Universal sentence splitter for fallback
-        self.universal_splitter = UniversalSplitter()
-
-    def _use_custom_splitter(self, text: str, lang: str) -> list[str]:
-        """
-        Processes a text using a custom splitter registered for the given language.
-
-        Args:
-            text (str): The text to split.
-            lang (str): The language of the text (e.g., 'en', 'fr', 'auto').
-
-        Returns:
-            list[str]: A list of sentences.
-
-        Raises:
-             TextProcessingError: If a custom splitter fails during execution.
-        """
-        for splitter in self.custom_splitters:
-            supported_languages = (
-                [splitter.languages]
-                if isinstance(splitter.languages, str)
-                else splitter.languages
-            )
-            if lang in supported_languages:
-                if self.verbose:
-                    logger.debug(
-                        "Using %s for language: %s. (Custom Splitter)",
-                        splitter.name,
-                        lang,
-                    )
-                # The split method on the splitter model handles validation and error wrapping.     
-                return splitter.split(text)
-
-    def _split_by_sentence(self, text: str, lang: str) -> tuple[list[str], set[str]]:
-        """
-        Splits text into sentences using language-specific algorithms.
-        Automatically detects language and prioritizes specialized libraries,
-        falling back to a universal regex splitter for broad coverage.
-
-        Args:
-            text (str): The input text to split.
-            lang (str): The language of the text (e.g., 'en', 'fr', 'auto').
-
-        Returns:
-            Tuple[list[str], set[str]]: A tuple consists of a list of sentences and a set of warnings.
-        """
-        warnings = set()
-
-        if lang == "auto":
-            lang_detected, confidence = detect_text_language(text)
-            if self.verbose:
-                logger.debug("Attempting language detection.")
-            if confidence < 0.7:
-                warnings.add(
-                    f"Low confidence in language detected. Detected: '{lang_detected}' with confidence {confidence:.2f}."
-                )
-            lang = lang_detected if confidence >= 0.7 else lang
-
-        # Prioritize custom splitters
-        if lang in self.custom_splitters_languages:
-            return self._use_custom_splitter(text, lang), warnings
-
-        elif lang in PYSBD_SUPPORTED_LANGUAGES:
-            if self.verbose:
-                logger.debug("Using pysbd for language: %s.", lang)
-            return Segmenter(language=lang).segment(text), warnings
-
-        elif lang in SENTSPLIT_UNIQUE_LANGUAGES:
-            if self.verbose:
-                logger.debug(
-                    "Using SentSplit for language: %s. (sentsplit)",
-                    lang,
-                )
-            return SentSplit(lang).segment(text), warnings
-
-        elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
-            if self.verbose:
-                logger.debug(
-                    "Using Indic NLP for language: %s. (indic-nlp-library)",
-                    lang,
-                )
-            return sentence_tokenize.sentence_split(text, lang), warnings
-
-        elif lang in SENTENCEX_UNIQUE_LANGUAGES:
-            if self.verbose:
-                logger.debug(
-                    "Using Sentencex for language: %s. (sentencex)",
-                    lang,
-                )
-            return segment(lang, text), warnings
-
-        else:  # Fallback to universal regex splitter
-            warnings.add(
-                "Language not supported or detected with low confidence. Universal regex splitter was used."
-            )
-            if self.verbose:
-                logger.debug("Using a universal regex splitter.")
-            return self.universal_splitter.split(text), warnings
+        # Initialize SentenceSplitter
+        self.sentence_splitter = sentence_splitter if sentence_splitter else SentenceSplitter(verbose=self.verbose)
 
     def _get_overlap_clauses(
         self,
@@ -272,13 +151,23 @@ class PlainTextChunker:
 
     def _count_tokens(self, text: str, token_counter: Callable[[str], int]) -> int:
         """
-        Safely count tokens, handling potential errors from the token_counter.
-        Returns the count or raises a TextProcessingError, if the counter fails.
+        Safely counts tokens in the given text using the provided token_counter function.
+
+        Args:
+            text (str): The input text string.
+            token_counter (Callable[[str], int]): A callable function that takes a string
+                                                  and returns its token count as an integer.
+
+        Returns:
+            int: The number of tokens in the text.
+
+        Raises:
+            CallbackExecutionError: If the token_counter function fails during execution.
         """
         try:
             return token_counter(text)
         except Exception as e:
-            raise TextProcessingError(
+            raise CallbackExecutionError(
                 f"Token counter failed while processing text starting with: '{text[:100]}...'.\n"
                 "💡 Hint: Please ensure the token counter function handles "
                 f"all edge cases and returns an integer. \nDetails: {e}"
@@ -302,8 +191,8 @@ class PlainTextChunker:
             token_counter (Callable): The function needed for token counting.
         Returns:
             list[str]: A List containing two strings:
-            - The clauses that fit within the token budget.
-            - The remaining unfitted clauses.
+                - The clauses that fit within the token budget.
+                - The remaining unfitted clauses.
         """
         clauses = self.clause_end_regex.split(sentence)
         clauses = [cl for cl in clauses if cl.strip()]
@@ -411,6 +300,7 @@ class PlainTextChunker:
                     )
                 sentence_count = len(curr_chunk) # considered as sentences
                 chunk_base_count = sentence_count
+                
             else:
                 if index < len(sentences):
                     curr_chunk.append(sentences[index])
@@ -439,19 +329,12 @@ class PlainTextChunker:
             tuple[Tuple[str], tuple[str]]: A tuple of chunk strings and a tuple of warning messages.
         """
         all_warnings = set()
-        detected_sentences, split_warnings = self._split_by_sentence(config.text, config.lang)
-        all_warnings.update(split_warnings)
-
-
-        # Post-processing: Filters empty string and rejoin some left over punctuations.
-        sentences = []
-        for sent in detected_sentences:
-            stripped_sent = sent.strip()
-            if stripped_sent:
-                if re.fullmatch(r"[\p{P}\p{S}]+", stripped_sent):
-                    sentences[-1] += stripped_sent[:5] # Only the first 5 ones
-                else:
-                    sentences.append(sent.rstrip())
+        sentences, warnings = self.sentence_splitter.split(
+            config.text,
+            config.lang,
+            _return_warnings=True
+        )
+        all_warnings.update(warnings)
 
         if self.verbose:
             logger.debug(
@@ -528,16 +411,9 @@ class PlainTextChunker:
         """
         if self.verbose:
             logger.info("Processing text - single run")
-
-        # Adjust limits based on mode
-        if mode == "sentence":
-            max_tokens = sys.maxsize
-        elif mode == "token":
-            max_sentences = sys.maxsize
-
-        # Validate all parameters through TextChunkingConfig
+        # Validate the parameters
         try:
-            config = TextChunkingConfig(
+            config = TextChunkingParams(
                 text=text,
                 lang=lang,
                 mode=mode,
@@ -546,8 +422,6 @@ class PlainTextChunker:
                 overlap_percent=overlap_percent,
                 offset=offset,
                 token_counter=(token_counter if token_counter else self.token_counter),
-                verbose=self.verbose,
-                use_cache=self.use_cache,
             )
         except ValidationError as e:
             pretty_err = pretty_errors(e)
@@ -555,10 +429,16 @@ class PlainTextChunker:
                 f"Invalid chunking configuration.\n Details: {pretty_err}"
             ) from e
 
+        # Adjust limits based on mode
+        if mode == "sentence":
+            max_tokens = sys.maxsize
+        elif mode == "token":
+            max_sentences = sys.maxsize
+
         if not config.text:
             if self.verbose:
                 logger.info("Input text is empty. Returning empty list.")
-            return [] if not _batch_context else ([], ()) # type: ignore
+            return [] if not _batch_context else ([], ())
 
         if self.use_cache:
             chunks, warnings = self._chunk_cached(config)
@@ -739,7 +619,6 @@ class PlainTextChunker:
             ]
             for msg, count in warnings_counter.items():
                 warning_message.append(f"  - ({count}/{total_texts}) {msg}")
-            # Log the entire formatted message as a single entry
             logger.warning("\n" + "\n".join(warning_message))
 
     @staticmethod
@@ -748,22 +627,3 @@ class PlainTextChunker:
         Clears the global in-memory cache used for chunking operations.
         """
         cache.clear()
-
-    def preview_sentences(
-        self, text: str, lang: str = "auto"
-    ) -> tuple[list[str], set[str]]:
-        """
-        Splits text into sentences for quick preview or inspection.
-
-        Uses Chunklet’s multi-language sentence splitting logic without chunking.
-
-        Args:
-            text (str): Input text.
-            lang (str): Language code ('en', 'fr', 'auto'). Defaults to 'auto'.
-
-        Returns:
-             tuple[list[str], set[str]]:
-                 - A list of sentences from the input text.
-                 - A set of wanings if any.
-        """
-        return self._split_by_sentence(text, lang)
