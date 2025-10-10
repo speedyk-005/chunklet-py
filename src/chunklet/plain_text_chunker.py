@@ -231,14 +231,13 @@ class PlainTextChunker:
         Returns:
             list[str]: A list of chunk strings.
         """
-        # length of the curr_chunk overlaps + optional(unfitted text), Used to prevent oversized chunk in rare cases.
-        # for instance: the original text to chunk has parts not well written.
-        # (e.g. long paragrapth without punctuations, embeded images urls, ...)
-        chunk_base_count = 0
+        # Tracks the "baseline" number of sentences in the current chunk 
+        # before adding overlaps or leftover text.
+        base_sentence_count = 0
 
         chunks = []
         curr_chunk = []
-        curr_token_count = 0
+        token_count = 0
         sentence_count = 0
 
         index = 0
@@ -251,24 +250,21 @@ class PlainTextChunker:
                 sentence_tokens = 0
 
             if (
-                curr_token_count + sentence_tokens > config.max_tokens
+                token_count + sentence_tokens > config.max_tokens
                 or sentence_count + 1 > config.max_sentences
             ):
                 # If curr_chunk contains only the base but limit is reached
                 # That might mean a long text without punctuation.
                 # Note: That could happen when we are in token-based mode.
-                if chunk_base_count == sentence_count:
-                    sent_head = (
-                        # Ignore last chars
-                        sentences[index][:150]
-                        + self.continuation_marker
-                    )
-                    curr_chunk.append(sent_head)
+                if base_sentence_count == sentence_count:
+                    # Take a snippet to prevent stalling on long sentences
+                    snippet = sentences[index][:150] + self.continuation_marker
+                    curr_chunk.append(snippet)
                     index += 1
                     continue
 
-                if curr_token_count + sentence_tokens > config.max_tokens:
-                    remaining_tokens = config.max_tokens - curr_token_count
+                if token_count + sentence_tokens > config.max_tokens:
+                    remaining_tokens = config.max_tokens - token_count
                     fitted, unfitted = self._find_clauses_that_fit(
                         sentences[index],
                         remaining_tokens,
@@ -294,17 +290,17 @@ class PlainTextChunker:
 
                 # Incrementally update token_count for the new curr_chunk
                 if config.mode in {"token", "hybrid"}:
-                    curr_token_count = sum(
+                    token_count = sum(
                         self._count_tokens(s, config.token_counter)
                         for s in overlap_clauses + unfitted
                     )
                 sentence_count = len(curr_chunk) # considered as sentences
-                chunk_base_count = sentence_count
+                base_sentence_count = sentence_count
                 
             else:
                 if index < len(sentences):
                     curr_chunk.append(sentences[index])
-                curr_token_count += sentence_tokens
+                token_count += sentence_tokens
                 sentence_count += 1
                 index += 1
 
