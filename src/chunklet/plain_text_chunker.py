@@ -1,48 +1,32 @@
 from __future__ import annotations
-from typing import Generator, Callable, Optional
+from typing import Any, Optional, Literal, Callable, Generator
+from collections.abc import Iterable, Iterator
+from pydantic import conint
 import sys
 import regex as re
-from collections.abc import Iterable, Iterator
-from collections import Counter
-from functools import partial
-from cachetools import cached, LRUCache
-from cachetools.keys import hashkey
 from itertools import tee
-from more_itertools import ilen
-from box import Box
-from pydantic import ValidationError
-from rich.progress import (
-    Progress,
-    SpinnerColumn,
-    BarColumn,
-    TextColumn,
-    TimeRemainingColumn
-)
-# mpire is lazy imported 
 
-from chunklet.sentence_splitter import SentenceSplitter
-from chunklet.utils.error_utils import pretty_errors
-from chunklet.models import (
-    CustomSplitterConfig,
-    PlainTextChunkerInitConfig,
-    TextChunkingParams,
-)
+# mpire is lazy imported
+
+from chunklet.sentence_splitter import SentenceSplitter, BaseSplitter
+from chunklet.utils.logger import logger
+from chunklet.utils.validation import validate_input
+from chunklet.utils.token_utils import count_tokens
+from chunklet.utils.progress import get_progress_bar
+
 from chunklet.exceptions import (
     InvalidInputError,
     MissingTokenCounterError,
     CallbackExecutionError,
 )
-from chunklet.utils.logger import logger
 
 
 # for clauses overlapping and fitting
 CLAUSE_END_TRIGGERS = r";,’：—)&…"
 
-# In-memory cache
-cache = LRUCache(maxsize=256)
 
 # Sentinel to serve as the default value for the separator args in batch chunking
-_sentinel = object()   
+_sentinel = object()
 
 
 class PlainTextChunker:
@@ -56,51 +40,43 @@ class PlainTextChunker:
     - Multilingual Support: Leverages language-specific algorithms and detection for broad coverage.
     - Pluggable Token Counters: Integrate custom token counting functions (e.g., for specific LLM tokenizers).
     - Parallel Processing: Efficiently handles batch chunking of multiple texts using multiprocessing.
-    - Caching: Speeds up repeated chunking operations with LRU caching.
     - Memory friendly batching: Yields chunks one at a time, reducing memory usage, especially for very large documents.
     """
 
+    @validate_input
     def __init__(
         self,
         verbose: bool = True,
-        use_cache: bool = True,
         continuation_marker: str = "...",
         token_counter: Callable[[str], int] | None = None,
-        sentence_splitter: SentenceSplitter | None = None,
+        sentence_splitter: Any | None = None,
     ):
         """
         Initialize Chunklet settings.
 
         Args:
             verbose (bool): Enable verbose logging.
-            use_cache (bool): Enable caching on chunking.
             continuation_marker (str): The marker to prepend to unfitted clauses. Defaults to '...'.
             token_counter (Callable): Counts tokens in a sentence for token-based chunking.
-            sentence_splitter (SentenceSplitter | None): An optional SentenceSplitter instance.
+            sentence_splitter (BaseSplitter | None): An optional BaseSplitter instance.
                 If None, a default SentenceSplitter will be initialized.
         """
-        # Validate parameters
-        try:
-            config = PlainTextChunkerInitConfig(
-                verbose=verbose,
-                token_counter=token_counter,
-                continuation_marker=continuation_marker,
-            )
-        except ValidationError as e:
-            pretty_err = pretty_errors(e)
-            raise InvalidInputError(
-                f"Invalid configuration.\n Details: {pretty_err}"
-            ) from e
-
-        self.verbose = verbose
-        self.use_cache = use_cache
+        self._verbose = verbose
         self.token_counter = token_counter
         self.continuation_marker = continuation_marker
 
-        if self.verbose:
+        if sentence_splitter is not None and not isinstance(
+            sentence_splitter, BaseSplitter
+        ):
+            raise InvalidInputError(
+                f"The provided sentence_splitter must be an instance of BaseSplitter, "
+                f"but got {type(sentence_splitter).__name__}."
+            )
+
+        if self._verbose:
             logger.debug(
-                "Initialized with verbose=%s, Default token counter is %sprovided.",
-                self.verbose,
+                "Initialized with verbose={}, Default token counter is {}provided.",
+                self._verbose,
                 "not " if self.token_counter is None else "",
             )
 
@@ -108,7 +84,22 @@ class PlainTextChunker:
         self.clause_end_regex = re.compile(rf"(?<=[{CLAUSE_END_TRIGGERS}])\s")
 
         # Initialize SentenceSplitter
-        self.sentence_splitter = sentence_splitter if sentence_splitter else SentenceSplitter(verbose=self.verbose)
+        self.sentence_splitter = (
+            sentence_splitter
+            if sentence_splitter
+            else SentenceSplitter(verbose=self._verbose)
+        )
+
+    @property
+    def verbose(self) -> bool:
+        """Get the verbosity status."""
+        return self._verbose
+
+    @verbose.setter
+    def verbose(self, value: bool):
+        """Set the verbosity and propagate to sentence_splitter."""
+        self._verbose = value
+        self.sentence_splitter.verbose = value
 
     def _get_overlap_clauses(
         self,
@@ -149,30 +140,6 @@ class PlainTextChunker:
             )
         return overlapped_clauses
 
-    def _count_tokens(self, text: str, token_counter: Callable[[str], int]) -> int:
-        """
-        Safely counts tokens in the given text using the provided token_counter function.
-
-        Args:
-            text (str): The input text string.
-            token_counter (Callable[[str], int]): A callable function that takes a string
-                                                  and returns its token count as an integer.
-
-        Returns:
-            int: The number of tokens in the text.
-
-        Raises:
-            CallbackExecutionError: If the token_counter function fails during execution.
-        """
-        try:
-            return token_counter(text)
-        except Exception as e:
-            raise CallbackExecutionError(
-                f"Token counter failed while processing text starting with: '{text[:100]}...'.\n"
-                "💡 Hint: Please ensure the token counter function handles "
-                f"all edge cases and returns an integer. \nDetails: {e}"
-            ) from e
-
     def _find_clauses_that_fit(
         self,
         sentence: str,
@@ -189,6 +156,7 @@ class PlainTextChunker:
             sentence (str): The input string to be split into clauses.
             remaining_tokens (int): The number of tokens available to fit clauses into.
             token_counter (Callable): The function needed for token counting.
+
         Returns:
             list[str]: A List containing two strings:
                 - The clauses that fit within the token budget.
@@ -200,7 +168,7 @@ class PlainTextChunker:
         fitted = []
         unfitted = []
         for i in range(len(clauses)):
-            clause_tokens = self._count_tokens(clauses[i], token_counter)
+            clause_tokens = count_tokens(clauses[i], token_counter)
 
             if clause_tokens <= remaining_tokens:
                 fitted.append(clauses[i])
@@ -209,16 +177,46 @@ class PlainTextChunker:
                 unfitted = clauses[i:]
                 break
 
-        if len(unfitted) == 1:
-            # This is likely a long string with no clause breaks. Truncate it.
-            unfitted = [unfitted[0][:150]]
-
         return " ".join(fitted), " ".join(unfitted)
+
+    def _resolve_unpunctuated_text(
+        self,
+        text: str,
+        max_tokens: int,
+        token_counter: Callable[[str], int],
+    ) -> str:
+        """
+        Applies greedy token cutoff to a long, unpunctuated string.
+
+        Splits the text into segments (words/parts) and greedily adds them
+        to a 'fitted' part until the max_tokens limit is reached.
+
+        Args:
+            text (str): The input string to be processed.
+            max_tokens (int): The maximum number of tokens allowed in the fitted part.
+            token_counter (Callable): The function used to count tokens.
+
+        Returns:
+            str: The fitted part of the text, truncated to fit within max_tokens.
+        """
+        segments = re.split(r"[ /\\]", text)
+        token_count = 0
+        parts = []
+        for part in segments:
+            part_tokens = count_tokens(part + "...", token_counter)
+            if token_count + part_tokens > max_tokens:
+                break
+            parts.append(part)
+        return " ".join(parts) + "..."
 
     def _group_by_chunk(
         self,
         sentences: list[str],
-        config: TextChunkingConfig,
+        mode: str,
+        token_counter: Callable[[str], int],
+        max_tokens: int,
+        max_sentences: int,
+        overlap_percent: int | float,
     ) -> list[str]:
         """
         Groups sentences into chunks based on the specified mode and constraints.
@@ -226,15 +224,15 @@ class PlainTextChunker:
 
         Args:
             sentences lList): A list of sentences to be chunked.
-            config (TextChunkingConfig): Configuration for chunking.
+            mode (str): Chunking mode ('sentence', 'token', or 'hybrid').
+            token_counter (Callable): The token counting function.
+            max_tokens (int): Maximum number of tokens per chunk.
+            max_sentences (int): Maximum number of sentences per chunk.
+            overlap_percent (int | float): Percentage of overlap between chunks.
 
         Returns:
             list[str]: A list of chunk strings.
         """
-        # Tracks the "baseline" number of sentences in the current chunk 
-        # before adding overlaps or leftover text.
-        base_sentence_count = 0
-
         chunks = []
         curr_chunk = []
         token_count = 0
@@ -242,61 +240,62 @@ class PlainTextChunker:
 
         index = 0
         while index < len(sentences):
-            if config.mode in {"token", "hybrid"}:
-                sentence_tokens = self._count_tokens(
-                    sentences[index], config.token_counter
-                )
+            if mode in {"token", "hybrid"}:
+                sentence_tokens = count_tokens(sentences[index], token_counter)
             else:
                 sentence_tokens = 0
 
-            if (
-                token_count + sentence_tokens > config.max_tokens
-                or sentence_count + 1 > config.max_sentences
-            ):
-                # If curr_chunk contains only the base but limit is reached
-                # That might mean a long text without punctuation.
-                # Note: That could happen when we are in token-based mode.
-                if base_sentence_count == sentence_count:
-                    # Take a snippet to prevent stalling on long sentences
-                    snippet = sentences[index][:150] + self.continuation_marker
-                    curr_chunk.append(snippet)
-                    index += 1
-                    continue
+            sentence_limit_reached = sentence_count + 1 > max_sentences
+            token_limit_reached = token_count + sentence_tokens > max_tokens
 
-                if token_count + sentence_tokens > config.max_tokens:
-                    remaining_tokens = config.max_tokens - token_count
+            if sentence_limit_reached or token_limit_reached:
+                # for token-based mode, try splitting further
+                if token_limit_reached:
+                    remaining_tokens = max_tokens - token_count
                     fitted, unfitted = self._find_clauses_that_fit(
                         sentences[index],
                         remaining_tokens,
-                        config.token_counter,
+                        token_counter,
                     )
-                    if fitted:
-                        curr_chunk.append(fitted)
-                        chunks.append("\n".join(curr_chunk))  # Considered complete
+
+                    # --- Handle long, unpunctuated sentences with Greedy Token Cutoff ---
+                    # This applies if the sentence itself is too long for a single chunk
+                    # This is likely a long string with no clause breaks
+                    # and _find_clauses_that_fit would return it as unfitted.
+                    # (e.g, urls, bad formated text, image uris).
+                    if not curr_chunk and not fitted and unfitted:
+                        chunks.append(
+                            self._resolve_unpunctuated_text(
+                                text=sentences[index],
+                                max_tokens=max_tokens,
+                                token_counter=token_counter,
+                            )
+                        )
                         index += 1
-                    else:
-                        unfitted = ""
-                else: # If in mode sentence
+                        continue  # Move to next iteration
+
+                    curr_chunk.append(fitted)
+                    chunks.append("\n".join(curr_chunk))  # Considered complete
+
+                else:  # If in mode sentence
                     chunks.append("\n".join(curr_chunk))  # Considered complete
                     unfitted = ""
+                    index += 1
 
                 # Prepare data for next chunk
-                overlap_clauses = self._get_overlap_clauses(
-                    curr_chunk, config.overlap_percent
-                )
+                overlap_clauses = self._get_overlap_clauses(curr_chunk, overlap_percent)
                 # New current chunk
                 unfitted = [unfitted] if unfitted else []
                 curr_chunk = overlap_clauses + unfitted
 
                 # Incrementally update token_count for the new curr_chunk
-                if config.mode in {"token", "hybrid"}:
+                if mode in {"token", "hybrid"}:
                     token_count = sum(
-                        self._count_tokens(s, config.token_counter)
+                        count_tokens(s, token_counter)
                         for s in overlap_clauses + unfitted
                     )
-                sentence_count = len(curr_chunk) # considered as sentences
-                base_sentence_count = sentence_count
-                
+                sentence_count = len(curr_chunk)  # considered as sentences
+
             else:
                 if index < len(sentences):
                     curr_chunk.append(sentences[index])
@@ -310,76 +309,18 @@ class PlainTextChunker:
 
         return chunks
 
-    def _chunk(
-        self,
-        config: TextChunkingConfig,
-    ) -> tuple[tuple[str], tuple[str]]:
-        """
-        Internal method to chunk a given text based on specified parameters.
-        Performs sentence splitting and chunk grouping.
-
-        Args:
-            config (TextChunkingConfig): The configuration for chunking.
-
-        Returns:
-            tuple[Tuple[str], tuple[str]]: A tuple of chunk strings and a tuple of warning messages.
-        """
-        all_warnings = set()
-        sentences, warnings = self.sentence_splitter.split(
-            config.text,
-            config.lang,
-            _return_warnings=True
-        )
-        all_warnings.update(warnings)
-
-        if self.verbose:
-            logger.debug(
-                "Text splitted into sentences. Total sentences detected: %s",
-                len(sentences),
-            )
-        if not sentences:
-            return (), tuple(all_warnings)
-
-        offset = round(config.offset)
-        if offset >= len(sentences):
-            if self.verbose:
-                logger.info(
-                    "Offset %s >= total sentences %s. Returning empty list.",
-                    offset,
-                    len(sentences),
-                )
-
-            return (), tuple(all_warnings)
-
-        sentences = sentences[offset:]
-        chunks = self._group_by_chunk(sentences, config)
-        if self.verbose:
-            logger.info("Finished chunking text. Generated %s chunks.\n", len(chunks))
-        # Make them immutable to be safe with caching if enabled.
-        return tuple(chunks), tuple(all_warnings)
-
-    @cached(cache=cache, key=lambda self, config: hashkey(config))  # Ignore self
-    def _chunk_cached(
-        self,
-        config: TextChunkingConfig,
-    ) -> tuple[tuple[Box], tuple[str]]:
-        """
-        Cached version of the `_chunk` method, leveraging LRU caching for performance.
-        """
-        return self._chunk(config)
-
+    @validate_input
     def chunk(
         self,
         text: str,
         *,
         lang: str = "auto",
-        mode: str = "sentence",
-        max_tokens: int = 256,
-        max_sentences: int = 12,
-        overlap_percent: int | float = 20,
-        offset: int = 0,
+        mode: Literal["sentence", "token", "hybrid"] = "sentence",
+        max_tokens: conint(ge=30) = 256,
+        max_sentences: conint(ge=1) = 12,
+        overlap_percent: conint(ge=0, le=75) = 20,
+        offset: conint(ge=0) = 0,
         token_counter: Callable[[str], int] | None = None,
-        _batch_context: bool = False,
     ) -> list[str]:
         """
         Chunks a single text into smaller pieces based on specified parameters.
@@ -389,10 +330,10 @@ class PlainTextChunker:
         Args:
             text (str): The input text to chunk.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            mode (str): Chunking mode ('sentence', 'token', or 'hybrid'). Defaults to "sentence".
+            mode (Literal["sentence", "token", "hybrid"]): Chunking mode. Defaults to "sentence".
             max_tokens (int): Maximum number of tokens per chunk. Defaults to 512.
             max_sentences (int): Maximum number of sentences per chunk. Defaults to 12.
-            overlap_percent (int | float): Percentage of overlap between chunks (0-85).
+            overlap_percent (int | float): Percentage of overlap between chunks (0-75).
                 Defaults to 20
             offset (int): Starting sentence offset for chunking. Defaults to 0.
             token_counter (callable | None): Optional token counting function. Required for token-based modes only.
@@ -405,25 +346,13 @@ class PlainTextChunker:
             MissingTokenCounterError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
             TextProcessingError: If the provided `token_counter` callable raises an exception during token counting.
         """
+        # f"The 'max_tokens' parameter must be greater than or equal to 30. Got {max_tokens}."
+
+        if mode in {"token", "hybrid"} and not (token_counter or self.token_counter):
+            raise MissingTokenCounterError()
+
         if self.verbose:
-            logger.info("Processing text - single run")
-        # Validate the parameters
-        try:
-            config = TextChunkingParams(
-                text=text,
-                lang=lang,
-                mode=mode,
-                max_tokens=max_tokens,
-                max_sentences=max_sentences,
-                overlap_percent=overlap_percent,
-                offset=offset,
-                token_counter=(token_counter if token_counter else self.token_counter),
-            )
-        except ValidationError as e:
-            pretty_err = pretty_errors(e)
-            raise InvalidInputError(
-                f"Invalid chunking configuration.\n Details: {pretty_err}"
-            ) from e
+            logger.info("Single run - Processing for text: {}. .", f"{text[:150]}...")
 
         # Adjust limits based on mode
         if mode == "sentence":
@@ -431,43 +360,64 @@ class PlainTextChunker:
         elif mode == "token":
             max_sentences = sys.maxsize
 
-        if not config.text:
+        if not text:
             if self.verbose:
                 logger.info("Input text is empty. Returning empty list.")
-            return [] if not _batch_context else ([], ())
+            return []
 
-        if self.use_cache:
-            chunks, warnings = self._chunk_cached(config)
-        else:
-            chunks, warnings = self._chunk(config)
+        try:
+            sentences = self.sentence_splitter.split(
+                text,
+                lang,
+            )
+        except Exception as e:
+            raise CallbackExecutionError(
+                f"An error occurred during the sentence splitting process.\nDetails: {e}\n"
+                "💡 Hint: This may be due to an issue with the underlying sentence splitting library."
+            ) from e
 
-        if _batch_context:
-            return list(chunks), warnings
+        if not sentences:
+            return []
 
-        if warnings:
-            warning_message = [
-                f"Found {len(warnings)} unique warning(s) during chunking:"
-            ]
-            for msg in warnings:
-                warning_message.append(f"  - {msg}")
-            logger.warning("\n" + "\n".join(warning_message))
+        offset = round(offset)
+        if offset >= len(sentences):
+            logger.warning(
+                "Offset {} >= total sentences {}. Returning empty list.",
+                offset,
+                len(sentences),
+            )
+            return []
 
-        return list(chunks)
+        sentences = sentences[offset:]
+        chunks = self._group_by_chunk(
+            sentences,
+            mode=mode,
+            token_counter=token_counter or self.token_counter,
+            max_tokens=max_tokens,
+            max_sentences=max_sentences,
+            overlap_percent=overlap_percent,
+        )
+        if self.verbose:
+            logger.info(
+                "Generated {} chunks for text: {}. .\n", len(chunks), f"{text[:150]}..."
+            )
+        return chunks
 
+    @validate_input
     def batch_chunk(
         self,
         texts: Iterable[str],
         *,
         lang: str = "auto",
-        mode: str = "sentence",
-        max_tokens: int = 256,
-        max_sentences: int = 12,
-        overlap_percent: int | float = 20,
-        offset: int = 0,
+        mode: Literal["sentence", "token", "hybrid"] = "sentence",
+        max_tokens: conint(ge=30) = 256,
+        max_sentences: conint(ge=1) = 12,
+        overlap_percent: conint(ge=0, le=75) = 20,
+        offset: conint(ge=0) = 0,
         token_counter: Callable[[str], int] | None = None,
         n_jobs: Optional[int] = None,
         show_progress: bool = True,
-        on_errors: str = "raise",
+        on_errors: Literal["raise", "skip", "break"] = "raise",
         separator: Any = _sentinel,
         _document_context: bool = False,
     ) -> Generator[Any, None, None]:
@@ -479,9 +429,9 @@ class PlainTextChunker:
         of the tasks that completed successfully, preventing wasted work.
 
         Args:
-            texts: List of input texts to be chunked. Each text will be processed independently.
+            texts (Iterable[str]): An list or generator of input texts to be chunked. Each text will be processed independently.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            mode (str): Chunking mode ('sentence', 'token', or 'hybrid'). Defaults to "sentence".
+            mode (Literal["sentence", "token", "hybrid"]): Chunking mode. Defaults to "sentence".
             max_tokens (int): Maximum number of tokens per chunk.
             max_sentences (int): Maximum number of sentences per chunk.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
@@ -490,7 +440,7 @@ class PlainTextChunker:
             n_jobs (int | None): Number of parallel workers to use. If None, uses all available CPUs.
                    Must be >= 1 if specified.
             show_progress (bool): Flag to show or disable the loading bar.
-            on_errors (str): How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
+            on_errors (Literal["raise", "skip", "break"]): How to handle errors during processing. Defaults to 'raise'.
             separator (Any): A value to be yielded after the chunks of each text are processed.
 
         yields:
@@ -499,27 +449,36 @@ class PlainTextChunker:
         Raises:
             InvalidInputError: If `texts` is not a list or if `n_jobs` is less than 1.
         """
-        # Validate that texts is an iterable and contains only strings
-        if isinstance(texts, str) or not (
-            isinstance(texts, Iterable) 
-            or all(isinstance(t, str) for t in texts)
-        ):
+        if isinstance(texts, str):
             raise InvalidInputError(
-                "The 'texts' parameter must be an iterable of strings (e.g., list, tuple, generator of strings).\n" 
+                "Invalid input for [texts]: Single string must be passed to the .chunk() method, not .batch_chunk()."
             )
 
-        # Use tee to create two independent iterators
-        # Then calculate total number of texts using ilen
+        def _validate_entry(entry):
+            if not isinstance(entry, str):
+                msg = f"The 'texts' iterable should only contain strings, but found the value '{entry}' [type={type(entry).__name__}].\n💡 Hint: Please make sure all items provided to 'batch_chunk' are strings."
+                raise InvalidInputError(msg)
+            return 1
+
+        if n_jobs is not None and n_jobs < 1:
+            raise InvalidInputError(
+                "The 'n_jobs' parameter must be an integer greater than or equal to 1, or None.\n"
+                "💡 Hint: Use `n_jobs=None` to use all available CPU cores."
+            )
+
+        # Use tee to create two independent iterators, so we can count safely to prevent exhaustion.
         if isinstance(texts, Iterator):
             texts_for_total, texts_for_processing = tee(texts)
-            total_texts = ilen(texts_for_total)
+
         else:
-            texts_for_processing = texts
-            total_texts = len(texts)
+            texts_for_processing, texts_for_total = texts, texts
+
+        # Calculate while validating each entry
+        total_texts = sum(_validate_entry(entry) for entry in texts_for_total)
 
         if self.verbose:
             logger.info(
-                "Processing %s texts in batch mode with n_jobs=%s.",
+                "Processing {} text(s) in batch mode with n_jobs={}.",
                 total_texts,
                 n_jobs if n_jobs is not None else "default",
             )
@@ -528,13 +487,6 @@ class PlainTextChunker:
             if self.verbose:
                 logger.info("Input texts is empty. Returning empty list.")
             return
-
-        # Validate n_jobs parameter
-        if n_jobs is not None and n_jobs < 1:
-            raise InvalidInputError(
-                "The 'n_jobs' parameter must be an integer greater than or equal to 1, or None.\n"
-                "💡 Hint: Use `n_jobs=None` to use all available CPU cores."
-            )
 
         # Wrapper to capture result/exception
         def chunk_func(text: str):
@@ -547,79 +499,43 @@ class PlainTextChunker:
                     max_sentences=max_sentences,
                     overlap_percent=overlap_percent,
                     offset=offset,
-                    token_counter=token_counter,
-                    _batch_context=True,
-               )
+                    token_counter=token_counter or self.token_counter,
+                )
                 return res, None
             except Exception as e:
                 return None, e
-                
-        collected_warnings = []
 
-        with Progress(
-            TextColumn("[progress.description]{task.description}"),
-            TextColumn("[bold blue]{task.percentage:>3.0f}%"), # Percentage
-            BarColumn(),
-            TimeRemainingColumn(),
-            transient=True, # Cleans up after completion
-            disable=not show_progress, 
-        ) as progress:
+        with get_progress_bar(enabled=show_progress) as progress:
             task = progress.add_task("[green]Processing...", total=total_texts)
 
             from mpire import WorkerPool  # Lazy import, only needed there.
 
             with WorkerPool(n_jobs=n_jobs) as executor:
-                    task_iter = executor.imap(
-                        func=chunk_func,
-                        iterable_of_args=texts_for_processing,
-                        iterable_len=total_texts, # Provided for Iterators
-                    )
+                task_iter = executor.imap(
+                    func=chunk_func,
+                    iterable_of_args=texts_for_processing,
+                    iterable_len=total_texts,  # Provided for Iterators
+                )
 
-                    for result, error in task_iter:
-                        if error:
-                            if on_errors == "raise":
-                                raise error
-                            elif on_errors == "break":
-                                logger.error(
-                                    "A task in 'batch_chunk' failed. Returning partial results.\n"
-                                    f"💡 Hint: Check the logs for more details about the failed task. \nReason: {error}"
-                                )
-                                break
-                            else: # ignore
-                                logger.warning(f"Skipping a failed task. \nReason: {error}")
-                                continue
-                        else:
-                            chunks, warnings = result
-                            if _document_context: # Needed by document chunker
-                                yield chunks
-                            else:
-                                yield from chunks
-                                if separator is not _sentinel:
-                                    yield separator
-                            collected_warnings.append(warnings)
+                for result, error in task_iter:
+                    if error:
+                        if on_errors == "raise":
+                            raise error
+                        elif on_errors == "break":
+                            logger.error(
+                                "A task in 'batch_chunk' failed. Returning partial results.\n"
+                                f"💡 Hint: Check the logs for more details about the failed task. \nReason: {error}"
+                            )
+                            break
+                        else:  # ignore
+                            logger.warning(f"Skipping a failed task. \nReason: {error}")
                             progress.update(task, advance=1)
-                        
-                                
+                            continue
 
-        # Count the occurencies of warnings
-        warnings_counter = Counter()
-        for warning_list in collected_warnings:
-            for msg in warning_list:
-                warnings_counter[msg] += 1
-
-        if warnings_counter:
-            # Build a multi-line warning message for the logger
-            warning_message = [
-                f"Found {len(warnings_counter)} unique warning(s) "
-                "during batch processing of {total_texts} texts:"
-            ]
-            for msg, count in warnings_counter.items():
-                warning_message.append(f"  - ({count}/{total_texts}) {msg}")
-            logger.warning("\n" + "\n".join(warning_message))
-
-    @staticmethod
-    def clear_cache():
-        """
-        Clears the global in-memory cache used for chunking operations.
-        """
-        cache.clear()
+                    if _document_context:  # Needed by document chunker
+                        yield result
+                    else:
+                        yield from result
+                        if separator is not _sentinel:
+                            yield separator
+                    progress.update(task, advance=1)

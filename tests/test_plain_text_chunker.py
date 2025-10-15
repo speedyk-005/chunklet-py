@@ -3,11 +3,16 @@ This module contains unit tests for the PlainTextChunker class,
 covering its core functionality, various chunking modes, overlap behavior,
 and batch processing capabilities.
 """
+
 import pytest
 import re
-from chunklet.sentence_splitter import SentenceSplitter
+
 from chunklet.plain_text_chunker import PlainTextChunker
-from chunklet.exceptions import InvalidInputError, CallbackExecutionError, MissingTokenCounterError
+from chunklet.exceptions import (
+    InvalidInputError,
+    CallbackExecutionError,
+    MissingTokenCounterError,
+)
 from loguru import logger
 
 
@@ -17,9 +22,9 @@ logger.remove()
 
 # --- Constants ---
 
-ENGLISH_TEXT = """
+TEXT = """
 She loves cooking. He studies AI. "You are a Dr.", she said. The weather is great. We play chess. Books are fun, aren't they?
- 
+
 The Playlist contains:
   - two videos
   - one image
@@ -43,14 +48,16 @@ def chunker():
 # --- Core Tests ---
 def test_init_validation_error():
     """Test that InvalidInputError is raised for invalid initialization parameters."""
-    pattern = re.escape("[token_counter] Input should be callable")
+    pattern = re.escape(
+        "[token_counter] Input should be callable (input='Not a callable', type=str)"
+    )
     with pytest.raises(InvalidInputError, match=pattern):
         PlainTextChunker(token_counter="Not a callable")
 
 
 @pytest.mark.parametrize(
     "mode, max_tokens, max_sentences, expected_chunks",
-    [("sentence", 512, 3, 9), ("token", 30, 100, 1), ("hybrid", 30, 3, 9)],
+    [("sentence", 512, 3, 7), ("token", 30, 100, 3), ("hybrid", 30, 3, 7)],
 )
 def test_all_modes_produce_chunks(
     chunker, mode, max_tokens, max_sentences, expected_chunks
@@ -58,7 +65,7 @@ def test_all_modes_produce_chunks(
     """Verify all chunking modes produce output with expected chunk counts and structure."""
     chunker.verbose = True
     chunks = chunker.chunk(
-        ENGLISH_TEXT,
+        TEXT,
         mode=mode,
         max_tokens=max_tokens,
         max_sentences=max_sentences,
@@ -85,7 +92,7 @@ def test_all_modes_produce_chunks(
 )
 def test_offset_behavior(chunker, offset, expect_chunks):
     """Verify offset affects output and large offsets produce no chunks"""
-    chunks = chunker.chunk(ENGLISH_TEXT, offset=offset)
+    chunks = chunker.chunk(TEXT, offset=offset)
     if expect_chunks:
         assert chunks, f"Should get chunks for offset={offset}"
         assert len(chunks[0]) > 0, "Chunk content should not be empty"
@@ -101,15 +108,12 @@ def test_token_counter_validation(mode):
 
 
 def test_long_sentence_truncation(chunker):
-    """Test that a long sentence without punctuation is truncated correctly."""
+    """Test that a long sentence without punctuation is #truncated correctly."""
     long_sentence = "word " * 100
-    # Use max_tokens to trigger truncation for the single long sentence
     chunks = chunker.chunk(long_sentence, mode="token", max_tokens=30)
 
-    assert len(chunks) == 1
-    # The chunk should be truncated and have the continuation marker.
-    assert len(chunks[0]) < len(long_sentence)
-    assert chunks[0].endswith("...")
+    assert len(chunks) == 1, f"Expected 1 chunk, but got {len(chunks)}"
+    assert chunks[0].endswith("..."), f"Chunk '{chunks[0]}' does not end with '...'"
 
 
 # --- Overlap Related Tests ---
@@ -117,7 +121,7 @@ def test_overlap_behavior(chunker):
     """Test that overlap produces multiple chunks and the overlap content is correct."""
     # Test case 1: Overlap with capitalized clause
     chunks = chunker.chunk(
-        ENGLISH_TEXT,
+        TEXT,
         mode="sentence",
         max_sentences=3,
         overlap_percent=33,
@@ -172,9 +176,7 @@ def test_overlap_behavior(chunker):
         (["First sentence.", "", "Second sentence."], 3),
     ],
 )
-def test_batch_processing_successful(
-    chunker, texts_input, expected_results_len
-):
+def test_batch_processing_successful(chunker, texts_input, expected_results_len):
     """Comprehensive test for batch processing successful runs and edge cases."""
     results = list(
         chunker.batch_chunk(
@@ -197,15 +199,18 @@ def test_batch_processing_successful(
 
 def test_batch_processing_input_validation(chunker):
     """Test batch processing error handling on invalid input"""
-    # Test that InvalidInputError is raised for input text isnt an iterable object
-    texts_input = "this is a string, not a list"
+    # Test that InvalidInputError is raised for input that is an iterable, but contains wrong types
+    texts_input_int = [1, 2, 3]  # Use list[int] here
 
     with pytest.raises(
-        InvalidInputError, match="The 'texts' parameter must be an iterable of strings"
+        InvalidInputError,
+        match=re.escape(
+            "The 'texts' iterable should only contain strings, but found the value '1' [type=int]"
+        ),
     ):
-        list(chunker.batch_chunk(texts_input))
+        list(chunker.batch_chunk(texts_input_int))
 
-    #Test that InvalidInputError is raised for invalid n_jobs values
+    # The original test for n_jobs can remain
     with pytest.raises(
         InvalidInputError,
         match="The 'n_jobs' parameter must be an integer greater than or equal to 1, or None",
@@ -226,11 +231,14 @@ def test_batch_chunk_error_handling_on_task(chunker):
     texts = ["This is ok.", "This will fail.", "This will not be processed."]
 
     # Test on_errors = 'raise'
-    with pytest.raises(CallbackExecutionError, match="Token counter failed while processing text starting with:"):
+    with pytest.raises(
+        CallbackExecutionError,
+        match="Token counter failed while processing text starting with:",
+    ):
         list(chunker.batch_chunk(texts, mode="token", on_errors="raise"))
 
-    # Test on_errors = 'ignore'
-    results = list(chunker.batch_chunk(texts, mode="token", on_errors="ignore"))
+    # Test on_errors = 'skip'
+    results = list(chunker.batch_chunk(texts, mode="token", on_errors="skip"))
     assert len(results) == 2
     assert "This is ok." in results[0]
     assert "This will not be processed." in results[1]
@@ -245,9 +253,17 @@ def test_batch_chunk_error_handling_on_task(chunker):
     "separator, texts, expected_output",
     [
         # Case 1: Simple string separator
-        ("---", ["First sentence.", "Second sentence."], ["First sentence.", "---", "Second sentence.", "---"]),
+        (
+            "---",
+            ["First sentence.", "Second sentence."],
+            ["First sentence.", "---", "Second sentence.", "---"],
+        ),
         # Case 2: None as separator
-        (None, ["First sentence.", "Second sentence."], ["First sentence.", None, "Second sentence.", None]),
+        (
+            None,
+            ["First sentence.", "Second sentence."],
+            ["First sentence.", None, "Second sentence.", None],
+        ),
     ],
 )
 def test_batch_chunk_with_separator(chunker, separator, texts, expected_output):

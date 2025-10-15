@@ -1,1 +1,2 @@
-from .sentence_splitter import SentenceSplitter
+from .sentence_splitter import *
+from .registry import *

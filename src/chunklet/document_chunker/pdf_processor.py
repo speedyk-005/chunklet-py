@@ -1,5 +1,4 @@
 from __future__ import annotations
-from pathlib import Path
 import regex as re
 from typing import Any, Iterator
 
@@ -78,7 +77,9 @@ class PDFProcessor:
             ) from e
 
         # Inner generator function to process pages one by one
-        def _extract_pages_generator(reader_obj: PdfReader, f_handle: Any) -> Iterator[str]:
+        def _extract_pages_generator(
+            reader_obj: PdfReader, f_handle: Any
+        ) -> Iterator[str]:
             for page in reader_obj.pages:
                 text = page.extract_text()
                 if text:
@@ -99,7 +100,10 @@ class PDFProcessor:
                 clean_key = key[1:] if key.startswith("/") else key
                 metadata[clean_key.lower()] = value
 
-        return {"metadata": metadata, "pages": _extract_pages_generator(reader, file_handle)}
+        return {
+            "metadata": metadata,
+            "pages": _extract_pages_generator(reader, file_handle),
+        }
 
 
 # --- Usage example ---

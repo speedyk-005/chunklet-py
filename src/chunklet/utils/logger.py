@@ -1,18 +1,9 @@
-import logging
+from loguru import logger
 from rich.console import Console
-from rich.logging import RichHandler
 
+# Setup Rich console
+console = Console()
 
-console = Console(width=200) # fixed width to prevent excessive wrappings in narrow screens
-
-
-handler = RichHandler(rich_tracebacks=True, show_path=True, markup=True)
-
-logging.basicConfig(
-    level="INFO",
-    format="%(message)s",
-    datefmt="[%X]",
-    handlers=[handler]
-)
-
-logger = logging.getLogger(__name__)
+# Redirect loguru to Rich console, disable loguru coloring
+logger.remove()
+logger.add(console.print, colorize=False)

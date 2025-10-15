@@ -11,11 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Code Chunker Introduction:** Introduced `CodeChunker`, a rule-based language agnostic chunker for syntax-aware chunking of source code.
 - **Expanded Language Support:** Integrated `sentsplit`, `sentencex`, and `indic-nlp-library` for more accurate and comprehensive sentence splitting across a wider range of languages.
 This officially boosts language support from 36+ to 40+.
-- **Error Handling**: Added an `on_errors` parameter to `batch_chunk` to allow for more flexible error handling (raise, ignore, or break).
+- **Error Handling**: Added an `on_errors` parameter to `batch_chunk` methods to allow for more flexible error handling (raise, skip, or break).
 - **Faster Language Detection**: Optimized language detection by using only the first 500 characters of the input text. This significantly improves performance, especially for large documents, without compromising accuracy for language identification.
-- **Code Chunker Introduction:** Introduced `CodeChunker` for syntax-aware chunking of source code, with support for multiple programming languages by leveraging `src/libs/code_structure_extractor` to dispatch code into structural elements.
 - **CLI Multiple Input Files:** Added an `--input-files` argument to allow processing of multiple specific files.
 - **CLI Metadata Flag:** Added a `-m, --metadata` flag to the CLI to display chunk metadata in the output.
 - **Document Chunker:** Introduced `DocumentChunker` to handle various file formats like `.pdf`, `.docx`, `.txt`, `.md`, `.rst`, `.rtf`.
@@ -26,25 +26,28 @@ This officially boosts language support from 36+ to 40+.
 
 ### Changed
 
-- **Improved Universal Splitter:** Replaced the existing universal sentence splitter with a more robust, multi-stage version. The new splitter offers more accurate handling of abbreviations, numbered lists, and complex punctuation, and has a larger punctuation coverage, improving fallback support for unsupported languages.
+- **Streamlined Validation with Typeguard:** Adopted Typeguard exclusively for validation + manual validations, replacing Pydantic models and centralizing runtime type checking. This results in faster, more consistent, and lower-overhead validation.
+- **Sentence Splitter Refactoring:**
+    - Refactored the `SentenceSplitter` to be more modular and extensible. The management of custom splitters has been moved to a new `registry` module, which provides a centralized way to register and use custom splitter functions.
+    - Introduced a new way of registering custom splitters using the `register_splitter` function and the `@registered_splitter` decorator, replacing the old dictionary-based approach. This new API is more explicit, provides better validation, and is easier to use.
+- **Improved FallbackSplitter:** Replaced the existing universal sentence splitter with a more robust, multi-stage version. The new splitter offers more accurate handling of abbreviations, numbered lists, and complex punctuation, and has a larger punctuation coverage, improving fallback support for unsupported languages.
 - **SentenceSplitter Extraction:** The core sentence splitting logic, previously embedded within `PlainTextChunker`, has been extracted and consolidated into a dedicated `SentenceSplitter` module. This significantly improves modularity, reusability, and maintainability across the library.
 - **Clause Delimiters**: Added ellipsis to the list of clause delimiters for more accurate chunking.
-- **Logging**: Replaced `loguru` with the standard `logging` module and `RichHandler` for a cleaner and more beautiful logging experience that integrates seamlessly with progress bars.
+- **Logging**: Linked `loguru` logger with `rich` for a cleaner and more beautiful logging experience that integrates seamlessly with progress bars.
 - **Batch Chunking Flexibility:** Modified `PlainTextChunker.batch_chunk` to accept any `Iterable` of strings for the `texts` parameter, instead of being restricted to `list`.
 - **Memory Optimization:** Refactored all batch methods in the lib to fully utilize generators, yielding chunks one at a time to reduce memory footprint, especially for large documents. That also means you dont have to wait for the chunks fully be processed before start using them.
 - **Memory Friendly caching:** Replaced `functools.lrucache` with `cachetools.cache` to avoid instance references in cache keys to prevent unnecessary memory retention.
-- **Linting:** Integrated `flake8` for code linting and updated `CONTRIBUTING.md` with instructions for running it.
-- **Code Quality:** Fixed various `pyflakes` linting issues across the `src/` and `tests/` directories, improving code cleanliness.
+- **Code Quality:**
+    - Fixed various `pyflakes` linting issues across the `src/` and `tests/` directories, improving code cleanliness.
+    - Integrated `flake8` for code linting and updated `CONTRIBUTING.md` with instructions for running it.
 - **Error rebranding:** Renamed `TokenNotProvidedError` to `MissingTokenCounterError` for clearer semantics and updated all relevant usages.
 - **Error Handling:**
-    - Modified `_count_tokens` to return `CallbackExcecutionError` instead of `ChunkletError`.
-    - Catched errors raised by the usage of `custom_splitters`'s callback and reraised as `TextProcessingError` instead.
+    - Modified `count_tokens` to return `CallbackExcecutionError` instead of `ChunkletError`.
     - Re-parented `MissingTokenCounterError` under `InvalidInputError`. `UnsupportedFileTypeError` was also added to the new hierarchy.
 - **Project Restructuring:**
     - Renamed `src/chunklet/core.py` to `src/chunklet/plain_text_chunker.py`.
     - Renamed `Chunklet` class to `PlainTextChunker`.
 - **Improved Error Messages:** Improved error messages across the library to be more user-friendly and provide hints for fixing the issues.  
-- **Friendlier Initialization:** Updated `PlainTextChunker` to accept a a list of dict instead of a list of models for more beginner friendly initialization.
 - **Safer Tokenizer Command processing:** Changed `shell=True` to `shell=False` for the subprocess.run call in create_external_tokenizer for enhanced security and predictability. The shlex module is now implicitly used for command parsing when shell=False.
 - **Improved chunking format:** Added a newline between sentences for structured chunking format output. This helps preserving original format better.
 - **Grouping improvements:**
@@ -53,15 +56,13 @@ This officially boosts language support from 36+ to 40+.
     - Use incremental token recalculation for better performance.
     - Artifacts handling: Ignore the last chars after the first 150 ones in the loop around sentences. Reason: if the original text to chunk has parts not well written. (e.g. long text stream without punctuations, embeded images urls, ...)
 - **Absolute Imports:** Converted all relative imports to absolute imports within the `chunklet` package for better clarity and to avoid potential import issues.
-- **Project Layout:** Restructured project by moving the logo to the root and adding a `samples/` directory to store the sample files.
 - **CLI Aliases:** Added `-f` as an alias for `--file` and `-d` as an alias for `--input-dir`.
 - **Default Limits:** Changed the default `max_tokens` from 512 to 256 and `max_sentences` from 100 to 12.
-- **Model renamed:** Renamed `ChunkingConfig` to `TextChunkingConfig`.
 - **Continuation marker:** Exposed continuation marker so users can define thier own or set it to an empty str to disabled it.
-- **Custom Splitter Validation**: Refactored custom splitter callback validation into a `split` method within `CustomSplitterConfig`, providing a safer wrapper for callback execution and clearer error messages.
 
 ### Removed
 
+- **Caching:** Removed the in-memory caching functionality to focus on raw performance optimization.
 - **Python 3.8 Support:** Dropped official support for Python 3.8. The minimum required Python version is now 3.9.
 - **CLI Argument:** Removed the `--no-cache` command-line argument.
 - **CLI Argument:** Removed the deprecated `--batch` argument.

@@ -13,6 +13,7 @@ imported directly from the package alongside execptions.
 from .sentence_splitter import SentenceSplitter
 from .plain_text_chunker import PlainTextChunker
 from .document_chunker import DocumentChunker
+
 # from .code_chunker import CodeChunker
 from .exceptions import (
     ChunkletError,
@@ -30,8 +31,7 @@ __all__ = [
     "SentenceSplitter",
     "PlainTextChunker",
     "DocumentChunker",
-    #"CodeChunker",
-    "CodeChunker",
+    # "CodeChunker",
     "ChunkletError",
     "InvalidInputError",
     "MissingTokenCounterError",

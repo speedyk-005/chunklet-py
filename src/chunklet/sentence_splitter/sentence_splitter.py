@@ -1,7 +1,6 @@
 from __future__ import annotations
-from typing import List, Set, Dict
+from abc import ABC, abstractmethod
 import regex as re
-from pydantic import ValidationError
 from pysbd import Segmenter
 from sentsplit.segment import SentSplit
 from sentencex import segment
@@ -13,131 +12,92 @@ from chunklet.sentence_splitter.languages import (
     SENTENCEX_UNIQUE_LANGUAGES,
     INDIC_NLP_UNIQUE_LANGUAGES,
 )
-from chunklet.sentence_splitter.fallback_splitter import FallbackSplitter
+from chunklet.sentence_splitter.registry import use_registered_splitter, is_registered
+from chunklet.sentence_splitter._fallback_splitter import FallbackSplitter
 from chunklet.utils.detect_text_language import detect_text_language
-from chunklet.models import CustomSplitterConfig
+from chunklet.utils.validation import validate_input
 from chunklet.utils.logger import logger
-from chunklet.exceptions import InvalidInputError, CallbackExecutionError
-from chunklet.utils.error_utils import pretty_errors
+from chunklet.exceptions import InvalidInputError
 
 
-class SentenceSplitter:
+class BaseSplitter(ABC):
+    """
+    Abstract base class for sentence splitting.
+    Defines the interface that all sentence splitter implementations must adhere to.
+    """
+
+    @abstractmethod
+    def split(self, text: str) -> list[str]:
+        """
+        Splits the given text into a list of sentences.
+
+        Args:
+            text (str): The input text to be segmented.
+            s
+        Returns:
+            list[str]: A list of sentences extracted from the text.
+        """
+        pass
+
+
+class SentenceSplitter(BaseSplitter):
     """
     A robust and versatile utility dedicated to precisely segmenting text into individual sentences.
 
     Key Features:
     - Multilingual Support: Leverages language-specific algorithms and detection for broad coverage.
-    - Custom Splitters: Allows integration of user-defined splitting logic.
-    - Fallback Mechanism: Employs a universal regex splitter for unsupported languages.
+    - Custom Splitters: Uses centralized registry for custom splitting logic.
+    - Fallback Mechanism: Employs a universal rule-based splitter for unsupported languages.
     - Robust Error Handling: Provides clear error reporting for issues with custom splitters.
     - Intelligent Post-processing: Cleans up split sentences by filtering empty strings and rejoining stray punctuation.
     """
-    def __init__(
-        self,
-        custom_splitters: List[Dict] | None = None,
-        verbose: bool = True
-    ):
+
+    def __init__(self, verbose: bool = True):
         """
         Initializes the SentenceSplitter.
 
         Args:
-            custom_splitters (List[Dict] | None): A list of dictionaries, where each dictionary
-                defines a custom sentence splitter. Each splitter dictionary must contain:
-                - 'name' (str): A unique name for the splitter.
-                - 'languages' (str or Iterable[str]): Language(s) supported by the splitter.
-                - 'callback' (Callable[[str], List[str]]): A callable function that takes
-                  a string and returns a list of strings (sentences).
             verbose (bool): If True, enables verbose logging for debugging and informational messages.
         """
         if not isinstance(verbose, bool):
             raise InvalidInputError("The 'verbose' flag must be a boolean value.")
 
-        try:
-            # Validate custom_splitters against the Pydantic model
-            self._custom_splitters = (
-                [CustomSplitterConfig(**splitter) for splitter in custom_splitters]
-                if custom_splitters
-                else None
-            )
-        except ValidationError as e:
-            pretty_err = pretty_errors(e)
-            raise InvalidInputError(
-                f"Invalid custom_splitters configuration.\n Details: {pretty_err}"
-            ) from e
-
         self.verbose = verbose
         self.fallback_splitter = FallbackSplitter()
 
-        # Prepare a set of supported extensions from custom splitters
-        self.custom_splitters_languages = set()
-        if self._custom_splitters:
-            for splitter in self._custom_splitters:
-                if isinstance(splitter.languages, str):
-                    self.custom_splitters_languages.add(splitter.languages)
-                else:
-                    self.custom_splitters_languages.update(set(splitter.languages))
-
-    @property
-    def custom_splitters(self) -> List[CustomSplitterConfig] | None:
+    def _filter_sentences(self, sentences: list[str]) -> list[str]:
         """
-        Returns the list of custom splitter configurations.
-        """
-        return self._custom_splitters
-
-    def _use_custom_splitter(self, text: str, lang: str) -> list[str]:
-        """
-        Processes a text using a custom splitter registered for the given language.
+        Post-processes split sentences by filtering empty strings and rejoining stray punctuation.
 
         Args:
-            text (str): The text to split.
-            lang (str): The language of the text (e.g., 'en', 'fr', 'auto').
+            sentences (list[str]): Raw list of split sentences.
 
         Returns:
-            list[str]: A list of sentences.
-
-        Raises:
-             CallbackExecutionError: If a custom splitter fails during execution.
+            list[str]: Cleaned list of sentences with proper punctuation handling.
         """
-        for splitter in self._custom_splitters:
-            supported_languages = (
-                [splitter.languages]
-                if isinstance(splitter.languages, str)
-                else splitter.languages
-            )
-            if lang in supported_languages:
-                if self.verbose:
-                    logger.debug(
-                        "Using %s for language: %s. (Custom Splitter)",
-                        splitter.name,
-                        lang,
-                    )
-                    
-                # Handle validation and error wrapping.
-                try:
-                    result = splitter.callback(text)
-                except Exception as e:
-                    raise CallbackExecutionError(
-                        f"Custom splitter '{splitter.name}' callback failed for text starting with: '{text[:100]}...'.\n"
-                        f"Details: {e}"
-                    ) from e
+        processed_sentences = []
+        for sent in sentences:
+            stripped_sent = sent.strip()
+            if stripped_sent:
+                if re.fullmatch(r"[\p{P}\p{S}]+", stripped_sent):
+                    if (
+                        processed_sentences
+                    ):  # Ensure there's a previous sentence to append to
+                        processed_sentences[-1] += stripped_sent[
+                            :5
+                        ]  # Limits to the first 5 ones
+                    else:  # If no previous sentence, just add it
+                        processed_sentences.append(stripped_sent[:2])
+                else:
+                    processed_sentences.append(sent.rstrip())  # Use sent.rstrip() here
+        return processed_sentences
 
-                if not isinstance(result, list) or not all(isinstance(item, str) for item in result):
-                    raise CallbackExecutionError(
-                        f"Custom splitter '{splitter.name}' callback returned an invalid type. "
-                        f"Expected a list of strings, but got {type(result)} with elements of mixed types."
-                    )
-                return result
-
-    def split(
-        self,
-        text: str,
-        lang: str,
-        _return_warnings: bool = False
-    ) -> list[str]:
+    @validate_input
+    def split(self, text: str, lang: str) -> list[str]:
         """
         Splits text into sentences using language-specific algorithms.
         Automatically detects language and prioritizes specialized libraries,
-        falling back to a universal regex splitter for broad coverage.
+        falling back to a universal rule-based splitter for broad coverage.
 
         Args:
             text (str): The input text to split.
@@ -145,97 +105,58 @@ class SentenceSplitter:
 
         Returns:
             list[str]: A list of sentences.
-
-        Raises:
-             CallbackExecutionError: If a custom splitter fails during execution.
         """
-        if not isinstance(text, str):
-            raise InvalidInputError("The 'text' argument must be a string.")
-        if not isinstance(lang, str):
-            raise InvalidInputError("The 'lang' argument must be a string.")             
- 
-        warnings = set()
         sentences = []
 
         if lang == "auto":
             lang_detected, confidence = detect_text_language(text)
             if self.verbose:
-                logger.debug("Attempting language detection.")
-            if confidence < 0.7:
-                warnings.add(
-                    f"Low confidence in language detected. Detected: '{lang_detected}' with confidence {confidence:.2f}."
+                logger.info(
+                    "Language detection: '{}' with confidence {}",
+                    lang_detected,
+                    f"{round(confidence)  * 10}/10",
                 )
             lang = lang_detected if confidence >= 0.7 else lang
 
-        # Prioritize custom splitters
-        if lang in self.custom_splitters_languages and self._custom_splitters:
-            sentences = self._use_custom_splitter(text, lang)
+        if is_registered(lang):
+            if self.verbose:
+                logger.info("Using registered splitter for {}", lang)
+            sentences, splitter_name = use_registered_splitter(text, lang)
+            if self.verbose:
+                logger.info("Using registered splitter: {}", splitter_name)
 
         elif lang in PYSBD_SUPPORTED_LANGUAGES:
             if self.verbose:
-                logger.debug("Using pysbd for language: %s.", lang)
+                logger.info("Using pysbd splitter")
             sentences = Segmenter(language=lang).segment(text)
 
         elif lang in SENTSPLIT_UNIQUE_LANGUAGES:
             if self.verbose:
-                logger.debug(
-                    "Using SentSplit for language: %s. (sentsplit)",
-                    lang,
-                )
+                logger.info("Using sentsplit splitter")
             sentences = SentSplit(lang).segment(text)
 
         elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
             if self.verbose:
-                logger.debug(
-                    "Using Indic NLP for language: %s. (indic-nlp-library)",
-                    lang,
-                )
+                logger.info("Using indic-nlp-library splitter")
             sentences = sentence_tokenize.sentence_split(text, lang)
 
         elif lang in SENTENCEX_UNIQUE_LANGUAGES:
             if self.verbose:
-                logger.debug(
-                    "Using Sentencex for language: %s. (sentencex)",
-                    lang,
-                )
+                logger.info("Using sentencex splitter")
             sentences = segment(lang, text)
 
-        else:  # Fallback to universal regex splitter
-            warnings.add(
-                "Language not supported or detected with low confidence. Universal regex splitter was used."
-            )
+        else:  # Fallback to universal rule-based splitter
             if self.verbose:
-                logger.debug("Using a universal regex splitter.")
-            sentences = self.fallback_splitter.split(text)
+                logger.info("Using a universal rule-based splitter")
+                sentences = self.fallback_splitter.split(text)
 
-        # Post-processing: Filters empty string and rejoin some left over punctuations.
-        processed_sentences = []
-        for sent in sentences: 
-            stripped_sent = sent.strip()
-            if stripped_sent:
-                if re.fullmatch(r"[\p{P}\p{S}]+", stripped_sent):
-                    if processed_sentences: # Ensure there's a previous sentence to append to
-                        processed_sentences[-1] += stripped_sent[:5] # Limits to the first 5 ones
-                    else: # If no previous sentence, just add it
-                        processed_sentences.append(stripped_sent[:2])
-                else:
-                    processed_sentences.append(sent.rstrip()) # Use sent.rstrip() here
+        # Apply post-processing filter
+        processed_sentences = self._filter_sentences(sentences)
 
         if self.verbose:
-            logger.debug(
-                "Text splitted into sentences. Total sentences detected: %s",
+            logger.info(
+                "Text splitted into sentences. Total sentences detected: {}",
                 len(processed_sentences),
             )
-
-        if _return_warnings:
-            return processed_sentences, warnings
-
-        if warnings:
-            warning_message = [
-                f"Found {len(warnings)} unique warning(s) during sentence splitting:"
-            ]
-            for msg in warnings:
-                warning_message.append(f"  - {msg}")
-            logger.warning("\n" + "\n".join(warning_message))
 
         return processed_sentences

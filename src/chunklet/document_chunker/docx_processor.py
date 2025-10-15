@@ -1,6 +1,3 @@
-import re
-from pathlib import Path
-
 try:
     from markdownify import markdownify as md
 except ImportError:

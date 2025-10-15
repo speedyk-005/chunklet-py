@@ -38,14 +38,14 @@ dependencies = [
   "sentencex>=0.6.0",
   "indic-nlp-library>=0.90",
   "py3langid>=0.3.0",
-  "pydantic>=2.0.0",
   "mpire>=2.10.0",
   "rich>=13.0.0",
   "more-itertools>=10.8.0",
   "python-box>=7.3.0",
   "regex>=2024.11.6",
-  "cachetools>=5.5.2"
-]
+  "pydantic>=2.0.0",
+  "typing_extensions>=2.0.0"
+  ]
 
 [project.urls]
 Homepage = "https://github.com/speedyk-005/chunklet-py"
@@ -81,7 +81,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
-packages = ["chunklet", "chunklet.utils", "chunklet.libs", "chunklet.static"]
+packages = ["chunklet", "chunklet.utils"]
 
 [tool.pytest.ini_options]
 minversion = "7.4"
@@ -99,8 +99,9 @@ line-length = 88
 
 [tool.flake8]
 per-file-ignores = [
-    "__init__.py:F401",
-    "tests/*.py:E501",
+    "src/chunklet/__init__.py:F401",
+    "src/chunklet/document_chunker/__init__.py:F401,F403",
+    "src/chunklet/sentence_splitter/__init__.py:F401,F403",
 ]
 extend-ignore = ["E501"]
 count = true
