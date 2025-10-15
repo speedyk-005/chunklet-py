@@ -1,9 +1,9 @@
-from __future__ import annotations
 from pathlib import Path
-from typing import Callable, Any, Generator
+from typing import Callable, Literal, Any, Generator
 from collections.abc import Iterable
+from pydantic import conint
 from box import Box
-
+from loguru import logger
 try:
     from striprtf.striprtf import rtf_to_text
 except ImportError:
@@ -14,14 +14,12 @@ from chunklet.document_chunker.pdf_processor import PDFProcessor
 from chunklet.document_chunker.docx_processor import DOCXProcessor
 from chunklet.document_chunker.rst_to_md import rst_to_markdown
 from chunklet.document_chunker.registry import is_registered, use_registered_processor
-
+from chunklet.utils.validation import validate_input
 from chunklet.exceptions import (
     InvalidInputError,
     UnsupportedFileTypeError,
     FileProcessingError,
 )
-from chunklet.utils.validation import validate_input
-from chunklet.utils.logger import logger
 
 
 class DocumentChunker:
@@ -79,9 +77,8 @@ class DocumentChunker:
 
         if self._verbose:
             logger.debug(
-                "Initialized DocumentChunker with verbose={}, using PlainTextChunker: {}",
+                "DocumentChunker initialized with verbose={}.",
                 self._verbose,
-                self.plain_text_chunker,
             )
 
         self.pdf_processor = PDFProcessor()
@@ -216,11 +213,11 @@ class DocumentChunker:
         path: str | Path,
         *,
         lang: str = "auto",
-        mode: str = "sentence",
-        max_tokens: int = 256,
-        max_sentences: int = 12,
-        overlap_percent: int | float = 20,
-        offset: int = 0,
+        mode: Literal["sentence", "token", "hybrid"] = "sentence",
+        max_tokens: conint(ge=30) = 256,
+        max_sentences: conint(ge=1) = 12,
+        overlap_percent: conint(ge=0, le=75) = 20,
+        offset: conint(ge=0) = 0,
         token_counter: Callable[[str], int] | None = None,
     ) -> list[Box]:
         """
@@ -233,7 +230,7 @@ class DocumentChunker:
         Args:
             path (str | Path): The path to the document file.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            mode (str): Chunking mode ('sentence', 'token', or 'hybrid'). Defaults to "sentence".
+            mode (Literal["sentence", "token", "hybrid"]): Chunking mode. Defaults to "sentence".
             max_tokens (int): Maximum number of tokens per chunk.
             max_sentences (int): Maximum number of sentences per chunk.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
@@ -251,7 +248,7 @@ class DocumentChunker:
             FileProcessingError: If an error occurs during file reading or processing.
             MissingTokenCounter: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
             CallbackExecutionError: If a callback function (e.g., custom processors callbacks) fails during execution.
-        """
+        """    
         # Capture all parameters
         params = {k: v for k, v in locals().items() if k not in ["self", "path"]}
 
@@ -259,13 +256,8 @@ class DocumentChunker:
         validated_path = Path(str(path))
 
         if self.verbose:
-            logger.debug(
-                "Validated path: {}, detected extension: {}",
-                validated_path,
-                ext,
-            )
+            logger.info("Starting chunk processing for path: {}.", validated_path)
 
-        text_content = ""  # This will hold the text for chunking
         document_metadata = {"source": str(validated_path)}
 
         # Prioritize custom processors from registry
@@ -274,7 +266,7 @@ class DocumentChunker:
                 str(validated_path), ext
             )
             if self.verbose:
-                logger.debug("Used registered processor: {}", processor_name)
+                logger.info("Used registered processor: {}", processor_name)
         elif ext in self.SUPPORTED_EXTENSIONS - {".pdf"}:
             text_content = self._extract_text(validated_path, ext)
         elif ext == ".pdf":
@@ -295,13 +287,7 @@ class DocumentChunker:
 
         if self.verbose:
             logger.info(
-                "Generated chunks for {} (from {})",
-                validated_path,
-                (
-                    "text-based file"
-                    if ext in self.SUPPORTED_EXTENSIONS - {".pdf"}
-                    else "custom processor"
-                ),
+                "Generated chunks for {}.", validated_path
             )
 
         return chunk_boxes
@@ -312,15 +298,15 @@ class DocumentChunker:
         paths: Iterable[str | Path],
         *,
         lang: str = "auto",
-        mode: str = "sentence",
-        max_tokens: int = 256,
-        max_sentences: int = 12,
-        overlap_percent: int | float = 20,
-        offset: int = 0,
+        mode: Literal["sentence", "token", "hybrid"] = "sentence",
+        max_tokens: conint(ge=30) = 256,
+        max_sentences: conint(ge=1) = 12,
+        overlap_percent: conint(ge=0, le=75) = 20,
+        offset: conint(ge=0) = 0,
         token_counter: Callable[[str], int] | None = None,
         n_jobs: int | None = None,
         show_progress: bool = True,
-        on_errors: str = "raise",
+        on_errors: Literal["raise", "skip", "break"] = "raise",
     ) -> Generator[Box, None, None]:
         """
         Chunks multiple PDF documents from a list of file paths.
@@ -331,7 +317,7 @@ class DocumentChunker:
         Args:
             paths (list[str | Path]): A list of paths to the PDF files.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            mode (str): Chunking mode ('sentence', 'token', or 'hybrid'). Defaults to "sentence".
+            mode (Literal["sentence", "token", "hybrid"]): Chunking mode. Defaults to "sentence".
             max_tokens (int): Maximum number of tokens per chunk.
             max_sentences (int): Maximum number of sentences per chunk.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
@@ -340,7 +326,8 @@ class DocumentChunker:
             n_jobs (int | None): Number of parallel workers to use. If None, uses all available CPUs.
                    Must be >= 1 if specified.
             show_progress (bool): Flag to show or disable the loading bar.
-            on_errors (str): How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
+            on_errors (Literal["raise", "skip", "break"]):
+                How to handle errors during processing. Defaults to 'raise'.
 
         yields:
             Box: `Box` object, representing a chunk with its content and metadata.
@@ -352,12 +339,6 @@ class DocumentChunker:
             FileProcessingError: If an error occurs during file reading or processing.
             MissingTokenCounter: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
         """
-        # Validate that paths is an iterable
-        if not isinstance(paths, Iterable):
-            raise InvalidInputError(
-                "The 'paths' parameter must be an iterable (e.g., a list or tuple) of file paths."
-            )
-
         if self.verbose:
             logger.info("Starting batch PDF chunking for {} documents.", len(paths))
 
@@ -378,11 +359,7 @@ class DocumentChunker:
                         "All files in the list must be .pdf files."
                     )
                 validated_paths_with_ext.append((str(path), ext))
-            except (
-                FileNotFoundError,
-                UnsupportedFileTypeError,
-                InvalidInputError,
-            ) as e:
+            except Exception as e:
                 if self.verbose:
                     logger.warning(
                         "Skipping file {} at index {}. Reason: {}", path, i, e
@@ -393,6 +370,7 @@ class DocumentChunker:
             logger.warning(
                 "No valid PDF files found after validation. Returning empty generator."
             )
+            return iter([])
 
         # Generator needed to process the pdfs pages one by one
         def _extract_pdf_pages():
@@ -442,15 +420,15 @@ class DocumentChunker:
         paths: Iterable[str | Path],
         *,
         lang: str = "auto",
-        mode: str = "sentence",
-        max_tokens: int = 256,
-        max_sentences: int = 12,
-        overlap_percent: int | float = 20,
-        offset: int = 0,
+        mode: Literal["sentence", "token", "hybrid"] = "sentence",
+        max_tokens: conint(ge=30) = 256,
+        max_sentences: conint(ge=1) = 12,
+        overlap_percent: conint(ge=0, le=75) = 20,
+        offset: conint(ge=0) = 0,
         token_counter: Callable[[str], int] | None = None,
         n_jobs: int | None = None,
         show_progress: bool = True,
-        on_errors: str = "raise",
+        on_errors: Literal["raise", "skip", "break"] = "raise",
     ) -> Generator[Box, None, None]:
         """
         Chunks multiple documents from a list of file paths.
@@ -462,7 +440,7 @@ class DocumentChunker:
         Args:
             paths (Iterable[str | Path]): An iterable of paths to the document files.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            mode (str): Chunking mode ('sentence', 'token', or 'hybrid'). Defaults to "sentence".
+            mode (Literal["sentence", "token", "hybrid"]): Chunking mode. Defaults to "sentence".
             max_tokens (int): Maximum number of tokens per chunk.
             max_sentences (int): Maximum number of sentences per chunk.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
@@ -471,7 +449,8 @@ class DocumentChunker:
             n_jobs (int | None): Number of parallel workers to use. If None, uses all available CPUs.
                    Must be >= 1 if specified.
             show_progress (bool): Flag to show or disable the loading bar.
-            on_errors (str): How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
+            on_errors (Literal["raise", "skip", "break"]):
+                How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
 
         yields:
             Box: `Box` object, representing a chunk with its content and metadata.
@@ -485,12 +464,6 @@ class DocumentChunker:
             MissingTokenCounter: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
             CallbackExecutionError: If a callback function (e.g., custom processors callbacks) fails during execution.
         """
-        # Validate that paths is an iterable
-        if not isinstance(paths, Iterable):
-            raise InvalidInputError(
-                "The 'paths' parameter must be an iterable (e.g., a list or tuple) of file paths."
-            )
-
         if self.verbose:
             logger.info("Starting batch chunking for {} documents.", len(paths))
 
@@ -505,11 +478,7 @@ class DocumentChunker:
             try:
                 ext = self._validate_path_extension(path)
                 validated_paths_with_ext.append((str(path), ext))
-            except (
-                FileNotFoundError,
-                UnsupportedFileTypeError,
-                InvalidInputError,
-            ) as e:
+            except Exception as e:
                 if self.verbose:
                     logger.warning(
                         "Skipping file {} at index {}. Reason: {}", path, i, e
@@ -520,7 +489,7 @@ class DocumentChunker:
             logger.warning(
                 "No valid files found after validation. Returning empty generator."
             )
-            return
+            return iter([])
 
         def _extract_texts() -> Generator[str, None, None]:
             for validated_path, ext in validated_paths_with_ext:
@@ -543,6 +512,7 @@ class DocumentChunker:
                 base_metadata = {"source": validated_path}
                 doc_metadatas.append(base_metadata)
 
+                # Prioritize custom processors from registry
                 if is_registered(ext):
                     text_content, processor_name = use_registered_processor(
                         validated_path, ext
@@ -562,5 +532,7 @@ class DocumentChunker:
         for i, chunks_list in enumerate(all_docs_chunks_gen):
             metadata = doc_metadatas[i]
             yield from self._create_chunk_boxes(chunks_list, metadata)
-            if self.verbose:
-                logger.info("Finished generating chunks for {}", metadata.get("source"))
+        if self.verbose and metadata:
+            logger.info(
+                "Finished generating chunks for {} document(s).", len(metadata)
+            )

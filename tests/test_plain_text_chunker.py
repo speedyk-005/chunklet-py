@@ -1,9 +1,3 @@
-"""
-This module contains unit tests for the PlainTextChunker class,
-covering its core functionality, various chunking modes, overlap behavior,
-and batch processing capabilities.
-"""
-
 import pytest
 import re
 
@@ -14,7 +8,6 @@ from chunklet.exceptions import (
     MissingTokenCounterError,
 )
 from loguru import logger
-
 
 # Silent logging
 logger.remove()
@@ -204,9 +197,7 @@ def test_batch_processing_input_validation(chunker):
 
     with pytest.raises(
         InvalidInputError,
-        match=re.escape(
-            "The 'texts' iterable should only contain strings, but found the value '1' [type=int]"
-        ),
+        match=re.escape("The 'texts' iterable should only contain strings, but found the value '1' [type=int]")
     ):
         list(chunker.batch_chunk(texts_input_int))
 

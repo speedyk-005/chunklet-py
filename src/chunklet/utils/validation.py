@@ -1,5 +1,5 @@
-from typing_extensions import TypedDict
 from typing import get_type_hints, Type, Annotated
+from typing_extensions import TypedDict
 from collections.abc import Iterator
 from itertools import tee
 import inspect

@@ -1,9 +1,3 @@
-"""
-This module contains unit tests for the SentenceSplitter class,
-covering its core functionality, multilingual support, fallback mechanisms,
-custom splitter integration, universal override logic, and robust error handling.
-"""
-
 import re
 import pytest
 from chunklet.sentence_splitter import (

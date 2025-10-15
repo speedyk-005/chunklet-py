@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        pip install -e .[dev,document]
+        pip install -e .[dev,document,code]
     - name: Test with pytest
       run: |
         PYTEST_ADDOPTS="" pytest tests

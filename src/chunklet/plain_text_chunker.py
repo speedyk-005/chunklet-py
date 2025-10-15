@@ -1,29 +1,24 @@
-from __future__ import annotations
-from typing import Any, Optional, Literal, Callable, Generator
-from collections.abc import Iterable, Iterator
-from pydantic import conint
 import sys
 import regex as re
 from itertools import tee
-
+from typing import Any, Optional, Literal, Callable, Generator
+from collections.abc import Iterable, Iterator
+from pydantic import conint
+import enlighten   
+from loguru import logger
 # mpire is lazy imported
 
 from chunklet.sentence_splitter import SentenceSplitter, BaseSplitter
-from chunklet.utils.logger import logger
 from chunklet.utils.validation import validate_input
 from chunklet.utils.token_utils import count_tokens
-from chunklet.utils.progress import get_progress_bar
-
 from chunklet.exceptions import (
     InvalidInputError,
     MissingTokenCounterError,
     CallbackExecutionError,
 )
 
-
 # for clauses overlapping and fitting
 CLAUSE_END_TRIGGERS = r";,’：—)&…"
-
 
 # Sentinel to serve as the default value for the separator args in batch chunking
 _sentinel = object()
@@ -57,7 +52,8 @@ class PlainTextChunker:
         Args:
             verbose (bool): Enable verbose logging.
             continuation_marker (str): The marker to prepend to unfitted clauses. Defaults to '...'.
-            token_counter (Callable): Counts tokens in a sentence for token-based chunking.
+            token_counter (Callable[[str], int] | None): Function that counts tokens in text.
+                If None, must be provided when calling chunk() methods.
             sentence_splitter (BaseSplitter | None): An optional BaseSplitter instance.
                 If None, a default SentenceSplitter will be initialized.
 
@@ -78,7 +74,7 @@ class PlainTextChunker:
 
         if self._verbose:
             logger.debug(
-                "Initialized with verbose={}, Default token counter is {}provided.",
+                "PlainTextChunker initialized with verbose={}, Default token counter is {}provided.",
                 self._verbose,
                 "not " if self.token_counter is None else "",
             )
@@ -349,13 +345,11 @@ class PlainTextChunker:
             CallbackExecutionError: If an error occurs during sentence splitting
             or token counting within a chunking task.
         """
-        # f"The 'max_tokens' parameter must be greater than or equal to 30. Got {max_tokens}."
-
         if mode in {"token", "hybrid"} and not (token_counter or self.token_counter):
             raise MissingTokenCounterError()
 
         if self.verbose:
-            logger.info("Single run - Processing for text: {}. .", f"{text[:150]}...")
+            logger.info("Starting chunk processing for text: {}. .", f"{text[:150]}...")
 
         # Adjust limits based on mode
         if mode == "sentence":
@@ -443,7 +437,8 @@ class PlainTextChunker:
             n_jobs (int | None): Number of parallel workers to use. If None, uses all available CPUs.
                    Must be >= 1 if specified.
             show_progress (bool): Flag to show or disable the loading bar.
-            on_errors (Literal["raise", "skip", "break"]): How to handle errors during processing. Defaults to 'raise'.
+            on_errors (Literal["raise", "skip", "break"]):
+                How to handle errors during processing. Defaults to 'raise'.
             separator (Any): A value to be yielded after the chunks of each text are processed.
 
         yields:
@@ -462,8 +457,11 @@ class PlainTextChunker:
 
         def _validate_entry(entry):
             if not isinstance(entry, str):
-                msg = f"The 'texts' iterable should only contain strings, but found the value '{entry}' [type={type(entry).__name__}].\n💡 Hint: Please make sure all items provided to 'batch_chunk' are strings."
-                raise InvalidInputError(msg)
+                raise InvalidInputError(
+                    f"The 'texts' iterable should only contain strings, "
+                    f"but found the value '{entry}' [type={type(entry).__name__}].\n"
+                    "💡 Hint: Please make sure all items provided to 'batch_chunk' are strings."
+                )
             return 1
 
         if n_jobs is not None and n_jobs < 1:
@@ -491,8 +489,8 @@ class PlainTextChunker:
 
         if total_texts == 0:
             if self.verbose:
-                logger.info("Input texts is empty. Returning empty list.")
-            return
+                logger.info("Input texts is empty. Returning empty iterator.")
+            return iter([])
 
         # Wrapper to capture result/exception
         def chunk_func(text: str):
@@ -510,12 +508,17 @@ class PlainTextChunker:
                 return res, None
             except Exception as e:
                 return None, e
+        
+        from mpire import WorkerPool  # Lazy import
 
-        with get_progress_bar(enabled=show_progress) as progress:
-            task = progress.add_task("[green]Processing...", total=total_texts)
-
-            from mpire import WorkerPool  # Lazy import, only needed there.
-
+        manager = enlighten.get_manager()
+        pbar = manager.counter(total=total_texts, desc="Chunking texts...", unit="ticks", color="green")
+        if not show_progress:
+            manager.stop()
+                
+        successful_texts = 0
+        failed_texts = 0
+        try:    
             with WorkerPool(n_jobs=n_jobs) as executor:
                 task_iter = executor.imap(
                     func=chunk_func,
@@ -524,7 +527,10 @@ class PlainTextChunker:
                 )
 
                 for result, error in task_iter:
+                    pbar.update()
+                        
                     if error:
+                        failed_texts += 1
                         if on_errors == "raise":
                             raise error
                         elif on_errors == "break":
@@ -533,9 +539,8 @@ class PlainTextChunker:
                                 f"💡 Hint: Check the logs for more details about the failed task. \nReason: {error}"
                             )
                             break
-                        else:  # ignore
+                        else:  # skip
                             logger.warning(f"Skipping a failed task. \nReason: {error}")
-                            progress.update(task, advance=1)
                             continue
 
                     if _document_context:  # Needed by document chunker
@@ -544,4 +549,13 @@ class PlainTextChunker:
                         yield from result
                         if separator is not _sentinel:
                             yield separator
-                    progress.update(task, advance=1)
+                    successful_texts += 1
+                    
+        finally:
+            if self.verbose:
+                logger.info(
+                    "Batch processing completed: {} successful, {} failed, {} total",
+                    successful_texts, failed_texts, total_texts
+                )
+            manager.stop() # Ensure manager is stopped
+

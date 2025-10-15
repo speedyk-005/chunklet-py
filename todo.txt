@@ -1,4 +1,3 @@
-- replace rich progress by enlighten
 -  replace argparse with typer
 - add support for multiple dir in cli
 
@@ -6,6 +5,8 @@
 
 # what we have done
 - review and update the docstrings 
-- refactor extract_text c]method in document chunker
+- refactor extract_text method in document chunker
+- Intoduced code chunker
+- replace rich progress by enlighten
 
 # done, not yet changelog

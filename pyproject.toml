@@ -38,12 +38,36 @@ dependencies = [
   "indic-nlp-library>=0.90",
   "py3langid>=0.3.0",
   "mpire>=2.10.0",
-  "rich>=13.0.0",
+  "enlighten==1.13.0",
   "python-box>=7.3.0",
   "regex>=2024.11.6",
   "pydantic>=2.0.0",
-  "typing_extensions>=2.0.0"
+  "typing_extensions>=2.0.0",
   ]
+
+[project.optional-dependencies]
+document = [
+  "pypdf>=5.0.8",
+  "pydocx>=0.9.0",
+  "docutils>=0.21.2",
+  "markdownify>=1.1.0",
+  "striprtf>=0.0.29",
+  "beautifulsoup4>=4.13.4",
+]
+
+code = [
+  "defusedxml>=0.7.1",
+  "anytree>=2.12.1",
+]
+
+dev = [
+  "pytest>=8.3.5",
+  "pytest-cov>=6.2.1",
+  "pytest-mock>=3.14.1",
+  "black>=25.1.0",
+  "flake8>=7.3.0",
+  "flake8-pyproject>=1.2.3",
+]
 
 [project.urls]
 Homepage = "https://github.com/speedyk-005/chunklet-py"
@@ -55,31 +79,19 @@ Changelog = "https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md"
 [project.scripts]
 chunklet = "chunklet.cli:main"
 
-[project.optional-dependencies]
-dev = [
-  "pytest>=8.3.5",
-  "pytest-cov>=6.2.1",
-  "pytest-mock>=3.14.1",
-  "black>=25.1.0",
-  "flake8>=7.3.0",
-  "flake8-pyproject>=1.2.3",
-]
-document = [
-  "pypdf>=5.0.8",
-  "pydocx>=0.9.0",
-  "docutils>=0.21.2",
-  "markdownify>=1.1.0",
-  "striprtf>=0.0.29",
-  "beautifulsoup4>=4.13.4",
-]
-
 [build-system]
 requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
-packages = ["chunklet", "chunklet.utils"]
+packages = [
+    "chunklet",
+    "chunklet.utils",
+    "chunklet.document_chunker",
+    "chunklet.experimental.code_chunker",
+    "chunklet.sentence_splitter",
+]
 
 [tool.pytest.ini_options]
 minversion = "7.4"

@@ -1,10 +1,10 @@
-from __future__ import annotations
 from abc import ABC, abstractmethod
 import regex as re
 from pysbd import Segmenter
 from sentsplit.segment import SentSplit
 from sentencex import segment
 from indicnlp.tokenize import sentence_tokenize
+from loguru import logger
 
 from chunklet.sentence_splitter.languages import (
     PYSBD_SUPPORTED_LANGUAGES,
@@ -16,7 +16,6 @@ from chunklet.sentence_splitter.registry import use_registered_splitter, is_regi
 from chunklet.sentence_splitter._fallback_splitter import FallbackSplitter
 from chunklet.utils.detect_text_language import detect_text_language
 from chunklet.utils.validation import validate_input
-from chunklet.utils.logger import logger
 from chunklet.exceptions import InvalidInputError
 
 
@@ -118,6 +117,7 @@ class SentenceSplitter(BaseSplitter):
                 )
             lang = lang_detected if confidence >= 0.7 else lang
 
+        # Prioritize custom splitters from registry
         if is_registered(lang):
             if self.verbose:
                 logger.info("Using registered splitter for {}", lang)

@@ -1,8 +1,3 @@
-"""
-This module contains unit tests for the DocumentChunker class,
-covering its core functionality, document processing, and custom processor integration.
-"""
-
 import pytest
 import re
 from concurrent.futures import ThreadPoolExecutor
