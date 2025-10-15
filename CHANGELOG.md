@@ -63,7 +63,7 @@ This officially boosts language support from 36+ to 40+.
 ### Removed
 
 - **Caching:** Removed the in-memory caching functionality to focus on raw performance optimization.
-- **Python 3.8 Support:** Dropped official support for Python 3.8. The minimum required Python version is now 3.9.
+- **Python 3.8 and 3.9 Support:** Dropped official support for Python 3.8 and 3.9 The minimum required Python version is now 3.10.
 - **CLI Argument:** Removed the `--no-cache` command-line argument.
 - **CLI Argument:** Removed the deprecated `--batch` argument.
 - **Removed `preview_sentences` method:** The `preview_sentences` method was removed from `PlainTextChunker` as the `SentenceSplitter` is now exposed as a separate, dedicated utility.
