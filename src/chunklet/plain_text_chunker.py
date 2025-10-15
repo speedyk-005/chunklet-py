@@ -60,6 +60,9 @@ class PlainTextChunker:
             token_counter (Callable): Counts tokens in a sentence for token-based chunking.
             sentence_splitter (BaseSplitter | None): An optional BaseSplitter instance.
                 If None, a default SentenceSplitter will be initialized.
+
+        Raises:
+            InvalidInputError: If any of the input arguments are invalid or if the provided `sentence_splitter` is not an instance of `BaseSplitter`.
         """
         self._verbose = verbose
         self.token_counter = token_counter
@@ -333,8 +336,7 @@ class PlainTextChunker:
             mode (Literal["sentence", "token", "hybrid"]): Chunking mode. Defaults to "sentence".
             max_tokens (int): Maximum number of tokens per chunk. Defaults to 512.
             max_sentences (int): Maximum number of sentences per chunk. Defaults to 12.
-            overlap_percent (int | float): Percentage of overlap between chunks (0-75).
-                Defaults to 20
+            overlap_percent (int | float): Percentage of overlap between chunks (0-75). Defaults to 20
             offset (int): Starting sentence offset for chunking. Defaults to 0.
             token_counter (callable | None): Optional token counting function. Required for token-based modes only.
 
@@ -344,7 +346,8 @@ class PlainTextChunker:
         Raises:
             InvalidInputError: If any chunking configuration parameter is invalid.
             MissingTokenCounterError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
-            TextProcessingError: If the provided `token_counter` callable raises an exception during token counting.
+            CallbackExecutionError: If an error occurs during sentence splitting
+            or token counting within a chunking task.
         """
         # f"The 'max_tokens' parameter must be greater than or equal to 30. Got {max_tokens}."
 
@@ -444,10 +447,13 @@ class PlainTextChunker:
             separator (Any): A value to be yielded after the chunks of each text are processed.
 
         yields:
-            str or Any: A chunk string, or the separator value.
+            str: A chunk string.
+            Any: The separator value, if provided.
 
         Raises:
-            InvalidInputError: If `texts` is not a list or if `n_jobs` is less than 1.
+            InvalidInputError: If `texts` is not an iterable of strings, or if `n_jobs` is less than 1.
+            MissingTokenCounterError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
+            CallbackExecutionError: If an error occurs during sentence splitting or token counting within a chunking task.
         """
         if isinstance(texts, str):
             raise InvalidInputError(

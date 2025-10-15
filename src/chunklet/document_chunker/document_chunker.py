@@ -60,7 +60,7 @@ class DocumentChunker:
                 If None, a default PlainTextChunker will be initialized.
 
         Raises:
-            InvalidInputError: If the provided plain_text_chunker is not an instance of PlainTextChunker.
+            InvalidInputError: If any of the input arguments are invalid or if the provided `plain_text_chunker` is not an instance of `PlainTextChunker`.
         """
         self._verbose = verbose
 
@@ -150,30 +150,28 @@ class DocumentChunker:
         if self.verbose:
             logger.debug("Extracting text from file: {} with extension: {}", path, ext)
 
-        text_content = ""
         try:
             if ext == ".docx":
-                text_content = self.docx_processor.extract_text(path)
-            else:
-                with open(path, "r", encoding="utf-8", errors="ignore") as f:
-                    raw_content = f.read()
-                    if ext == ".rst":
-                        text_content = rst_to_markdown(raw_content)
-                    elif ext == ".rtf":
-                        if rtf_to_text is None:
-                            raise ImportError(
-                                "The 'striprtf' library is not installed. Please install it with 'pip install striprtf' or install the document processing extras with 'pip install chunklet-py[document]'"
-                            )
-                        text_content = rtf_to_text(raw_content)
-                    else:  # For .txt, .md, and others handled by simple read
-                        text_content = raw_content
+                return self.docx_processor.extract_text(path)
+
+            with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                raw_content = f.read()
+
+            if ext == ".rst":
+                return rst_to_markdown(raw_content)
+            elif ext == ".rtf":
+                if rtf_to_text is None:
+                    raise ImportError(
+                        "The 'striprtf' library is not installed. Please install it with 'pip install striprtf' or install the document processing extras with 'pip install chunklet-py[document]'"
+                    )
+                return rtf_to_text(raw_content)
+            else:  # For .txt, .md, and others handled by simple read
+                return raw_content
 
         except Exception as e:
             raise FileProcessingError(
                 f"Error extracting text from file {path}.\n Details: {e}"
             ) from e
-
-        return text_content
 
     def _create_chunk_boxes(
         self,
@@ -182,6 +180,21 @@ class DocumentChunker:
     ) -> list[Box]:
         """
         Helper to create a list of Box objects for chunks with embedded metadata and auto-assigned chunk numbers.
+
+
+
+        Args:
+            chunks (Iterable[str]): An iterable (e.g., list or generator) of raw text strings,
+                                    each representing a chunk of content.
+            base_metadata (dict[str, Any]): A dictionary containing document-level metadata
+                                            (e.g., 'source' file path, 'page_count' for PDFs)
+                                            to be embedded into each chunk's metadata.
+
+        Returns:
+            list[Box]: A list of `Box` objects. Each `Box` contains:
+                       - 'content' (str): The text of the chunk.
+                       - 'metadata' (dict): A dictionary including 'chunk_num' (int)
+                                            and all key-value pairs from `base_metadata`.
         """
         chunk_boxes = []
         for i, chunk_str in enumerate(chunks, start=1):
@@ -276,7 +289,6 @@ class DocumentChunker:
                 f"Supported extensions are: {self.SUPPORTED_EXTENSIONS}\n"
                 "💡 Hint: You can add support for other file types by providing a custom processor."
             )
-
         # Process as a single block of text
         chunks = self.plain_text_chunker.chunk(text=text_content, **params)
         chunk_boxes = list(self._create_chunk_boxes(chunks, document_metadata))
@@ -471,6 +483,7 @@ class DocumentChunker:
                                      or if the file is a PDF.
             FileProcessingError: If an error occurs during file reading or processing.
             MissingTokenCounter: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
+            CallbackExecutionError: If a callback function (e.g., custom processors callbacks) fails during execution.
         """
         # Validate that paths is an iterable
         if not isinstance(paths, Iterable):

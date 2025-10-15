@@ -1,13 +1,11 @@
-- add a new method to the
-  SentenceSplitter class called get_splitter_name. This method would tell you which splitter will be used for a given language without
-  you having to actually split any text.
 - replace rich progress by enlighten
-- review and update the docstrings
 -  replace argparse with typer
 - add support for multiple dir in cli
 
 
 
 # what we have done
+- review and update the docstrings 
+- refactor extract_text c]method in document chunker
 
 # done, not yet changelog
