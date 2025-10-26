@@ -51,15 +51,26 @@ class PDFProcessor:
         )
 
     def _cleanup_text(self, text: str) -> str:
+
         """Cleans and normalizes extracted PDF text."""
+
         if not text:
+
             return ""
 
+    
+
         text = self.multiple_newline_pattern.sub("\n\n", text)
+
         text = self.standalone_number_pattern.sub("\n", text)
+
         text = self.single_newline_pattern.sub(" ", text)
+
         text = self.word_number_split_pattern.sub(r"\1\2 \n\3", text)
+
         text = self.multiple_space_pattern.sub(" ", text)
+
+    
 
         return text
 
@@ -72,7 +83,7 @@ class PDFProcessor:
             from pypdf import PdfReader
         except ImportError as e:
             raise ImportError(
-                "The 'pypdf' library is not installed. Please install it with 'pip install pypdf' or "
+                "The 'pypdf' library is not installed. Please install it with 'pip install 'pypdf>=5.0.8'' or "
                 "install the document processing extras with 'pip install chunklet-py[document]'"
             ) from e
 

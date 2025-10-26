@@ -1,0 +1,88 @@
+These files store formatted text and plain text.
+
+0 – Plain Text Document, normally used for licensing
+1ST – Plain Text Document, normally preceded by the words "README" (README.1ST)
+600 – Plain Text Document, used in UNZIP history log
+602 – Text602 (T602) document
+ABW – AbiWord document
+ACL – MS Word AutoCorrect List
+AFP – Advanced Function Presentation
+AMI – Lotus Ami Pro
+ANS – American National Standards Institute (ANSI) text
+ASC – ASCII text
+AWW – Ability Write
+BBeB – Broad Band EBook
+CCF – Color Chat 1.0
+CSV – ASCII text as comma-separated values, used in spreadsheets and database management systems
+CWK – ClarisWorks-AppleWorks document
+DBK – DocBook XML sub-format
+DITA – Darwin Information Typing Architecture document
+DOC – Microsoft Word document
+DOCM – Microsoft Word macro-enabled document
+DOCX – document, Office Open XML, there are at least 4 quite different versions of Microsoft's DOCX: 1) ECMA-376, 2)ISO/IEC 29500 Transitional, 3) ISO/IEC 29500 Strict, 4) Microsoft-specific Compatibility Mode variants.
+DOT – Microsoft Word document template
+DOTX – Office Open XML text document template
+DWD – DavkaWriter Heb/Eng word processor file
+EGT – EGT Universal Document
+EPUB – EPUB open standard for e-books
+EVTX – Windows XML EventLog files are system log files used by the Windows operating system[6]
+EZW – Reagency Systems easyOFFER document[7]
+FDX – Final Draft
+FTM – Fielded Text Meta
+FTX – Fielded Text (Declared)
+GDOC – Google Drive Document
+GUIDE – AmigaGuide
+HTML, HTM – HyperText Markup Language
+HWP – Haansoft (Hancom) Hangul Word Processor document
+HWPML – Haansoft (Hancom) Hangul Word Processor Markup Language document
+KPUB – Kobo ebook format
+LOG – Text log file
+LWP – Lotus Word Pro
+MBP – metadata for Mobipocket documents
+MD – Markdown text document
+ME – Plain text document normally preceded by the word "READ" (READ.ME)
+MCW – Microsoft Word for Macintosh (versions 4.0–5.1)
+Mobi – Mobipocket documents
+NB – Mathematica Notebook
+NB – Nota Bene Document (Academic Writing Software)
+NBP – Mathematica Player Notebook
+NEIS – 학교생활기록부 작성 프로그램 (Student Record Writing Program) Document
+NT – N-Triples RDF container (.nt)
+NQ – N-Quads RDF container (.nq)
+ODM – OpenDocument master document
+ODOC – Synology Drive Office Document
+ODT – OpenDocument text document
+OSHEET – Synology Drive Office Spreadsheet
+OTT – OpenDocument text document template
+OMM – OmmWriter text document
+PAGES – Apple Pages document
+PAP – Papyrus word processor document
+PER – Canadian Forces Personnel Appraisal System (CFPAS) Personnel Evaluation Report (PER)
+PDR – Canadian Forces Personnel Appraisal System (CFPAS) Personnel Development Report (PDR)
+PDAX – Portable Document Archive (PDA) document index file
+PDF – Portable Document Format
+PROTONDOC – Proton Docs file shortcut
+QUOX – Question Object File Format for Quobject Designer or Quobject Explorer
+RTF – Rich Text document
+RPT – Crystal Reports
+SDW – StarWriter text document, used in earlier versions of StarOffice
+SE – Shuttle Document
+STW – OpenOffice.org XML (obsolete) text document template
+Sxw – OpenOffice.org XML (obsolete) text document
+TeX – TeX
+TMDX – SoftMaker TextMaker
+INFO – Texinfo
+Troff – Unix OS document processing system
+TXT – ASCII or Unicode plain text file
+UOF – Uniform Office Format
+UOML – Unique Object Markup Language
+VIA – Revoware VIA Document Project File
+WPD – WordPerfect document
+WPS – Microsoft Works document
+WPT – Microsoft Works document template
+WRD – WordIt! document
+WRF – ThinkFree Write
+WRI – Microsoft Write document
+XHTML, XHT – XHTML eXtensible HyperText Markup Language
+XML – eXtensible Markup Language
+XPS – XPS: Open XML Paper Specification

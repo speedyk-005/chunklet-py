@@ -1,7 +1,7 @@
 [project]
 name = "chunklet-py"
 version = "2.0.0"
-description = "A smart multilingual text chunker for LLMs, RAG, and beyond."
+description = "One library to split them all: Sentence, Code, Docs— RAG-ready, token-aware, and multi-format."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
 ]
@@ -38,21 +38,22 @@ dependencies = [
   "indic-nlp-library>=0.90",
   "py3langid>=0.3.0",
   "mpire>=2.10.0",
-  "enlighten==1.13.0",
   "python-box>=7.3.0",
   "regex>=2024.11.6",
-  "pydantic>=2.0.0",
+  "pydantic>=2.11",
   "typing_extensions>=2.0.0",
-  ]
+  "typer>=0.19.0",
+]
 
 [project.optional-dependencies]
 document = [
   "pypdf>=5.0.8",
-  "pydocx>=0.9.0",
+  "mammoth>=1.9.0",
+  "ebooklib>=0.19",
   "docutils>=0.21.2",
   "markdownify>=1.1.0",
   "striprtf>=0.0.29",
-  "beautifulsoup4>=4.13.4",
+  "pylatexenc>=2.10",
 ]
 
 code = [
@@ -77,7 +78,7 @@ Issues = "https://github.com/speedyk-005/chunklet-py/issues"
 Changelog = "https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md"
 
 [project.scripts]
-chunklet = "chunklet.cli:main"
+chunklet = "chunklet.cli:app"
 
 [build-system]
 requires = ["setuptools>=64", "wheel"]
@@ -89,6 +90,7 @@ packages = [
     "chunklet",
     "chunklet.utils",
     "chunklet.document_chunker",
+    "chunklet.document_chunker.converters",
     "chunklet.experimental.code_chunker",
     "chunklet.sentence_splitter",
 ]

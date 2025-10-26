@@ -178,15 +178,15 @@ def test_language_chunking(code_chunker, request, language_fixture, max_tokens):
 
     assert len(chunks) > 0
     assert all(simple_token_counter(chunk.content) <= max_tokens for chunk in chunks)
-    assert all(chunk.start_line <= chunk.end_line for chunk in chunks)
-    assert all(hasattr(chunk, "tree") and chunk.tree for chunk in chunks)
+    assert all(chunk.metadata.start_line <= chunk.metadata.end_line for chunk in chunks)
+    assert all(hasattr(chunk.metadata, "tree") and chunk.metadata.tree for chunk in chunks)
 
     # Validate Line Continuity
     last_end = 0
     for chunk in chunks:
         if last_end > 0:
-            assert chunk.start_line > last_end
-        last_end = chunk.end_line
+            assert chunk.metadata.start_line > last_end
+        last_end = chunk.metadata.end_line
 
 
 # --- Docstring Tests ---
@@ -321,10 +321,11 @@ def test_batch_chunk_success(code_chunker, multiple_sources):
     # Verify all chunks have required attributes
     for chunk in chunks:
         assert hasattr(chunk, "content")
-        assert hasattr(chunk, "tree")
-        assert hasattr(chunk, "start_line")
-        assert hasattr(chunk, "end_line")
-        assert hasattr(chunk, "source_path")
+        assert hasattr(chunk.metadata, "tree")
+        assert hasattr(chunk.metadata, "start_line")
+        assert hasattr(chunk.metadata, "end_line")
+        assert hasattr(chunk.metadata, "source_path")
+        assert hasattr(chunk.metadata, "chunk_num")
 
 
 def test_batch_chunk_empty_sources(code_chunker):
@@ -410,7 +411,4 @@ def test_batch_chunk_different_max_tokens(code_chunker, multiple_sources):
         # Verify chunks don't exceed token limit
         for chunk in chunks:
             assert simple_token_counter(chunk.content) <= max_tokens
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+         

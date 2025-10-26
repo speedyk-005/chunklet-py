@@ -14,11 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Code Chunker Introduction:** Introduced `CodeChunker`, a rule-based language agnostic chunker for syntax-aware chunking of source code.
 - **Expanded Language Support:** Integrated `sentsplit`, `sentencex`, and `indic-nlp-library` for more accurate and comprehensive sentence splitting across a wider range of languages.
 This officially boosts language support from 36+ to 40+.
-- **Error Handling**: Added an `on_errors` parameter to `batch_chunk` methods to allow for more flexible error handling (raise, skip, or break).
-- **Faster Language Detection**: Optimized language detection by using only the first 500 characters of the input text. This significantly improves performance, especially for large documents, without compromising accuracy for language identification.
+- **Error Handling in batch methods**: Added an `on_errors` parameter to `batch_chunk` methods to allow for more flexible error handling (raise, skip, or break).
 - **CLI Multiple Input Files:** Added an `--input-files` argument to allow processing of multiple specific files.
-- **CLI Metadata Flag:** Added a `-m, --metadata` flag to the CLI to display chunk metadata in the output.
-- **Document Chunker:** Introduced `DocumentChunker` to handle various file formats like `.pdf`, `.docx`, `.txt`, `.md`, `.rst`, `.rtf`.
+- **Document Chunker:** Introduced `DocumentChunker` to handle various file formats like `.pdf`, `.docx`, `.txt`, `.md`, `.rst`, `.rtf`, `.tex`, `.html/hml`, `.epub`.
 - **Show Progress Parameter:** Added `show_progress` parameter to `batch_chunk` in `PlainTextChunker` to allow users to control the display of the progress bar.
 - **Custom Processors:** Introduced support for custom document processors, allowing users to define their own logic for extracting text from various file types.
 - **New Custom Exception Types:** Introduced more specific error types like `FileProcessingError`, `UnsupportedFileTypeError`, `TokenLimitError` and `CallbackExecutionError`.
@@ -26,14 +24,17 @@ This officially boosts language support from 36+ to 40+.
 
 ### Changed
 
-- **Streamlined Validation with Typeguard:** Adopted Typeguard exclusively for validation + manual validations, replacing Pydantic models and centralizing runtime type checking. This results in faster, more consistent, and lower-overhead validation.
+- **CLI Refactoring:**
+    - Replaced `argparse` with `typer` and overhauled command-line arguments for file and directory handling.
+    - Replaced the old `--file`, `--input-files`, and `--input-dir` options with new `--file` (`-f`) and `--dir` (`-d`) options.
+    - Both new options accept one or more paths, providing a more consistent and powerful way to specify input.
+**Validation with Pydantic `validate_call`:** Replaced Pydantic BaseModel with `pydantic.validate_call` for lightweight and easier validation, centralizing runtime type checking.       
 - **Sentence Splitter Refactoring:**
     - Refactored the `SentenceSplitter` to be more modular and extensible. The management of custom splitters has been moved to a new `registry` module, which provides a centralized way to register and use custom splitter functions.
     - Introduced a new way of registering custom splitters using the `register_splitter` function and the `@registered_splitter` decorator, replacing the old dictionary-based approach. This new API is more explicit, provides better validation, and is easier to use.
 - **Improved FallbackSplitter:** Replaced the existing universal sentence splitter with a more robust, multi-stage version. The new splitter offers more accurate handling of abbreviations, numbered lists, and complex punctuation, and has a larger punctuation coverage, improving fallback support for unsupported languages.
 - **SentenceSplitter Extraction:** The core sentence splitting logic, previously embedded within `PlainTextChunker`, has been extracted and consolidated into a dedicated `SentenceSplitter` module. This significantly improves modularity, reusability, and maintainability across the library.
 - **Clause Delimiters**: Added ellipsis to the list of clause delimiters for more accurate chunking.
-- **Logging**: Linked `loguru` logger with `rich` for a cleaner and more beautiful logging experience that integrates seamlessly with progress bars.
 - **Batch Chunking Flexibility:** Modified `PlainTextChunker.batch_chunk` to accept any `Iterable` of strings for the `texts` parameter, instead of being restricted to `list`.
 - **Memory Optimization:** Refactored all batch methods in the lib to fully utilize generators, yielding chunks one at a time to reduce memory footprint, especially for large documents. That also means you dont have to wait for the chunks fully be processed before start using them.
 - **Memory Friendly caching:** Replaced `functools.lrucache` with `cachetools.cache` to avoid instance references in cache keys to prevent unnecessary memory retention.
@@ -54,16 +55,15 @@ This officially boosts language support from 36+ to 40+.
     - Improved logic for handling sentences that exceed max_tokens or max_sentences. The `_find_clauses_that_fit` method's output (fitted, unfitted) is now more accurately integrated, ensuring that sentences are correctly split and assigned to chunks.
     - Modified `_find_clauses_that_fit` to return a list of str instead of a tuple of list of str for easier control. That Ensures that unfitted sentences are properly joined and accounted for when starting a new chunk after an overlap.
     - Use incremental token recalculation for better performance.
-    - Artifacts handling: Ignore the last chars after the first 150 ones in the loop around sentences. Reason: if the original text to chunk has parts not well written. (e.g. long text stream without punctuations, embeded images urls, ...)
+    - Artifacts handling: Ignore the last chars after the first 150 ones in the loop around sentences. Reason: if the original text to chunk has parts not well written. (e.g. long text stream without punctuation';lkjhgfdsas, embeded images urls, ...)
 - **Absolute Imports:** Converted all relative imports to absolute imports within the `chunklet` package for better clarity and to avoid potential import issues.
-- **CLI Aliases:** Added `-f` as an alias for `--file` and `-d` as an alias for `--input-dir`.
 - **Default Limits:** Changed the default `max_tokens` from 512 to 256 and `max_sentences` from 100 to 12.
 - **Continuation marker:** Exposed continuation marker so users can define thier own or set it to an empty str to disabled it.
 
 ### Removed
 
 - **Caching:** Removed the in-memory caching functionality to focus on raw performance optimization.
-- **Python 3.8 and 3.9 Support:** Dropped official support for Python 3.8 and 3.9 The minimum required Python version is now 3.10.
+- **Python 3.8 and 3.9 Support:** Dropped official support for Python 3.8 and 3.9. The minimum required Python version is now 3.10.
 - **CLI Argument:** Removed the `--no-cache` command-line argument.
 - **CLI Argument:** Removed the deprecated `--batch` argument.
 - **Removed `preview_sentences` method:** The `preview_sentences` method was removed from `PlainTextChunker` as the `SentenceSplitter` is now exposed as a separate, dedicated utility.
@@ -128,7 +128,7 @@ This officially boosts language support from 36+ to 40+.
 - **Custom Sentence Splitters:** Added support for integrating custom sentence splitting functions, allowing users to define their own logic for specific languages or requirements.
 - **Robust fallback splitter:** Switched to a simpler, more robust and predictable sentence splitter fallback. Reduced over splitting and merging.  
 - **Custom Exception Types:** Introduced `ChunkletError`, `InvalidInputError`, and `TokenNotProvidedError` for more specific and robust error handling across the library.
-- **Progress Bar for Batch Processing**: Visual feedback for batch processing with a `rich` progress bar.
+- **Progress Bar for Batch Processing**: Visual feedback for batch processing with a mpire progress bar.
 - **Faster batching**: On `n_jobs=1`, mpire is not used to prevent overheads. on `n_jobs>=2` batch are process with group of 2 per process. 
 
 ### Changed
@@ -137,7 +137,7 @@ This officially boosts language support from 36+ to 40+.
 - **_get_overlap_clauses Logic:** Simplified the logic for calculating overlap clauses by filtering empty clauses and improving the capitalization check.
 - **Improved fallback splitter:** Used `p{Lu}`, `p{Ll}` in `regex_splitter.py` to identify and handle abbreviations and acronyms more accurately across different languages.                
 - **Token Counter Error Handling:** Enhanced robustness by introducing a helper method to safely count tokens and handle potential errors from user-provided token counters. On error, operation is aborted.
-- **LRU Cache Optimization:** Increased `lru_cache` maxsize from 25 to 256 for improved caching performance.
+- **LRU Cache Optimization:** - Made caching mechanism to be internal and subtle and increased `lru_cache` maxsize from 25 to 256 for improved caching performance.
 - **`preview_sentences` Enhanced Output:** The `preview_sentences` function now returns a tuple containing the list of sentences and any warnings encountered during processing, allowing for better insight into potential issues.
   
 ### Fixed

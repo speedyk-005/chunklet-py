@@ -33,14 +33,15 @@ Inspired by:
 import sys
 import regex as re 
 from pathlib import Path
-from typing import Literal, Callable, Generator
-from pydantic import conint
+from typing import Literal, Callable, Generator, Annotated
+from collections.abc import Iterable
+from functools import partial
+from pydantic import Field
 import defusedxml.ElementTree as ET
 from collections import defaultdict 
 from box import Box
 from anytree import Node, RenderTree
 from loguru import logger
-import enlighten
 
 from chunklet.experimental.code_chunker.patterns import (
     SINGLE_LINE_COMMENT,
@@ -58,7 +59,8 @@ from chunklet.experimental.code_chunker.helpers import (
     is_binary_file,
     is_python_code,
 )
-from chunklet.utils.validation import validate_input
+from chunklet.utils.batch_runner import run_in_batch
+from chunklet.utils.validation import validate_input, safely_count_iterable, restricted_iterable
 from chunklet.utils.token_utils import count_tokens
 from chunklet.exceptions import (
     InvalidInputError,
@@ -102,13 +104,6 @@ class CodeChunker:
         """
         self.token_counter = token_counter
         self.verbose = verbose
-        
-        if self.verbose:
-            logger.debug(
-                "CodeChunker Initialized with verbose={}, Default token counter is {}provided.",
-                self.verbose,
-                "not " if self.token_counter is None else "",
-            )
 
     def _read_source(self, source: str | Path) -> str:
         """Retrieve source code from file or treat input as raw string.
@@ -132,7 +127,7 @@ class CodeChunker:
                 with open(path, "r", encoding="utf-8", errors="replace") as f:
                     content = f.read()
                     if self.verbose:
-                        logger.debug("Successfully read %d characters from {}", len(content), path)
+                        logger.info("Successfully read %d characters from {}", len(content), path)
                     return content
             except Exception as e:
                 raise FileProcessingError(f"Failed to read file: {path}") from e
@@ -425,6 +420,7 @@ class CodeChunker:
                         doc = buffer.pop("DOC", [])  
                         self._flush_box(curr_struct, snippet_boxes, buffer) 
                         buffer.clear()
+                        buffer["doc"] = doc
             
             # We don't want to extract nestled blocks
             if func_start:
@@ -500,14 +496,16 @@ class CodeChunker:
                 if curr_chunk:  # avoid empty chunk creation
                     sub_boxes.append(Box({
                         "content": "\n".join(curr_chunk),
-                        "tree": f"• {box.tree}",
-                        "start_line": line_no - len(curr_chunk),
-                        "end_line": line_no - 1,
-                        "source_path": str(source)
-                            if isinstance(source, (str, Path))
-                            else "N/A",
+                        "metadata": {
+                            "tree": f"• {box.tree}",
+                            "start_line": line_no - len(curr_chunk),
+                            "end_line": line_no - 1,
+                            "source_path": str(source)
+                                if isinstance(source, (str, Path))
+                                else "N/A",
+                        }
                     }))
-                curr_chunk = []
+                curr_chunk.clear()
                 token_count = 0
 
             curr_chunk.append(line)
@@ -517,12 +515,14 @@ class CodeChunker:
         if curr_chunk:
             sub_boxes.append(Box({
                 "content": "\n".join(curr_chunk),
-                "tree": f"• {box.tree}",
-                "start_line": box.end_line - len(curr_chunk) + 1,
-                "end_line": box.end_line,
-                "source_path": str(source) if (
-                    isinstance(source, Path) or is_path_like(source)
-                ) else "N/A",
+                "metadata": {
+                    "tree": f"• {box.tree}",
+                    "start_line": box.end_line - len(curr_chunk) + 1,
+                    "end_line": box.end_line,
+                    "source_path": str(source) if (
+                        isinstance(source, Path) or is_path_like(source)
+                    ) else "N/A",
+                },
             }))
 
         return sub_boxes
@@ -532,7 +532,7 @@ class CodeChunker:
         self,
         source: str | Path,
         *,
-        max_tokens: conint(ge=30) = 256,
+        max_tokens: Annotated[int, Field(ge=12)] = 256,
         token_counter: Callable | None = None,
         include_comments: bool = False,
         docstring_mode: Literal["summary", "all", "excluded"] = "summary",
@@ -625,23 +625,29 @@ class CodeChunker:
                 else:  # Else split further
                     if self.verbose:
                         logger.warning("Splitting oversized block ({} tokens) into sub-chunks", box_tokens)
-                    result_boxes.extend(self._split_oversized(box, max_tokens, source, token_counter))
+                    sub_chunks = self._split_oversized(box, max_tokens, source, token_counter)
+                    for sub_chunk in sub_chunks:
+                        sub_chunk.metadata.chunk_num = len(result_boxes) + 1
+                        result_boxes.append(sub_chunk)
                     i += 1
             else: 
                # too big but some merged: flush
                 merged_box = Box({
                     "content": "\n".join(merged_content),
-                    "tree": f"• {max(merged_tree_set, key=len)}",
-                    "start_line": merged_start_line,
-                    "end_line": merged_end_line,
-                    "source_path": str(source) if (
-                        isinstance(source, Path) or is_path_like(source)
-                    ) else "N/A",
+                    "metadata": {
+                        "chunk_num": len(result_boxes) + 1,
+                        "tree": f"• {max(merged_tree_set, key=len)}",
+                        "start_line": merged_start_line,
+                        "end_line": merged_end_line,
+                        "source_path": str(source) if (
+                            isinstance(source, Path) or is_path_like(source)
+                        ) else "N/A",
+                    }
                 })
                 result_boxes.append(merged_box)
                 
-                merged_content = []
-                merged_tree_set = set()
+                merged_content.clear()
+                merged_tree_set.clear()
                 merged_start_line = None
                 merged_end_line = None
                 token_count = 0 
@@ -650,15 +656,18 @@ class CodeChunker:
         if merged_content:
             merged_box = Box({
                 "content": "\n".join(merged_content),
-                "tree": f"• {max(merged_tree_set, key=len)}",
-                "start_line": merged_start_line,
-                "end_line": merged_end_line,
-                "source_path": str(source) if (
-                    isinstance(source, Path) or is_path_like(source)
-                ) else "N/A",
+                "metadata": {
+                    "chunk_num": len(result_boxes) + 1,
+                    "tree": f"• {max(merged_tree_set, key=len)}",
+                    "start_line": merged_start_line,
+                    "end_line": merged_end_line,
+                    "source_path": str(source) if (
+                        isinstance(source, Path) or is_path_like(source)
+                    ) else "N/A",
+                }
             })
             result_boxes.append(merged_box)
-
+            
         if self.verbose:
             logger.info("Generated {} chunk(s) from source", len(result_boxes))
             
@@ -667,11 +676,11 @@ class CodeChunker:
     @validate_input
     def batch_chunk(
         self,
-        sources: list[str | Path],
+        sources: restricted_iterable(str | Path),
         *,
-        max_tokens: conint(ge=30) = 256,
+        max_tokens: Annotated[int, Field(ge=12)] = 256,
         token_counter: Callable[[str], int] | None = None,
-        n_jobs: int | None = None,
+        n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "skip", 
     ) -> Generator[Box, None, None]:
@@ -682,7 +691,7 @@ class CodeChunker:
         applying consistent chunking rules across all inputs.
 
         Args:
-            sources (list[str | Path]): List of file paths or raw code strings to process.
+            sources (restricted_iterable[str | Path]): A restricted iterable of file paths or raw code strings to process.
             max_tokens (int): Maximum tokens per chunk. Defaults to 256.
             token_counter (Callable[[str], int] | None): Token counting function.
                 Uses instance counter if None.
@@ -700,80 +709,22 @@ class CodeChunker:
             FileProcessingError: Source file cannot be read.
             TokenLimitError: Structural block exceeds max_tokens in strict mode.
             Callbackexecutionerror: If the token counter fails or returns an invalid type.
-        """
-        # Validate that sources is a list of strings or Paths
-        if not (isinstance(sources, list) and 
-                all(isinstance(source, (str, Path)) for source in sources)):
-            raise InvalidInputError("The 'sources' parameter must be a list of strings or Path objects.")
-            
-        if n_jobs is not None and n_jobs < 1:
-            raise InvalidInputError(
-                "The 'n_jobs' parameter must be an integer greater than or equal to 1, or None.\n"
-                "💡 Hint: Use `n_jobs=None` to use all available CPU cores."
-            )
-        
-        total_sources = len(sources)
+        """            
+        chunk_func = partial(
+            self.chunk,
+            max_tokens=max_tokens,
+            token_counter=token_counter or self.token_counter,
+        )
 
-        if self.verbose:
-            logger.info(
-                "Processing {} text(s) in batch mode with n_jobs={}.",
-                total_sources,
-                n_jobs if n_jobs is not None else "default",
-            )
+        processed_results = run_in_batch(
+            func=chunk_func,
+            iterable_of_args=sources,
+            iterable_name="sources",
+            n_jobs=n_jobs,
+            show_progress=show_progress,
+            on_errors=on_errors,
+            verbose=self.verbose,
+        )
 
-        if not sources:
-            logger.info("Input sources is empty. Returning empty iterator.")
-            return iter([])
-           
-        # Wrapper to capture result/exception
-        def chunk_func(source: str | Path):
-            try:
-                return self.chunk(
-                    source=source,
-                    max_tokens=max_tokens,
-                    token_counter=token_counter,
-                ), None
-            except Exception as e:
-                return None, e
-                
-        from mpire import WorkerPool  # Lazy import
-                
-        manager = enlighten.get_manager()
-        pbar = manager.counter(total=total_sources, desc="Chunking sources...", unit="sources", color="green")
-        if not show_progress:
-            manager.stop() 
-                
-        successful_sources = 0
-        failed_sources = 0
-        try:    
-            with WorkerPool(n_jobs=n_jobs) as executor:
-                task_iter = executor.imap_unordered(chunk_func, sources)
-                
-                for result, error in task_iter:
-                    pbar.update() 
-          
-                    if error:
-                        failed_sources += 1          
-                        if on_errors == "raise":
-                            raise error
-                        elif on_errors == "break":
-                            logger.error(
-                                "A task in 'batch_chunk' failed. Returning partial results.\n"
-                                f"💡 Hint: Check the logs for more details about the failed task. \nReason: {error}"
-                            )
-                            break
-                        else:  # skip
-                            logger.warning(f"Skipping a failed task. \nReason: {error}")
-                            continue
-                
-                    else:
-                        successful_sources += 1
-                        yield from result 
-                
-        finally:
-            if self.verbose:
-                logger.info(
-                    "Batch processing completed: {} successful, {} failed, {} total",
-                    successful_sources, failed_sources, total_sources
-                )
-            manager.stop() # Ensure manager is stopped
+        for doc_chunks in processed_results:
+            yield from doc_chunks

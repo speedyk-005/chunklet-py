@@ -37,9 +37,10 @@ Design Principles
 
 Limitations
 -----------
-`CodeChunker` assumes syntactically conventional code. Highly obfuscated, minified,
+- `CodeChunker` assumes syntactically conventional code. Highly obfuscated, minified,
 or macro-generated sources may not fully respect its boundary patterns, though such
 cases fall outside its intended domain.
+- Nesled docstrings or comments blocks is not well supported
 
 Summary
 -------

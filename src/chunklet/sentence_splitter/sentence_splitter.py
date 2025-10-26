@@ -1,5 +1,7 @@
+import sys
 from abc import ABC, abstractmethod
 import regex as re
+from py3langid.langid import LanguageIdentifier, MODEL_FILE
 from pysbd import Segmenter
 from sentsplit.segment import SentSplit
 from sentencex import segment
@@ -12,9 +14,8 @@ from chunklet.sentence_splitter.languages import (
     SENTENCEX_UNIQUE_LANGUAGES,
     INDIC_NLP_UNIQUE_LANGUAGES,
 )
-from chunklet.sentence_splitter.registry import use_registered_splitter, is_registered
+from chunklet.sentence_splitter.registry import CustomSplitterRegistry
 from chunklet.sentence_splitter._fallback_splitter import FallbackSplitter
-from chunklet.utils.detect_text_language import detect_text_language
 from chunklet.utils.validation import validate_input
 from chunklet.exceptions import InvalidInputError
 
@@ -51,18 +52,23 @@ class SentenceSplitter(BaseSplitter):
     - Intelligent Post-processing: Cleans up split sentences by filtering empty strings and rejoining stray punctuation.
     """
 
+    @validate_input
     def __init__(self, verbose: bool = True):
         """
         Initializes the SentenceSplitter.
 
         Args:
+            text (str): The input text to be split.      
             verbose (bool): If True, enables verbose logging for debugging and informational messages.
         """
-        if not isinstance(verbose, bool):
-            raise InvalidInputError("The 'verbose' flag must be a boolean value.")
-
         self.verbose = verbose
+        self.custom_splitter_registry = CustomSplitterRegistry()
         self.fallback_splitter = FallbackSplitter()
+        
+        # Create a normalized identifier for langid
+        self.identifier = LanguageIdentifier.from_pickled_model(
+            MODEL_FILE, norm_probs=True
+        )
 
     def _filter_sentences(self, sentences: list[str]) -> list[str]:
         """
@@ -78,50 +84,68 @@ class SentenceSplitter(BaseSplitter):
         for sent in sentences:
             stripped_sent = sent.strip()
             if stripped_sent:
+                # If sentence is made of stray punctuation only
                 if re.fullmatch(r"[\p{P}\p{S}]+", stripped_sent):
-                    if (
-                        processed_sentences
-                    ):  # Ensure there's a previous sentence to append to
-                        processed_sentences[-1] += stripped_sent[
-                            :5
-                        ]  # Limits to the first 5 ones
-                    else:  # If no previous sentence, just add it
+                    if processed_sentences:
+                        # Limits to the first 5 ones
+                        processed_sentences[-1] += stripped_sent[:5]
+                    else: 
                         processed_sentences.append(stripped_sent[:2])
                 else:
-                    processed_sentences.append(sent.rstrip())  # Use sent.rstrip() here
+                    processed_sentences.append(sent.rstrip())  
         return processed_sentences
 
     @validate_input
-    def split(self, text: str, lang: str) -> list[str]:
+    def detected_top_language(self, text: str) -> tuple[str, float]:
         """
-        Splits text into sentences using language-specific algorithms.
-        Automatically detects language and prioritizes specialized libraries,
-        falling back to a universal rule-based splitter for broad coverage.
+        Detects the top language of the given text using py3langid.
 
         Args:
-            text (str): The input text to split.
+            text (str): The input text to detect the language for.
+
+        Returns:
+            tuple[str, float]: A tuple containing the detected language code and its confidence.
+        """
+        lang_detected, confidence = self.identifier.classify(text)
+        if self.verbose:
+            logger.info(
+                "Language detection: '{}' with confidence {}. Low confidence might affect splitting reliability.",
+                lang_detected,
+                f"{round(confidence)  * 10}/10",
+            )
+        return lang_detected, confidence
+
+    @validate_input
+    def split(self, text: str, lang: str = "auto") -> list[str]:
+        """
+        Splits a given text into a list of sentences.
+
+        Args:
+            text (str): The input text to be split.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto').
 
         Returns:
             list[str]: A list of sentences.
         """
+        if not text:
+            if self.verbose:
+                logger.info("Input text is empty. Returning empty list.")
+            return []
         sentences = []
 
         if lang == "auto":
-            lang_detected, confidence = detect_text_language(text)
             if self.verbose:
-                logger.info(
-                    "Language detection: '{}' with confidence {}",
-                    lang_detected,
-                    f"{round(confidence)  * 10}/10",
+                logger.warning(
+                    "The language is set to `auto`. Consider setting the `lang` parameter to a specific language to improve reliability."
                 )
+            lang_detected, confidence = self.detected_top_language(text)
             lang = lang_detected if confidence >= 0.7 else lang
 
         # Prioritize custom splitters from registry
-        if is_registered(lang):
+        if self.custom_splitter_registry.is_registered(lang):
             if self.verbose:
                 logger.info("Using registered splitter for {}", lang)
-            sentences, splitter_name = use_registered_splitter(text, lang)
+            sentences, splitter_name = self.custom_splitter_registry.split(text, lang)
             if self.verbose:
                 logger.info("Using registered splitter: {}", splitter_name)
 
@@ -145,18 +169,21 @@ class SentenceSplitter(BaseSplitter):
                 logger.info("Using sentencex splitter")
             sentences = segment(lang, text)
 
-        else:  # Fallback to universal rule-based splitter
+        else: 
             if self.verbose:
-                logger.info("Using a universal rule-based splitter")
-                sentences = self.fallback_splitter.split(text)
+                logger.warning(
+                    "Using a universal rule-based splitter.\n"
+                    "Reason: Language not supported or detected with low confidence."
+                )
+            sentences = self.fallback_splitter.split(text)
 
         # Apply post-processing filter
         processed_sentences = self._filter_sentences(sentences)
 
         if self.verbose:
-            logger.info(
-                "Text splitted into sentences. Total sentences detected: {}",
-                len(processed_sentences),
-            )
+                logger.info(
+                    "Text splitted into sentences. Total sentences detected: {}",
+                    len(processed_sentences),
+                )
 
         return processed_sentences

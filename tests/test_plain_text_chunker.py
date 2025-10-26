@@ -33,6 +33,8 @@ def chunker():
     """Provides a configured Chunklet instance for testing"""
 
     def simple_token_counter(text: str) -> int:
+        if "fail" in text:
+            raise ValueError("Intentional failure")
         return len(text.split())
 
     return PlainTextChunker(token_counter=simple_token_counter)
@@ -41,10 +43,10 @@ def chunker():
 # --- Core Tests ---
 def test_init_validation_error():
     """Test that InvalidInputError is raised for invalid initialization parameters."""
-    pattern = re.escape(
-        "[token_counter] Input should be callable (input='Not a callable', type=str)"
-    )
-    with pytest.raises(InvalidInputError, match=pattern):
+    with pytest.raises(
+        InvalidInputError,
+        match=re.escape("(token_counter) Input should be callable.")
+    ):
         PlainTextChunker(token_counter="Not a callable")
 
 
@@ -197,27 +199,19 @@ def test_batch_processing_input_validation(chunker):
 
     with pytest.raises(
         InvalidInputError,
-        match=re.escape("The 'texts' iterable should only contain strings, but found the value '1' [type=int]")
+        match=re.escape("Input should be a valid string.")
     ):
         list(chunker.batch_chunk(texts_input_int))
 
-    # The original test for n_jobs can remain
+    # Test n_jobs with an invalid type  
     with pytest.raises(
         InvalidInputError,
-        match="The 'n_jobs' parameter must be an integer greater than or equal to 1, or None",
+        match=re.escape("(n_jobs) Input should be greater than or equal to 1.")
     ):
         list(chunker.batch_chunk(["some text"], n_jobs=-1))
 
-
 def test_batch_chunk_error_handling_on_task(chunker):
     """Test the on_errors parameter in batch_chunk."""
-
-    def failing_token_counter(text: str) -> int:
-        if "fail" in text:
-            raise ValueError("Intentional failure")
-        return len(text.split())
-
-    chunker.token_counter = failing_token_counter
 
     texts = ["This is ok.", "This will fail.", "This will not be processed."]
 
@@ -262,3 +256,4 @@ def test_batch_chunk_with_separator(chunker, separator, texts, expected_output):
     result = list(chunker.batch_chunk(texts, separator=separator))
 
     assert result == expected_output
+
