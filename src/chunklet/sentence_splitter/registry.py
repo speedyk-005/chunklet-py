@@ -2,7 +2,7 @@ import inspect
 from typing import Callable
 from pydantic import TypeAdapter, ValidationError
 from chunklet.utils.validation import validate_input, pretty_errors
-from chunklet.exceptions import CallbackExecutionError, InvalidInputError
+from chunklet.exceptions import CallbackError
 
 
 class CustomSplitterRegistry:
@@ -11,13 +11,18 @@ class CustomSplitterRegistry:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(CustomSplitterRegistry, cls).__new__(cls)
-            cls._instance._splitters: Dict[str, Tuple[str, Callable]] = {}
+            cls._instance._splitters: dict[str, tuple[str, Callable]] = {}
         return cls._instance
 
     @property
     def splitters(self):
-        return self._splitters
-        
+        """
+        Returns a shallow copy of the dictionary of registered splitters.
+
+        This prevents external modification of the internal registry state.
+        """
+        return self._splitters.copy()
+
     @validate_input
     def is_registered(self, lang: str) -> bool:
         """
@@ -25,13 +30,9 @@ class CustomSplitterRegistry:
         """
         return lang in self._splitters
 
-
     @validate_input
     def register(
-        self,
-        *langs: str,
-        callback: Callable[str, list[str]],
-        name: str | None = None
+        self, *langs: str, callback: Callable[str, list[str]], name: str | None = None
     ):
         """
         Register a splitter callback for one or more languages.
@@ -39,30 +40,32 @@ class CustomSplitterRegistry:
         Args:
             *langs: One or more language codes (str)
             callback: Callable that takes exactly one argument (the text to split)
-                (or two if it is a bound method with 'self')
             name (str, optional): The name of the splitter. Defaults to the function name.
 
         Raises:
-            TypeError: If callback is not callable or has the wrong number of parameters.
+            InvalidInputError: If the provided arguments are not valid.
         """
-        # Validate it accepts exactly one argument (or two if first is 'self')
         sig = inspect.signature(callback)
         params = list(sig.parameters.values())
+
+        # Exclude 'self' if it's a method
         if params and params[0].name == "self":
             params = params[1:]
-        if len(params) != 1:
+
+        # Filter for required parameters (those without a default value)
+        required_params = [p for p in params if p.default is inspect.Parameter.empty]
+
+        if len(required_params) != 1:
             param_list = ", ".join(p.name for p in params)
-            raise InvalidInputError(
-                f"1 validation error(s) for {callback.__name__!r}\n"
-                "1) Input signature mismatched ({param_list}).\n"
-                f"  Expected exactly one parameter (excluding 'self').\n"
-                f"  💡Hint: Define the function like `def splitter(text): ...`"
+            raise TypeError(
+                f"'{callback.__name__}' has signature ({param_list}).\n"
+                "Expected exactly one required parameter to accept the text.\n"
+                "💡Hint: Optional parameters with default values are allowed."
             )
 
         splitter_name = name or callback.__name__
         for lang in langs:
             self._splitters[lang] = (splitter_name, callback)
-
 
     @validate_input
     def unregister(self, *langs: str) -> None:
@@ -75,12 +78,14 @@ class CustomSplitterRegistry:
         for lang in langs:
             self._splitters.pop(lang, None)
 
+    def clear(self) -> None:
+        """
+        Clears all registered splitters from the registry.
+        """
+        self._splitters.clear()
+
     @validate_input
-    def split(
-        self,
-        text: str,
-        lang: str
-    ) -> tuple[list[str], str]:
+    def split(self, text: str, lang: str) -> tuple[list[str], str]:
         """
         Processes a text using a splitter registered for the given language.
 
@@ -92,12 +97,12 @@ class CustomSplitterRegistry:
             tuple[list[str], str]: A tuple containing a list of sentences and the name of the splitter used.
 
         Raises:
-            CallbackExecutionError: If the splitter callback fails.
+            CallbackError: If the splitter callback fails.
             TypeError: If the splitter returns the wrong type.
         """
         splitter_info = self._splitters.get(lang)
         if not splitter_info:
-            raise CallbackExecutionError(
+            raise CallbackError(
                 f"No splitter registered for language '{lang}'.\n"
                 f"💡Hint: Use `.register('{lang}', fn=your_function)` first."
             )
@@ -111,10 +116,10 @@ class CustomSplitterRegistry:
             validator.validate_python(result)
         except ValidationError as e:
             e.subtitle = f"{name} result"
-            e.hint = f"💡Hint: Make sure your splitter returns a list of strings."
-            raise CallbackExecutionError(f"{pretty_errors(e)}.\n") from None
+            e.hint = "💡Hint: Make sure your splitter returns a list of strings."
+            raise CallbackError(f"{pretty_errors(e)}.\n") from None
         except Exception as e:
-            raise CallbackExecutionError(
+            raise CallbackError(
                 f"Splitter '{name}' for lang '{lang}' raised an exception.\nDetails: {e}"
             ) from None
 
@@ -131,10 +136,9 @@ def registered_splitter(*langs: str, name: str | None = None):
             ...
     """
     registry = CustomSplitterRegistry()
+
     def decorator(callback: Callable):
-        registry.register(
-            *langs, callback=callback, name=name
-        )
+        registry.register(*langs, callback=callback, name=name)
         return callback
 
     return decorator

@@ -1,8 +1,10 @@
 from typing import Any, Literal, Callable
 from collections.abc import Iterable, Generator
-from mpire import WorkerPool
+
+# mpire is lazy imported
 from loguru import logger
 from chunklet.utils.validation import safely_count_iterable
+
 
 def run_in_batch(
     func: Callable,
@@ -11,6 +13,7 @@ def run_in_batch(
     n_jobs: int | None = None,
     show_progress: bool = True,
     on_errors: Literal["raise", "skip", "break"] = "raise",
+    separator: Any = None,
     verbose: bool = True,
 ) -> Generator[Any, None, None]:
     """
@@ -26,22 +29,29 @@ def run_in_batch(
         show_progress (bool): Whether to display a progress bar.
         on_errors (Literal["raise", "skip", "break"]):
             How to handle errors during processing. Defaults to "raise".
+        separator (Any): A value to be yielded after the chunks of each text are processed.
+            Note: None cannot be used as a separator.
         verbose (bool): Whether to enable verbose logging.
 
     Yields:
-        Any: The result returned by each successful function call.
+        Any: A `Box` object containing the chunk content and metadata, or any separator object.
     """
+    from mpire import WorkerPool
+
     total, iterable_of_args = safely_count_iterable(iterable_name, iterable_of_args)
+
+    if verbose:
+        logger.info("Starting batch chunking for {} items.", total)
 
     if total == 0:
         if verbose:
             logger.info("Input {} is empty. Returning empty iterator.", iterable_name)
         return iter([])
-        
+
     # Wrapper to capture result/exception
-    def chunk_func(args):
+    def chunk_func(*args, **kwargs):
         try:
-            res = func(args)
+            res = func(*args, **kwargs)
             return res, None
         except Exception as e:
             return None, e
@@ -49,11 +59,15 @@ def run_in_batch(
     failed_count = 0
     try:
         with WorkerPool(n_jobs=n_jobs) as executor:
-            task_iter = executor.imap(
+            imap_func = (
+                executor.imap if separator is not None else executor.imap_unordered
+            )
+            task_iter = imap_func(
                 chunk_func,
                 iterable_of_args,
                 iterable_len=total,
                 progress_bar=show_progress,
+                # task_timeout=3, # temp set for debuging purpose
             )
 
             for res, error in task_iter:
@@ -63,20 +77,24 @@ def run_in_batch(
                         raise error
                     elif on_errors == "break":
                         logger.error(
-                            "A task in 'run_in_batch' failed. Returning partial results.\n"
-                            f"💡 Hint: Check logs for more details.\nReason: {error}"
+                            "A task for {} failed. Returning partial results.\nReason: {}",
+                            iterable_name,
+                            error,
                         )
                         break
                     else:  # skip
-                        logger.warning(f"Skipping a failed task.\nReason: {error}")
+                        logger.warning("Skipping a failed task.\nReason: {}", error)
                         continue
 
-                yield res
+                yield from res
+
+                if separator is not None:
+                    yield separator
 
     finally:
         if verbose:
             logger.info(
-                "Batch processing completed with {}/{} successes",
+                "Batch processing completed. {}/{} items processed successfully.",
                 total - failed_count,
                 total,
             )

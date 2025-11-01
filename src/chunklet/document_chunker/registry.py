@@ -1,8 +1,12 @@
 import inspect
-from typing import Callable, Dict, Tuple
+from typing import Callable, Iterable, Any
 from pydantic import TypeAdapter, ValidationError
 from chunklet.utils.validation import validate_input, pretty_errors
-from chunklet.exceptions import CallbackExecutionError, InvalidInputError
+from chunklet.exceptions import CallbackError, InvalidInputError
+
+
+# A tuple containing the extracted text(s) and a dictionary of metadata.
+ReturnType = tuple[str | Iterable[str], dict[str, Any]]
 
 
 class CustomProcessorRegistry:
@@ -11,12 +15,17 @@ class CustomProcessorRegistry:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(CustomProcessorRegistry, cls).__new__(cls)
-            cls._instance._processors: Dict[str, Tuple[str, Callable]] = {}
+            cls._instance._processors: dict[str, tuple[str, Callable]] = {}
         return cls._instance
 
     @property
     def processors(self):
-        return self._processors
+        """
+        Returns a shallow copy of the dictionary of registered processors.
+
+        This prevents external modification of the internal registry state.
+        """
+        return self._processors.copy()
 
     @validate_input
     def is_registered(self, ext: str) -> bool:
@@ -27,37 +36,36 @@ class CustomProcessorRegistry:
 
     @validate_input
     def register(
-        self,
-        *exts: str, callback: Callable[[str], str], name: str | None = None
+        self, *exts: str, callback: Callable[[str], ReturnType], name: str | None = None
     ):
         """
         Register a document processor callback for one or more file extensions.
 
         Args:
             *exts: One or more file extensions (str), e.g., '.json', '.xml'.
-            callback: Callable that takes the file path (str) and returns its content (str).
+            callback: A callable that takes a file path and returns a tuple of (text or text iterable, metadata dictionary).
             name (str, optional): The name of the processor. Defaults to the function name.
 
         Raises:
-            TypeError: If callback is not callable or has the wrong number of parameters.
-            InvalidInputError: If an extension is not valid (e.g., missing leading dot).
+            InvalidInputError: If the provided arguments are not valid.
         """
-        if not callable(callback):
-            raise TypeError(
-                f"{type(callback).__name__} is not callable.\n"
-                f"💡Hint: Pass a function or a bound method accepting one argument (the file path)."
-            )
 
         sig = inspect.signature(callback)
         params = list(sig.parameters.values())
+
+        # Exclude 'self' if it's a method
         if params and params[0].name == "self":
             params = params[1:]
-        if len(params) != 1:
+
+        # Filter for required parameters (those without a default value)
+        required_params = [p for p in params if p.default is inspect.Parameter.empty]
+
+        if len(required_params) != 1:
             param_list = ", ".join(p.name for p in params)
             raise TypeError(
                 f"'{callback.__name__}' has signature ({param_list}).\n"
-                f"Expected exactly one parameter (excluding 'self').\n"
-                f"💡Hint: Define the function like `def processor(file_path): ...`"
+                "Expected exactly one required parameter to accept the file path.\n"
+                "💡Hint: Optional parameters with default values are allowed."
             )
 
         processor_name = name or callback.__name__
@@ -79,8 +87,14 @@ class CustomProcessorRegistry:
         for ext in exts:
             self._processors.pop(ext, None)
 
+    def clear(self) -> None:
+        """
+        Clears all registered processors from the registry.
+        """
+        self._processors.clear()
+
     @validate_input
-    def extract_text(self, file_path: str, ext: str) -> tuple[str, str]:
+    def extract_data(self, file_path: str, ext: str) -> tuple[ReturnType, str]:
         """
         Processes a file using a processor registered for the given file extension.
 
@@ -89,10 +103,10 @@ class CustomProcessorRegistry:
             ext (str): The file extension.
 
         Returns:
-            tuple[str, str]: A tuple containing the extracted text content and the name of the processor used.
+            tuple[ReturnType, str]: A tuple containing the extracted data and the name of the processor used.
 
         Raises:
-            CallbackExecutionError: If the processor callback fails or returns the wrong type.
+            CallbackError: If the processor callback fails or returns the wrong type.
             InvalidInputError: If no processor is registered for the extension.
         """
         processor_info = self._processors.get(ext)
@@ -107,14 +121,18 @@ class CustomProcessorRegistry:
         try:
             # Validate the return type
             result = callback(file_path)
-            validator = TypeAdapter(str)
+            validator = TypeAdapter(ReturnType)
             validator.validate_python(result)
         except ValidationError as e:
             e.subtitle = f"{name} result"
-            e.hint = f"💡Hint: Make sure your processor returns a string."
-            raise CallbackExecutionError(f"{pretty_errors(e)}.\n") from None
+            e.hint = (
+                "💡Hint: Make sure your processor returns a tuple of (text/texts, metadata_dict)."
+                " An empty dict can be provided if there's no metadata."
+            )
+
+            raise CallbackError(f"{pretty_errors(e)}.\n") from None
         except Exception as e:
-            raise CallbackExecutionError(
+            raise CallbackError(
                 f"Processor '{name}' for extension '{ext}' raised an exception.\nDetails: {e}"
             ) from None
 
@@ -132,10 +150,9 @@ def registered_processor(*exts: str, name: str | None = None):
             return text_content
     """
     registry = CustomProcessorRegistry()
+
     def decorator(callback: Callable):
-        registry.register(
-            *exts, callback=callback, name=name
-        )
+        registry.register(*exts, callback=callback, name=name)
         return callback
 
     return decorator

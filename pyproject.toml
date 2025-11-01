@@ -34,20 +34,25 @@ keywords = [
 dependencies = [
   "pysbd>=0.3.4",
   "sentsplit>=1.0.7",
-  "sentencex>=0.6.0",
+ 
+  # Pinning to the last known working version with a reliable binary/build.
+  # The 1.0.x series has a broken sdist package structure.
+  "sentencex<=0.6.1", 
+  
   "indic-nlp-library>=0.90",
   "py3langid>=0.3.0",
   "mpire>=2.10.0",
   "python-box>=7.3.0",
+  "more-itertools>=10.6.0",
   "regex>=2024.11.6",
   "pydantic>=2.11",
-  "typing_extensions>=2.0.0",
   "typer>=0.19.0",
 ]
 
 [project.optional-dependencies]
 document = [
-  "pypdf>=5.0.8",
+  "pdfminer.six>=20250324",
+  "python-docx>=1.2.0",
   "mammoth>=1.9.0",
   "ebooklib>=0.19",
   "docutils>=0.21.2",
@@ -91,23 +96,16 @@ packages = [
     "chunklet.utils",
     "chunklet.document_chunker",
     "chunklet.document_chunker.converters",
+    "chunklet.document_chunker.processors",
     "chunklet.experimental.code_chunker",
     "chunklet.sentence_splitter",
 ]
 
 [tool.pytest.ini_options]
 minversion = "7.4"
-
-# pytest-cov is temporarily disabled due to deadlocks with mpire and multiprocessing.
-# See https://github.com/pytest-dev/pytest-cov/issues/ for more details.
-#addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --strict-markers" 
-
+addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --durations=10"
 testpaths = ["tests"]
 python_files = "test_*.py"
-
-[tool.coverage.run]
-concurrency = ["multiprocessing"]
-parallel = true 
 
 [tool.coverage.report]
 omit = [
@@ -122,6 +120,7 @@ per-file-ignores = [
     "src/chunklet/__init__.py:F401",
     "src/chunklet/document_chunker/__init__.py:F401,F403",
     "src/chunklet/sentence_splitter/__init__.py:F401,F403",
+    "src/chunklet/experimental/code_chunker/__init__.py:F401,F403",
 ]
-extend-ignore = ["E501"]
+extend-ignore = ["E501", "E203"]
 count = true

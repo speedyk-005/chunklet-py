@@ -25,7 +25,14 @@ class MissingTokenCounterError(InvalidInputError):
         super().__init__(self.msg)
 
 
-class UnsupportedFileTypeError(InvalidInputError):
+class FileProcessingError(ChunkletError):
+    """Raised when a file cannot be loaded, opened, or
+    accessed."""
+
+    pass
+
+
+class UnsupportedFileTypeError(FileProcessingError):
     """Raised when a file type is not supported for a given operation."""
 
     pass
@@ -37,14 +44,7 @@ class TokenLimitError(ChunkletError):
     pass
 
 
-class FileProcessingError(ChunkletError):
-    """Raised when a file cannot be loaded, opened, or
-    accessed."""
-
-    pass
-
-
-class CallbackExecutionError(ChunkletError):
+class CallbackError(ChunkletError):
     """Raised when a callback function provided to chunker
     or splitter fails during execution."""
 

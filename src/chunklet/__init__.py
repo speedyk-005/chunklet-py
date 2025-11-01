@@ -14,8 +14,6 @@ from .sentence_splitter import SentenceSplitter
 from .plain_text_chunker import PlainTextChunker
 from .document_chunker import DocumentChunker
 from .experimental.code_chunker import CodeChunker
-
-# from .code_chunker import CodeChunker
 from .exceptions import (
     ChunkletError,
     InvalidInputError,
@@ -23,7 +21,7 @@ from .exceptions import (
     UnsupportedFileTypeError,
     TokenLimitError,
     FileProcessingError,
-    CallbackExecutionError,
+    CallbackError,
 )
 
 __version__ = "2.0.0"
@@ -39,5 +37,5 @@ __all__ = [
     "UnsupportedFileTypeError",
     "TokenLimitError",
     "FileProcessingError",
-    "CallbackExecutionError",
+    "CallbackError",
 ]

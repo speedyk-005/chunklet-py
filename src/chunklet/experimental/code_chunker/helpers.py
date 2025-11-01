@@ -35,7 +35,7 @@ def is_path_like(text: str) -> bool:
     if sys.platform == "win32" and any(c in text for c in '<>:"|?*'):
         return False
 
-    return bool(PATH_PATTERN.fullmatch(text))  # Fixed: changed full_match to fullmatch
+    return bool(PATH_PATTERN.match(text))
 
 
 def is_binary_file(file_path: str | Path) -> bool:

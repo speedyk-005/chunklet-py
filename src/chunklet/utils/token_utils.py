@@ -1,6 +1,6 @@
 from typing import Callable
 from functools import lru_cache
-from chunklet.exceptions import CallbackExecutionError
+from chunklet.exceptions import CallbackError
 
 
 @lru_cache(maxsize=1024)
@@ -19,18 +19,18 @@ def count_tokens(text: str, token_counter: Callable[[str], int]) -> int:
         int: Number of tokens.
 
     Raises:
-        Callbackexecutionerror: If the token counter fails or returns an invalid type.
+        CallbackError: If the token counter fails or returns an invalid type.
     """
     try:
         token_count = token_counter(text)
         if isinstance(token_count, (int, float)):
             return int(token_count)
-        raise CallbackExecutionError(
+        raise CallbackError(
             f"Token counter returned invalid type ({type(token_count).__name__}) "
             f"for text starting with: '{text[:100]}'"
         )
     except Exception as e:
-        raise CallbackExecutionError(
+        raise CallbackError(
             f"Token counter failed while processing text starting with: '{text[:100]}...'.\n"
             "💡 Hint: Please ensure the token counter function handles "
             f"all edge cases and returns an integer. \nDetails: {e}"

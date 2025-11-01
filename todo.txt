@@ -1,5 +1,11 @@
-- merged batch_chunk with chunk_pdfs
-
 # what we have done
+- changed the base class of UnsupportedFileTypeError to FileProcessingError
+- put a clear method in registry
+- rm tempfile import and use the special raw text in html 2 text without needing path
+- fixed code chunker line numbering to be consistent for all mode
+- used namedtuple to reduce ambiguity in some part of code_chunker
+- used plain dict instead of box object in some part
+- keep looging concisde and consistent
+
 
 # done, not yet changelog

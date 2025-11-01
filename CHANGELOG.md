@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0.0 alpha] - 2025-09-12
+## [2.0.0 alpha] - 2025-11-01
 
 ### Added
 
@@ -19,16 +19,18 @@ This officially boosts language support from 36+ to 40+.
 - **Document Chunker:** Introduced `DocumentChunker` to handle various file formats like `.pdf`, `.docx`, `.txt`, `.md`, `.rst`, `.rtf`, `.tex`, `.html/hml`, `.epub`.
 - **Show Progress Parameter:** Added `show_progress` parameter to `batch_chunk` in `PlainTextChunker` to allow users to control the display of the progress bar.
 - **Custom Processors:** Introduced support for custom document processors, allowing users to define their own logic for extracting text from various file types.
-- **New Custom Exception Types:** Introduced more specific error types like `FileProcessingError`, `UnsupportedFileTypeError`, `TokenLimitError` and `CallbackExecutionError`.
-- **Cache Management**: Added a static method `clear_cache` to `PlainTextChunker` to allow programmatic clearing of the shared in-memory cache.
+- **New Custom Exception Types:** Introduced more specific error types like `FileProcessingError`, `UnsupportedFileTypeError`, `TokenLimitError` and `CallbackError`.
+- for dealing with malformed or extremely long, unpunctuated strings (like a massive URL, a base64 encoded block, or a chunk of minified JSON).
 
 ### Changed
 
+- **Project Restructuring:**
+    - Renamed `src/chunklet/core.py` to `src/chunklet/plain_text_chunker.py`.
+    - Renamed `Chunklet` class to `PlainTextChunker`.
 - **CLI Refactoring:**
-    - Replaced `argparse` with `typer` and overhauled command-line arguments for file and directory handling.
-    - Replaced the old `--file`, `--input-files`, and `--input-dir` options with new `--file` (`-f`) and `--dir` (`-d`) options.
-    - Both new options accept one or more paths, providing a more consistent and powerful way to specify input.
-**Validation with Pydantic `validate_call`:** Replaced Pydantic BaseModel with `pydantic.validate_call` for lightweight and easier validation, centralizing runtime type checking.       
+    - Simplified all input flags (--file, --dir, etc.) into a single --source (-s) flag, which accepts one or more paths (files or directories).
+    - Combined the verbose --output-file and --output-dir into a single --destination (-d) flag, which automatically adapts to single-file output or multi-file directory writing.
+- **Type Validation:** Replaced Pydantic BaseModel with `pydantic.validate_call` for lightweight and easier validation, centralizing runtime type checking.       
 - **Sentence Splitter Refactoring:**
     - Refactored the `SentenceSplitter` to be more modular and extensible. The management of custom splitters has been moved to a new `registry` module, which provides a centralized way to register and use custom splitter functions.
     - Introduced a new way of registering custom splitters using the `register_splitter` function and the `@registered_splitter` decorator, replacing the old dictionary-based approach. This new API is more explicit, provides better validation, and is easier to use.
@@ -37,32 +39,28 @@ This officially boosts language support from 36+ to 40+.
 - **Clause Delimiters**: Added ellipsis to the list of clause delimiters for more accurate chunking.
 - **Batch Chunking Flexibility:** Modified `PlainTextChunker.batch_chunk` to accept any `Iterable` of strings for the `texts` parameter, instead of being restricted to `list`.
 - **Memory Optimization:** Refactored all batch methods in the lib to fully utilize generators, yielding chunks one at a time to reduce memory footprint, especially for large documents. That also means you dont have to wait for the chunks fully be processed before start using them.
-- **Memory Friendly caching:** Replaced `functools.lrucache` with `cachetools.cache` to avoid instance references in cache keys to prevent unnecessary memory retention.
 - **Code Quality:**
     - Fixed various `pyflakes` linting issues across the `src/` and `tests/` directories, improving code cleanliness.
     - Integrated `flake8` for code linting and updated `CONTRIBUTING.md` with instructions for running it.
 - **Error rebranding:** Renamed `TokenNotProvidedError` to `MissingTokenCounterError` for clearer semantics and updated all relevant usages.
 - **Error Handling:**
-    - Modified `count_tokens` to return `CallbackExcecutionError` instead of `ChunkletError`.
-    - Re-parented `MissingTokenCounterError` under `InvalidInputError`. `UnsupportedFileTypeError` was also added to the new hierarchy.
-- **Project Restructuring:**
-    - Renamed `src/chunklet/core.py` to `src/chunklet/plain_text_chunker.py`.
-    - Renamed `Chunklet` class to `PlainTextChunker`.
+    - Modified `count_tokens` to return `CallbackError` instead of `ChunkletError`.
+    - Re-parented `MissingTokenCounterError` under `InvalidInputError`.
 - **Improved Error Messages:** Improved error messages across the library to be more user-friendly and provide hints for fixing the issues.  
 - **Safer Tokenizer Command processing:** Changed `shell=True` to `shell=False` for the subprocess.run call in create_external_tokenizer for enhanced security and predictability. The shlex module is now implicitly used for command parsing when shell=False.
 - **Improved chunking format:** Added a newline between sentences for structured chunking format output. This helps preserving original format better.
 - **Grouping improvements:**
     - Improved logic for handling sentences that exceed max_tokens or max_sentences. The `_find_clauses_that_fit` method's output (fitted, unfitted) is now more accurately integrated, ensuring that sentences are correctly split and assigned to chunks.
-    - Modified `_find_clauses_that_fit` to return a list of str instead of a tuple of list of str for easier control. That Ensures that unfitted sentences are properly joined and accounted for when starting a new chunk after an overlap.
+    - Modified `_find_clauses_that_fit` to return a list of str instead of tuple[list[str]] (tuple of list of str) for easier control. That Ensures that unfitted sentences are properly joined and accounted for when starting a new chunk after an overlap.
     - Use incremental token recalculation for better performance.
-    - Artifacts handling: Ignore the last chars after the first 150 ones in the loop around sentences. Reason: if the original text to chunk has parts not well written. (e.g. long text stream without punctuation';lkjhgfdsas, embeded images urls, ...)
+    - Artifacts handling: Improved logic to gracefully handle and segment malformed or extreme text artifacts (e.g., massive URLs, base64 blocks, minified JSON) by applying a Greedy Token Cutoff. This ensures the chunker does not fail or produce overly large, unusable chunks when encountering long, unpunctuated strings.
 - **Absolute Imports:** Converted all relative imports to absolute imports within the `chunklet` package for better clarity and to avoid potential import issues.
 - **Default Limits:** Changed the default `max_tokens` from 512 to 256 and `max_sentences` from 100 to 12.
 - **Continuation marker:** Exposed continuation marker so users can define thier own or set it to an empty str to disabled it.
 
 ### Removed
 
-- **Caching:** Removed the in-memory caching functionality to focus on raw performance optimization.
+- **Caching:** Removed the in-memory caching functionality to focus on raw performance optimization. the only part that still have caching is the utils `count_tokens`
 - **Python 3.8 and 3.9 Support:** Dropped official support for Python 3.8 and 3.9. The minimum required Python version is now 3.10.
 - **CLI Argument:** Removed the `--no-cache` command-line argument.
 - **CLI Argument:** Removed the deprecated `--batch` argument.

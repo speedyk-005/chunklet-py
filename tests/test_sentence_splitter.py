@@ -1,13 +1,12 @@
 import re
 import pytest
+from loguru import logger
 from chunklet.sentence_splitter import SentenceSplitter
-from chunklet.sentence_splitter.registry import(
+from chunklet.sentence_splitter.registry import (
     CustomSplitterRegistry,
     registered_splitter,
 )
-from chunklet.exceptions import CallbackExecutionError
-from loguru import logger
-from typing import Callable, Dict, Tuple
+from chunklet.exceptions import CallbackError
 
 # Silent logging
 logger.remove()
@@ -15,10 +14,12 @@ logger.remove()
 
 # --- Fixture ---
 
+
 @pytest.fixture
 def splitter():
     """Provides a configured SentenceSplitter instance"""
     return SentenceSplitter()
+
 
 @pytest.fixture
 def registry():
@@ -27,6 +28,7 @@ def registry():
 
 
 # --- Multilingual Splitting Tests ---
+
 
 @pytest.mark.parametrize(
     "text, expected_sentences",
@@ -87,9 +89,10 @@ def test_unsupported_language_fallback(splitter, text, expected_sentences):
 
 # --- Custom Splitter Tests ---
 
+
 def test_custom_splitter_usage(registry):
     """Test that the splitter can work a custom splitter without errors."""
-    
+
     @registered_splitter("x_lang")
     def custom_x_splitter(text: str):
         return [s.strip() for s in text.split("X")]
@@ -139,9 +142,8 @@ def test_custom_splitter_validation_scenarios(
         return callback_func(text)
 
     try:
-        with pytest.raises(CallbackExecutionError, match=re.escape(expected_match)):
-            assert registry.is_registered("xx") == True
+        with pytest.raises(CallbackError, match=re.escape(expected_match)):
+            assert registry.is_registered("xx")
             splitter.split("Some text.", lang="xx")
     finally:
         registry.unregister("xx")
-

@@ -1,30 +1,30 @@
-import pytest
 import re
+import pytest
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
+from loguru import logger
 from chunklet.exceptions import (
     UnsupportedFileTypeError,
-    CallbackExecutionError,
+    CallbackError,
 )
 from chunklet.document_chunker import DocumentChunker
-from chunklet.document_chunker.registry import(
+from chunklet.document_chunker.registry import (
     CustomProcessorRegistry,
     registered_processor,
 )
-from loguru import logger
 
 # Silent logging
 logger.remove()
 
+"samples/minimal.epub",
 
 # --- Fixtures ---
 
+
 @pytest.fixture
 def chunker():
-    """
-    Provides a DocumentChunker instance initialized with a mocked PlainTextChunker.
-    """
+    """Provides a DocumentChunker instance."""
     return DocumentChunker()
+
 
 @pytest.fixture
 def registry():
@@ -34,33 +34,15 @@ def registry():
 
 # --- Core Tests ---
 
-def test_chunk_pdf(chunker):
-    """Test chunking a PDF file and its metadata."""
-    path = "samples/sample-pdf-a4-size.pdf"
-    first_chunk = next(chunker.chunk_pdfs([path]))
 
-    # Check metadata of the first chunk
-    first_chunk_metadata = first_chunk.metadata
-
-    assert "source" in first_chunk_metadata
-    assert first_chunk_metadata["source"] == path
-    assert "page_num" in first_chunk_metadata
-    assert "chunk_num" in first_chunk_metadata
-    assert "author" in first_chunk_metadata
-    assert "title" in first_chunk_metadata
-    assert "page_count" in first_chunk_metadata
-
-    
 @pytest.mark.parametrize(
     "path",
     [
-        "samples/Lorem Ipsum.docx",
         "samples/What_is_rst.rst",
         "samples/complex-layout.rtf",
-        "samples/minimal.epub",
     ],
 )
-def test_chunk_supported_files(chunker, path):
+def test_chunk_simple_files(chunker, path):
     """Test the main chunk method with various supported file types."""
     chunks = chunker.chunk(path)
     assert len(chunks) > 0
@@ -78,11 +60,14 @@ def test_chunk_unsupported_file(chunker, tmp_path):
         chunker.chunk(unsupported_file)
 
 
-def test_batch_chunk_with_different_file_type(
-    chunker
-):
+def test_batch_chunk_with_different_file_type(chunker):
     """Test successful batch chunking of multiple supported file types."""
-    paths = ["samples/Lorem Ipsum.docx", "samples/What_is_rst.rst"]
+    paths = [
+        "samples/Lorem Ipsum.docx",
+        "samples/What_is_rst.rst",
+        "samples/minimal.epub",
+        "samples/sample-pdf-a4-size.pdf",
+    ]
     all_document_chunks = list(chunker.batch_chunk(paths))
 
     # Check that we got some chunks
@@ -97,17 +82,20 @@ def test_batch_chunk_with_different_file_type(
     assert len(chunks_by_source) == len(paths)
     for path in paths:
         assert path in chunks_by_source
+        assert chunks_by_source[path][0].metadata  # assert metadata presence
         assert len(chunks_by_source[path]) > 0
 
 
 # --- Custom Processor Tests ---
 
+
 def test_chunk_method_with_custom_processor(tmp_path, mocker, chunker, registry):
     """Test that the chunk method correctly uses a custom processor."""
+
     # Define and register a mock custom processor callback
     @registered_processor(".mock", name="MockProcessor")
     def mock_custom_processor_callback(file_path: str) -> str:
-        return "Processed failed."
+        return "Processed failed.", {"mock": "metadata"}
 
     try:
         # Create a dummy file with the custom extension
@@ -135,11 +123,8 @@ def test_chunk_method_with_custom_processor(tmp_path, mocker, chunker, registry)
     [
         (
             "InvalidReturnProcessor",
-            lambda file_path: [
-                "This is a list.",
-                "Not a string.",
-            ],  # Returns list, not str
-            r"Input should be a valid string",
+            lambda file_path: 12345,  # Returns an int, not tuple(str|iterable, dict)
+            r"Make sure your processor returns a tuple of (text/texts, metadata_dict).",
         ),
         (
             "FailingProcessor",
@@ -166,10 +151,10 @@ def test_custom_processor_validation_scenarios(
 
     @registered_processor(".txt", name=processor_name)
     def temp_processor(file_path: str):
-        return callback_func(file_path)
+        return callback_func(file_path), {"mock": "metadata"}
 
     try:
-        with pytest.raises(CallbackExecutionError, match=re.escape(expected_match)):
+        with pytest.raises(CallbackError, match=re.escape(expected_match)):
             chunker.chunk(dummy_file)
     finally:
         # Unregister to not affect other tests

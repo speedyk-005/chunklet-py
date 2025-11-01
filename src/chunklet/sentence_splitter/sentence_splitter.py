@@ -1,4 +1,3 @@
-import sys
 from abc import ABC, abstractmethod
 import regex as re
 from py3langid.langid import LanguageIdentifier, MODEL_FILE
@@ -17,7 +16,6 @@ from chunklet.sentence_splitter.languages import (
 from chunklet.sentence_splitter.registry import CustomSplitterRegistry
 from chunklet.sentence_splitter._fallback_splitter import FallbackSplitter
 from chunklet.utils.validation import validate_input
-from chunklet.exceptions import InvalidInputError
 
 
 class BaseSplitter(ABC):
@@ -58,13 +56,13 @@ class SentenceSplitter(BaseSplitter):
         Initializes the SentenceSplitter.
 
         Args:
-            text (str): The input text to be split.      
+            text (str): The input text to be split.
             verbose (bool): If True, enables verbose logging for debugging and informational messages.
         """
         self.verbose = verbose
         self.custom_splitter_registry = CustomSplitterRegistry()
         self.fallback_splitter = FallbackSplitter()
-        
+
         # Create a normalized identifier for langid
         self.identifier = LanguageIdentifier.from_pickled_model(
             MODEL_FILE, norm_probs=True
@@ -89,10 +87,10 @@ class SentenceSplitter(BaseSplitter):
                     if processed_sentences:
                         # Limits to the first 5 ones
                         processed_sentences[-1] += stripped_sent[:5]
-                    else: 
+                    else:
                         processed_sentences.append(stripped_sent[:2])
                 else:
-                    processed_sentences.append(sent.rstrip())  
+                    processed_sentences.append(sent.rstrip())
         return processed_sentences
 
     @validate_input
@@ -109,7 +107,7 @@ class SentenceSplitter(BaseSplitter):
         lang_detected, confidence = self.identifier.classify(text)
         if self.verbose:
             logger.info(
-                "Language detection: '{}' with confidence {}. Low confidence might affect splitting reliability.",
+                "Language detection: '{}' with confidence {}.",
                 lang_detected,
                 f"{round(confidence)  * 10}/10",
             )
@@ -143,33 +141,18 @@ class SentenceSplitter(BaseSplitter):
 
         # Prioritize custom splitters from registry
         if self.custom_splitter_registry.is_registered(lang):
-            if self.verbose:
-                logger.info("Using registered splitter for {}", lang)
             sentences, splitter_name = self.custom_splitter_registry.split(text, lang)
             if self.verbose:
                 logger.info("Using registered splitter: {}", splitter_name)
-
         elif lang in PYSBD_SUPPORTED_LANGUAGES:
-            if self.verbose:
-                logger.info("Using pysbd splitter")
             sentences = Segmenter(language=lang).segment(text)
-
         elif lang in SENTSPLIT_UNIQUE_LANGUAGES:
-            if self.verbose:
-                logger.info("Using sentsplit splitter")
             sentences = SentSplit(lang).segment(text)
-
         elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
-            if self.verbose:
-                logger.info("Using indic-nlp-library splitter")
             sentences = sentence_tokenize.sentence_split(text, lang)
-
         elif lang in SENTENCEX_UNIQUE_LANGUAGES:
-            if self.verbose:
-                logger.info("Using sentencex splitter")
             sentences = segment(lang, text)
-
-        else: 
+        else:
             if self.verbose:
                 logger.warning(
                     "Using a universal rule-based splitter.\n"
@@ -181,9 +164,9 @@ class SentenceSplitter(BaseSplitter):
         processed_sentences = self._filter_sentences(sentences)
 
         if self.verbose:
-                logger.info(
-                    "Text splitted into sentences. Total sentences detected: {}",
-                    len(processed_sentences),
-                )
+            logger.info(
+                "Text splitted into sentences. Total sentences detected: {}",
+                len(processed_sentences),
+            )
 
         return processed_sentences

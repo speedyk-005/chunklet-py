@@ -1,27 +1,26 @@
+from typing import Any, Literal, Callable, Generator, Annotated
+from collections.abc import Iterable
 import sys
+import copy
 import regex as re
-from typing import Any, Optional, Literal, Callable, Generator, Annotated
-from collections.abc import Iterable, Iterator
-from functools import  partial
-from pydantic import Field  
+from box import Box
+from functools import partial
+from pydantic import Field
 from loguru import logger
-# mpire is lazy imported
 
 from chunklet.sentence_splitter import SentenceSplitter, BaseSplitter
-from chunklet.utils.validation import validate_input, safely_count_iterable, restricted_iterable
+from chunklet.utils.validation import validate_input, restricted_iterable
 from chunklet.utils.batch_runner import run_in_batch
 from chunklet.utils.token_utils import count_tokens
 from chunklet.exceptions import (
     InvalidInputError,
     MissingTokenCounterError,
-    CallbackExecutionError,
+    CallbackError,
 )
+
 
 # for clauses overlapping and fitting
 CLAUSE_END_TRIGGERS = r";,’：—)&…"
-
-# Sentinel to serve as the default value for the separator args in batch chunking
-_sentinel = object()
 
 
 class PlainTextChunker:
@@ -76,9 +75,8 @@ class PlainTextChunker:
         self.clause_end_regex = re.compile(rf"(?<=[{CLAUSE_END_TRIGGERS}])\s")
 
         # Initialize SentenceSplitter
-        self.sentence_splitter = (
-            sentence_splitter
-            or SentenceSplitter(verbose=self._verbose)
+        self.sentence_splitter = sentence_splitter or SentenceSplitter(
+            verbose=self._verbose
         )
 
     @property
@@ -91,6 +89,66 @@ class PlainTextChunker:
         """Set the verbosity and propagate to sentence_splitter."""
         self._verbose = value
         self.sentence_splitter.verbose = value
+
+    def find_span(self, text_portion: str, full_text: str) -> tuple[int, int]:
+        """
+        Finds the start and end indices of a text portion within a larger text,
+        using a fuzzy match that ignores punctuation and extra whitespace.
+
+        Args:
+            text_portion (str): The smaller text to find.
+            full_text (str): The larger text to search within.
+
+        Returns:
+            tuple[int, int]: A tuple containing the start and end indices of the match,
+                or (-1, -1) if no match is found.
+        """
+        # Split the portion text by punctuation and whitespace
+        words = re.split(r"[\p{P}\p{Z}]+", text_portion)
+
+        # Build a fuzzy match pattern, allowing for punctuation and whitespace between words
+        pattern = r"[\p{P}\p{Z}]*?".join(re.escape(w) for w in words if (w.strip()))
+
+        # Search for the pattern in the full text
+        match = re.search(pattern, full_text)
+
+        if match:
+            return match.span()
+
+        return -1, -1
+
+    def _create_chunk_boxes(
+        self,
+        chunks: Iterable[str],
+        base_metadata: dict[str, Any],
+        text: str,
+    ) -> list[Box]:
+        """
+        Helper to create a list of Box objects for chunks with embedded metadata and auto-assigned chunk numbers.
+
+        Args:
+            chunks (Iterable[str]): An iterable (e.g., list or generator) of raw text strings,
+                each representing a chunk of content.
+            base_metadata (dict[str, Any]): A dictionary containing document-level metadata
+                (e.g., 'source' file path, 'page_count' for PDFs) to be embedded
+                into each chunk's metadata.
+            text (str): The full original text to find the span of the chunk within.
+
+        Returns:
+            list[Box]: A list of `Box` objects. Each `Box` contains:
+                - 'content' (str): The text of the chunk.
+                - 'metadata' (dict): A dictionary including 'chunk_num' (int)
+                    and all key-value pairs from `base_metadata`.
+        """
+        chunk_boxes = []
+        for i, chunk_str in enumerate(chunks, start=1):
+            chunk_box = Box()
+            chunk_box.content = chunk_str
+            chunk_box.metadata = copy.deepcopy(base_metadata)
+            chunk_box.metadata.chunk_num = i
+            chunk_box.metadata.span = self.find_span(chunk_str, text)
+            chunk_boxes.append(chunk_box)
+        return chunk_boxes
 
     def _get_overlap_clauses(
         self,
@@ -110,10 +168,9 @@ class PlainTextChunker:
             list[str]: A list of clauses as overlap.
         """
         detected_clauses = [
-            clause for sent in sentences
-            for clause in self.clause_end_regex.split(sent)
+            clause for sent in sentences for clause in self.clause_end_regex.split(sent)
         ]
-            
+
         overlap_num = round(len(detected_clauses) * overlap_percent / 100)
 
         if overlap_num == 0:
@@ -226,11 +283,11 @@ class PlainTextChunker:
         Returns:
             list[str]: A list of chunk strings.
         """
+        chunks = []
         curr_chunk = []
         token_count = 0
         sentence_count = 0
-        chunks = []
-        
+
         index = 0
         while index < len(sentences):
             if mode in {"token", "hybrid"}:
@@ -314,7 +371,8 @@ class PlainTextChunker:
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
-    ) -> list[str]:
+        base_metadata: dict[str, Any] | None = None,
+    ) -> list[Box]:
         """
         Chunks a single text into smaller pieces based on specified parameters.
         Supports multiple chunking modes (sentence, token, hybrid), clause-level overlap,
@@ -328,22 +386,27 @@ class PlainTextChunker:
             max_sentences (int): Maximum number of sentences per chunk. Defaults to 12.
             overlap_percent (int | float): Percentage of overlap between chunks (0-75). Defaults to 20
             offset (int): Starting sentence offset for chunking. Defaults to 0.
-            token_counter (callable | None): Optional token counting function. Required for token-based modes only.
+            token_counter (callable | None): Optional token counting function.
+                Required for token-based modes only.
+            base_metadata (dict[str, Any] | None): Optional dictionary to be included with each chunk.
 
         Returns:
-            list[str]: A list of chunk strings.
+            list[Box]: A list of `Box` objects, each containing the chunk content and metadata.
 
         Raises:
             InvalidInputError: If any chunking configuration parameter is invalid.
             MissingTokenCounterError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
-            CallbackExecutionError: If an error occurs during sentence splitting
+            CallbackError: If an error occurs during sentence splitting
             or token counting within a chunking task.
         """
+        if self.verbose:
+            logger.info(
+                "Starting chunk processing for text starting with: {}.",
+                f"{text[:100]}...",
+            )
+
         if mode in {"token", "hybrid"} and not (token_counter or self.token_counter):
             raise MissingTokenCounterError()
-
-        if self.verbose:
-            logger.info("Starting chunk processing for text: {}. .", f"{text[:150]}...")
 
         # Adjust limits based on mode
         if mode == "sentence":
@@ -351,7 +414,7 @@ class PlainTextChunker:
         elif mode == "token":
             max_sentences = sys.maxsize
 
-        if not text:
+        if not text.strip():
             if self.verbose:
                 logger.info("Input text is empty. Returning empty list.")
             return []
@@ -362,7 +425,7 @@ class PlainTextChunker:
                 lang,
             )
         except Exception as e:
-            raise CallbackExecutionError(
+            raise CallbackError(
                 f"An error occurred during the sentence splitting process.\nDetails: {e}\n"
                 "💡 Hint: This may be due to an issue with the underlying sentence splitting library."
             ) from e
@@ -379,18 +442,19 @@ class PlainTextChunker:
             )
             return []
 
-        sentences = sentences[offset:]
         chunks = self._group_by_chunk(
-            sentences,
+            sentences[offset:],
             mode=mode,
             token_counter=token_counter or self.token_counter,
             max_tokens=max_tokens,
             max_sentences=max_sentences,
             overlap_percent=overlap_percent,
         )
-        if self.verbose:
-            logger.info("Generated {} chunks.", len(chunks))
-        return chunks
+
+        if base_metadata is None:
+            base_metadata = {}
+
+        return self._create_chunk_boxes(chunks, base_metadata, text)
 
     @validate_input
     def batch_chunk(
@@ -404,11 +468,11 @@ class PlainTextChunker:
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
+        separator: Any = None,
+        base_metadata: dict[str, Any] | None = None,
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
-        separator: Any = _sentinel,
-        _document_context: bool = False,
     ) -> Generator[Any, None, None]:
         """
         Processes a batch of texts in parallel, splitting each into chunks.
@@ -425,22 +489,25 @@ class PlainTextChunker:
             max_sentences (int): Maximum number of sentences per chunk.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
             offset (int): Starting sentence offset for chunking. Defaults to 0.
-            token_counter (callable | None): The token counting function. Required for token-based modes only.
-            n_jobs (int | None): Number of parallel workers to use. If None, uses all available CPUs.
-                   Must be >= 1 if specified.
-            show_progress (bool): Flag to show or disable the loading bar.
-            on_errors (Literal["raise", "skip", "break"]):
-                How to handle errors during processing. Defaults to 'raise'.
+            token_counter (callable | None): The token counting function.
             separator (Any): A value to be yielded after the chunks of each text are processed.
+                Note: None cannot be used as a separator.
+            base_metadata (dict[str, Any] | None): Optional dictionary to be included with each chunk.
+                Required for token-based modes only.
+            n_jobs (int | None): Number of parallel workers to use. If None, uses all available CPUs.
+                Must be >= 1 if specified.
+            show_progress (bool): Flag to show or disable the loading bar.
+            on_errors (Literal["raise", "skip", "break"]): How to handle errors during processing.
+                Defaults to 'raise'.
 
-        yields:
-            str: A chunk string.
-            Any: The separator value, if provided.
+        Yields:
+            Any: A `Box` object containing the chunk content and metadata, or any separator object.
 
         Raises:
             InvalidInputError: If `texts` is not an iterable of strings, or if `n_jobs` is less than 1.
             MissingTokenCounterError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
-            CallbackExecutionError: If an error occurs during sentence splitting or token counting within a chunking task.
+            CallbackError: If an error occurs during sentence splitting
+                or token counting within a chunking task.
         """
         chunk_func = partial(
             self.chunk,
@@ -450,23 +517,17 @@ class PlainTextChunker:
             max_sentences=max_sentences,
             overlap_percent=overlap_percent,
             offset=offset,
+            base_metadata=base_metadata,
             token_counter=token_counter or self.token_counter,
         )
-    
-        processed_results = run_in_batch(
-             func=chunk_func,
-             iterable_of_args=texts,
-             iterable_name="'texts' in batch_chunk",
-             n_jobs=n_jobs,
-             show_progress=show_progress,
-             on_errors=on_errors,
-             verbose=self.verbose,
-        )
 
-        for doc_chunks in processed_results:
-            if _document_context:
-                yield doc_chunks
-            else:
-                yield from doc_chunks
-                if separator is not _sentinel:
-                    yield separator
+        yield from run_in_batch(
+            func=chunk_func,
+            iterable_of_args=texts,
+            iterable_name="texts",
+            n_jobs=n_jobs,
+            show_progress=False,
+            on_errors=on_errors,
+            separator=separator,
+            verbose=self.verbose,
+        )

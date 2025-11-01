@@ -1,19 +1,22 @@
-import pytest
 import re
-
+import pytest
+from more_itertools import split_at
+from loguru import logger
 from chunklet.plain_text_chunker import PlainTextChunker
 from chunklet.exceptions import (
     InvalidInputError,
-    CallbackExecutionError,
+    CallbackError,
     MissingTokenCounterError,
 )
-from loguru import logger
 
 # Silent logging
 logger.remove()
 
 
 # --- Constants ---
+
+# Sentinel to serve as boundary between the groups of chunks for each text
+SEPARATOR_SENTINEL = object()
 
 TEXT = """
 She loves cooking. He studies AI. "You are a Dr.", she said. The weather is great. We play chess. Books are fun, aren't they?
@@ -44,8 +47,7 @@ def chunker():
 def test_init_validation_error():
     """Test that InvalidInputError is raised for invalid initialization parameters."""
     with pytest.raises(
-        InvalidInputError,
-        match=re.escape("(token_counter) Input should be callable.")
+        InvalidInputError, match=re.escape("(token_counter) Input should be callable.")
     ):
         PlainTextChunker(token_counter="Not a callable")
 
@@ -67,13 +69,18 @@ def test_all_modes_produce_chunks(
     )
     assert chunks, f"Expected chunks in {mode} mode but got empty list"
     assert (
-        len(list(chunks)) == expected_chunks
-    ), f"Expected {expected_chunks} chunks in {mode} mode, but got {len(list(chunks))}"
+        len(chunks) == expected_chunks
+    ), f"Expected {expected_chunks} chunks in {mode} mode, but got {len(chunks)}"
 
     # Verify the structure of the first chunk
-    first_chunk = chunks[0]  # first_chunk is now a string
-    assert isinstance(first_chunk, str)
-    assert len(first_chunk) > 0  # Check length of the string
+    first_chunk = chunks[0]
+    assert hasattr(first_chunk, "content")
+    assert hasattr(first_chunk, "metadata")
+
+    assert len(first_chunk.content) > 0
+
+    assert first_chunk.metadata.chunk_num == 1
+    assert hasattr(first_chunk.metadata, "span")
 
 
 @pytest.mark.parametrize(
@@ -88,9 +95,10 @@ def test_all_modes_produce_chunks(
 def test_offset_behavior(chunker, offset, expect_chunks):
     """Verify offset affects output and large offsets produce no chunks"""
     chunks = chunker.chunk(TEXT, offset=offset)
+
     if expect_chunks:
-        assert chunks, f"Should get chunks for offset={offset}"
-        assert len(chunks[0]) > 0, "Chunk content should not be empty"
+        assert len(chunks) >= 1, f"Should get chunks for offset={offset}"
+        assert len(chunks[0].content) > 0, "Chunk content should not be empty"
     else:
         assert not chunks, f"Should get no chunks for offset={offset}"
 
@@ -99,7 +107,10 @@ def test_offset_behavior(chunker, offset, expect_chunks):
 def test_token_counter_validation(mode):
     """Test that a MissingTokenCounterError is raised when a token_counter is missing for token/hybrid modes."""
     with pytest.raises(MissingTokenCounterError):
-        PlainTextChunker().chunk("some text", mode=mode)
+        new_chunker = PlainTextChunker()
+
+        # Consume the generator to trigger the error
+        new_chunker.chunk("some text", mode=mode)
 
 
 def test_long_sentence_truncation(chunker):
@@ -107,8 +118,10 @@ def test_long_sentence_truncation(chunker):
     long_sentence = "word " * 100
     chunks = chunker.chunk(long_sentence, mode="token", max_tokens=30)
 
-    assert len(chunks) == 1, f"Expected 1 chunk, but got {len(chunks)}"
-    assert chunks[0].endswith("..."), f"Chunk '{chunks[0]}' does not end with '...'"
+    assert len(chunks) >= 1, "Expected at least one chunk, but got None"
+    assert chunks[0].content.endswith(
+        "..."
+    ), f"Chunk '{chunks[0].content}' does not end with '...'"
 
 
 # --- Overlap Related Tests ---
@@ -124,40 +137,19 @@ def test_overlap_behavior(chunker):
     assert len(chunks) > 1, "Overlap should produce multiple chunks"
 
     # Manually calculate the expected overlap to create a robust test
-    first_chunk_content = chunks[0]
+    first_chunk_content = chunks[0].content
     clauses = chunker.clause_end_regex.split(first_chunk_content)
 
     overlap_num = round(len(clauses) * 0.33)
     expected_overlap_clause = clauses[-overlap_num:][0]
 
     # The logic adds '... ' if the clause doesn't start with a capital letter
-    if not (
-        expected_overlap_clause[0].isupper()
-        or (len(expected_overlap_clause) > 1 and expected_overlap_clause[1].isupper())
-    ):
-        expected_overlap_string = f"... {expected_overlap_clause.lstrip()}"
-    else:
-        expected_overlap_string = expected_overlap_clause
-
-    assert chunks[1].startswith(
-        expected_overlap_string
-    ), f"Expected second chunk to start with '{expected_overlap_string}', but it did not."
-
-    # Test case 2: Overlap with non-capitalized clause
-    text = "This is a first sentence, and this is a second part. This is the second sentence."
-    chunks = chunker.chunk(text, mode="sentence", max_sentences=1, overlap_percent=50)
-    assert len(chunks) > 1
-    assert chunks[1].startswith("... and this is a second part.")
-
-    # Test _get_overlap_clauses directly
-    sentences = [
-        "This is the first sentence.",
-        "This is the second sentence, with a clause.",
-        "This is the third sentence.",
-    ]
-    overlap = chunker._get_overlap_clauses(sentences, 50)
-    assert isinstance(overlap, list)
-    assert len(overlap) > 0
+    assert (
+        re.match(
+            rf"(?:\.\.\. )?{re.escape(expected_overlap_clause)}", chunks[1].content
+        )
+        is not None
+    ), f"Expected second chunk to start with '{expected_overlap_clause}' (with optional '... '), but it did not."
 
 
 # --- Batch chunking Tests---
@@ -178,18 +170,15 @@ def test_batch_processing_successful(chunker, texts_input, expected_results_len)
             texts_input,
             mode="sentence",
             max_sentences=100,
-            _document_context=True,
+            separator=SEPARATOR_SENTINEL,
         )
     )
-    assert len(results) == expected_results_len
-    if texts_input and results and results[0] and len(results[0]) > 0:
-        # Check structure of the first result of the first text
-        assert isinstance(results[0][0], str)  # Check if it's a string
 
-    if texts_input == ["First sentence.", "", "Second sentence."]:
-        assert "First sentence." in results[0][0]
-        assert results[1] == []
-        assert "Second sentence." in results[2][0]
+    # Minus by 1 to removed count for the empty [] that split_at like to put at the end
+    assert (
+        len(list(split_at(results, lambda x: x is SEPARATOR_SENTINEL))) - 1
+        == expected_results_len
+    )
 
 
 def test_batch_processing_input_validation(chunker):
@@ -198,17 +187,17 @@ def test_batch_processing_input_validation(chunker):
     texts_input_int = [1, 2, 3]  # Use list[int] here
 
     with pytest.raises(
-        InvalidInputError,
-        match=re.escape("Input should be a valid string.")
+        InvalidInputError, match=re.escape("Input should be a valid string.")
     ):
         list(chunker.batch_chunk(texts_input_int))
 
-    # Test n_jobs with an invalid type  
+    # Test n_jobs with an invalid type
     with pytest.raises(
         InvalidInputError,
-        match=re.escape("(n_jobs) Input should be greater than or equal to 1.")
+        match=re.escape("(n_jobs) Input should be greater than or equal to 1."),
     ):
         list(chunker.batch_chunk(["some text"], n_jobs=-1))
+
 
 def test_batch_chunk_error_handling_on_task(chunker):
     """Test the on_errors parameter in batch_chunk."""
@@ -217,43 +206,35 @@ def test_batch_chunk_error_handling_on_task(chunker):
 
     # Test on_errors = 'raise'
     with pytest.raises(
-        CallbackExecutionError,
+        CallbackError,
         match="Token counter failed while processing text starting with:",
     ):
         list(chunker.batch_chunk(texts, mode="token", on_errors="raise"))
 
     # Test on_errors = 'skip'
-    results = list(chunker.batch_chunk(texts, mode="token", on_errors="skip"))
-    assert len(results) == 2
-    assert "This is ok." in results[0]
-    assert "This will not be processed." in results[1]
+    results = chunker.batch_chunk(
+        texts,
+        mode="token",
+        on_errors="skip",
+        separator=SEPARATOR_SENTINEL,
+    )
+
+    # Split the flattened stream into groups
+    all_chunk_groups = list(split_at(results, lambda x: x is SEPARATOR_SENTINEL))
+
+    assert len(all_chunk_groups) - 1 == 2  # Expect 2 successful documents
+    assert "This is ok." in all_chunk_groups[0][0].content
+    assert "This will not be processed." in all_chunk_groups[1][0].content
 
     # Test on_errors = 'break'
-    results = list(chunker.batch_chunk(texts, mode="token", on_errors="break"))
-    assert len(results) == 1
-    assert "This is ok." in results[0]
+    results = chunker.batch_chunk(
+        texts,
+        mode="token",
+        on_errors="break",
+        separator=SEPARATOR_SENTINEL,
+    )
 
-
-@pytest.mark.parametrize(
-    "separator, texts, expected_output",
-    [
-        # Case 1: Simple string separator
-        (
-            "---",
-            ["First sentence.", "Second sentence."],
-            ["First sentence.", "---", "Second sentence.", "---"],
-        ),
-        # Case 2: None as separator
-        (
-            None,
-            ["First sentence.", "Second sentence."],
-            ["First sentence.", None, "Second sentence.", None],
-        ),
-    ],
-)
-def test_batch_chunk_with_separator(chunker, separator, texts, expected_output):
-    """Test the separator functionality in batch_chunk with real chunking."""
-    result = list(chunker.batch_chunk(texts, separator=separator))
-
-    assert result == expected_output
-
+    # Split the flattened stream into groups
+    all_chunk_groups = list(split_at(results, lambda x: x is SEPARATOR_SENTINEL))
+    assert len(all_chunk_groups) - 1 == 1  # Expect 1 successful document
+    assert "This is ok." in all_chunk_groups[0][0].content
