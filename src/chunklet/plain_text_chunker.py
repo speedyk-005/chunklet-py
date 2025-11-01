@@ -453,15 +453,6 @@ class PlainTextChunker:
             token_counter=token_counter or self.token_counter,
         )
     
-        result = run_in_batch(
-             func=chunk_func,
-             iterable_of_args=texts,
-             iterable_name="'texts' in batch_chunk",
-             n_jobs=n_jobs,
-             show_progress=show_progress,
-             on_errors=on_errors,
-             verbose=self.verbose,
-        )
         processed_results = run_in_batch(
              func=chunk_func,
              iterable_of_args=texts,

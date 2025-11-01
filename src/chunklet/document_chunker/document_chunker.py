@@ -45,10 +45,6 @@ class DocumentChunker:
     - Pluggable Document processors: Integrate custom processors allowing definition
     of specific logic for extracting text from various file types.
     """
-
-    # Supported file extensions
-    SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt", ".tex", ".html", ".hml", ".md", ".rst", ".rtf", ".epub"}
-
     def __init__(
         self,
         plain_text_chunker: Any | None = None,
@@ -100,6 +96,13 @@ class DocumentChunker:
         self.processor_registry = CustomProcessorRegistry()
 
     @property
+    def supported_extensions(self):
+        """Get the supported extensions, including the custom ones."""
+        return {
+            ".pdf", ".docx", ".txt", ".tex", ".html", ".hml", ".md", ".rst", ".rtf", ".epub"
+        } | self.processor_registry.processors.keys()
+        
+    @property
     def verbose(self) -> bool:
         """Get the verbosity status."""
         return self._verbose
@@ -138,10 +141,10 @@ class DocumentChunker:
         if not path.is_file():
             raise FileNotFoundError(f"The file '{path}' can't be found.")
 
-        if extension not in self.SUPPORTED_EXTENSIONS and not self.processor_registry.is_registered(extension):
+        if extension not in self.supported_extensions:
             raise UnsupportedFileTypeError(
                 f"File type '{extension}' is not supported.\nSupported extensions are: "
-                f"{self.SUPPORTED_EXTENSIONS | self.processor_registry.custom_splitters()}\n"
+                f"{self.supported_extensions}\n"
                 "💡 Hint: You can add support for other file types by providing a custom processor."
             )
 
@@ -274,7 +277,7 @@ class DocumentChunker:
             )
             if self.verbose:
                 logger.info("Used registered processor: {}", processor_name)
-        elif ext in self.SUPPORTED_EXTENSIONS - {".pdf"}:
+        elif ext in self.supported_extensions - {".pdf"}:
             text_content = self._extract_text(validated_path, ext)
         elif ext == ".pdf":
             raise UnsupportedFileTypeError(
@@ -285,7 +288,7 @@ class DocumentChunker:
         else:
             raise UnsupportedFileTypeError(
                 f"File type '{ext}' is not supported.\n"
-                f"Supported extensions are: {self.SUPPORTED_EXTENSIONS}\n"
+                f"Supported extensions are: {self.supported_extensions}\n"
                 "💡 Hint: You can add support for other file types by providing a custom processor."
             )
         # Process as a single block of text

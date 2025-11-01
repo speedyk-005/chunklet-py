@@ -11,19 +11,19 @@ class CustomSplitterRegistry:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(CustomSplitterRegistry, cls).__new__(cls)
-            cls._instance._custom_splitters: Dict[str, Tuple[str, Callable]] = {}
+            cls._instance._splitters: Dict[str, Tuple[str, Callable]] = {}
         return cls._instance
 
     @property
-    def custom_splitters(self):
-        return self._custom_splitters
+    def splitters(self):
+        return self._splitters
         
     @validate_input
     def is_registered(self, lang: str) -> bool:
         """
         Check if a splitter is registered for the given language.
         """
-        return lang in self.custom_splitters
+        return lang in self._splitters
 
 
     @validate_input
@@ -61,7 +61,7 @@ class CustomSplitterRegistry:
 
         splitter_name = name or callback.__name__
         for lang in langs:
-            self._custom_splitters[lang] = (splitter_name, callback)
+            self._splitters[lang] = (splitter_name, callback)
 
 
     @validate_input
@@ -73,7 +73,7 @@ class CustomSplitterRegistry:
             *langs: Language codes to remove
         """
         for lang in langs:
-            self._custom_splitters.pop(lang, None)
+            self._splitters.pop(lang, None)
 
     @validate_input
     def split(
@@ -95,7 +95,7 @@ class CustomSplitterRegistry:
             CallbackExecutionError: If the splitter callback fails.
             TypeError: If the splitter returns the wrong type.
         """
-        splitter_info = self._custom_splitters.get(lang)
+        splitter_info = self._splitters.get(lang)
         if not splitter_info:
             raise CallbackExecutionError(
                 f"No splitter registered for language '{lang}'.\n"

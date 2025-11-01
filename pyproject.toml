@@ -97,9 +97,17 @@ packages = [
 
 [tool.pytest.ini_options]
 minversion = "7.4"
-addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --strict-markers --durations=0"
+
+# pytest-cov is temporarily disabled due to deadlocks with mpire and multiprocessing.
+# See https://github.com/pytest-dev/pytest-cov/issues/ for more details.
+#addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --strict-markers" 
+
 testpaths = ["tests"]
 python_files = "test_*.py"
+
+[tool.coverage.run]
+concurrency = ["multiprocessing"]
+parallel = true 
 
 [tool.coverage.report]
 omit = [

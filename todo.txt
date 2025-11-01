@@ -1,14 +1,5 @@
 - merged batch_chunk with chunk_pdfs
 
 # what we have done
-- keep invalid input errors consistent
-- add support for html, latex and epub
-- improved regex pattern for code chunking, add more coverage and reduce edges cases
-- replace argparse with typer
-- update @src/chunklet/utils/token_utils.py to use lrucache
-- improve pattern for code chunking for more languages coverage and edges cases reducing
-- replace pydantic basemodel by pydantic validate_call for lightweight and more easier validation
-- centralized batch methods to a utils
-- removed input_files and add support for multiple dir in cli
 
 # done, not yet changelog
