@@ -17,6 +17,20 @@ class DocxProcessor(BaseProcessor):
         file_path (str): Path to the DOCX file.
     """
 
+    METADATA_FIELDS = [
+            "title",
+            "author",
+            "language",
+            "subject",
+            "publisher",
+            "date",
+            "rights",
+            "keywords",
+            "last_modified_by"
+            "created",
+            "modified",
+        ] 
+    
     def extract_metadata(self) -> dict[str, Any]:
         """Extracts core metadata from the DOCX file.
 
@@ -41,18 +55,13 @@ class DocxProcessor(BaseProcessor):
 
         doc = Document(self.file_path)
         props = doc.core_properties
-        metadata = {
-            "source": str(self.file_path),
-            "title": props.title,
-            "author": props.author,
-            "subject": props.subject,
-            "keywords": props.keywords,
-            "last_modified_by": props.last_modified_by,
-            "created": props.created,
-            "modified": props.modified,
-        }
+        metadata = {"source": str(self.file_path)}
+        for field in self.METADATA_FIELDS:
+            value = getattr(props, field, "")
+            if value:
+                metadata[field] = str(value)
         return metadata
-
+       
     def extract_text(self) -> Generator[str, None, None]:
         """Extracts the text content from the DOCX file in Markdown format.
 

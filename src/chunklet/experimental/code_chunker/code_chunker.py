@@ -52,11 +52,8 @@ from chunklet.experimental.code_chunker.patterns import (
     OPENER,
     CLOSURE,
 )
-from chunklet.experimental.code_chunker.helpers import (
-    is_path_like,
-    is_binary_file,
-    is_python_code,
-)
+from chunklet.experimental.code_chunker.helpers import is_binary_file, is_python_code
+from chunklet.utils.path_utils import is_path_like   
 from chunklet.utils.batch_runner import run_in_batch
 from chunklet.utils.validation import validate_input, restricted_iterable
 from chunklet.utils.token_utils import count_tokens
@@ -93,7 +90,7 @@ class CodeChunker:
     @validate_input
     def __init__(
         self,
-        verbose: bool = True,
+        verbose: bool = False,
         token_counter: Callable[[str], int] | None = None,
     ):
         """
@@ -590,7 +587,7 @@ class CodeChunker:
         token_counter: Callable[[str], int] | None = None,
         include_comments: bool = False,
         docstring_mode: Literal["summary", "all", "excluded"] = "summary",
-        strict_mode: bool = True,
+        strict: bool = True,
     ) -> list[Box]:
         """
         Extract semantic code chunks from source using structural analysis.
@@ -609,7 +606,7 @@ class CodeChunker:
                 - "summary": Include only first line of docstrings
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
-            strict_mode (bool): If True, raise error when structural blocks exceed
+            strict (bool): If True, raise error when structural blocks exceed
                 max_tokens. If False, split oversized blocks. Default: True.
 
         Returns:
@@ -625,7 +622,7 @@ class CodeChunker:
             MissingTokenCounterError: No token counter available.
             FileProcessingError: Source file cannot be read.
             TokenLimitError: Structural block exceeds max_tokens in strict mode.
-            Callbackexecutionerror: If the token counter fails or returns an invalid type.
+            CallbackError: If the token counter fails or returns an invalid type.
         """
         if self.verbose:
             logger.info(
@@ -676,7 +673,7 @@ class CodeChunker:
 
             elif not merged_content:
                 # too big and nothing merged yet: handle single oversize
-                if strict_mode:
+                if strict:
                     raise TokenLimitError(
                         f"Structural block exceeds maximum token limit: {box_tokens} > {max_tokens}.\n"
                         f"Content starting with: \n```\n{snippet_dict['content'][:100]}...\n```\n"
@@ -768,7 +765,7 @@ class CodeChunker:
         separator: Any = None,
         include_comments: bool = False,
         docstring_mode: Literal["summary", "all", "excluded"] = "summary",
-        strict_mode: bool = True,
+        strict: bool = True,
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
@@ -791,7 +788,7 @@ class CodeChunker:
                 - "summary": Include only first line of docstrings
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
-            strict_mode (bool): If True, raise error when structural blocks exceed
+            strict (bool): If True, raise error when structural blocks exceed
                 max_tokens. If False, split oversized blocks. Default: True.
             n_jobs (int | None): Number of parallel workers. Uses all available CPUs if None.
             show_progress (bool): Display progress bar during processing. Defaults to True.
@@ -806,7 +803,7 @@ class CodeChunker:
             MissingTokenCounterError: No token counter available.
             FileProcessingError: Source file cannot be read.
             TokenLimitError: Structural block exceeds max_tokens in strict mode.
-            Callbackexecutionerror: If the token counter fails or returns an invalid type.
+            CallbackError: If the token counter fails or returns an invalid type.
         """
         chunk_func = partial(
             self.chunk,
@@ -814,7 +811,7 @@ class CodeChunker:
             token_counter=token_counter or self.token_counter,
             include_comments=include_comments,
             docstring_mode=docstring_mode,
-            strict_mode=strict_mode,
+            strict=strict,
         )
 
         yield from run_in_batch(

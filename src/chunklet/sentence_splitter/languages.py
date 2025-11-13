@@ -53,10 +53,31 @@ INDIC_NLP_UNIQUE_LANGUAGES = {
     "te",  # Telugu
 }
 
-# Languages unique to Sentencex that are NOT supported by the other libraries (2)
+# Languages unique to Sentencex that are NOT supported by the other libraries (15)
+# `Sentencex` is a powerful library that aims to support all languages with a Wikipedia presence,
+# with fallbacks for over 200 languages.
+# It uses a fallback system to support a vast number of languages.
+# The set below is a curated selection of the more reliable
+# and unique languages from `Sentencex`. It has been filtered to:
+#    *   Include only languages with an ISO 639-1 code.
+#    *   Exclude languages that are already covered by `pysbd`, `sentsplit`, or `Indic NLP Library`.
+#    *   Exclude languages that are fallbacks to other languages but are not reliable enough.
 SENTENCEX_UNIQUE_LANGUAGES = {
+    "an",  # Aragonese
     "ca",  # Catalan
+    "co",  # Corsican
+    "cs",  # Czech
     "fi",  # Finnish
+    "gl",  # Galician
+    "io",  # Ido
+    "jv",  # Javanese
+    "li",  # Limburgish
+    "mo",  # Moldovan
+    "nds",  # Low German
+    "nn",  # Norwegian Nynorsk
+    "oc",  # Occitan
+    "su",  # Sundanese
+    "wa",  # Walloon
 }
 
 

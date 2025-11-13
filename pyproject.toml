@@ -1,7 +1,7 @@
 [project]
 name = "chunklet-py"
 version = "2.0.0"
-description = "One library to split them all: Sentence, Code, Docs— RAG-ready, token-aware, and multi-format."
+description = "One library to split them all. Advanced, RAG-ready text, code, and document chunking for LLMs, supporting multilingual, token-aware, and multi-format."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
 ]
@@ -20,6 +20,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Text Processing",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Topic :: Software Development :: Libraries :: Python Modules"
@@ -73,6 +74,11 @@ dev = [
   "black>=25.1.0",
   "flake8>=7.3.0",
   "flake8-pyproject>=1.2.3",
+  "mike>=2.1.2",
+  "mkdocs-material>=9.6.20",
+  "mkdocs-api-autonav>=0.4.0",
+  "mkdocstrings-python>=1.17.0",
+  "pymdown-extensions>=10.16.1",
 ]
 
 [project.urls]

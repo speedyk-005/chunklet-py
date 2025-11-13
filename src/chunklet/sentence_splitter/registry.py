@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable
+from typing import Callable, Iterable, Any
 from pydantic import TypeAdapter, ValidationError
 from chunklet.utils.validation import validate_input, pretty_errors
 from chunklet.exceptions import CallbackError
@@ -30,21 +30,53 @@ class CustomSplitterRegistry:
         """
         return lang in self._splitters
 
-    @validate_input
-    def register(
-        self, *langs: str, callback: Callable[str, list[str]], name: str | None = None
-    ):
+    def register(self, *args: Any, name: str | None = None):
         """
         Register a splitter callback for one or more languages.
 
-        Args:
-            *langs: One or more language codes (str)
-            callback: Callable that takes exactly one argument (the text to split)
-            name (str, optional): The name of the splitter. Defaults to the function name.
+        This method can be used in two ways:
+        1. As a decorator:
+            @registry.register("en", "fr", name="my_splitter")
+            def my_splitter(text):
+                ...
 
-        Raises:
-            InvalidInputError: If the provided arguments are not valid.
+        2. As a direct function call:
+            registry.register(my_splitter, "en", "fr", name="my_splitter")
+
+        Args:
+            *args: The arguments, which can be either (lang1, lang2, ...) for a decorator
+                   or (callback, lang1, lang2, ...) for a direct call.
+            name (str | None): The name of the splitter. If None, attempts to use the callback's name.
         """
+        if not args:
+            raise ValueError("At least one language or a callback must be provided.")
+
+        if callable(args[0]):
+            # Direct call: register(callback, lang1, lang2, ...)
+            callback = args[0]
+            langs = args[1:]
+            if not langs:
+                raise ValueError("At least one language must be provided for the callback.")
+            self._register_logic(langs, callback, name)
+            return callback
+        else:
+            # Decorator: @register(lang1, lang2, ...)
+            langs = args
+
+            def decorator(cb: Callable):
+                self._register_logic(langs, cb, name)
+                return cb
+
+            return decorator
+
+    @validate_input
+    def _register_logic(
+        self,
+        langs: tuple[str, ...],
+        callback: Callable[[str], list[str]],
+        name: str | None = None,
+    ):
+        """Helper to perform the actual registration and validation."""
         sig = inspect.signature(callback)
         params = list(sig.parameters.values())
 
@@ -63,7 +95,16 @@ class CustomSplitterRegistry:
                 "💡Hint: Optional parameters with default values are allowed."
             )
 
-        splitter_name = name or callback.__name__
+        if name is None:
+            if hasattr(callback, '__name__') and callback.__name__ != '<lambda>':
+                splitter_name = callback.__name__
+            else:
+                raise ValueError(
+                    "A name must be provided for the splitter, or the callback must be a named function (not a lambda)."
+                )
+        else:
+            splitter_name = name
+        
         for lang in langs:
             self._splitters[lang] = (splitter_name, callback)
 
@@ -99,6 +140,15 @@ class CustomSplitterRegistry:
         Raises:
             CallbackError: If the splitter callback fails.
             TypeError: If the splitter returns the wrong type.
+
+        Examples:
+            >>> from chunklet.sentence_splitter import CustomSplitterRegistry
+            >>> registry = CustomSplitterRegistry()
+            >>> @registry.register("xx", name="custom_splitter")
+            ... def custom_splitter(text: str) -> list[str]:
+            ...     return text.split(" ")
+            >>> registry.split("Hello World", "xx")
+            (['Hello', 'World'], 'custom_splitter')
         """
         splitter_info = self._splitters.get(lang)
         if not splitter_info:
@@ -124,21 +174,3 @@ class CustomSplitterRegistry:
             ) from None
 
         return result, name
-
-
-def registered_splitter(*langs: str, name: str | None = None):
-    """
-    Decorator version of splitter registration.
-
-    Usage:
-        @registered_splitter("en", "fr")
-        def my_splitter(text):
-            ...
-    """
-    registry = CustomSplitterRegistry()
-
-    def decorator(callback: Callable):
-        registry.register(*langs, callback=callback, name=name)
-        return callback
-
-    return decorator

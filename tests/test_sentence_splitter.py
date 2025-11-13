@@ -1,16 +1,8 @@
 import re
 import pytest
 from loguru import logger
-from chunklet.sentence_splitter import SentenceSplitter
-from chunklet.sentence_splitter.registry import (
-    CustomSplitterRegistry,
-    registered_splitter,
-)
-from chunklet.exceptions import CallbackError
-
-# Silent logging
-logger.remove()
-
+from chunklet.sentence_splitter import SentenceSplitter, CustomSplitterRegistry
+from chunklet import CallbackError
 
 # --- Fixture ---
 
@@ -93,7 +85,7 @@ def test_unsupported_language_fallback(splitter, text, expected_sentences):
 def test_custom_splitter_usage(registry):
     """Test that the splitter can work a custom splitter without errors."""
 
-    @registered_splitter("x_lang")
+    @registry.register("x_lang")
     def custom_x_splitter(text: str):
         return [s.strip() for s in text.split("X")]
 
@@ -137,7 +129,7 @@ def test_custom_splitter_validation_scenarios(
 ):
     """Test various custom splitter validation scenarios."""
 
-    @registered_splitter("xx", name=splitter_name)
+    @registry.register("xx", name=splitter_name)
     def _temp_splitter(text):
         return callback_func(text)
 

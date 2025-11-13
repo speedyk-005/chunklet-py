@@ -1,16 +1,12 @@
 import re
 import pytest
 from more_itertools import split_at
-from loguru import logger
 from chunklet.plain_text_chunker import PlainTextChunker
-from chunklet.exceptions import (
+from chunklet import (
     InvalidInputError,
     CallbackError,
     MissingTokenCounterError,
 )
-
-# Silent logging
-logger.remove()
 
 
 # --- Constants ---
@@ -60,7 +56,6 @@ def test_all_modes_produce_chunks(
     chunker, mode, max_tokens, max_sentences, expected_chunks
 ):
     """Verify all chunking modes produce output with expected chunk counts and structure."""
-    chunker.verbose = True
     chunks = chunker.chunk(
         TEXT,
         mode=mode,

@@ -1,11 +1,19 @@
+- add a metadata.md in docs
+- add language in chunks and even limit counts
+
+
 # what we have done
-- changed the base class of UnsupportedFileTypeError to FileProcessingError
-- put a clear method in registry
-- rm tempfile import and use the special raw text in html 2 text without needing path
-- fixed code chunker line numbering to be consistent for all mode
-- used namedtuple to reduce ambiguity in some part of code_chunker
-- used plain dict instead of box object in some part
-- keep looging concisde and consistent
+- added the classifier for Python 3.14 to the pyproject.toml file.
+- added Python 3.14 to the test matrix in the GitHub Actions workflow
+- Expanded and refined the set of fallback languages, increasing the number of unique 'sentencex' languages from 2 to 15.
+- Update the documentation
+- fix continuation marker logic
+- fix missing fondamental metadata for documnet chunker
+- make register function designed to be used in two different ways: as a direct function call, or more commonly, as a decorator.
+- add of usage in some docstrings
+- rm the top-level chunklet package's __init__.py to reduce import time
+- implement a try-except block using
+  Path(text).is_file() to trigger OSError for path length.
 
 
 # done, not yet changelog

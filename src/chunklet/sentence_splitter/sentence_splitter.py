@@ -25,15 +25,23 @@ class BaseSplitter(ABC):
     """
 
     @abstractmethod
-    def split(self, text: str) -> list[str]:
+    def split(self, text: str, lang: str) -> list[str]:
         """
         Splits the given text into a list of sentences.
 
-        Args:
-            text (str): The input text to be segmented.
-            s
+        text (str): The input text to be split.
+            lang (str): The language of the text (e.g., 'en', 'fr', 'auto').
+            
         Returns:
             list[str]: A list of sentences extracted from the text.
+
+        Examples:
+            >>> class MySplitter(BaseSplitter):
+            ...     def split(self, text: str, lang: str) -> list[str]:
+            ...         return text.split(".")
+            >>> splitter = MySplitter()
+            >>> splitter.split("Hello. World.", "en")
+            ['Hello', ' World']
         """
         pass
 
@@ -51,12 +59,11 @@ class SentenceSplitter(BaseSplitter):
     """
 
     @validate_input
-    def __init__(self, verbose: bool = True):
+    def __init__(self, verbose: bool = False):
         """
         Initializes the SentenceSplitter.
 
         Args:
-            text (str): The input text to be split.
             verbose (bool): If True, enables verbose logging for debugging and informational messages.
         """
         self.verbose = verbose
@@ -124,6 +131,15 @@ class SentenceSplitter(BaseSplitter):
 
         Returns:
             list[str]: A list of sentences.
+
+        Examples:
+            >>> splitter = SentenceSplitter()
+            >>> splitter.split("Hello world. How are you?", "en")
+            ['Hello world.', 'How are you?']
+            >>> splitter.split("Bonjour le monde. Comment allez-vous?", "fr")
+            ['Bonjour le monde.', 'Comment allez-vous?']
+            >>> splitter.split("Hello world. How are you?", "auto")
+            ['Hello world.', 'How are you?']
         """
         if not text:
             if self.verbose:

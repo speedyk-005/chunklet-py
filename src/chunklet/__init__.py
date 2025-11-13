@@ -1,19 +1,17 @@
 """
-Chunklet: Multi_strategy, Context-aware, Multilingual Text Chunker
+Chunklet: The v2.0.0 Evolution - Multi-strategy, Context-aware, Multilingual Text & Code Chunker
 
 This package provides a robust and flexible solution for splitting large texts
-into smaller, manageable chunks. It is designed with applications like Large
+and code into smaller, manageable chunks. Designed for applications like Large
 Language Models (LLMs), Retrieval-Augmented Generation (RAG) pipelines, and
-other context-aware Natural Language Processing (NLP) tasks in mind.
+other context-aware Natural Language Processing (NLP) tasks.
 
-The core functionality is provided by the `Chunklet` class, which can be
-imported directly from the package alongside execptions.
+Version 2.0.0 introduces a revamped architecture with:
+- Dedicated chunkers: `PlainTextChunker` (formerly `Chunklet`), `DocumentChunker`, and `CodeChunker`.
+- Expanded language support (50+ languages) and improved error handling.
+- Flexible batch processing with `on_errors` parameter and memory-optimized generators.
+- Enhanced modularity, extensibility, and performance.
 """
-
-from .sentence_splitter import SentenceSplitter
-from .plain_text_chunker import PlainTextChunker
-from .document_chunker import DocumentChunker
-from .experimental.code_chunker import CodeChunker
 from .exceptions import (
     ChunkletError,
     InvalidInputError,
@@ -27,10 +25,6 @@ from .exceptions import (
 __version__ = "2.0.0"
 
 __all__ = [
-    "SentenceSplitter",
-    "PlainTextChunker",
-    "DocumentChunker",
-    "CodeChunker",
     "ChunkletError",
     "InvalidInputError",
     "MissingTokenCounterError",

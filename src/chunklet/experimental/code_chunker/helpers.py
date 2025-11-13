@@ -1,43 +1,15 @@
 import sys
 import regex as re
-from pathlib import Path
+import ast
 import mimetypes
+from pathlib import Path
 from pygments.lexers import guess_lexer
 from pygments.util import ClassNotFound
-
-# Pattern to check if source args provided in the chunk method is a path
-PATH_PATTERN = re.compile(
-    r"""
-    ^                                   # start of string
-    (?:/|[\p{Lu}]:\\)?                 # optional root (Unix or Windows drive)
-    (?:[\p{L}\p{N}_\-. ]+[/\\])*       # intermediate folders
-    (?:[\p{L}\p{N}_\-. ])+             # file name (hidden or normal)
-    (?:\.[\p{L}\p{N}]+)?               # optional extension
-    $                                   # end of string
-""",
-    re.VERBOSE,
-)
+from chunklet.utils.validation import validate_input
+from chunklet.utils.path_utils import is_path_like 
 
 
-def is_path_like(text: str) -> bool:
-    """
-    Check if a string looks like a filesystem path (file or folder),
-    including Unix/Windows paths, hidden files, and scripts without extensions.
-
-    Args:
-        text (str): text to check.
-
-    Returns:
-        bool: True if string appears to be a filesystem path.
-    """
-    if not text or "\n" in text or "\0" in text:
-        return False
-    if sys.platform == "win32" and any(c in text for c in '<>:"|?*'):
-        return False
-
-    return bool(PATH_PATTERN.match(text))
-
-
+@validate_input
 def is_binary_file(file_path: str | Path) -> bool:
     """
     Determine whether a file is binary or text.
@@ -63,19 +35,24 @@ def is_binary_file(file_path: str | Path) -> bool:
         return b"\0" in chunk
 
 
+@validate_input
 def is_python_code(source: str | Path) -> bool:
     """
-    Heuristically check if a source is written in Python
+    Check if a source is written in Python.
 
-    This function uses multiple indicators to determine whether the input
-    is likely Python code, including:
-      - File extension check (".py")
-      - Shebang line detection (e.g., "#!/usr/bin/python" or "#!/usr/bin/env python")
-      - Syntax pattern recognition via Pygments lexer guessing
+    This function uses multiple indicators, prioritizing syntactic validity
+    via the Abstract Syntax Tree (AST) parser for maximum confidence.
+
+    Indicators used:
+      - File extension check for path inputs (e.g., .py, .pyi, .pyx, .pyw).
+      - Shebang line detection (e.g., "#!/usr/bin/python").
+      - Definitive syntax check using Python's `ast.parse()`.
+      - Fallback heuristic via Pygments lexer guessing.
 
     Note:
-        This is a heuristic approach and may produce false positives or
-        false negatives for short, ambiguous, or unconventional code snippets.
+        The function is definitive for complete, syntactically correct code blocks.
+        It falls back to a Pygments heuristic only for short, incomplete, or
+        ambiguous code snippets that fail AST parsing.
 
     Args:
         source (str | Path): raw code string or Path to source file to check.
@@ -83,15 +60,29 @@ def is_python_code(source: str | Path) -> bool:
     Returns:
         bool: True if the source is written in Python.
     """
+    # Path-based check
     if isinstance(source, Path) or (isinstance(source, str) and is_path_like(source)):
         path = Path(source)
-        return path.suffix.lower() == ".py"
+        return path.suffix.lower() in {".py", ".pyi", ".pyx", ".pyw"}
 
-    if re.match(r"#!/usr/bin/(env\s+)?python", source.strip()):
-        return True
+    if isinstance(source, str):
+        # Shebang line check
+        if re.match(r"#!/usr/bin/(env\s+)?python", source.strip()):
+            return True
 
+        # Definitive syntactic check (Highest confidence)
+        try:
+            ast.parse(source)
+            # If parsing succeeds, it's definitely Python code
+            return True 
+        except Exception:
+            # If fails, it might still be Python code (e.g., incomplete snippet), so continue with heuristics
+            pass  
+
+    # Pygments heuristic (Lowest confidence, last resort)
     try:
         lexer = guess_lexer(source)
         return lexer.name.lower() == "python"
     except ClassNotFound:
         return False
+        

@@ -23,6 +23,14 @@ def pretty_errors(error: ValidationError) -> str:
 
         input_value = err["input"]
         input_type = type(input_value).__name__
+
+        # Sliced to avoid overflow screen
+        input_value = (
+            input_value
+            if len(str(input_value)) < 500
+            else str(input_value)[:500] + "..."
+        )
+
         lines.append(
             f"{ind}) {formatted_loc} {msg}.\n"
             f"  Found: (input={input_value!r}, type={input_type})"
@@ -43,8 +51,10 @@ def restricted_iterable(*hints: Any) -> Any:
         if isinstance(v, str):
             # Pydantic-Core is sometimes pickier; using ValueError often works better
             # with external validators than a raw TypeError
+            # Sliced to avoid overflow screen
+            input_val = v if len(v) < 500 else v[:500] + "..."
             raise ValueError(
-                f"Input cannot be a string.\n  Found: (input={v!r}, type=str)"
+                f"Input cannot be a string.\n  Found: (input={input_val!r}, type=str)"
             )
         return v
 
@@ -81,6 +91,7 @@ def validate_input(fn):
     return wrapper
 
 
+@validate_input
 def safely_count_iterable(name: str, iterable: Iterable) -> tuple[int, Iterable]:
     """
     Counts elements in an iterable while preserving its state and forcing validation.
@@ -98,6 +109,24 @@ def safely_count_iterable(name: str, iterable: Iterable) -> tuple[int, Iterable]
 
     Raises:
         InvalidInputError: If any element fails validation during the counting process.
+
+    Examples:
+        >>> # With a list
+        >>> my_list = [1, 2, 3, 4, 5]
+        >>> count, preserved_list = safely_count_iterable("my_list", my_list)
+        >>> print(f"Count: {count}")
+        Count: 5
+        >>> print(f"Original list is preserved: {list(preserved_list)}")
+        Original list is preserved: [1, 2, 3, 4, 5]
+
+        >>> # With an iterator (generator)
+        >>> my_iterator = (x for x in range(10))
+        >>> count, preserved_iterator = safely_count_iterable("my_iterator", my_iterator)
+        >>> print(f"Count: {count}")
+        Count: 10
+        >>> # The iterator is preserved and can still be consumed
+        >>> print(f"Sum of preserved iterator: {sum(preserved_iterator)}")
+        Sum of preserved iterator: 45
     """
     try:  # If pydantic wrap it as ValidatorIterator object
         # Tee if it's an iterator

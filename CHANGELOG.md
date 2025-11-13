@@ -13,15 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Code Chunker Introduction:** Introduced `CodeChunker`, a rule-based language agnostic chunker for syntax-aware chunking of source code.
 - **Expanded Language Support:** Integrated `sentsplit`, `sentencex`, and `indic-nlp-library` for more accurate and comprehensive sentence splitting across a wider range of languages.
-This officially boosts language support from 36+ to 40+.
+This officially boosts language support from 36+ to 50+.
 - **Error Handling in batch methods**: Added an `on_errors` parameter to `batch_chunk` methods to allow for more flexible error handling (raise, skip, or break).
-- **CLI Multiple Input Files:** Added an `--input-files` argument to allow processing of multiple specific files.
 - **Document Chunker:** Introduced `DocumentChunker` to handle various file formats like `.pdf`, `.docx`, `.txt`, `.md`, `.rst`, `.rtf`, `.tex`, `.html/hml`, `.epub`.
 - **Show Progress Parameter:** Added `show_progress` parameter to `batch_chunk` in `PlainTextChunker` to allow users to control the display of the progress bar.
 - **Custom Processors:** Introduced support for custom document processors, allowing users to define their own logic for extracting text from various file types.
 - **New Custom Exception Types:** Introduced more specific error types like `FileProcessingError`, `UnsupportedFileTypeError`, `TokenLimitError` and `CallbackError`.
-- for dealing with malformed or extremely long, unpunctuated strings (like a massive URL, a base64 encoded block, or a chunk of minified JSON).
-
+  
 ### Changed
 
 - **Project Restructuring:**
@@ -56,7 +54,7 @@ This officially boosts language support from 36+ to 40+.
     - Artifacts handling: Improved logic to gracefully handle and segment malformed or extreme text artifacts (e.g., massive URLs, base64 blocks, minified JSON) by applying a Greedy Token Cutoff. This ensures the chunker does not fail or produce overly large, unusable chunks when encountering long, unpunctuated strings.
 - **Absolute Imports:** Converted all relative imports to absolute imports within the `chunklet` package for better clarity and to avoid potential import issues.
 - **Default Limits:** Changed the default `max_tokens` from 512 to 256 and `max_sentences` from 100 to 12.
-- **Continuation marker:** Exposed continuation marker so users can define thier own or set it to an empty str to disabled it.
+- **Continuation marker:** Improved the continuation marker logic and exposed it's value so users can define thier own or set it to an empty str to disabled it.
 
 ### Removed
 

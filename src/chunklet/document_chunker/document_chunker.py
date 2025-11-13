@@ -60,39 +60,44 @@ class DocumentChunker:
 
     def __init__(
         self,
-        plain_text_chunker: Any | None = None,
-        verbose: bool = True,
+        sentence_splitter: Any | None = None,
+        verbose: bool = False,
+        continuation_marker: str = "...",
         token_counter: Callable[[str], int] | None = None,
     ):
         """
         Initializes the DocumentChunker.
 
         Args:
-            plain_text_chunker (PlainTextChunker | None): An optional PlainTextChunker instance.
-                If None, a default PlainTextChunker will be initialized.
-            verbose (bool): If True, enables verbose logging. Defaults to True.
+            sentence_splitter (BaseSplitter | None): An optional BaseSplitter instance.
+                If None, a default SentenceSplitter will be initialized.
+            verbose (bool): Enable verbose logging.
+            continuation_marker (str): The marker to prepend to unfitted clauses. Defaults to '...'.
             token_counter (Callable[[str], int] | None): Function that counts tokens in text.
                 If None, must be provided when calling chunk() methods.
 
         Raises:
-            InvalidInputError: If any of the input arguments are invalid or if the provided `plain_text_chunker` is not an instance of `PlainTextChunker`.
+            InvalidInputError: If any of the input arguments are invalid or if the provided `sentence_splitter` is not an instance of `BaseSplitter`.
         """
         self._verbose = verbose
         self.token_counter = token_counter
+        self.continuation_marker = continuation_marker
 
-        # Explicit type validation for plain_text_chunker
-        if plain_text_chunker is not None and not isinstance(
-            plain_text_chunker, PlainTextChunker
+        # Explicit type validation for sentence_splitter
+        if sentence_splitter is not None and not isinstance(
+            sentence_splitter, BaseSplitter
         ):
             raise InvalidInputError(
-                f"The provided plain_text_chunker must be an instance of PlainTextChunker, "
-                f"but got {type(plain_text_chunker).__name__}."
+                f"The provided sentence_splitter must be an instance of BaseSplitter, "
+                f"but got {type(sentence_splitter).__name__}."
             )
 
-        self.plain_text_chunker = plain_text_chunker or PlainTextChunker(
+        self.plain_text_chunker = PlainTextChunker(
+            sentence_splitter=sentence_splitter,
+            verbose=self._verbose,
+            continuation_marker=self.continuation_marker,
             token_counter=self.token_counter
         )
-        self.plain_text_chunker.verbose = (self._verbose,)
 
         self.processors = {
             ".pdf": pdf_processor.PDFProcessor,
@@ -124,7 +129,7 @@ class DocumentChunker:
     def verbose(self, value: bool):
         """Set the verbosity and propagate to plain_text_chunker."""
         self._verbose = value
-        self.verbose = value
+        self.plain_text_chunker.verbose = value
 
     def _validate_and_get_extension(self, path: Path) -> str:
         """
@@ -247,7 +252,25 @@ class DocumentChunker:
         text_gens_to_chain = []
 
         for i, (path, ext, error) in enumerate(validated_paths):
-            if error is not None:
+            try:
+                if error is not None:
+                    raise error
+
+                text_content_or_generator, document_metadata = self._extract_data(
+                    path, ext
+                )
+                all_metadata.append(document_metadata)
+
+                if isinstance(text_content_or_generator, Generator):
+                    g1, g2 = tee(text_content_or_generator)
+                    path_section_counts[str(path)] = ilen(g1)
+                    text_gens_to_chain.append(g2)
+                else:
+                    path_section_counts[str(path)] = 1
+
+                    # Wrap in a list to prevent breakking the str into chars
+                    text_gens_to_chain.append([text_content_or_generator])
+            except Exception as e:
                 if on_errors == "raise":
                     logger.error(
                         "Document validation failed for '{}' at paths[{}].\nReason: {}.",
@@ -271,34 +294,6 @@ class DocumentChunker:
                         i,
                         error,
                     )
-                    continue
-
-            try:
-                text_content_or_generator, document_metadata = self._extract_data(
-                    path, ext
-                )
-                all_metadata.append(document_metadata)
-
-                if isinstance(text_content_or_generator, Generator):
-                    g1, g2 = tee(text_content_or_generator)
-                    path_section_counts[str(path)] = ilen(g1)
-                    text_gens_to_chain.append(g2)
-                else:
-                    path_section_counts[str(path)] = 1
-
-                    # Wrap in a list to prevent breakking the str into chars
-                    text_gens_to_chain.append([text_content_or_generator])
-            except Exception as e:
-                if on_errors == "raise":
-                    raise e
-                elif on_errors == "break":
-                    logger.error(
-                        f"Stopping batch processing due to error in file: {path}",
-                        exc_info=e,
-                    )
-                    break
-                else:  # skip
-                    logger.warning(f"Skipping file {path} due to error:", exc_info=e)
                     continue
 
         all_texts_gen = chain.from_iterable(text_gens_to_chain)
@@ -489,7 +484,7 @@ class DocumentChunker:
                 doc_metadata["section_count"] = path_section_counts[curr_path]
                 doc_metadata["curr_section"] = i
 
-                ch["metadata"] = doc_metadata
+                ch["metadata"].update(doc_metadata)
                 yield ch
 
             path_section_counts[curr_path] -= 1

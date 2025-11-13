@@ -1,16 +1,12 @@
 import re
 import pytest
 from more_itertools import split_at
-from loguru import logger
 from chunklet.experimental.code_chunker import CodeChunker
-from chunklet.exceptions import (
+from chunklet import (
     MissingTokenCounterError,
     TokenLimitError,
     FileProcessingError,
 )
-
-# Silent logging
-logger.remove()
 
 
 # Helper function
@@ -264,10 +260,10 @@ def test_nonexistent_file(chunker):
 def test_oversized_block_error(chunker):
     """Test Error For Blocks Exceeding Max Tokens."""
     with pytest.raises(TokenLimitError):
-        chunker.chunk(LONG_FUNCTION_CODE, max_tokens=30, strict_mode=True)
+        chunker.chunk(LONG_FUNCTION_CODE, max_tokens=30, strict=True)
 
     # should not raise on strict mode is disabled
-    chunks = chunker.chunk(LONG_FUNCTION_CODE, max_tokens=30, strict_mode=False)
+    chunks = chunker.chunk(LONG_FUNCTION_CODE, max_tokens=30, strict=False)
     assert len(chunks) > 0  # Should split into multiple chunks
 
 

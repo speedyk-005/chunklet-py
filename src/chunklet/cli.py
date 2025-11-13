@@ -1,4 +1,5 @@
 import sys
+import json
 import typer
 from typing import Optional, List
 from pathlib import Path
@@ -6,12 +7,12 @@ from enum import Enum
 import subprocess
 import shlex
 from importlib.metadata import version, PackageNotFoundError
-import json
 
+from chunklet.sentence_splitter import SentenceSplitter
 from chunklet.plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker import DocumentChunker
 from chunklet.experimental.code_chunker import CodeChunker
-from chunklet.experimental.code_chunker.helpers import is_path_like
+from chunklet.utils.path_utils import is_path_like
 
 try:
     __version__ = version("chunklet")
@@ -64,6 +65,112 @@ def create_external_tokenizer(command_str: str):
 
     return external_tokenizer
 
+@app.command(name="split", help="Splits text or a single file into sentences.")
+def split_command(
+    text: Optional[str] = typer.Argument(
+        None, help="The input text to split. If not provided, --source must be used."
+    ),
+    source: Optional[Path] = typer.Option(
+        None,
+        "--source",
+        "-s",
+        help="Path to a single file to read input from. Cannot be a directory or multiple files.",
+    ),
+    destination: Optional[Path] = typer.Option(
+        None,
+        "--destination",
+        "-d",
+        help="Path to a single file to write the segmented sentences (separated by \\n\\n). Cannot be a directory.",
+    ),
+    lang: str = typer.Option(
+        "auto",
+        "--lang",
+        help="Language of the text (e.g., 'en', 'fr', 'auto'). (default: auto)",
+    ),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Enable verbose logging."
+    ),
+):
+    """
+    Split text or a single file into sentences using the SentenceSplitter.
+    """
+    # Validation and Input Acquisition
+    provided_inputs = [arg for arg in [text, source] if arg is not None]
+
+    if len(provided_inputs) == 0:
+        typer.echo(
+            "Error: No input provided. Please use a text argument or the --source option.",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    if len(provided_inputs) > 1:
+        typer.echo(
+            "Error: Provide either a text string, or use the --source option, but not both.",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    if source:
+        # --- Source Constraints ---
+        if source.is_dir():
+            typer.echo(
+                f"Error: Source path '{source}' cannot be a directory for the 'split' command.",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        if not source.is_file():
+            typer.echo(
+                f"Error: Source path '{source}' not found or is not a file.",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+
+        try:
+            input_text = source.read_text(encoding="utf-8")
+        except Exception as e:
+            typer.echo(f"Error reading source file: {e}", err=True)
+            raise typer.Exit(code=1)
+    else:
+        input_text = text
+
+    # --- Destination Constraint ---
+    if destination and destination.is_dir():
+        typer.echo(
+            f"Error: Destination path '{destination}' cannot be a directory for the 'split' command.",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    # Split Logic
+    splitter = SentenceSplitter(verbose=verbose)
+    sentences, confidence = splitter.split(input_text, lang=lang)
+
+    # Output Handling
+    if destination:
+        output_str = "\n".join(sentences)
+        source_display = f"from {source.name}" if source else "(from stdin)"
+        
+        try:
+            destination.write_text(output_str, encoding="utf-8")
+            typer.echo(
+                f"Successfully split and wrote {len(sentences)} sentences "
+                f"{source_display} to {destination} (Confidence: {confidence})",
+                err=True,
+            )
+        except Exception as e:
+            typer.echo(f"Error writing to destination file: {e}", err=True)
+            raise typer.Exit(code=1)
+    else:
+        source_display = f"Source: {source.name}" if source else "Source: stdin"
+
+        typer.echo(
+            f"--- Sentences ({len(sentences)}): "
+            f" [{source_display} | Lang: {lang.upper()} | Confidence: {confidence}] ---"
+        )
+        
+        for sentence in sentences:
+            typer.echo(sentence)
 
 @app.command(name="chunk", help="Chunk text or files based on specified parameters.")
 def chunk_command(
@@ -119,7 +226,10 @@ def chunk_command(
     tokenizer_command: Optional[str] = typer.Option(
         None,
         "--tokenizer-command",
-        help="A shell command to use for token counting. The command should take text as stdin and output the token count as a number.",
+        help=(
+            "A shell command to use for token counting. "
+            "The command should take text as stdin and output the token count as a number."
+        ),
     ),
     metadata: bool = typer.Option(
         False, "--metadata", help="Include metadata in the output."
@@ -141,9 +251,9 @@ def chunk_command(
         "--docstring-mode",
         help="Docstring processing strategy for CodeChunker: 'summary', 'all', or 'excluded'.",
     ),
-    strict_mode: bool = typer.Option(
+    strict: bool = typer.Option(
         True,
-        "--strict-mode",
+        "--strict",
         help="If True, raise error when structural blocks exceed max_tokens in CodeChunker. If False, split oversized blocks.",
     ),
     include_comments: bool = typer.Option(
@@ -208,7 +318,7 @@ def chunk_command(
         chunk_kwargs.update(
             {
                 "docstring_mode": docstring_mode,
-                "strict_mode": strict_mode,
+                "strict": strict,
                 "include_comments": include_comments,
             }
         )
@@ -217,7 +327,7 @@ def chunk_command(
             chunker_instance = PlainTextChunker(
                 verbose=verbose,
                 token_counter=token_counter,
-            ) 
+            )
         else:
             chunker_instance = DocumentChunker(
                 verbose=verbose,
@@ -264,7 +374,7 @@ def chunk_command(
             else:
                 # Fails the path-like regex heuristic check
                 typer.echo(
-                    f"Warning: '{s_path}' does not resemble a valid file system path "
+                    f"Warning: '{path}' does not resemble a valid file system path "
                     "(failed heuristic check). Skipping.",
                     err=True,
                 )
@@ -306,14 +416,14 @@ def chunk_command(
     # --- Output handling ---
 
     # Check for conflict: multi-input requires directory destination
-    if destination and is_multi_output_mode and destination.is_file():
+    if destination and destination.is_file():
         typer.echo(
             "Error: When processing multiple inputs, '--destination' must be a directory, not a file.",
             err=True,
         )
         raise typer.Exit(code=1)
 
-    if destination and is_multi_output_mode:
+    if destination and len(destination):
         # This is the equivalent of the old `if output_dir:` block
         destination.mkdir(parents=True, exist_ok=True)
         total_chunks_written = 0
@@ -367,19 +477,23 @@ def chunk_command(
         for res in all_results:
             for chunk_box in res:
                 chunk_counter += 1
-                output_content.append(f"## Source: {chunk_box.metadata.get('source', 'stdin')}")
+                output_content.append(
+                    f"## Source: {chunk_box.metadata.get('source', 'stdin')}"
+                )
                 output_content.append(f"--- Chunk {chunk_counter} ---")
                 output_content.append(chunk_box.content)
                 output_content.append("")
                 if metadata:
                     chunk_metadata = chunk_box.metadata.to_dict()
-                    chunk_metadata.pop("source", None)   # Prevent printing the source path again
-                    output_content.append("\n### Chunk Metadata") # Use a sub-header
-                    
+                    chunk_metadata.pop(
+                        "source", None
+                    )  # Prevent printing the source path again
+                    output_content.append("\n### Chunk Metadata")  # Use a sub-header
+
                     for key, value in chunk_metadata.items():
                         # Use clean pipe formatting for terminal style tables
                         output_content.append(f"| {key}: {value}")
-                        
+
                     output_content.append("\n")
 
         output_str = "\n".join(output_content)

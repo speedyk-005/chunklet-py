@@ -34,22 +34,53 @@ class CustomProcessorRegistry:
         """
         return ext in self._processors
 
-    @validate_input
-    def register(
-        self, *exts: str, callback: Callable[[str], ReturnType], name: str | None = None
-    ):
+    def register(self, *args: Any, name: str | None = None):
         """
         Register a document processor callback for one or more file extensions.
 
+        This method can be used in two ways:
+        1. As a decorator:
+            @registry.register(".json", ".xml", name="my_processor")
+            def my_processor(file_path):
+                ...
+
+        2. As a direct function call:
+            registry.register(my_processor, ".json", ".xml", name="my_processor")
+
         Args:
-            *exts: One or more file extensions (str), e.g., '.json', '.xml'.
-            callback: A callable that takes a file path and returns a tuple of (text or text iterable, metadata dictionary).
-            name (str, optional): The name of the processor. Defaults to the function name.
-
-        Raises:
-            InvalidInputError: If the provided arguments are not valid.
+            *args: The arguments, which can be either (ext1, ext2, ...) for a decorator
+                   or (callback, ext1, ext2, ...) for a direct call.
+            name (str | None): The name of the processor. If None, attempts to use the callback's name.
         """
+        if not args:
+            raise ValueError("At least one file extension or a callback must be provided.")
 
+        if callable(args[0]):
+            # Direct call: register(callback, ext1, ext2, ...)
+            callback = args[0]
+            exts = args[1:]
+            if not exts:
+                raise ValueError("At least one file extension must be provided for the callback.")
+            self._register_logic(exts, callback, name)
+            return callback
+        else:
+            # Decorator: @register(ext1, ext2, ...)
+            exts = args
+
+            def decorator(cb: Callable):
+                self._register_logic(exts, cb, name)
+                return cb
+
+            return decorator
+
+    @validate_input
+    def _register_logic(
+        self,
+        exts: tuple[str, ...],
+        callback: Callable[[str], ReturnType],
+        name: str | None = None,
+    ):
+        """Helper to perform the actual registration and validation."""
         sig = inspect.signature(callback)
         params = list(sig.parameters.values())
 
@@ -68,7 +99,16 @@ class CustomProcessorRegistry:
                 "💡Hint: Optional parameters with default values are allowed."
             )
 
-        processor_name = name or callback.__name__
+        if name is None:
+            if hasattr(callback, '__name__') and callback.__name__ != '<lambda>':
+                processor_name = callback.__name__
+            else:
+                raise ValueError(
+                    "A name must be provided for the processor, or the callback must be a named function (not a lambda)."
+                )
+        else:
+            processor_name = name
+
         for ext in exts:
             if not isinstance(ext, str) or not ext.startswith("."):
                 raise InvalidInputError(
@@ -108,6 +148,18 @@ class CustomProcessorRegistry:
         Raises:
             CallbackError: If the processor callback fails or returns the wrong type.
             InvalidInputError: If no processor is registered for the extension.
+
+        Examples:
+            >>> from chunklet.document_chunker.registry import CustomProcessorRegistry
+            >>> registry = CustomProcessorRegistry()
+            >>> @registry.register(".txt", name="my_txt_processor")
+            ... def process_txt(file_path: str) -> tuple[str, dict]:
+            ...     with open(file_path, 'r') as f:
+            ...         content = f.read()
+            ...     return content, {"source": file_path}
+            >>> # Assuming 'sample.txt' exists with some content
+            >>> # result, processor_name = registry.extract_data("sample.txt", ".txt")
+            >>> # print(f"Extracted by {processor_name}: {result[0][:20]}...")
         """
         processor_info = self._processors.get(ext)
         if not processor_info:
@@ -137,22 +189,3 @@ class CustomProcessorRegistry:
             ) from None
 
         return result, name
-
-
-def registered_processor(*exts: str, name: str | None = None):
-    """
-    Decorator version of document processor registration.
-
-    Usage:
-        @registered_processor(".json", ".xml")
-        def my_json_processor(file_path):
-            # ... logic to extract text from JSON
-            return text_content
-    """
-    registry = CustomProcessorRegistry()
-
-    def decorator(callback: Callable):
-        registry.register(*exts, callback=callback, name=name)
-        return callback
-
-    return decorator

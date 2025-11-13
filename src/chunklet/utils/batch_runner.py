@@ -1,10 +1,15 @@
+import os 
+import sys
+import re
 from typing import Any, Literal, Callable
+from itertools import tee
+from more_itertools import ilen
 from collections.abc import Iterable, Generator
+from rich.progress import Progress
 
-# mpire is lazy imported
+# multiprocess is lazy imported
 from loguru import logger
 from chunklet.utils.validation import safely_count_iterable
-
 
 def run_in_batch(
     func: Callable,
@@ -36,10 +41,11 @@ def run_in_batch(
     Yields:
         Any: A `Box` object containing the chunk content and metadata, or any separator object.
     """
-    from mpire import WorkerPool
+    # Using 'multiprocess' (a fork of multiprocessing) for enhanced pickling capabilities.
+    from multiprocess import Pool
 
     total, iterable_of_args = safely_count_iterable(iterable_name, iterable_of_args)
-
+        
     if verbose:
         logger.info("Starting batch chunking for {} items.", total)
 
@@ -48,6 +54,11 @@ def run_in_batch(
             logger.info("Input {} is empty. Returning empty iterator.", iterable_name)
         return iter([])
 
+    # This is often better for I/O-bound tasks
+    effective_n_jobs = n_jobs if n_jobs is not None else os.cpu_count() or 1
+    # Use a heuristic (total / workers / 4) to send large chunks, ensuring a minimum of 1
+    chunksize = max(1, total // (effective_n_jobs * 4))
+    
     # Wrapper to capture result/exception
     def chunk_func(*args, **kwargs):
         try:
@@ -56,20 +67,26 @@ def run_in_batch(
         except Exception as e:
             return None, e
 
+    progress = None
     failed_count = 0
     try:
-        with WorkerPool(n_jobs=n_jobs) as executor:
-            imap_func = (
-                executor.imap if separator is not None else executor.imap_unordered
-            )
+        with Pool(processes=n_jobs) as pool:
+            imap_func = pool.imap if separator is not None else pool.imap_unordered
             task_iter = imap_func(
                 chunk_func,
                 iterable_of_args,
-                iterable_len=total,
-                progress_bar=show_progress,
-                # task_timeout=3, # temp set for debuging purpose
-            )
+                chunksize = chunksize,
+            ) 
 
+            task_iter, task_iter_2 = tee(task_iter)
+            total_res = ilen(task_iter_2)
+            
+            # Progress bar setup
+            if show_progress and total > 0:
+                progress = Progress()
+                task = progress.add_task(f"[green]Processing {iterable_name}[/green]", total=total_res) 
+                progress.start() 
+        
             for res, error in task_iter:
                 if error:
                     failed_count += 1
@@ -84,14 +101,22 @@ def run_in_batch(
                         break
                     else:  # skip
                         logger.warning("Skipping a failed task.\nReason: {}", error)
+                        if progress:
+                            progress.update(task, advance=1)
                         continue
 
+                if progress:
+                    progress.update(task, advance=1)
+                    
                 yield from res
 
                 if separator is not None:
                     yield separator
 
     finally:
+        if progress:
+            progress.stop() 
+
         if verbose:
             logger.info(
                 "Batch processing completed. {}/{} items processed successfully.",

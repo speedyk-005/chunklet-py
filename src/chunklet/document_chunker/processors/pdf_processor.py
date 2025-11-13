@@ -1,6 +1,7 @@
 from typing import Any, Generator
-import regex as re
 from io import StringIO
+import regex as re
+from more_itertools import ilen
 
 # pdfminer is lazy imported
 
@@ -8,38 +9,27 @@ from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
 
 # --- Regex Patterns ---
+
+# Pattern to normalize consecutive newlines
+MULTIPLE_NEWLINE_PATTERN = re.compile(r"(\n\s*){2,}")
+
 # Pattern to remove lines with only numbers
 STANDALONE_NUMBER_PATTERN = re.compile(r"\n\s*\p{N}+\s*\n", re.U)
 
-# Pattern to collapse multiple whitespace characters into a single space
-MULTIPLE_SPACE_PATTERN = re.compile(r"[ ]{2,}")
-
-# Pattern to normalize three or more consecutive newlines
-MULTIPLE_NEWLINE_PATTERN = re.compile(r"(\n\s*){3,}")
-
 # Pattern to merge single newlines within logical text blocks
-SINGLE_NEWLINE_PATTERN = re.compile(
+HEADING_OR_LIST_PATTERN = re.compile(
     r"""
-    (?<=             # Match if preceded by..
+    (
+        \n             # A newline
         [\p{L}\p{N}] # A Unicode letter or a Unicode number
-        [.\-)*]      # Followed by a punctuation
+        [.\-)*]       # Followed by a punctuation
     )
-    \n               # The newline character to be replaced
-    (?!\n)           # Do not match if followed by another newline (true paragraph break)
+    \n                 # The newline character to be replaced
     """,
     re.U | re.VERBOSE,
 )
 
-# Pattern to split words that are incorrectly concatenated with a number
-WORD_NUMBER_SPLIT_PATTERN = re.compile(
-    r"""
-    (\p{L}+)        # Match and capture one or more Unicode letters
-    (\p{P})         # Match and capture a punctuation character
-    (\p{N}[.\-)*])  # Match and capture a number followed by a symbol
-    """,
-    re.U | re.VERBOSE,
-)
-
+# --- PDF Processor Class ---
 
 class PDFProcessor(BaseProcessor):
     """PDF extraction and cleanup utility using pdfminer.six.
@@ -64,7 +54,7 @@ class PDFProcessor(BaseProcessor):
             ) from e
         self.file_path = file_path
         self.laparams = LAParams(
-            line_margin=0.2,
+            line_margin=0.5,
         )
 
     def _cleanup_text(self, text: str) -> str:
@@ -85,32 +75,35 @@ class PDFProcessor(BaseProcessor):
         """
         if not text:
             return ""
+        text = MULTIPLE_NEWLINE_PATTERN.sub("\n", text)
+        text = HEADING_OR_LIST_PATTERN.sub(r"\1 ", text)
         text = STANDALONE_NUMBER_PATTERN.sub("", text)
-        text = MULTIPLE_NEWLINE_PATTERN.sub("\n\n", text)
-        text = WORD_NUMBER_SPLIT_PATTERN.sub(r"\1\2 \n\3", text)
-        text = MULTIPLE_SPACE_PATTERN.sub(" ", text)
-        return text.strip()
+        return text
 
     def extract_text(self) -> Generator[str, None, None]:
         """Yield cleaned text from each PDF page.
 
+        Uses pdfminer.high_level.extract_text for efficient page-by-page extraction.
+
         Returns:
             Generator[str, None, None]: Cleaned text of each page.
         """
-        from pdfminer.high_level import extract_text_to_fp
+        from pdfminer.high_level import extract_text
         from pdfminer.pdfpage import PDFPage
 
         with open(self.file_path, "rb") as fp:
-            for page_num, _ in enumerate(PDFPage.get_pages(fp)):
-                buffer = StringIO()
-                fp.seek(0)  # reset pointer for each page
-                extract_text_to_fp(
-                    fp,  # positional: input file
-                    buffer,  # positional: output buffer
-                    laparams=self.laparams,
+            page_count = ilen(PDFPage.get_pages(fp))
+            
+            for page_num in range(page_count):
+                # Call extract_text on the file path, specifying the page number.
+                # This is efficient as it avoids repeated file seeks/parsing 
+                # within the loop that was present in the old `extract_text_to_fp` approach.
+                raw_text = extract_text(
+                    self.file_path,
                     page_numbers=[page_num],
+                    laparams=self.laparams,
                 )
-                yield self._cleanup_text(buffer.getvalue())
+                yield self._cleanup_text(raw_text)
 
     def extract_metadata(self) -> dict[str, Any]:
         """Extract PDF metadata.
@@ -126,9 +119,18 @@ class PDFProcessor(BaseProcessor):
 
         metadata = {"source": str(self.file_path), "page_count": 0}
         with open(self.file_path, "rb") as f:
+            # Initialize parser on the file stream
             parser = PDFParser(f)
+            
+            # The PDFDocument constructor reads file structure and advances the pointer
             doc = PDFDocument(parser)
-            metadata["page_count"] = sum(1 for _ in PDFPage.get_pages(f))
+            
+            # Count pages: Reset pointer to the start of the file stream to count pages correctly
+            f.seek(0)
+            
+            metadata["page_count"] = ilen(PDFPage.get_pages(f))
+            
+            # Extract info fields from the document object
             if hasattr(doc, "info") and doc.info:
                 for info in doc.info:
                     for k, v in info.items():
@@ -142,14 +144,18 @@ class PDFProcessor(BaseProcessor):
 
 # --- Example usage ---
 if __name__ == "__main__":
-    pdf_file = "/storage/emulated/0/Documents/Pdf/Les-bases-de-la-theorie-musicale-EDMProduction.pdf"
-    processor = PDFProcessor(pdf_file)
+    pdf_file = "samples/sample-pdf-a4-size.pdf"
+    
+    try:
+        processor = PDFProcessor(pdf_file)
 
-    meta = processor.extract_metadata()
-    print("--- Metadata ---")
-    for k, v in meta.items():
-        print(f"{k}: {v}")
+        meta = processor.extract_metadata()
+        print("--- Metadata ---")
+        for k, v in meta.items():
+            print(f"{k}: {v}")
 
-    print("\n--- Pages ---")
-    for i, page_text in enumerate(processor.extract_text(), start=1):
-        print(f"\n--- Page {i} ---\n{page_text}\n")
+        print("\n--- Pages ---")
+        for i, page_text in enumerate(processor.extract_text(), start=1):
+            print(f"\n--- Page {i} ---\n{page_text[:500]}...\n")
+    except ImportError as e:
+        print(f"Error: {e}")

@@ -41,12 +41,12 @@ class PlainTextChunker:
     def __init__(
         self,
         sentence_splitter: Any | None = None,
-        verbose: bool = True,
+        verbose: bool = False,
         continuation_marker: str = "...",
         token_counter: Callable[[str], int] | None = None,
     ):
         """
-        Initialize Chunklet settings.
+        Initialize The PlainTextChunker.
 
         Args:
             sentence_splitter (BaseSplitter | None): An optional BaseSplitter instance.
@@ -71,13 +71,12 @@ class PlainTextChunker:
                 f"but got {type(sentence_splitter).__name__}."
             )
 
+        # Initialize SentenceSplitter
+        self.sentence_splitter = sentence_splitter or SentenceSplitter()
+        self.sentence_splitter.verbose = self._verbose
+        
         # Regex to split clauses inside sentences by clause-ending punctuation
         self.clause_end_regex = re.compile(rf"(?<=[{CLAUSE_END_TRIGGERS}])\s")
-
-        # Initialize SentenceSplitter
-        self.sentence_splitter = sentence_splitter or SentenceSplitter(
-            verbose=self._verbose
-        )
 
     @property
     def verbose(self) -> bool:
@@ -90,7 +89,7 @@ class PlainTextChunker:
         self._verbose = value
         self.sentence_splitter.verbose = value
 
-    def find_span(self, text_portion: str, full_text: str) -> tuple[int, int]:
+    def _find_span(self, text_portion: str, full_text: str) -> tuple[int, int]:
         """
         Finds the start and end indices of a text portion within a larger text,
         using a fuzzy match that ignores punctuation and extra whitespace.
@@ -104,17 +103,19 @@ class PlainTextChunker:
                 or (-1, -1) if no match is found.
         """
         # Split the portion text by punctuation and whitespace
-        words = re.split(r"[\p{P}\p{Z}]+", text_portion)
+        words = [w for w in re.split(r"[\p{P}\p{Z}\n]+", text_portion) if w.strip()]
+
+        if not words:
+            return -1, -1
 
         # Build a fuzzy match pattern, allowing for punctuation and whitespace between words
-        pattern = r"[\p{P}\p{Z}]*?".join(re.escape(w) for w in words if (w.strip()))
+        pattern = r"".join(rf"{word}[\p{{P}}\p{{Z}}\n]{{0,4}}" for word in words)
 
         # Search for the pattern in the full text
-        match = re.search(pattern, full_text)
+        match = re.search(pattern, full_text, re.I)
 
         if match:
             return match.span()
-
         return -1, -1
 
     def _create_chunk_boxes(
@@ -143,10 +144,10 @@ class PlainTextChunker:
         chunk_boxes = []
         for i, chunk_str in enumerate(chunks, start=1):
             chunk_box = Box()
-            chunk_box.content = chunk_str
+            chunk_box.content = chunk_str.strip()
             chunk_box.metadata = copy.deepcopy(base_metadata)
             chunk_box.metadata.chunk_num = i
-            chunk_box.metadata.span = self.find_span(chunk_str, text)
+            chunk_box.metadata.span = self._find_span(chunk_str, text)
             chunk_boxes.append(chunk_box)
         return chunk_boxes
 
@@ -179,11 +180,10 @@ class PlainTextChunker:
         overlapped_clauses = detected_clauses[-overlap_num:]
 
         # The Condition to add the continuation marker
-        if overlapped_clauses and (
-            len(overlapped_clauses[0]) < 2
-            or not (
-                overlapped_clauses[0][0].isupper() or overlapped_clauses[0][1].isupper()
-            )
+        if ( 
+            overlapped_clauses 
+            and overlapped_clauses[0] 
+            and not overlapped_clauses[0][0].isupper()
         ):
             overlapped_clauses[0] = (
                 f"{self.continuation_marker} " + overlapped_clauses[0]
@@ -249,15 +249,15 @@ class PlainTextChunker:
         Returns:
             str: The fitted part of the text, truncated to fit within max_tokens.
         """
-        segments = re.split(r"[ /\\]", text)
+        parts = re.split(r"[ /\\]", text)
         token_count = 0
-        parts = []
-        for part in segments:
+        fitted_parts = []
+        for part in parts:
             part_tokens = count_tokens(part + "...", token_counter)
             if token_count + part_tokens > max_tokens:
                 break
-            parts.append(part)
-        return " ".join(parts) + "..."
+            fitted_parts.append(part)
+        return " ".join(fitted_parts) + "..."
 
     def _group_by_chunk(
         self,
@@ -314,41 +314,38 @@ class PlainTextChunker:
                     # and _find_clauses_that_fit would return it as unfitted.
                     # (e.g, urls, bad formated text, image uris).
                     if not curr_chunk and not fitted and unfitted:
-                        chunks.append(
-                            self._resolve_unpunctuated_text(
-                                text=sentences[index],
-                                max_tokens=max_tokens,
-                                token_counter=token_counter,
-                            )
-                        )
+                        curr_chunk = [self._resolve_unpunctuated_text(
+                            text=sentences[index],
+                            max_tokens=max_tokens,
+                            token_counter=token_counter,
+                        )]
                         index += 1
-                        continue  # Move to next iteration
-
+                        continue
+                        
                     curr_chunk.append(fitted)
-                    chunks.append("\n".join(curr_chunk))  # Considered complete
+                    should_move_forward = fitted and not unfitted
 
                 else:  # If in mode sentence
-                    chunks.append("\n".join(curr_chunk))  # Considered complete
+                    should_move_forward = True
                     unfitted = ""
-                    index += 1
 
+                chunks.append("\n".join(curr_chunk))  # Considered complete 
+                
                 # Prepare data for next chunk
-                overlap_clauses = self._get_overlap_clauses(curr_chunk, overlap_percent)
-                # New current chunk
-                unfitted = [unfitted] if unfitted else []
-                curr_chunk = overlap_clauses + unfitted
+                curr_chunk = self._get_overlap_clauses(curr_chunk, overlap_percent)
 
-                # Incrementally update token_count for the new curr_chunk
                 if mode in {"token", "hybrid"}:
-                    token_count = sum(
-                        count_tokens(s, token_counter)
-                        for s in overlap_clauses + unfitted
-                    )
+                    token_count = sum(count_tokens(s, token_counter) for s in curr_chunk)
+                    
                 sentence_count = len(curr_chunk)  # considered as sentences
+            
+                if should_move_forward:  
+                    index += 1 
+                else:
+                    sentences[index] = unfitted
 
             else:
-                if index < len(sentences):
-                    curr_chunk.append(sentences[index])
+                curr_chunk.append(sentences[index])
                 token_count += sentence_tokens
                 sentence_count += 1
                 index += 1
@@ -396,8 +393,7 @@ class PlainTextChunker:
         Raises:
             InvalidInputError: If any chunking configuration parameter is invalid.
             MissingTokenCounterError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
-            CallbackError: If an error occurs during sentence splitting
-            or token counting within a chunking task.
+            CallbackError: If an error occurs during sentence splitting or token counting within a chunking task.
         """
         if self.verbose:
             logger.info(
@@ -526,7 +522,7 @@ class PlainTextChunker:
             iterable_of_args=texts,
             iterable_name="texts",
             n_jobs=n_jobs,
-            show_progress=False,
+            show_progress=show_progress,
             on_errors=on_errors,
             separator=separator,
             verbose=self.verbose,

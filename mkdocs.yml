@@ -1,67 +1,110 @@
 site_name: chunklet-py Documentation
 site_url: https://speedyk-005.github.io/chunklet-py/
-site_description: A smart multilingual text chunker for LLMs, RAG, and beyond.
+site_description: "One library to split them all: Sentence, Code, Docs— RAG-ready, token-aware, and multi-format."
 repo_url: https://github.com/speedyk-005/chunklet-py
 
 theme:
   name: material
-  logo: assets/logo.jpeg
+  logo: img/logo.svg
+  icon:
+    annotation: material/plus-circle-outline
   custom_dir: docs/overrides
   features:
     - content.code.copy
+    - content.code.annotate
     - content.tabs.link
     - content.tooltips
     - navigation.tabs
     - navigation.indexes
     - navigation.instant
-    - navigation.footer 
+    - navigation.footer
     - header.autohide
   palette:
-    # Light mode: Blue on White
+    - media: "(prefers-color-scheme)"
+      primary: blue
+      accent: orange
+      toggle:
+        icon: material/brightness-auto
+        name: "Switch to light mode"
+      
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: blue 
+      primary: blue
       accent: orange
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
 
-    # Dark mode: Orange on Black
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: blue 
+      primary: blue
       accent: orange
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-        
+ 
 extra:
   version:
     provider: mike
 
 nav:
   - 'Welcome': 'index.md'
-  - 'Installation': 'installation.md'
   - 'Getting Started':
-      - 'Introduction': 'getting-started/index.md'
-      - 'Programmatic Usage': 'getting-started/programmatic.md'
-      - 'CLI Usage': 'getting-started/cli.md'
+    - 'Installation': 'getting-started/installation.md'
+    - 'CLI': 'getting-started/cli.md'
+    - 'Programmatic Usage':
+      - 'Overview': 'getting-started/programmatic/index.md'
+      - 'Sentence Splitter': 'getting-started/programmatic/sentence_splitter.md'
+      - 'Plain Text Chunker': 'getting-started/programmatic/plain_text_chunker.md'
+      - 'Document Chunker': 'getting-started/programmatic/document_chunker.md'
+      - 'Code Chunker': 'getting-started/programmatic/code_chunker.md'
+      
   - 'Supported Languages': 'supported-languages.md'
-  - 'Models': 'models.md'
   - 'Exceptions and Warnings': 'exceptions-and-warnings.md'
-  - 'Internal Flow': 'internal-flow.md'
-  - 'Utils': 'utils.md'
+  - "What's New": 'whats-new.md'
+  - 'Migration Guide': 'migration.md'
+  - 'Troubleshooting': 'troubleshooting.md'
 
 plugins:
   - search
   - mike
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_section_style: list
+            docstring_style: google
+            filters: ["!^_"]
+            heading_level: 1
+            merge_init_into_class: true
+            parameter_headings: true
+            separate_signature: true
+            show_root_heading: true
+            show_signature_annotations: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            summary: true
+  - api-autonav:
+      modules:
+        - src/chunklet
+      exclude_private: false
+
 docs_dir: 'docs/'
 
 markdown_extensions:
+  - def_list
   - pymdownx.highlight:
       anchor_linenums: true
+      pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - pymdownx.details
   - pymdownx.superfences
-
-  
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - md_in_html
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg

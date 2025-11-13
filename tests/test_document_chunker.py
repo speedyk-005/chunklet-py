@@ -1,21 +1,12 @@
 import re
 import pytest
 from collections import defaultdict
-from loguru import logger
-from chunklet.exceptions import (
+from chunklet.document_chunker import DocumentChunker, CustomProcessorRegistry
+from chunklet import (
     UnsupportedFileTypeError,
     CallbackError,
 )
-from chunklet.document_chunker import DocumentChunker
-from chunklet.document_chunker.registry import (
-    CustomProcessorRegistry,
-    registered_processor,
-)
 
-# Silent logging
-logger.remove()
-
-"samples/minimal.epub",
 
 # --- Fixtures ---
 
@@ -93,7 +84,7 @@ def test_chunk_method_with_custom_processor(tmp_path, mocker, chunker, registry)
     """Test that the chunk method correctly uses a custom processor."""
 
     # Define and register a mock custom processor callback
-    @registered_processor(".mock", name="MockProcessor")
+    @registry.register(".mock", name="MockProcessor")
     def mock_custom_processor_callback(file_path: str) -> str:
         return "Processed failed.", {"mock": "metadata"}
 
@@ -149,7 +140,7 @@ def test_custom_processor_validation_scenarios(
     dummy_file = tmp_path / "dummy_file.txt"
     dummy_file.write_text("Some content.")
 
-    @registered_processor(".txt", name=processor_name)
+    @registry.register(".txt", name=processor_name)
     def temp_processor(file_path: str):
         return callback_func(file_path), {"mock": "metadata"}
 

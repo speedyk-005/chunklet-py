@@ -20,6 +20,29 @@ def count_tokens(text: str, token_counter: Callable[[str], int]) -> int:
 
     Raises:
         CallbackError: If the token counter fails or returns an invalid type.
+
+    Examples:
+        >>> def simple_word_counter(text: str) -> int:
+        ...     return len(text.split())
+        >>> text = "This is a sample sentence."
+        >>> count_tokens(text, simple_word_counter)
+        5
+
+        >>> def char_counter(text: str) -> int:
+        ...     return len(text)
+        >>> count_tokens("hello", char_counter)
+        5
+
+        >>> # Example with a failing token counter
+        >>> def failing_counter(text: str) -> int:
+        ...     raise ValueError("Something went wrong!")
+        >>> try:
+        ...     count_tokens("test", failing_counter)
+        ... except CallbackError as e:
+        ...     print(e)
+        Token counter failed while processing text starting with: 'test...'.
+        💡 Hint: Please ensure the token counter function handles all edge cases and returns an integer.
+        Details: Something went wrong!
     """
     try:
         token_count = token_counter(text)

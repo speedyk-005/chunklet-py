@@ -14,16 +14,16 @@ class EpubProcessor(BaseProcessor):
     """Processor class for extracting text and metadata from EPUB files."""
 
     METADATA_FIELDS = [
-        "title",
-        "creator",
-        "contributor",
-        "language",
-        "subject",
-        "publisher",
-        "date",
-        "rights",
-    ]
-
+            "title",
+            "creator",
+            "contributor",
+            "language",
+            "subject",
+            "publisher",
+            "date",
+            "rights",
+        ] 
+    
     def __init__(self, file_path: str):
         """
         Initializes the EpubProcessor with a path to the EPUB file
@@ -71,7 +71,7 @@ class EpubProcessor(BaseProcessor):
 
 # Example usage
 if __name__ == "__main__":
-    file_path = "/storage/emulated/0/Download/Alices Adventures in Wonderland.epub"
+    file_path = "samples/minimal.epub"
     processor = EpubProcessor(file_path)
 
     metadata = processor.extract_metadata()
