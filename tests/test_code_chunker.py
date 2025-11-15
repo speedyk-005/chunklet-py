@@ -1,7 +1,7 @@
 import re
 import pytest
 from more_itertools import split_at
-from chunklet.experimental.code_chunker import CodeChunker
+from chunklet.code_chunker import CodeChunker
 from chunklet import (
     MissingTokenCounterError,
     TokenLimitError,
@@ -126,19 +126,23 @@ def chunker():
 
 
 @pytest.mark.parametrize(
-    "code_string,max_tokens",
+    "code_string,max_tokens,max_lines",
     [
-        (PYTHON_CODE, 40),
-        (CSHARP_CODE, 50),
-        (RUBY_CODE, 30),
+        (PYTHON_CODE, 40, None),
+        (CSHARP_CODE, 50, None),
+        (RUBY_CODE, 30, None),
+        (PYTHON_CODE, None, 10), # Test with max_lines
     ],
 )
-def test_language_chunking(chunker, code_string, max_tokens):
+def test_language_chunking(chunker, code_string, max_tokens, max_lines):
     """Test Chunking For Different Language Paradigms."""
-    chunks = chunker.chunk(code_string, max_tokens=max_tokens)
+    chunks = chunker.chunk(code_string, max_tokens=max_tokens, max_lines=max_lines)
 
     assert len(chunks) > 0
-    assert all(simple_token_counter(chunk.content) <= max_tokens for chunk in chunks)
+    if max_tokens is not None:
+        assert all(simple_token_counter(chunk.content) <= max_tokens for chunk in chunks)
+    if max_lines is not None:
+        assert all(len(chunk.content.splitlines()) <= max_lines for chunk in chunks)
     assert all(chunk.metadata.start_line <= chunk.metadata.end_line for chunk in chunks)
     assert all(
         hasattr(chunk.metadata, "tree") and chunk.metadata.tree for chunk in chunks
@@ -220,7 +224,7 @@ def test_docstring_modes(chunker, code_string, all_mode_pattern, summary_mode_pa
 @pytest.mark.parametrize("include_comments", [True, False])
 def test_comment_inclusion(chunker, include_comments):
     """Test Inclusion/Exclusion Of Comments."""
-    chunks = chunker.chunk(PYTHON_CODE, include_comments=include_comments)
+    chunks = chunker.chunk(PYTHON_CODE, max_tokens=200, include_comments=include_comments)
     content = "\n".join(chunk.content for chunk in chunks)
 
     # Use correct case and exact comment text from fixture
@@ -237,7 +241,7 @@ def test_missing_token_counter():
     """Test Error When No Token Counter Is Provided."""
     chunker = CodeChunker(token_counter=None)
     with pytest.raises(MissingTokenCounterError):
-        chunker.chunk("def test(): pass")
+        chunker.chunk("def test(): pass", max_tokens=30)
 
 
 def test_broken_token_counter():
@@ -248,13 +252,13 @@ def test_broken_token_counter():
 
     chunker = CodeChunker(token_counter=broken_token_counter)
     with pytest.raises(Exception):  # Should raise from the broken token counter
-        chunker.chunk("def test(): pass")
+        chunker.chunk("def test(): pass", max_tokens=30)
 
 
 def test_nonexistent_file(chunker):
     """Test Error For Non-Existent File."""
     with pytest.raises(FileProcessingError):
-        chunker.chunk(NON_EXISTENT_FILE)
+        chunker.chunk(NON_EXISTENT_FILE, max_tokens=30)
 
 
 def test_oversized_block_error(chunker):
@@ -326,6 +330,7 @@ def test_batch_chunk_error_handling_on_task(chunker):
         list(
             chunker.batch_chunk(
                 sources=sources_with_error,
+                max_tokens=50,
                 on_errors="raise",
                 show_progress=False,  # Disabled to prevent an unexpected race condition.
             )
@@ -333,10 +338,10 @@ def test_batch_chunk_error_handling_on_task(chunker):
 
     # Test on_errors = 'skip'
     # Should still get chunks from valid sources
-    chunks = list(chunker.batch_chunk(sources=sources_with_error, on_errors="skip"))
+    chunks = list(chunker.batch_chunk(sources=sources_with_error, max_tokens=50, on_errors="skip"))
     assert len(chunks) > 0
 
     # Test on_errors = 'break'
     # Should get no chunks since file error occurs first and breaks
-    chunks = list(chunker.batch_chunk(sources=sources_with_error, on_errors="break"))
+    chunks = list(chunker.batch_chunk(sources=sources_with_error, max_tokens=50, on_errors="break"))
     assert len(chunks) == 0

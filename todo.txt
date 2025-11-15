@@ -1,19 +1,33 @@
+- in cli, save output as json, rm metadata flag
+
+# documentation
 - add a metadata.md in docs
-- add language in chunks and even limit counts
+- highlight code line in docs
+- add readme in multiple languages
+- add icon for the two themes in readme
+- mention that chunker is a content aware chunkers
+- check https://github.com/Shunham7995/ragparser
+
+
+# next version
+- add support for csv, excel and eml files in subquent version
+- add support for odf with odfpy
+from odf.opendocument import load
+from odf import text
+
+doc = load("my document.odt")
+
+for paragraph in doc.getElementsByType(text.P):
+    print (paragraph.getAttribute('style name'))
+
 
 
 # what we have done
-- added the classifier for Python 3.14 to the pyproject.toml file.
-- added Python 3.14 to the test matrix in the GitHub Actions workflow
-- Expanded and refined the set of fallback languages, increasing the number of unique 'sentencex' languages from 2 to 15.
-- Update the documentation
-- fix continuation marker logic
-- fix missing fondamental metadata for documnet chunker
-- make register function designed to be used in two different ways: as a direct function call, or more commonly, as a decorator.
-- add of usage in some docstrings
-- rm the top-level chunklet package's __init__.py to reduce import time
-- implement a try-except block using
-  Path(text).is_file() to trigger OSError for path length.
-
+- make fx keywords case insinsitive in patterns for code chunker
+- preprocess docx to split on double newline instead of single one
+- rename utils to common
+- update code chunker tree rendering
+- add span metadata in code chunker
+- add conditional import in code chunker
 
 # done, not yet changelog

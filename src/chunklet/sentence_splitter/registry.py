@@ -1,7 +1,7 @@
 import inspect
 from typing import Callable, Iterable, Any
 from pydantic import TypeAdapter, ValidationError
-from chunklet.utils.validation import validate_input, pretty_errors
+from chunklet.common.validation import validate_input, pretty_errors
 from chunklet.exceptions import CallbackError
 
 
@@ -46,7 +46,7 @@ class CustomSplitterRegistry:
         Args:
             *args: The arguments, which can be either (lang1, lang2, ...) for a decorator
                    or (callback, lang1, lang2, ...) for a direct call.
-            name (str | None): The name of the splitter. If None, attempts to use the callback's name.
+            name (str, optional): The name of the splitter. If None, attempts to use the callback's name.
         """
         if not args:
             raise ValueError("At least one language or a callback must be provided.")

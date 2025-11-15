@@ -3,41 +3,60 @@ from io import StringIO
 import regex as re
 from more_itertools import ilen
 
-# pdfminer is lazy imported
+# pdfminer is lazily imported
 
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
-
-# --- Regex Patterns ---
 
 # Pattern to normalize consecutive newlines
 MULTIPLE_NEWLINE_PATTERN = re.compile(r"(\n\s*){2,}")
 
 # Pattern to remove lines with only numbers
-STANDALONE_NUMBER_PATTERN = re.compile(r"\n\s*\p{N}+\s*\n", re.U)
+STANDALONE_NUMBER_PATTERN = re.compile(r"\n\s*\p{N}+\s*\n")
 
 # Pattern to merge single newlines within logical text blocks
 HEADING_OR_LIST_PATTERN = re.compile(
-    r"""
-    (
-        \n             # A newline
-        [\p{L}\p{N}] # A Unicode letter or a Unicode number
-        [.\-)*]       # Followed by a punctuation
-    )
-    \n                 # The newline character to be replaced
-    """,
-    re.U | re.VERBOSE,
+    r"(\n"               # A newline
+        r"[\p{L}\p{N}]"   # A Unicode letter or a Unicode number
+        r"[.\-)*]"      # Followed by a punctuation
+    r")\n"             # The newline character to be replaced
+    , re.U
 )
 
-# --- PDF Processor Class ---
+PAGE_PATTERN = re.compile(
+    r"Page \p{N}+ of \p{N}+.*|"    # standalone page number
+    r"-\s*\p{N}+\s*-|"         # Page numbers with dashes
+    r"\s*\|\s*Page\s+\p{N}+\s*\|\s*"  # Boxed page numbers
+    , re.M
+)
+
 
 class PDFProcessor(BaseProcessor):
-    """PDF extraction and cleanup utility using pdfminer.six.
+    """
+    PDF extraction and cleanup utility using `pdfminer.six`.
 
     Provides methods to extract text and metadata from PDF files,
-    while cleaning and normalizing the text using regex patterns.
+    while cleaning and normalizing the extracted text using regex patterns.
+
+    This processor extracts **metadata** from the PDF document's **information
+    dictionary**, focusing on core metadata rather than all available fields.
+
+    For more details on PDF metadata extraction using `pdfminer.six`, refer to
+    this relevant Stack Overflow discussion:
+
+    https://stackoverflow.com/questions/75591385/extract-metadata-info-from-online-pdf-using-pdfminer-in-python
     """
 
+    METADATA_FIELDS = [
+        "title",
+        "author",
+        "creator",
+        "producer",
+        "publisher",
+        "created",
+        "modified",
+    ] 
+    
     def __init__(self, file_path: str):
         """Initialize the PDFProcessor.
 
@@ -78,6 +97,7 @@ class PDFProcessor(BaseProcessor):
         text = MULTIPLE_NEWLINE_PATTERN.sub("\n", text)
         text = HEADING_OR_LIST_PATTERN.sub(r"\1 ", text)
         text = STANDALONE_NUMBER_PATTERN.sub("", text)
+        text = PAGE_PATTERN.sub("", text)
         return text
 
     def extract_text(self) -> Generator[str, None, None]:
@@ -85,8 +105,8 @@ class PDFProcessor(BaseProcessor):
 
         Uses pdfminer.high_level.extract_text for efficient page-by-page extraction.
 
-        Returns:
-            Generator[str, None, None]: Cleaned text of each page.
+        Yields:
+            str: Markdown-formatted text of each page.
         """
         from pdfminer.high_level import extract_text
         from pdfminer.pdfpage import PDFPage
@@ -106,12 +126,19 @@ class PDFProcessor(BaseProcessor):
                 yield self._cleanup_text(raw_text)
 
     def extract_metadata(self) -> dict[str, Any]:
-        """Extract PDF metadata.
+        """Extracts metadata from the PDF document's information dictionary.  
 
         Includes source path, page count, and PDF info fields.
 
         Returns:
-            dict[str, Any]: Metadata dictionary.
+            dict[str, Any]: A dictionary containing metadata fields:
+                - title
+                - author
+                - creator
+                - producer
+                - publisher
+                - created
+                - modified
         """
         from pdfminer.pdfpage import PDFPage
         from pdfminer.pdfparser import PDFParser
@@ -134,11 +161,18 @@ class PDFProcessor(BaseProcessor):
             if hasattr(doc, "info") and doc.info:
                 for info in doc.info:
                     for k, v in info.items():
-                        if isinstance(k, bytes):
-                            k = k.decode("utf-8", "ignore")
-                        if isinstance(v, bytes):
-                            v = v.decode("utf-8", "ignore")
-                        metadata[k.lower()] = v
+
+                        # To keep metadata uniform
+                        k = "created" if k == "CreationDate" else k
+                        k = "modified" if k == "ModDate" else k
+
+                        
+                        if k.lower() in self.METADATA_FIELDS:
+                            if isinstance(k, bytes):
+                                k = k.decode("utf-8", "ignore")
+                            if isinstance(v, bytes):
+                                v = v.decode("utf-8", "ignore")
+                            metadata[k.lower()] = v
         return metadata
 
 
@@ -146,16 +180,15 @@ class PDFProcessor(BaseProcessor):
 if __name__ == "__main__":
     pdf_file = "samples/sample-pdf-a4-size.pdf"
     
-    try:
-        processor = PDFProcessor(pdf_file)
+    processor = PDFProcessor(pdf_file)
+    meta = processor.extract_metadata()
+    
+    print("Metadata:")
+    for k, v in meta.items():
+        print(f"{k}: {v}")
 
-        meta = processor.extract_metadata()
-        print("--- Metadata ---")
-        for k, v in meta.items():
-            print(f"{k}: {v}")
-
-        print("\n--- Pages ---")
-        for i, page_text in enumerate(processor.extract_text(), start=1):
-            print(f"\n--- Page {i} ---\n{page_text[:500]}...\n")
-    except ImportError as e:
-        print(f"Error: {e}")
+    print("\nText content preview:\n")
+    for i, page_text in enumerate(processor.extract_text(), start=1):
+        print(f"--- page {i} ---")
+        print(page_text[:512], "...")
+        print("\n --- \n")

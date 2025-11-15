@@ -24,7 +24,7 @@ def pretty_errors(error: ValidationError) -> str:
         input_value = err["input"]
         input_type = type(input_value).__name__
 
-        # Sliced to avoid overflow screen
+        # Sliced to avoid overflowing screen
         input_value = (
             input_value
             if len(str(input_value)) < 500
@@ -51,7 +51,7 @@ def restricted_iterable(*hints: Any) -> Any:
         if isinstance(v, str):
             # Pydantic-Core is sometimes pickier; using ValueError often works better
             # with external validators than a raw TypeError
-            # Sliced to avoid overflow screen
+            # Sliced to avoid overflowing screen
             input_val = v if len(v) < 500 else v[:500] + "..."
             raise ValueError(
                 f"Input cannot be a string.\n  Found: (input={input_val!r}, type=str)"

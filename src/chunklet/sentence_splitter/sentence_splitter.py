@@ -15,7 +15,7 @@ from chunklet.sentence_splitter.languages import (
 )
 from chunklet.sentence_splitter.registry import CustomSplitterRegistry
 from chunklet.sentence_splitter._fallback_splitter import FallbackSplitter
-from chunklet.utils.validation import validate_input
+from chunklet.common.validation import validate_input
 
 
 class BaseSplitter(ABC):
@@ -64,7 +64,7 @@ class SentenceSplitter(BaseSplitter):
         Initializes the SentenceSplitter.
 
         Args:
-            verbose (bool): If True, enables verbose logging for debugging and informational messages.
+            verbose (bool, optional): If True, enables verbose logging for debugging and informational messages.
         """
         self.verbose = verbose
         self.custom_splitter_registry = CustomSplitterRegistry()
@@ -127,7 +127,7 @@ class SentenceSplitter(BaseSplitter):
 
         Args:
             text (str): The input text to be split.
-            lang (str): The language of the text (e.g., 'en', 'fr', 'auto').
+            lang (str, optional): The language of the text (e.g., 'en', 'fr'). Defaults to 'auto'
 
         Returns:
             list[str]: A list of sentences.

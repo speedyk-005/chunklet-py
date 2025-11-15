@@ -23,7 +23,7 @@ from chunklet.document_chunker.converters import (
     latex_2_md,
 )
 from chunklet.document_chunker.registry import CustomProcessorRegistry
-from chunklet.utils.validation import validate_input, restricted_iterable
+from chunklet.common.validation import validate_input, restricted_iterable
 from chunklet.exceptions import InvalidInputError, UnsupportedFileTypeError
 
 
@@ -310,9 +310,9 @@ class DocumentChunker:
         path: str | Path,
         *,
         lang: str = "auto",
-        mode: Literal["sentence", "token", "hybrid"] = "sentence",
-        max_tokens: Annotated[int, Field(ge=12)] = 256,
-        max_sentences: Annotated[int, Field(ge=1)] = 12,
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_sentences: Annotated[int | None, Field(ge=1)] = None,
+        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
@@ -327,12 +327,13 @@ class DocumentChunker:
         Args:
             path (str | Path): The path to the document file.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            mode (Literal["sentence", "token", "hybrid"]): Chunking mode. Defaults to "sentence".
-            max_tokens (int): Maximum number of tokens per chunk.
-            max_sentences (int): Maximum number of sentences per chunk.
+            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
             offset (int): Starting sentence offset for chunking. Defaults to 0.
-            token_counter (callable | None): Optional token counting function. Required for token-based modes only.
+            token_counter (callable | None): Optional token counting function.
+                Required if `max_tokens` is provided.
 
         Returns:
             list[Box]: A list of `Box` objects, each representing
@@ -342,13 +343,9 @@ class DocumentChunker:
             InvalidInputError: If the input arguments aren't valid.
             FileNotFoundError: If provided file path not found.
             UnsupportedFileTypeError: If the file extension is not supported or is missing.
-            MissingTokenCounter: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
+            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
             CallbackError: If a callback function (e.g., custom processors callbacks) fails during execution.
         """
-        # Capture all parameters
-        params = {k: v for k, v in locals().items() if k not in ["self", "path"]}
-        params["token_counter"] = token_counter or self.token_counter
-
         path = Path(path)
         ext = self._validate_and_get_extension(path)
         if self.verbose:
@@ -368,7 +365,15 @@ class DocumentChunker:
 
         # Process as a single block of text
         chunk_boxes = self.plain_text_chunker.chunk(
-            text=text_content, base_metadata=document_metadata, **params
+            text=text_content,
+            lang=lang,
+            max_tokens=max_tokens,
+            max_sentences=max_sentences,
+            max_section_breaks=max_section_breaks,
+            overlap_percent=overlap_percent,
+            offset=offset,
+            token_counter=token_counter or self.token_counter,
+            base_metadata=document_metadata,
         )
 
         if self.verbose:
@@ -382,9 +387,9 @@ class DocumentChunker:
         paths: restricted_iterable(str | Path),
         *,
         lang: str = "auto",
-        mode: Literal["sentence", "token", "hybrid"] = "sentence",
-        max_tokens: Annotated[int, Field(ge=12)] = 256,
-        max_sentences: Annotated[int, Field(ge=1)] = 12,
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_sentences: Annotated[int | None, Field(ge=1)] = None,
+        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
@@ -403,12 +408,13 @@ class DocumentChunker:
         Args:
             paths (restricted_iterable[str | Path]): A restricted iterable of paths to the document files.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            mode (Literal["sentence", "token", "hybrid"]): Chunking mode. Defaults to "sentence".
-            max_tokens (int): Maximum number of tokens per chunk.
-            max_sentences (int): Maximum number of sentences per chunk.
+            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
             offset (int): Starting sentence offset for chunking. Defaults to 0.
-            token_counter (callable | None): Optional token counting function. Required for token-based modes only.
+            token_counter (callable | None): Optional token counting function.
+                Required if `max_tokens` is provided.
             separator (Any): A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
 
@@ -424,7 +430,7 @@ class DocumentChunker:
             InvalidInputError: If the input arguments aren't valid.
             FileNotFoundError: If provided file path not found.
             UnsupportedFileTypeError: If the file extension is not supported or is missing.
-            MissingTokenCounter: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
+            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
             CallbackError: If a callback function (e.g., custom processors callbacks) fails during execution.
         """
         sentinel = object()
@@ -446,9 +452,9 @@ class DocumentChunker:
         all_chunks_gen = self.plain_text_chunker.batch_chunk(
             texts=gathered_data["all_texts_gen"],
             lang=lang,
-            mode=mode,
             max_tokens=max_tokens,
             max_sentences=max_sentences,
+            max_section_breaks=max_section_breaks,
             overlap_percent=overlap_percent,
             offset=offset,
             token_counter=token_counter or self.token_counter,

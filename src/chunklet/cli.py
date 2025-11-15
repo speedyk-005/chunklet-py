@@ -11,8 +11,8 @@ from importlib.metadata import version, PackageNotFoundError
 from chunklet.sentence_splitter import SentenceSplitter
 from chunklet.plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker import DocumentChunker
-from chunklet.experimental.code_chunker import CodeChunker
-from chunklet.utils.path_utils import is_path_like
+from chunklet.code_chunker import CodeChunker
+from chunklet.common.path_utils import is_path_like
 
 try:
     __version__ = version("chunklet")
@@ -172,6 +172,7 @@ def split_command(
         for sentence in sentences:
             typer.echo(sentence)
 
+
 @app.command(name="chunk", help="Chunk text or files based on specified parameters.")
 def chunk_command(
     text: Optional[str] = typer.Argument(
@@ -183,6 +184,7 @@ def chunk_command(
         "-s",
         help="Path(s) to one or more files or directories to read input from. Overrides the 'text' argument.",
     ),
+    
     # flags for chunker type
     code: bool = typer.Option(False, "--code", help="Use CodeChunker for code files."),
     doc: bool = typer.Option(
@@ -194,31 +196,31 @@ def chunk_command(
         "-d",
         help="Path to a file (for single output) or a directory (for batch output) to write the chunks.",
     ),
-    mode: ChunkMode = typer.Option(
-        ChunkMode.sentence,
-        "--mode",
-        help="Chunking mode: 'sentence', 'token', or 'hybrid'. (default: sentence)",
-    ),
     lang: str = typer.Option(
         "auto",
         "--lang",
         help="Language of the text (e.g., 'en', 'fr', 'auto'). (default: auto)",
     ),
     max_tokens: int = typer.Option(
-        256, "--max-tokens", help="Maximum number of tokens per chunk. (default: 256)"
+        None, "--max-tokens", help="Maximum number of tokens per chunk. Applies to all chunking strategies. (must be >= 12)"
     ),
     max_sentences: int = typer.Option(
-        12,
+        None,
         "--max-sentences",
-        help="Maximum number of sentences per chunk. (default: 12)",
+        help="Maximum number of sentences per chunk. Applies to PlainTextChunker and DocumentChunker. (must be >= 1)",
+    ),
+    max_section_breaks: Optional[int] = typer.Option(
+        None,
+        "--max-section-breaks",
+        help="Maximum number of section breaks per chunk. Applies to PlainTextChunker and DocumentChunker. (must be >= 1)",
     ),
     overlap_percent: float = typer.Option(
         20.0,
         "--overlap-percent",
-        help="Percentage of overlap between chunks (0-85). (default: 20)",
+        help="Percentage of overlap between chunks (0-85). Applies to PlainTextChunker and DocumentChunker. (default: 20)",
     ),
     offset: int = typer.Option(
-        0, "--offset", help="Starting sentence offset for chunking. (default: 0)"
+        0, "--offset", help="Starting sentence offset for chunking. Applies to PlainTextChunker and DocumentChunker. (default: 0)"
     ),
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging."
@@ -234,6 +236,7 @@ def chunk_command(
     metadata: bool = typer.Option(
         False, "--metadata", help="Include metadata in the output."
     ),
+    
     # for Batching
     n_jobs: Optional[int] = typer.Option(
         None,
@@ -245,21 +248,27 @@ def chunk_command(
         "--on-errors",
         help="How to handle errors during processing. (default: raise)",
     ),
+    
     # CodeChunker specific arguments
+    max_lines: int = typer.Option(
+        None,
+        "--max-lines",
+        help="Maximum number of lines per chunk. Applies to CodeChunker only. (must be >= 5)",
+    ),
     docstring_mode: DocstringMode = typer.Option(
         DocstringMode.summary,
         "--docstring-mode",
-        help="Docstring processing strategy for CodeChunker: 'summary', 'all', or 'excluded'.",
+        help="Docstring processing strategy for CodeChunker: 'summary', 'all', or 'excluded'. Applies to CodeChunker only.",
     ),
     strict: bool = typer.Option(
         True,
         "--strict",
-        help="If True, raise error when structural blocks exceed max_tokens in CodeChunker. If False, split oversized blocks.",
+        help="If True, raise error when structural blocks exceed max_tokens in CodeChunker. If False, split oversized blocks. Applies to CodeChunker only.",
     ),
     include_comments: bool = typer.Option(
         True,
         "--include-comments",
-        help="Include comments in output chunks for CodeChunker.",
+        help="Include comments in output chunks for CodeChunker. Applies to CodeChunker only.",
     ),
 ):
     """
@@ -317,6 +326,7 @@ def chunk_command(
         )
         chunk_kwargs.update(
             {
+                "max_lines": max_lines,
                 "docstring_mode": docstring_mode,
                 "strict": strict,
                 "include_comments": include_comments,
@@ -336,8 +346,8 @@ def chunk_command(
         chunk_kwargs.update(
             {
                 "lang": lang,
-                "mode": mode,
                 "max_sentences": max_sentences,
+                "max_section_breaks": max_section_breaks,
                 "overlap_percent": overlap_percent,
                 "offset": offset,
             }
@@ -386,8 +396,7 @@ def chunk_command(
             )
             raise typer.Exit(code=0)
 
-        if not len(file_paths) == 1:
-            # Single file input logic
+        if len(file_paths) == 1 and file_paths[0].suffix not in {".pdf", ".epub", ".docx"}:
             single_file = file_paths[0]
             chunks = chunker_instance.chunk(
                 path=single_file,
@@ -477,18 +486,12 @@ def chunk_command(
         for res in all_results:
             for chunk_box in res:
                 chunk_counter += 1
-                output_content.append(
-                    f"## Source: {chunk_box.metadata.get('source', 'stdin')}"
-                )
-                output_content.append(f"--- Chunk {chunk_counter} ---")
+                output_content.append(f"## --- Chunk {chunk_counter} ---")
                 output_content.append(chunk_box.content)
                 output_content.append("")
                 if metadata:
                     chunk_metadata = chunk_box.metadata.to_dict()
-                    chunk_metadata.pop(
-                        "source", None
-                    )  # Prevent printing the source path again
-                    output_content.append("\n### Chunk Metadata")  # Use a sub-header
+                    output_content.append("\n--- Metadata ---")  # Use a sub-header
 
                     for key, value in chunk_metadata.items():
                         # Use clean pipe formatting for terminal style tables

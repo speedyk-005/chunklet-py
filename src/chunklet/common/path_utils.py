@@ -2,7 +2,7 @@ import sys
 import errno
 import regex as re
 from pathlib import Path
-from chunklet.utils.validation import validate_input
+from chunklet.common.validation import validate_input
 
 # Pattern to check if source args provided in the chunk method is a path
 PATH_PATTERN = re.compile(

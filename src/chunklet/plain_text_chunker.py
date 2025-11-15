@@ -9,9 +9,9 @@ from pydantic import Field
 from loguru import logger
 
 from chunklet.sentence_splitter import SentenceSplitter, BaseSplitter
-from chunklet.utils.validation import validate_input, restricted_iterable
-from chunklet.utils.batch_runner import run_in_batch
-from chunklet.utils.token_utils import count_tokens
+from chunklet.common.validation import validate_input, restricted_iterable
+from chunklet.common.batch_runner import run_in_batch
+from chunklet.common.token_utils import count_tokens
 from chunklet.exceptions import (
     InvalidInputError,
     MissingTokenCounterError,
@@ -19,16 +19,22 @@ from chunklet.exceptions import (
 )
 
 
-# for clauses overlapping and fitting
-CLAUSE_END_TRIGGERS = r";,’：—)&…"
+# Regex to split sentences into individual clauses
+CLAUSE_END_PATTERN = re.compile(r"(?<=[;,’：—)&…])\s")
 
+# Pattern to detect markdown headings
+SECTION_BREAK_PATTERN = re.compile(
+    r"\s*#{1,6}\s*.+?|"    # heading
+    r"^[\-\*_]{2,}$|"      # thematic Breaks
+    r"\s*<details>"        # collapsed Sections opening
+)
 
 class PlainTextChunker:
     """
     A powerful text chunking utility offering flexible strategies for optimal text segmentation.
 
     Key Features:
-    - Multiple Chunking Modes: Split text by sentence count, token count, or a hybrid approach.
+    - Flexible Constraint-Based Chunking: Segment text by specifying limits on sentence count, token count, or a combination of both.
     - Clause-Level Overlap: Ensures semantic continuity between chunks by overlapping
     at natural clause boundaries with Customizable continuation marker.
     - Multilingual Support: Leverages language-specific algorithms and detection for broad coverage.
@@ -49,11 +55,11 @@ class PlainTextChunker:
         Initialize The PlainTextChunker.
 
         Args:
-            sentence_splitter (BaseSplitter | None): An optional BaseSplitter instance.
+            sentence_splitter (BaseSplitter, optional): An optional BaseSplitter instance.
                 If None, a default SentenceSplitter will be initialized.
             verbose (bool): Enable verbose logging.
             continuation_marker (str): The marker to prepend to unfitted clauses. Defaults to '...'.
-            token_counter (Callable[[str], int] | None): Function that counts tokens in text.
+            token_counter (Callable[[str], int], optional): Function that counts tokens in text.
                 If None, must be provided when calling chunk() methods.
 
         Raises:
@@ -74,9 +80,6 @@ class PlainTextChunker:
         # Initialize SentenceSplitter
         self.sentence_splitter = sentence_splitter or SentenceSplitter()
         self.sentence_splitter.verbose = self._verbose
-        
-        # Regex to split clauses inside sentences by clause-ending punctuation
-        self.clause_end_regex = re.compile(rf"(?<=[{CLAUSE_END_TRIGGERS}])\s")
 
     @property
     def verbose(self) -> bool:
@@ -169,7 +172,7 @@ class PlainTextChunker:
             list[str]: A list of clauses as overlap.
         """
         detected_clauses = [
-            clause for sent in sentences for clause in self.clause_end_regex.split(sent)
+            clause for sent in sentences for clause in CLAUSE_END_PATTERN.split(sent)
         ]
 
         overlap_num = round(len(detected_clauses) * overlap_percent / 100)
@@ -212,7 +215,7 @@ class PlainTextChunker:
                 - The clauses that fit within the token budget.
                 - The remaining unfitted clauses.
         """
-        clauses = self.clause_end_regex.split(sentence)
+        clauses = CLAUSE_END_PATTERN.split(sentence)
         clauses = [cl for cl in clauses if cl.strip()]
 
         fitted = []
@@ -262,22 +265,22 @@ class PlainTextChunker:
     def _group_by_chunk(
         self,
         sentences: list[str],
-        mode: str,
         token_counter: Callable[[str], int],
         max_tokens: int,
         max_sentences: int,
+        max_section_breaks: int,
         overlap_percent: int | float,
     ) -> list[str]:
         """
-        Groups sentences into chunks based on the specified mode and constraints.
+        Groups sentences into chunks based on the specified constraints.
         Applies overlap logic between consecutive chunks.
 
         Args:
-            sentences lList): A list of sentences to be chunked.
-            mode (str): Chunking mode ('sentence', 'token', or 'hybrid').
+            sentences (list[str]): A list of sentences to be chunked.
             token_counter (Callable): The token counting function.
             max_tokens (int): Maximum number of tokens per chunk.
             max_sentences (int): Maximum number of sentences per chunk.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
             overlap_percent (int | float): Percentage of overlap between chunks.
 
         Returns:
@@ -287,23 +290,34 @@ class PlainTextChunker:
         curr_chunk = []
         token_count = 0
         sentence_count = 0
+        heading_count = 0
 
         index = 0
         while index < len(sentences):
-            if mode in {"token", "hybrid"}:
-                sentence_tokens = count_tokens(sentences[index], token_counter)
+            sentence = sentences[index]
+            
+            if SECTION_BREAK_PATTERN.match(sentence):
+                is_heading = True
+                sentence = "\n" + sentence
             else:
-                sentence_tokens = 0
+                is_heading = False
 
+            sentence_tokens = (
+                count_tokens(sentence + "\n", token_counter)
+                if max_tokens != sys.maxsize
+                else 0
+            )
+            
             sentence_limit_reached = sentence_count + 1 > max_sentences
-            token_limit_reached = token_count + sentence_tokens > max_tokens
+            heading_limit_reached = is_heading and heading_count + 1 > max_section_breaks
+            token_limit_reached = (max_tokens != sys.maxsize) and (token_count + sentence_tokens > max_tokens)
 
-            if sentence_limit_reached or token_limit_reached:
+            if token_limit_reached or sentence_limit_reached or heading_limit_reached:
                 # for token-based mode, try splitting further
                 if token_limit_reached:
                     remaining_tokens = max_tokens - token_count
                     fitted, unfitted = self._find_clauses_that_fit(
-                        sentences[index],
+                        sentence,
                         remaining_tokens,
                         token_counter,
                     )
@@ -315,7 +329,7 @@ class PlainTextChunker:
                     # (e.g, urls, bad formated text, image uris).
                     if not curr_chunk and not fitted and unfitted:
                         curr_chunk = [self._resolve_unpunctuated_text(
-                            text=sentences[index],
+                            text=sentence,
                             max_tokens=max_tokens,
                             token_counter=token_counter,
                         )]
@@ -325,7 +339,7 @@ class PlainTextChunker:
                     curr_chunk.append(fitted)
                     should_move_forward = fitted and not unfitted
 
-                else:  # If in mode sentence
+                else: 
                     should_move_forward = True
                     unfitted = ""
 
@@ -334,10 +348,14 @@ class PlainTextChunker:
                 # Prepare data for next chunk
                 curr_chunk = self._get_overlap_clauses(curr_chunk, overlap_percent)
 
-                if mode in {"token", "hybrid"}:
+                if max_tokens != sys.maxsize:
                     token_count = sum(count_tokens(s, token_counter) for s in curr_chunk)
-                    
-                sentence_count = len(curr_chunk)  # considered as sentences
+
+                if max_sentences != sys.maxsize:
+                    sentence_count = len(curr_chunk)
+
+                if max_section_breaks != sys.maxsize:
+                    heading_count = sum(1 for s in curr_chunk if SECTION_BREAK_PATTERN.match(s))
             
                 if should_move_forward:  
                     index += 1 
@@ -345,12 +363,14 @@ class PlainTextChunker:
                     sentences[index] = unfitted
 
             else:
-                curr_chunk.append(sentences[index])
+                curr_chunk.append(sentence)
                 token_count += sentence_tokens
                 sentence_count += 1
+                if is_heading:
+                    heading_count += 1
                 index += 1
 
-        # Add any remnants
+        # Add the last chunk if it exists
         if curr_chunk:
             chunks.append("\n".join(curr_chunk))
 
@@ -362,9 +382,9 @@ class PlainTextChunker:
         text: str,
         *,
         lang: str = "auto",
-        mode: Literal["sentence", "token", "hybrid"] = "sentence",
-        max_tokens: Annotated[int, Field(ge=12)] = 256,
-        max_sentences: Annotated[int, Field(ge=1)] = 12,
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_sentences: Annotated[int | None, Field(ge=1)] = None,
+        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
@@ -372,27 +392,27 @@ class PlainTextChunker:
     ) -> list[Box]:
         """
         Chunks a single text into smaller pieces based on specified parameters.
-        Supports multiple chunking modes (sentence, token, hybrid), clause-level overlap,
+        Supports flexible constraint-based chunking, clause-level overlap,
         and custom token counters.
 
         Args:
             text (str): The input text to chunk.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            mode (Literal["sentence", "token", "hybrid"]): Chunking mode. Defaults to "sentence".
-            max_tokens (int): Maximum number of tokens per chunk. Defaults to 512.
-            max_sentences (int): Maximum number of sentences per chunk. Defaults to 12.
+            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
             overlap_percent (int | float): Percentage of overlap between chunks (0-75). Defaults to 20
             offset (int): Starting sentence offset for chunking. Defaults to 0.
-            token_counter (callable | None): Optional token counting function.
+            token_counter (callable, optional): Optional token counting function.
                 Required for token-based modes only.
-            base_metadata (dict[str, Any] | None): Optional dictionary to be included with each chunk.
+            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
 
         Returns:
             list[Box]: A list of `Box` objects, each containing the chunk content and metadata.
 
         Raises:
             InvalidInputError: If any chunking configuration parameter is invalid.
-            MissingTokenCounterError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
+            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
             CallbackError: If an error occurs during sentence splitting or token counting within a chunking task.
         """
         if self.verbose:
@@ -401,14 +421,21 @@ class PlainTextChunker:
                 f"{text[:100]}...",
             )
 
-        if mode in {"token", "hybrid"} and not (token_counter or self.token_counter):
+        # Validate that at least one limit is provided
+        if not any((max_tokens, max_sentences, max_section_breaks)):
+            raise InvalidInputError("At least one of 'max_tokens', 'max_sentences', or 'max_section_break' must be provided.")
+
+        # If token_counter is required but not provided
+        if max_tokens is not None and not (token_counter or self.token_counter):
             raise MissingTokenCounterError()
 
-        # Adjust limits based on mode
-        if mode == "sentence":
+        # Adjust limits for _group_by_chunk's internal use
+        if max_tokens is None:
             max_tokens = sys.maxsize
-        elif mode == "token":
+        if max_sentences is None:
             max_sentences = sys.maxsize
+        if max_section_breaks is None:
+            max_section_breaks = sys.maxsize        
 
         if not text.strip():
             if self.verbose:
@@ -440,10 +467,10 @@ class PlainTextChunker:
 
         chunks = self._group_by_chunk(
             sentences[offset:],
-            mode=mode,
             token_counter=token_counter or self.token_counter,
             max_tokens=max_tokens,
             max_sentences=max_sentences,
+            max_section_breaks=max_section_breaks,
             overlap_percent=overlap_percent,
         )
 
@@ -458,9 +485,9 @@ class PlainTextChunker:
         texts: restricted_iterable(str),
         *,
         lang: str = "auto",
-        mode: Literal["sentence", "token", "hybrid"] = "sentence",
-        max_tokens: Annotated[int, Field(ge=12)] = 256,
-        max_sentences: Annotated[int, Field(ge=1)] = 12,
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_sentences: Annotated[int | None, Field(ge=1)] = None,
+        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
@@ -480,16 +507,16 @@ class PlainTextChunker:
         Args:
             texts (restricted_iterable[str]): A restricted iterable of input texts to be chunked.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            mode (Literal["sentence", "token", "hybrid"]): Chunking mode. Defaults to "sentence".
-            max_tokens (int): Maximum number of tokens per chunk.
-            max_sentences (int): Maximum number of sentences per chunk.
+            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
             offset (int): Starting sentence offset for chunking. Defaults to 0.
-            token_counter (callable | None): The token counting function.
+            token_counter (callable, optional): The token counting function.
+                Required if `max_tokens` is set.
             separator (Any): A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
-            base_metadata (dict[str, Any] | None): Optional dictionary to be included with each chunk.
-                Required for token-based modes only.
+            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
             n_jobs (int | None): Number of parallel workers to use. If None, uses all available CPUs.
                 Must be >= 1 if specified.
             show_progress (bool): Flag to show or disable the loading bar.
@@ -501,17 +528,17 @@ class PlainTextChunker:
 
         Raises:
             InvalidInputError: If `texts` is not an iterable of strings, or if `n_jobs` is less than 1.
-            MissingTokenCounterError: If `mode` is "token" or "hybrid" but no `token_counter` is provided.
+            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided. 
             CallbackError: If an error occurs during sentence splitting
                 or token counting within a chunking task.
         """
         chunk_func = partial(
             self.chunk,
             lang=lang,
-            mode=mode,
             max_tokens=max_tokens,
             max_sentences=max_sentences,
             overlap_percent=overlap_percent,
+            max_section_breaks=max_section_breaks,
             offset=offset,
             base_metadata=base_metadata,
             token_counter=token_counter or self.token_counter,

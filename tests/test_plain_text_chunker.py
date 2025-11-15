@@ -1,7 +1,11 @@
 import re
 import pytest
 from more_itertools import split_at
-from chunklet.plain_text_chunker import PlainTextChunker
+from chunklet.plain_text_chunker import (
+    PlainTextChunker,
+    SECTION_BREAK_PATTERN,
+    CLAUSE_END_PATTERN,
+)
 from chunklet import (
     InvalidInputError,
     CallbackError,
@@ -15,7 +19,11 @@ from chunklet import (
 SEPARATOR_SENTINEL = object()
 
 TEXT = """
+# A weird dream
+
 She loves cooking. He studies AI. "You are a Dr.", she said. The weather is great. We play chess. Books are fun, aren't they?
+
+##  My playlist 
 
 The Playlist contains:
   - two videos
@@ -49,47 +57,75 @@ def test_init_validation_error():
 
 
 @pytest.mark.parametrize(
-    "mode, max_tokens, max_sentences, expected_chunks",
-    [("sentence", 512, 3, 7), ("token", 30, 100, 3), ("hybrid", 30, 3, 7)],
+    "max_tokens, max_sentences, max_section_breaks, expected_chunks",
+    [
+        (None, 3, None, 7),  # Sentence-based
+        (30, None, None, 3),  # Token-based
+        (None, None, 1, 2), # Heading-based
+        (30, 3, 1, 7),  # Hybrid
+    ],
 )
-def test_all_modes_produce_chunks(
-    chunker, mode, max_tokens, max_sentences, expected_chunks
+def test_constraint_based_chunking(
+    chunker, max_tokens, max_sentences, max_section_breaks, expected_chunks
 ):
-    """Verify all chunking modes produce output with expected chunk counts and structure."""
+    """Verify constraint-based chunking produces output with expected chunk counts and structure."""
     chunks = chunker.chunk(
         TEXT,
-        mode=mode,
         max_tokens=max_tokens,
         max_sentences=max_sentences,
+        max_section_breaks=max_section_breaks,
     )
-    assert chunks, f"Expected chunks in {mode} mode but got empty list"
+    assert chunks, f"Expected chunks but got empty list"
     assert (
         len(chunks) == expected_chunks
-    ), f"Expected {expected_chunks} chunks in {mode} mode, but got {len(chunks)}"
+    ), f"Expected {expected_chunks} chunks, but got {len(chunks)}"
 
     # Verify the structure of the first chunk
     first_chunk = chunks[0]
     assert hasattr(first_chunk, "content")
     assert hasattr(first_chunk, "metadata")
-
     assert len(first_chunk.content) > 0
-
     assert first_chunk.metadata.chunk_num == 1
     assert hasattr(first_chunk.metadata, "span")
 
+    # Verify limits are respected for each chunk
+    for chunk_box in chunks:
+        content = chunk_box.content
+        
+        if max_sentences is not None:
+            # Split by sentence and check count
+            sentences_in_chunk = chunker.sentence_splitter.split(content)
+            assert len(sentences_in_chunk) <= max_sentences, \
+                f"Chunk exceeded max_sentences: {len(sentences_in_chunk)} > {max_sentences}"
+            
+        if max_tokens is not None:
+            # Count tokens and check
+            tokens_in_chunk = chunker.token_counter(content)
+            assert tokens_in_chunk <= max_tokens, \
+                f"Chunk exceeded max_tokens: {tokens_in_chunk} > {max_tokens}"
+            
+        if max_section_breaks is not None:
+            # Count headings and check
+            headings_in_chunk = [
+                s for s in chunker.sentence_splitter.split(content)
+                if SECTION_BREAK_PATTERN.match(s)
+            ]
+            assert len(headings_in_chunk) <= max_section_breaks, \
+                f"Chunk exceeded max_section_breaks: {len(headings_in_chunk)} > {max_section_breaks}"
+    
 
 @pytest.mark.parametrize(
     "offset, expect_chunks",
     [
         (0, True),
         (3, True),
-        (10, True),
+        (12, True),
         (100, False),  # More than total sentences
     ],
 )
 def test_offset_behavior(chunker, offset, expect_chunks):
     """Verify offset affects output and large offsets produce no chunks"""
-    chunks = chunker.chunk(TEXT, offset=offset)
+    chunks = chunker.chunk(TEXT, offset=offset, max_sentences=3)
 
     if expect_chunks:
         assert len(chunks) >= 1, f"Should get chunks for offset={offset}"
@@ -98,20 +134,19 @@ def test_offset_behavior(chunker, offset, expect_chunks):
         assert not chunks, f"Should get no chunks for offset={offset}"
 
 
-@pytest.mark.parametrize("mode", ["token", "hybrid"])
-def test_token_counter_validation(mode):
+def test_token_counter_validation():
     """Test that a MissingTokenCounterError is raised when a token_counter is missing for token/hybrid modes."""
     with pytest.raises(MissingTokenCounterError):
         new_chunker = PlainTextChunker()
 
         # Consume the generator to trigger the error
-        new_chunker.chunk("some text", mode=mode)
+        new_chunker.chunk("some text", max_tokens=30)
 
 
 def test_long_sentence_truncation(chunker):
     """Test that a long sentence without punctuation is #truncated correctly."""
     long_sentence = "word " * 100
-    chunks = chunker.chunk(long_sentence, mode="token", max_tokens=30)
+    chunks = chunker.chunk(long_sentence, max_tokens=30)
 
     assert len(chunks) >= 1, "Expected at least one chunk, but got None"
     assert chunks[0].content.endswith(
@@ -122,29 +157,19 @@ def test_long_sentence_truncation(chunker):
 # --- Overlap Related Tests ---
 def test_overlap_behavior(chunker):
     """Test that overlap produces multiple chunks and the overlap content is correct."""
-    # Test case 1: Overlap with capitalized clause
+    
     chunks = chunker.chunk(
         TEXT,
-        mode="sentence",
-        max_sentences=3,
-        overlap_percent=33,
+        max_sentences=4,
+        overlap_percent=50,
     )
     assert len(chunks) > 1, "Overlap should produce multiple chunks"
 
-    # Manually calculate the expected overlap to create a robust test
-    first_chunk_content = chunks[0].content
-    clauses = chunker.clause_end_regex.split(first_chunk_content)
-
-    overlap_num = round(len(clauses) * 0.33)
-    expected_overlap_clause = clauses[-overlap_num:][0]
-
-    # The logic adds '... ' if the clause doesn't start with a capital letter
+    # Expected that about 50% of first chunk content is present in the second one
+    expected_overlap = re.split(r"(?<=[,\n])", chunks[0].content)[3:]
     assert (
-        re.match(
-            rf"(?:\.\.\. )?{re.escape(expected_overlap_clause)}", chunks[1].content
-        )
-        is not None
-    ), f"Expected second chunk to start with '{expected_overlap_clause}' (with optional '... '), but it did not."
+        all([cls.strip() in chunks[1].content for cls in expected_overlap])
+    ), f"Expected second chunk to start with '{expected_overlap}'."
 
 
 # --- Batch chunking Tests---
@@ -163,7 +188,6 @@ def test_batch_processing_successful(chunker, texts_input, expected_results_len)
     results = list(
         chunker.batch_chunk(
             texts_input,
-            mode="sentence",
             max_sentences=100,
             separator=SEPARATOR_SENTINEL,
         )
@@ -204,12 +228,12 @@ def test_batch_chunk_error_handling_on_task(chunker):
         CallbackError,
         match="Token counter failed while processing text starting with:",
     ):
-        list(chunker.batch_chunk(texts, mode="token", on_errors="raise"))
+        list(chunker.batch_chunk(texts, max_tokens=12, on_errors="raise"))
 
     # Test on_errors = 'skip'
     results = chunker.batch_chunk(
         texts,
-        mode="token",
+        max_tokens=12,
         on_errors="skip",
         separator=SEPARATOR_SENTINEL,
     )
@@ -224,7 +248,7 @@ def test_batch_chunk_error_handling_on_task(chunker):
     # Test on_errors = 'break'
     results = chunker.batch_chunk(
         texts,
-        mode="token",
+        max_tokens=12,
         on_errors="break",
         separator=SEPARATOR_SENTINEL,
     )

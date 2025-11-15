@@ -5,11 +5,10 @@ from typing import Any, Literal, Callable
 from itertools import tee
 from more_itertools import ilen
 from collections.abc import Iterable, Generator
-from rich.progress import Progress
-
-# multiprocess is lazy imported
+# mpire is lazy imported
 from loguru import logger
-from chunklet.utils.validation import safely_count_iterable
+from chunklet.common.validation import safely_count_iterable
+from chunklet.common._progress_bar import ProgressBar
 
 def run_in_batch(
     func: Callable,
@@ -41,8 +40,7 @@ def run_in_batch(
     Yields:
         Any: A `Box` object containing the chunk content and metadata, or any separator object.
     """
-    # Using 'multiprocess' (a fork of multiprocessing) for enhanced pickling capabilities.
-    from multiprocess import Pool
+    from mpire import WorkerPool
 
     total, iterable_of_args = safely_count_iterable(iterable_name, iterable_of_args)
         
@@ -54,11 +52,6 @@ def run_in_batch(
             logger.info("Input {} is empty. Returning empty iterator.", iterable_name)
         return iter([])
 
-    # This is often better for I/O-bound tasks
-    effective_n_jobs = n_jobs if n_jobs is not None else os.cpu_count() or 1
-    # Use a heuristic (total / workers / 4) to send large chunks, ensuring a minimum of 1
-    chunksize = max(1, total // (effective_n_jobs * 4))
-    
     # Wrapper to capture result/exception
     def chunk_func(*args, **kwargs):
         try:
@@ -67,56 +60,39 @@ def run_in_batch(
         except Exception as e:
             return None, e
 
-    progress = None
     failed_count = 0
     try:
-        with Pool(processes=n_jobs) as pool:
-            imap_func = pool.imap if separator is not None else pool.imap_unordered
-            task_iter = imap_func(
-                chunk_func,
-                iterable_of_args,
-                chunksize = chunksize,
-            ) 
+        with ProgressBar(iterable_of_args, total=total, display=show_progress) as pbar_iterable:
+            with WorkerPool(n_jobs=n_jobs) as pool:
+                imap_func = pool.imap if separator is not None else pool.imap_unordered
+                task_iter = imap_func(
+                    chunk_func,
+                    pbar_iterable, # The pool iterates over the progress bar
+                    iterable_len=total,
+                )
 
-            task_iter, task_iter_2 = tee(task_iter)
-            total_res = ilen(task_iter_2)
-            
-            # Progress bar setup
-            if show_progress and total > 0:
-                progress = Progress()
-                task = progress.add_task(f"[green]Processing {iterable_name}[/green]", total=total_res) 
-                progress.start() 
-        
-            for res, error in task_iter:
-                if error:
-                    failed_count += 1
-                    if on_errors == "raise":
-                        raise error
-                    elif on_errors == "break":
-                        logger.error(
-                            "A task for {} failed. Returning partial results.\nReason: {}",
-                            iterable_name,
-                            error,
-                        )
-                        break
-                    else:  # skip
-                        logger.warning("Skipping a failed task.\nReason: {}", error)
-                        if progress:
-                            progress.update(task, advance=1)
-                        continue
+                for res, error in task_iter:
+                    if error:
+                        failed_count += 1
+                        if on_errors == "raise":
+                            raise error
+                        elif on_errors == "break":
+                            logger.error(
+                                "A task for {} failed. Returning partial results.\nReason: {}",
+                                iterable_name,
+                                error,
+                            )
+                            break
+                        else:  # skip
+                            logger.warning("Skipping a failed task.\nReason: {}", error)
+                            continue
+                        
+                    yield from res
 
-                if progress:
-                    progress.update(task, advance=1)
-                    
-                yield from res
-
-                if separator is not None:
-                    yield separator
+                    if separator is not None:
+                        yield separator
 
     finally:
-        if progress:
-            progress.stop() 
-
         if verbose:
             logger.info(
                 "Batch processing completed. {}/{} items processed successfully.",

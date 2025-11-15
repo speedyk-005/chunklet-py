@@ -35,9 +35,10 @@ def registry():
 )
 def test_chunk_simple_files(chunker, path):
     """Test the main chunk method with various supported file types."""
-    chunks = chunker.chunk(path)
+    chunks = chunker.chunk(path, max_sentences=5)
     assert len(chunks) > 0
     assert "source" in chunks[0].metadata
+
 
 
 def test_chunk_unsupported_file(chunker, tmp_path):
@@ -59,7 +60,7 @@ def test_batch_chunk_with_different_file_type(chunker):
         "samples/minimal.epub",
         "samples/sample-pdf-a4-size.pdf",
     ]
-    all_document_chunks = list(chunker.batch_chunk(paths))
+    all_document_chunks = list(chunker.batch_chunk(paths, max_sentences=5))
 
     # Check that we got some chunks
     assert len(all_document_chunks) > 0
@@ -96,7 +97,7 @@ def test_chunk_method_with_custom_processor(tmp_path, mocker, chunker, registry)
         )
 
         # Chunk the dummy file
-        chunks = chunker.chunk(dummy_file)
+        chunks = chunker.chunk(dummy_file, max_sentences=5)
 
         # Assert that the custom processor's output was used
         expected_content_prefix = "Processed failed."
@@ -146,7 +147,7 @@ def test_custom_processor_validation_scenarios(
 
     try:
         with pytest.raises(CallbackError, match=re.escape(expected_match)):
-            chunker.chunk(dummy_file)
+            chunker.chunk(dummy_file, max_sentences=5)
     finally:
         # Unregister to not affect other tests
         registry.unregister(".txt")

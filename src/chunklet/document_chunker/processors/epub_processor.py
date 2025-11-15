@@ -11,18 +11,30 @@ from chunklet.document_chunker.converters.html_2_md import html_to_md
 
 
 class EpubProcessor(BaseProcessor):
-    """Processor class for extracting text and metadata from EPUB files."""
+    """
+    Processor class for extracting text and metadata from EPUB files.
+
+    Text content is extracted by concatenating the text from all HTML content
+    documents within the EPUB container.
+
+    This processor focuses on extracting core **metadata** following the
+    **Dublin Core Metadata Initiative (DCMI)** standard, which is the common
+    practice in EPUB files. Not all available metadata fields are extracted.
+
+    For more details on EPUB metadata and the Dublin Core standard, refer to the
+    `ebooklib` tutorial:
+    
+    https://docs.sourcefabric.org/projects/ebooklib/en/latest/tutorial.html
+    """
 
     METADATA_FIELDS = [
-            "title",
-            "creator",
-            "contributor",
-            "language",
-            "subject",
-            "publisher",
-            "date",
-            "rights",
-        ] 
+        "title",
+        "creator",
+        "contributor",
+        "publisher",
+        "date",
+        "rights",
+    ] 
     
     def __init__(self, file_path: str):
         """
@@ -43,10 +55,16 @@ class EpubProcessor(BaseProcessor):
 
     def extract_metadata(self) -> dict[str, Any]:
         """
-        Extracts metadata from the EPUB file limited to Dublin Core fields.
+        Extracts Dublin Core metadata from the EPUB file.
 
         Returns:
-            dict[str, Any]: A dictionary containing metadata keys and their string values.
+            dict[str, Any]: A dictionary containing metadata fields.
+                - title
+                - creator
+                - contributor
+                - publisher
+                - date
+                - rights
         """
         metadata = {"source": str(self.file_path)}
         for field in self.METADATA_FIELDS:
@@ -78,9 +96,9 @@ if __name__ == "__main__":
     print("Metadata:")
     for k, v in metadata.items():
         print(f"{k}: {v}")
+        
     print("\nText content preview:\n")
-
-    for no, t in enumerate(processor.extract_text(), start=1):
-        print(f"### {no} ###")
-        print(t[:512], "...")
-        print("\n///*******/////\n")
+    for i, text in enumerate(processor.extract_text(), start=1):
+        print(f"--- {i} ---")
+        print(text[:512], "...")
+        print("\n --- \n")

@@ -5,8 +5,8 @@ import mimetypes
 from pathlib import Path
 from pygments.lexers import guess_lexer
 from pygments.util import ClassNotFound
-from chunklet.utils.validation import validate_input
-from chunklet.utils.path_utils import is_path_like 
+from chunklet.common.validation import validate_input
+from chunklet.common.path_utils import is_path_like 
 
 
 @validate_input

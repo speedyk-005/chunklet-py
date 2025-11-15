@@ -1,48 +1,52 @@
 from typing import Any, Generator
 from more_itertools import chunked
 
-# mammoth and docx are lazy imported
+# mammoth and docx are lazily imported
 
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 from chunklet.document_chunker.converters.html_2_md import html_to_md
 
 
 class DocxProcessor(BaseProcessor):
-    """Processor class for extracting text and metadata from DOCX files.
+    """
+    Processor class for extracting text and metadata from DOCX files.
 
-    This class can extract metadata and textual content from a DOCX file.
-    Images are replaced with a placeholder, and Markdown conversion is applied.
+    Text content is extracted, images are replaced with a placeholder,
+    and the resulting text is formatted using Markdown conversion.
+    
+    This class extracts **metadata** which typically uses a mix of
+    **Open Packaging Conventions (OPC)** properties and elements that align
+    with **Dublin Core** standards.
 
-    Attributes:
-        file_path (str): Path to the DOCX file.
+    For more details on the DOCX core properties processed, refer to the
+    `python-docx` documentation:
+    https://python-docx.readthedocs.io/en/latest/dev/analysis/features/coreprops.html
     """
 
     METADATA_FIELDS = [
-            "title",
-            "author",
-            "language",
-            "subject",
-            "publisher",
-            "date",
-            "rights",
-            "keywords",
-            "last_modified_by"
-            "created",
-            "modified",
-        ] 
+        "title",
+        "author",
+        "publisher",
+        "last_modified_by",
+        "created",
+        "modified",
+        "rights",
+        "version",
+    ] 
     
     def extract_metadata(self) -> dict[str, Any]:
-        """Extracts core metadata from the DOCX file.
+        """Extracts core properties (a mix of OPC and Dublin Core elements) from the DOCX file.
 
         Returns:
             dict[str, Any]: A dictionary containing metadata fields:
                 - title
                 - author
-                - subject
-                - keywords
+                - publisher
                 - last_modified_by
                 - created
                 - modified
+                - rights
+                - version
         """
         try:
             from docx import Document
@@ -61,15 +65,15 @@ class DocxProcessor(BaseProcessor):
             if value:
                 metadata[field] = str(value)
         return metadata
-       
+        
     def extract_text(self) -> Generator[str, None, None]:
         """Extracts the text content from the DOCX file in Markdown format.
 
-        Images are replaced with a placeholder "[Image here]".
-        Text is yielded in blocks of 200 lines to facilitate processing.
+        Images are replaced with a placeholder "[Image - num]".
+        Text is yielded in blocks of approximately 10 paragraphs each.
 
         Yields:
-            str: A block of Markdown text, approximately 200 lines each.
+            str: A block of Markdown text, approximately 10 paragraphs each.
         """
         try:  # Lazy import
             import mammoth
@@ -80,9 +84,12 @@ class DocxProcessor(BaseProcessor):
                 "with 'pip install 'chunklet-py[document]''"
             ) from e
 
+        count = 0
         def placeholder_images(image):
             """Replace all images with a placeholder text."""
-            return [mammoth.html.text("[Image here]")]
+            nonlocal count
+            count += 1
+            return [mammoth.html.text(f"[Image - {count}]")]
 
         with open(self.file_path, "rb") as docx_file:
             # Convert DOCX to HTML first
@@ -94,12 +101,14 @@ class DocxProcessor(BaseProcessor):
         # Now we can convert it to markdown
         markdown_content = html_to_md(raw_text=html_content)
 
-        for line_chunk in chunked(markdown_content.splitlines(keepends=True), 200):
-            yield "".join(line_chunk)
+        # Chunk its paragraphs into groups of 8 for faster processing.
+        paragraphs = markdown_content.split("\n\n")
+        for paragraph_chunk in chunked(paragraphs, 8):
+            yield "\n\n".join(paragraph_chunk)
 
 
 if __name__ == "__main__":
-    file_path = "/storage/emulated/0/Download/sample4.docx"
+    file_path = "samples/Lorem Ipsum.docx"
     processor = DocxProcessor(file_path)
 
     # Extract metadata
@@ -108,13 +117,8 @@ if __name__ == "__main__":
     for key, value in metadata.items():
         print(f"{key}: {value}")
 
-    texts = list(processor.extract_text())
-
-    from chunklet import Chunklet
-
-    chunks = Chunklet().batch_chunk(texts=texts, max_sentences=20, overlap_percent=30)
-
-    print("\nText Chunks:")
-    for ch in chunks:
-        print(ch)
-        print("\n //////// \n")
+    print("\nText content preview:\n")
+    for i, text in enumerate(processor.extract_text(), start=1):
+        print(f"--- {i} ---")
+        print(text[:512], "...")
+        print("\n --- \n")
