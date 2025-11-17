@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0.0 alpha] - 2025-11-01
+## [2.0.0] - 2025-11-17
 
 ### Added
 
@@ -18,6 +18,7 @@ This officially boosts language support from 36+ to 50+.
 - **Document Chunker:** Introduced `DocumentChunker` to handle various file formats like `.pdf`, `.docx`, `.txt`, `.md`, `.rst`, `.rtf`, `.tex`, `.html/hml`, `.epub`.
 - **Show Progress Parameter:** Added `show_progress` parameter to `batch_chunk` in `PlainTextChunker` to allow users to control the display of the progress bar.
 - **Custom Processors:** Introduced support for custom document processors, allowing users to define their own logic for extracting text from various file types.
+- **New Constraint Flags:** Introduced `max_section_breaks` for PlainTextChunker and DocumentChunker, and `max_lines` for CodeChunker, providing more granular control over chunking.
 - **New Custom Exception Types:** Introduced more specific error types like `FileProcessingError`, `UnsupportedFileTypeError`, `TokenLimitError` and `CallbackError`.
   
 ### Changed
@@ -28,6 +29,7 @@ This officially boosts language support from 36+ to 50+.
 - **CLI Refactoring:**
     - Simplified all input flags (--file, --dir, etc.) into a single --source (-s) flag, which accepts one or more paths (files or directories).
     - Combined the verbose --output-file and --output-dir into a single --destination (-d) flag, which automatically adapts to single-file output or multi-file directory writing.
+    - Updated constraint flags to match the new constraint style (no `mode`, no default values for `max_tokens` and `max_sentences`).
 - **Type Validation:** Replaced Pydantic BaseModel with `pydantic.validate_call` for lightweight and easier validation, centralizing runtime type checking.       
 - **Sentence Splitter Refactoring:**
     - Refactored the `SentenceSplitter` to be more modular and extensible. The management of custom splitters has been moved to a new `registry` module, which provides a centralized way to register and use custom splitter functions.
@@ -53,11 +55,11 @@ This officially boosts language support from 36+ to 50+.
     - Use incremental token recalculation for better performance.
     - Artifacts handling: Improved logic to gracefully handle and segment malformed or extreme text artifacts (e.g., massive URLs, base64 blocks, minified JSON) by applying a Greedy Token Cutoff. This ensures the chunker does not fail or produce overly large, unusable chunks when encountering long, unpunctuated strings.
 - **Absolute Imports:** Converted all relative imports to absolute imports within the `chunklet` package for better clarity and to avoid potential import issues.
-- **Default Limits:** Changed the default `max_tokens` from 512 to 256 and `max_sentences` from 100 to 12.
 - **Continuation marker:** Improved the continuation marker logic and exposed it's value so users can define thier own or set it to an empty str to disabled it.
 
 ### Removed
 
+- **Chunking Mode:** Removed the `mode` argument from the CLI and `PlainTextChunker`, as its functionality is now implicitly handled by other constraint flags (`max_tokens`, `max_sentences`, `max_section_breaks`).
 - **Caching:** Removed the in-memory caching functionality to focus on raw performance optimization. the only part that still have caching is the utils `count_tokens`
 - **Python 3.8 and 3.9 Support:** Dropped official support for Python 3.8 and 3.9. The minimum required Python version is now 3.10.
 - **CLI Argument:** Removed the `--no-cache` command-line argument.

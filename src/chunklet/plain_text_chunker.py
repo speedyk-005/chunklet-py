@@ -3,6 +3,7 @@ from collections.abc import Iterable
 import sys
 import copy
 import regex as re
+from fuzzysearch import find_near_matches
 from box import Box
 from functools import partial
 from pydantic import Field
@@ -24,9 +25,10 @@ CLAUSE_END_PATTERN = re.compile(r"(?<=[;,’：—)&…])\s")
 
 # Pattern to detect markdown headings
 SECTION_BREAK_PATTERN = re.compile(
-    r"\s*#{1,6}\s*.+?|"    # heading
-    r"^[\-\*_]{2,}$|"      # thematic Breaks
-    r"\s*<details>"        # collapsed Sections opening
+    r"^\s*#{1,6}\s*.+?$|"    # heading
+    r"^\s*([\-\*_]\s*)(?:\1){2,}\s*$|"      # thematic Breaks
+    r"\s*<details>",       # collapsed Sections opening
+    re.M
 )
 
 class PlainTextChunker:
@@ -34,7 +36,7 @@ class PlainTextChunker:
     A powerful text chunking utility offering flexible strategies for optimal text segmentation.
 
     Key Features:
-    - Flexible Constraint-Based Chunking: Segment text by specifying limits on sentence count, token count, or a combination of both.
+    - Flexible Constraint-Based Chunking: Segment text by specifying limits on sentence count, token count and section breaks or combination of them.
     - Clause-Level Overlap: Ensures semantic continuity between chunks by overlapping
     at natural clause boundaries with Customizable continuation marker.
     - Multilingual Support: Leverages language-specific algorithms and detection for broad coverage.
@@ -94,8 +96,7 @@ class PlainTextChunker:
 
     def _find_span(self, text_portion: str, full_text: str) -> tuple[int, int]:
         """
-        Finds the start and end indices of a text portion within a larger text,
-        using a fuzzy match that ignores punctuation and extra whitespace.
+        Finds the start and end indices of a text portion within a larger text using a fuzzy match.
 
         Args:
             text_portion (str): The smaller text to find.
@@ -105,20 +106,19 @@ class PlainTextChunker:
             tuple[int, int]: A tuple containing the start and end indices of the match,
                 or (-1, -1) if no match is found.
         """
-        # Split the portion text by punctuation and whitespace
-        words = [w for w in re.split(r"[\p{P}\p{Z}\n]+", text_portion) if w.strip()]
-
-        if not words:
+        if not text_portion:
             return -1, -1
 
-        # Build a fuzzy match pattern, allowing for punctuation and whitespace between words
-        pattern = r"".join(rf"{word}[\p{{P}}\p{{Z}}\n]{{0,4}}" for word in words)
-
         # Search for the pattern in the full text
-        match = re.search(pattern, full_text, re.I)
+        matches = find_near_matches(
+            text_portion,
+            full_text,
+            max_l_dist=10,
+        )    
 
-        if match:
-            return match.span()
+        if matches:
+            first = matches[0]
+            return first.start, first.end
         return -1, -1
 
     def _create_chunk_boxes(
@@ -337,10 +337,12 @@ class PlainTextChunker:
                         continue
                         
                     curr_chunk.append(fitted)
-                    should_move_forward = fitted and not unfitted
+
+                    if unfitted:
+                        # We need to process the remants separately
+                        sentences[index] = unfitted  
 
                 else: 
-                    should_move_forward = True
                     unfitted = ""
 
                 chunks.append("\n".join(curr_chunk))  # Considered complete 
@@ -357,11 +359,6 @@ class PlainTextChunker:
                 if max_section_breaks != sys.maxsize:
                     heading_count = sum(1 for s in curr_chunk if SECTION_BREAK_PATTERN.match(s))
             
-                if should_move_forward:  
-                    index += 1 
-                else:
-                    sentences[index] = unfitted
-
             else:
                 curr_chunk.append(sentence)
                 token_count += sentence_tokens
@@ -415,12 +412,6 @@ class PlainTextChunker:
             MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
             CallbackError: If an error occurs during sentence splitting or token counting within a chunking task.
         """
-        if self.verbose:
-            logger.info(
-                "Starting chunk processing for text starting with: {}.",
-                f"{text[:100]}...",
-            )
-
         # Validate that at least one limit is provided
         if not any((max_tokens, max_sentences, max_section_breaks)):
             raise InvalidInputError("At least one of 'max_tokens', 'max_sentences', or 'max_section_break' must be provided.")
@@ -428,6 +419,12 @@ class PlainTextChunker:
         # If token_counter is required but not provided
         if max_tokens is not None and not (token_counter or self.token_counter):
             raise MissingTokenCounterError()
+            
+        if self.verbose:
+            logger.info(
+                "Starting chunk processing for text starting with: {}.",
+                f"{text[:100]}...",
+            )
 
         # Adjust limits for _group_by_chunk's internal use
         if max_tokens is None:

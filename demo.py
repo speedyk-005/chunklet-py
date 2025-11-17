@@ -1,48 +1,54 @@
 from chunklet.code_chunker import CodeChunker
+from pathlib import Path
+import os
+import tempfile
+import shutil
+import io
+import sys
 
 PYTHON_CODE = '''
-using System;
+"""
+Module docstring
+"""
 
-namespace MyApp
-{
-    /// <summary>
-    /// A simple calculator class.
-    /// </summary>
-    public class Calculator
-    {
-        /// <summary>
-        /// Adds two numbers.
-        /// </summary>
-        public int Add(int x, int y)
-        {
-            int result = x + y;
-            return result;
-        }
+import os
 
-        // Multiply two numbers
-        public int Multiply(int x, int y)
-        {
-            return x * y;
-        }
-    }
-}
+class Calculator:
+    """
+    A simple calculator class.
 
+    A calculator that Contains basic arithmetic operations for demonstration purposes.
+    """
 
+    def add(self, x, y):
+        """Add two numbers and return result.
+
+        This is a longer description that should be truncated
+        in summary mode. It has multiple lines and details.
+        """
+        result = x + y
+        return result
+
+    def multiply(self, x, y):
+        # Multiply two numbers
+        return x * y
+
+def standalone_function():
+    """A standalone function."""
+    return True
 '''
-chunker = CodeChunker(token_counter=lambda x: len(x.split()))
+
+chunker = CodeChunker()
+
 chunks = chunker.chunk(
-    PYTHON_CODE,
-    max_tokens=36,
-    docstring_mode="summary",
-    include_comments="False",
+    PYTHON_CODE,                
+    max_functions=1,     
 )
 
-from pprint import pprint
-for ch in chunks:
-    print(f"span {ch.metadata.span}")
-    print("-- Tree --")
-    print(ch.metadata.tree)
+for i, chunk in enumerate(chunks):
+    print(f"--- Chunk {i+1} ---")
+    print(f"Content:\n{chunk.content}")
+    print("Metadata:")
+    for k,v in chunk.metadata.items():
+        print(f"{k}: {v}")
     print()
-    print("-------")
-
-print(PYTHON_CODE[527:609])

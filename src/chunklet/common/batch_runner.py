@@ -5,10 +5,12 @@ from typing import Any, Literal, Callable
 from itertools import tee
 from more_itertools import ilen
 from collections.abc import Iterable, Generator
+
 # mpire is lazy imported
+
 from loguru import logger
 from chunklet.common.validation import safely_count_iterable
-from chunklet.common._progress_bar import ProgressBar
+
 
 def run_in_batch(
     func: Callable,
@@ -62,35 +64,42 @@ def run_in_batch(
 
     failed_count = 0
     try:
-        with ProgressBar(iterable_of_args, total=total, display=show_progress) as pbar_iterable:
-            with WorkerPool(n_jobs=n_jobs) as pool:
-                imap_func = pool.imap if separator is not None else pool.imap_unordered
-                task_iter = imap_func(
-                    chunk_func,
-                    pbar_iterable, # The pool iterates over the progress bar
-                    iterable_len=total,
-                )
+        with WorkerPool(n_jobs=n_jobs) as pool:
+            imap_func = pool.imap if separator is not None else pool.imap_unordered
+            
+            progress_bar_options = {
+                "bar_format": "{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}, {rate_fmt}]",
+                "desc": "Chunking ...",
+            }
 
-                for res, error in task_iter:
-                    if error:
-                        failed_count += 1
-                        if on_errors == "raise":
-                            raise error
-                        elif on_errors == "break":
-                            logger.error(
-                                "A task for {} failed. Returning partial results.\nReason: {}",
-                                iterable_name,
-                                error,
-                            )
-                            break
-                        else:  # skip
-                            logger.warning("Skipping a failed task.\nReason: {}", error)
-                            continue
-                        
-                    yield from res
+            task_iter = imap_func(
+                chunk_func,
+                iterable_of_args,
+                iterable_len=total,
+                progress_bar=show_progress,
+                progress_bar_options=progress_bar_options,
+            )
 
-                    if separator is not None:
-                        yield separator
+            for res, error in task_iter:
+                if error:
+                    failed_count += 1
+                    if on_errors == "raise":
+                        raise error
+                    elif on_errors == "break":
+                        logger.error(
+                            "A task for {} failed. Returning partial results.\nReason: {}",
+                            iterable_name,
+                            error,
+                        )
+                        break
+                    else:  # skip
+                        logger.warning("Skipping a failed task.\nReason: {}", error)
+                        continue
+                    
+                yield from res
+
+                if separator is not None:
+                    yield separator
 
     finally:
         if verbose:

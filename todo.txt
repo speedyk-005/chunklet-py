@@ -1,17 +1,12 @@
-- in cli, save output as json, rm metadata flag
-
 # documentation
-- add a metadata.md in docs
 - highlight code line in docs
-- add readme in multiple languages
-- add icon for the two themes in readme
-- mention that chunker is a content aware chunkers
-- check https://github.com/Shunham7995/ragparser
-
+- add line numbers in the code blocks
 
 # next version
 - add support for csv, excel and eml files in subquent version
 - add support for odf with odfpy
+
+```python
 from odf.opendocument import load
 from odf import text
 
@@ -19,15 +14,11 @@ doc = load("my document.odt")
 
 for paragraph in doc.getElementsByType(text.P):
     print (paragraph.getAttribute('style name'))
-
-
+``
 
 # what we have done
-- make fx keywords case insinsitive in patterns for code chunker
-- preprocess docx to split on double newline instead of single one
-- rename utils to common
-- update code chunker tree rendering
-- add span metadata in code chunker
-- add conditional import in code chunker
+- modify sentence splitter to prevent merge on thematic break lines punctuation
+- add a new constraint in code chunker; max_functions
+- update documentation
 
 # done, not yet changelog

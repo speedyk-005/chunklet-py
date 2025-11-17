@@ -18,6 +18,13 @@ from chunklet.sentence_splitter._fallback_splitter import FallbackSplitter
 from chunklet.common.validation import validate_input
 
 
+# Regex pattern to identify strings consisting solely of punctuation or symbols.
+PUNCTUATION_ONLY_PATTERN = re.compile(r"[\p{P}\p{S}]+")
+
+# Regex pattern to identify thematic breaks (e.g., '---', '***', '___')
+THEMATIC_BREAK_PATTERN = re.compile(r"^\s*[\-\*_]{2,}\s*$")
+
+
 class BaseSplitter(ABC):
     """
     Abstract base class for sentence splitting.
@@ -90,7 +97,7 @@ class SentenceSplitter(BaseSplitter):
             stripped_sent = sent.strip()
             if stripped_sent:
                 # If sentence is made of stray punctuation only
-                if re.fullmatch(r"[\p{P}\p{S}]+", stripped_sent):
+                if PUNCTUATION_ONLY_PATTERN.fullmatch(stripped_sent) and not THEMATIC_BREAK_PATTERN.match(stripped_sent):
                     if processed_sentences:
                         # Limits to the first 5 ones
                         processed_sentences[-1] += stripped_sent[:5]

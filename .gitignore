@@ -58,3 +58,4 @@ Thumbs.db
 *.temp
 temp/
 site/
+.aider*

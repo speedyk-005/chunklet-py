@@ -348,8 +348,6 @@ class DocumentChunker:
         """
         path = Path(path)
         ext = self._validate_and_get_extension(path)
-        if self.verbose:
-            logger.info("Starting chunk processing for path: {}.", path)
 
         text_content_or_generator, document_metadata = self._extract_data(path, ext)
 
@@ -360,6 +358,9 @@ class DocumentChunker:
                 "so it must be processed in parallel for efficiency.\n"
                 "💡 Hint: use `chunker.batch_chunk()` for this file type."
             )
+
+        if self.verbose:
+            logger.info("Starting chunk processing for path: {}.", path)
 
         text_content = text_content_or_generator
 
@@ -468,7 +469,7 @@ class DocumentChunker:
         path_section_counts = gathered_data["path_section_counts"]
         all_metadata = gathered_data["all_metadata"]
 
-        # Since a sentinel is always at the end of the gen,
+        # HACK: Since a sentinel is always at the end of the gen,
         # the last list of the groups will be an empty one.
         # The only work-around to add a sentinel at paths
         paths = list(path_section_counts.keys()) + [None]

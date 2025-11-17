@@ -6,7 +6,7 @@ Welcome to the programmatic side of Chunklet-py! This is where you integrate Chu
 
     ---
 
-    Precisely split raw text into semantically meaningful sentences, handling various languages and complex structures.
+    Precisely split raw text into semantically meaningful sentences, fluently handling over 50 languages with intelligent detection and complex structures.
 
     [:octicons-arrow-right-24: Learn More](sentence_splitter.md)
     
@@ -14,7 +14,7 @@ Welcome to the programmatic side of Chunklet-py! This is where you integrate Chu
 
     ---
 
-    Process and chunk plain text documents, optimizing them for downstream tasks like embedding and LLM input.
+    Process and chunk plain text documents into perfectly sized, context-aware segments. It offers flexible constraint-based chunking with intelligent overlap, optimizing text for downstream tasks like embedding and LLM input.
 
     [:octicons-arrow-right-24: Learn More](plain_text_chunker.md)
 
@@ -22,7 +22,7 @@ Welcome to the programmatic side of Chunklet-py! This is where you integrate Chu
 
     ---
 
-    Work with diverse document formats (like PDF, DOCX, EPUB) and transform them into structured, chunked outputs.
+    Work with diverse document formats including `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, and `.rtf`, transforming them into structured, chunked outputs.
 
     [:octicons-arrow-right-24: Learn More](document_chunker.md)
 
@@ -30,7 +30,7 @@ Welcome to the programmatic side of Chunklet-py! This is where you integrate Chu
 
     ---
 
-    Intelligently chunk source code, preserving its logical structure and context for analysis, documentation, or AI model training.
+    Intelligently chunk source code, preserving its logical structure and context. This language-agnostic and lightweight tool is perfect for analysis, documentation, or AI model training.
 
     [:octicons-arrow-right-24: Learn More](code_chunker.md)
 

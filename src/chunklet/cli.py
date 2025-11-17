@@ -15,7 +15,7 @@ from chunklet.code_chunker import CodeChunker
 from chunklet.common.path_utils import is_path_like
 
 try:
-    __version__ = version("chunklet")
+    __version__ = version("chunklet-py")
 except PackageNotFoundError:
     __version__ = "unknown"
 
@@ -34,13 +34,13 @@ class OnError(str, Enum):
 
 class DocstringMode(str, Enum):
     summary = "summary"
-    all = "all"
+    all_ = "all"
     excluded = "excluded"
 
 
 app = typer.Typer(
     name="chunklet",
-    help="Chunklet: Smart Multilingual Text Chunker for LLMs, RAG, and beyond.",
+    help="A comprehensive library for advanced text, code, and document chunking, designed for LLM applications. It offers flexible, context-aware segmentation across various content types.",
     rich_help_panel=True,
 )
 
@@ -80,12 +80,12 @@ def split_command(
         None,
         "--destination",
         "-d",
-        help="Path to a single file to write the segmented sentences (separated by \\n\\n). Cannot be a directory.",
+        help="Path to a single file to write the segmented sentences (separated by \\n). Cannot be a directory.",
     ),
     lang: str = typer.Option(
         "auto",
         "--lang",
-        help="Language of the text (e.g., 'en', 'fr', 'auto'). (default: auto)",
+        help="Language of the text (e.g., 'en', 'fr', 'auto').",
     ),
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging."
@@ -234,7 +234,13 @@ def chunk_command(
         ),
     ),
     metadata: bool = typer.Option(
-        False, "--metadata", help="Include metadata in the output."
+        False,
+        "--metadata",
+        help=(
+            "Include metadata in the output. If --destination is a directory, "
+            "metadata is saved as separate .json files; otherwise, it's "
+            "included inline in the output."
+        ),
     ),
     
     # for Batching
@@ -246,7 +252,7 @@ def chunk_command(
     on_errors: OnError = typer.Option(
         OnError.raise_,
         "--on-errors",
-        help="How to handle errors during processing. (default: raise)",
+        help="How to handle errors during processing: 'raise', 'skip' or 'break'",
     ),
     
     # CodeChunker specific arguments
@@ -255,8 +261,13 @@ def chunk_command(
         "--max-lines",
         help="Maximum number of lines per chunk. Applies to CodeChunker only. (must be >= 5)",
     ),
+    max_functions: int = typer.Option(
+        None,
+        "--max-functions",
+        help="Maximum number of functions per chunk. Applies to CodeChunker only. (must be >= 1)",
+    ),
     docstring_mode: DocstringMode = typer.Option(
-        DocstringMode.summary,
+        DocstringMode.all_,
         "--docstring-mode",
         help="Docstring processing strategy for CodeChunker: 'summary', 'all', or 'excluded'. Applies to CodeChunker only.",
     ),
@@ -327,6 +338,7 @@ def chunk_command(
         chunk_kwargs.update(
             {
                 "max_lines": max_lines,
+                "max_functions": max_functions,
                 "docstring_mode": docstring_mode,
                 "strict": strict,
                 "include_comments": include_comments,
@@ -505,18 +517,17 @@ def chunk_command(
             destination.write_text(output_str, encoding="utf-8")
         else:
             typer.echo(output_str)
+        
 
-
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main_callback(
-    version: bool = typer.Option(
-        False, "--version", "-v", help="Show program's version number and exit."
+    version: Optional[bool] = typer.Option(
+        None, "--version", "-v", help="Show program's version number and exit."
     )
 ):
     if version:
         typer.echo(f"chunklet v{__version__}")
         raise typer.Exit()
-
 
 if __name__ == "__main__":
     app()

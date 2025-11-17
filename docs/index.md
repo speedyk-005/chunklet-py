@@ -1,11 +1,10 @@
 # Welcome to the Chunklet-py Documentation!
 
 <p align="center">
-  <img src="https://github.com/speedyk-005/chunklet-py/blob/main/images/logo_with_tagline.svg?raw=true" alt="Chunklet-py Logo" width="300"/>
+  <img src="https://github.com/speedyk-005/chunklet-py/blob/main/images/logo_with_tagline.png?raw=true" alt="Chunklet-py Logo" width="300"/>
 </p>
 
-“One library to split them all: Sentence, Code, Docs— RAG-ready, token-aware,
-and multi-format.”
+“One library to split them all: Sentence, Code, Docs.”
 
 Hello there! Welcome to the official documentation for Chunklet-py. We're thrilled to have you here and excited to guide you through everything our library has to offer.
 
@@ -21,19 +20,53 @@ You might be thinking, 'Can't I just split my text or code with a simple charact
 
 ## 🤔 Why Chunklet-py? What is it, Anyway? (And Why Should You Care?)
 
-**Chunklet-py** is your go-to solution for transforming large volumes of text and code into perfectly sized, context-aware chunks. It intelligently understands the structure of your content, employing clever techniques like clause-level overlapping for text and structural awareness for code, all to preserve the original meaning. Think of it as a meticulous curator, ensuring the integrity of your valuable data.
+**Chunklet-py** is a versatile and powerful library designed to intelligently segment various forms of content—from raw text to complex documents and source code—into perfectly sized, context-aware chunks. It goes beyond simple splitting, offering specialized tools:
 
-Whether you're preparing data for Large Language Models (LLMs), developing Retrieval-Augmented Generation (RAG) pipelines, or enhancing AI-driven document search, Chunklet-py (version 2.0) expertly manages the intricate process of text segmentation with remarkable precision. It ensures your data is RAG-ready, token-aware, and compatible with multiple formats, making it a top choice for efficient indexing, embedding, and inference.
+*   `Sentence Splitter`
+*   `Plain Text Chunker`
+*   `Document Chunker`
+*   `Code Chunker`
 
-Feature                  | Why it’s great  
-------------------------|----------------
-🌐 **Multilingual text chunking** | Supports over 50 languages with the help of robust third-party libraries and a reliable fallback splitter. It intelligently leverages language-specific algorithms and detection for broad coverage.
-⚙️ **Language-agnostic Code Chunking** | Works seamlessly across a wide array of programming languages (including Python, C/C++, Java, C#, and many others) without needing language-specific grammars.
-⛓️ **Hybrid Mode Text chunking**          | Offers the best of both worlds by supporting both token and sentence limits simultaneously, complete with guaranteed Clause-Level Overlap for text chunking – a feature rarely found even in commercial solutions.  
-⚡ **Efficient Parallel Batch Processing** | Utilizes `Mpire` for efficient parallel processing, optimizing for fast batch chunking of your content.
- 🔧 **Highly Customizable**  | Provides extensive customization options, including pluggable token counters, custom sentence splitters, and flexible custom processors for document registration.
+Each of these is tailored to preserve the original meaning and structure of your data.
 
-And there's even more to discover!
+Whether you're preparing data for Large Language Models (LLMs), developing Retrieval-Augmented Generation (RAG) pipelines, or enhancing AI-driven document search, Chunklet-py (version 2.0) provides the precision and flexibility needed for efficient indexing, embedding, and inference across multiple formats and languages.
+
+<div class="grid cards" markdown>
+
+- :material-speedometer:{ .lg .middle } __Blazingly Fast__
+
+    Leverages efficient parallel processing to chunk large volumes of content with remarkable speed.
+
+- :fontawesome-solid-feather:{ .lg .middle } __Featherlight Footprint__
+
+    Designed to be lightweight and memory-efficient, ensuring optimal performance without unnecessary overhead.
+
+- :material-database-marker-outline:{ .lg .middle } __Rich Metadata for RAG__
+
+    Enriches chunks with valuable, context-aware metadata (source, span, document properties, code AST details) crucial for advanced RAG and LLM applications.
+
+- :material-tune:{ .lg .middle } __Infinitely Customizable__
+
+    Offers extensive customization options, from pluggable token counters to custom sentence splitters and processors.
+
+- :material-translate:{ .lg .middle } __Multilingual Mastery__
+
+    Supports over 50 natural languages for text and document chunking with intelligent detection and language-specific algorithms.
+
+- :material-code-tags:{ .lg .middle } __Code-Aware Intelligence__
+
+    Language-agnostic code chunking that understands and preserves the structural integrity of your source code.
+
+- :material-ruler-square:{ .lg .middle } __Precision Chunking__
+
+    Flexible constraint-based chunking allows you to combine limits based on sentences, tokens, sections, lines, and functions.
+
+- :material-console-line:{ .lg .middle } __Dual Interface: CLI & Library__
+
+    Use it as a powerful command-line tool for fast, terminal-based chunking or import it as a library for deep integration into your Python applications.
+
+</div>
+
 
 ---
 
@@ -62,6 +95,8 @@ Wanna know what's under the hood?
 
 *   [**Supported Languages:**](supported-languages.md) See which languages Chunklet speaks fluently.
 *   [**Exceptions and Warnings:**](exceptions-and-warnings.md) Because sometimes, things go wrong. Here's what to do when they do.
+*   [**Metadata:**](getting-started/metadata.md) Understand the rich context `chunklet` attaches to your chunks.
+*   [**Troubleshooting:**](troubleshooting.md) Solutions to common issues you might encounter.
 
 ## Keeping Up-to-Date 
  
@@ -78,3 +113,11 @@ Wanna know what's under the hood?
  *   [**GitHub Repository:**](https://github.com/speedyk-005/chunklet-py) The main hub for all things Chunklet.
  *   [**License Information:**](https://github.com/speedyk-005/chunklet-py/blob/main/LICENSE) All the necessary bits and bobs about Chunklet's license.
  *   [**Contributing:**](https://github.com/speedyk-005/chunklet-py/blob/main/CONTRIBUTING.md) Want to help make Chunklet even better? Find out how you can contribute!                                            
+
+## Related Projects
+
+- [**Semchunk**](https://github.com/isaacus-dev/semchunk)
+- [**semantic-chunker**](https://github.com/Goldziher/semantic-chunker)
+- [**Chonkie**](https://github.com/chonkie-inc/chonkie)
+- [**code_chunker**](https://github.com/JimAiMoment/code-chunker) by JimAiMoment
+- [**CintraAI Code Chunker**](https://github.com/CintraAI/code-chunker)

@@ -4,10 +4,10 @@
   <img src="../../img/document_chunker.jpeg" alt="Document Chunker" width="300"/>
 </p>
 
-!!! note "Read Plain Text Chunker First"
-    The `DocumentChunker` leverages the `PlainTextChunker` internally for its chunking logic. Many of the parameters and concepts (like `mode`, `max_sentences`, `max_tokens`, `overlap_percent`, `token_counter`, and `batch_chunk` behavior) are shared between the two.
+!!! note "Psst... Read `PlainTextChunker` First!"
+    Think of `DocumentChunker` as the cool, sophisticated older sibling of `PlainTextChunker`. While `DocumentChunker` knows how to handle all sorts of fancy file formats, the real brains of the chunking operation—the part that does the heavy lifting of splitting text by sentences, tokens, and section breaks—lives inside `PlainTextChunker`.
 
-    Therefore, it is highly recommended to read the [Plain Text Chunker documentation](plain_text_chunker.md) first. In this document, shared APIs will only be summarized, with detailed explanations available in the `PlainTextChunker` documentation.
+    So, before you dive in here, do yourself a favor and get cozy with the [PlainTextChunker documentation](plain_text_chunker.md) first. It’s the key to unlocking the full power of chunking! We’ll cover the awesome document-specific stuff here, but the core concepts are all explained over there.
 
 ## Streamlined Document Processing
 
@@ -21,7 +21,7 @@ Ready to simplify your document processing? Let's explore how!
 
 The `DocumentChunker` comes with a bag of tricks that makes document processing a breeze:
 
--  **Multi-Format Mastery:** From the corporate world of DOCX to the academic realm of PDFs, this chunker speaks a multitude of file languages. It can handle `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.md`, `.rst`, and even `.rtf` files.
+-  **Multi-Format Mastery:** From the corporate world of DOCX to the academic realm of PDFs, this chunker speaks a multitude of file languages. It can handle `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, and even `.rtf` files.
 -  **Metadata Enrichment:** It's not just about the text. The `DocumentChunker` automatically enriches your chunks with valuable metadata, like the source file path and page numbers for PDFs.
 -  **Bulk Processing Beast:** Got a whole folder of documents to process? No sweat. This chunker is built for bulk, efficiently processing multiple documents in a single go.
 -  **Pluggable Processors:** Have a weird, esoteric file format that nobody else has heard of? The `DocumentChunker` is ready for the challenge. You can plug in your own custom processors to handle any file type you can throw at it.
@@ -34,6 +34,8 @@ The `DocumentChunker` has two main methods: `chunk` for processing a single file
     - `.epub`: Processed by `EpubProcessor`
     - `.pdf`: Processed by `PDFProcessor`
 
+    These processors can also provide unique optional metadata, enriching your chunks with valuable context. For more details, check out the [Metadata in Chunklet-py documentation](../../getting-started/metadata.md).
+
     Due to the streaming nature of these processors (they yield content page by page or in blocks), it is highly recommended to use them with the `batch_chunk` method. Attempting to use these processors with the `chunk` method (which expects a single string input) will result in a [`FileProcessingError`](../../exceptions-and-warnings.md#fileprocessingerror) as the `chunk` method is not designed to consume the generator output of these processors.
 
 ## Single Run
@@ -43,12 +45,17 @@ The `chunk` method of `DocumentChunker` shares most of its arguments with `Plain
 *   The first argument is `path` (a string representing the file path or a `pathlib.Path` object) instead of `text`.
 *   The `base_metadata` argument is not available, as metadata is automatically extracted and managed by the document processors.
 
+Remember, just like with `PlainTextChunker`, at least one of `max_sentences`, `max_tokens`, or `max_section_breaks` must be provided to avoid an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror).
+
 Let's say we have the following text content:
 
 ```txt
-The quick brown fox jumps over the lazy dog. This is the first sentence.
-Here is the second sentence, which is a bit longer. And this is the third one.
-Finally, the fourth sentence concludes our example.
+The quick brown fox jumps over the lazy dog. This is the first sentence, and it's a classic.
+Here is the second sentence, which is a bit longer and more descriptive. And this is the third one, short and sweet.
+The fourth sentence concludes our initial example, but we need more text to demonstrate the chunking effectively.
+Let's add a fifth sentence to make the text a bit more substantial. The sixth sentence will provide even more content for our test.
+This is the seventh sentence, and we are still going. The eighth sentence is here to make the text even longer.
+Finally, the ninth sentence will be the last one for this example, making sure we have enough content to create multiple chunks.
 ```
 
 Save this content into a file named `sample_text.txt`. Here's how you would use it with `DocumentChunker`:
@@ -63,11 +70,10 @@ chunker = DocumentChunker()
 
 chunks = chunker.chunk(
     path=file_path,
-    mode="sentence",         # (1)!
-    lang="auto",             # (2)!
-    max_sentences=2,         # (3)!
-    overlap_percent=0,       # (4)!
-    offset=0                 # (5)!
+    lang="auto",             # (1)!
+    max_sentences=4,         # (2)!
+    overlap_percent=0,       # (3)!
+    offset=0                 # (4)!
 )
 
 for i, chunk in enumerate(chunks):
@@ -77,23 +83,31 @@ for i, chunk in enumerate(chunks):
     print()
 ```
 
-1.  Sets the chunking mode. Options are `"sentence"`, `"token"`, or `"hybrid"`. For a detailed explanation of each mode, refer to the [Plain Text Chunker: Chunking Modes Explained](plain_text_chunker.md#chunking-modes-explained).
-2.  Instructs the chunker to automatically detect the language of the input text. While convenient, explicitly setting the language (e.g., `lang="en"`) can improve accuracy and performance for known languages.
-3.  Sets the maximum number of sentences allowed per chunk. In this example, chunks will contain at most two sentences. The default value is 12.
-4.  Configures the chunker to have no overlap between consecutive chunks. The default behavior includes a 20% overlap to maintain context across chunks.
-5.  Specifies that chunking should start from the very beginning of the text (the first sentence). The default is 0.
+1.  Instructs the chunker to automatically detect the language of the input text. While convenient, explicitly setting the language (e.g., `lang="en"`) can improve accuracy and performance for known languages.
+2.  Sets the maximum number of sentences allowed per chunk. In this example, chunks will contain at most four sentences.
+3.  Configures the chunker to have no overlap between consecutive chunks. The default behavior includes a 20% overlap to maintain context across chunks.
+4.  Specifies that chunking should start from the very beginning of the text (the first sentence). The default is 0.
 
 ??? success "Click to show output"
     ```
     --- Chunk 1 ---
-    Metadata: {'source': 'sample_text.txt', 'chunk_num': 1, 'span': (0, 73)}
+    Metadata: {'source': 'sample_text.txt', 'chunk_num': 1, 'span': (0, 209)}
     Content: The quick brown fox jumps over the lazy dog.
-    This is the first sentence.
+    This is the first sentence, and it's a classic.
+    Here is the second sentence, which is a bit longer and more descriptive.
+    And this is the third one, short and sweet.
 
     --- Chunk 2 ---
-    Metadata: {'source': 'sample_text.txt', 'chunk_num': 2, 'span': (125, 203)}
-    Content: And this is the third one.
-    Finally, the fourth sentence concludes our example.
+    Metadata: {'source': 'sample_text.txt', 'chunk_num': 2, 'span': (210, 509)}
+    Content: The fourth sentence concludes our initial example, but we need more text to demonstrate the chunking effectively.
+    Let's add a fifth sentence to make the text a bit more substantial.
+    The sixth sentence will provide even more content for our test.
+    This is the seventh sentence, and we are still going.
+
+    --- Chunk 3 ---
+    Metadata: {'source': 'sample_text.txt', 'chunk_num': 3, 'span': (510, 696)}
+    Content: The eighth sentence is here to make the text even longer.
+    Finally, the ninth sentence will be the last one for this example, making sure we have enough content to create multiple chunks.
     ```
 
 !!! tip "Enable Verbose Logging"
@@ -115,14 +129,11 @@ for i, chunk in enumerate(chunks):
     chunker = DocumentChunker(continuation_marker="")
     ```
 
-!!! note "Token Counter Requirement"
-    When using `"token"` or `"hybrid"` mode, a `token_counter` function is essential. This function, which you provide, should accept a string and return an integer representing its token count. Failing to provide a `token_counter` in these modes will result in a [`MissingTokenCounterError`](../../exceptions-and-warnings.md#missingtokencountererror).
-
 ## Batch Run
 
 While the `chunk` method is perfect for processing a single document, the `batch_chunk` method is designed for efficiently processing multiple documents in parallel. It returns a generator, allowing you to process large volumes of documents without exhausting memory.
 
-The `batch_chunk` method shares most of its core arguments with `PlainTextChunker.batch_chunk` (like `mode`, `max_sentences`, `max_tokens`, `lang`, `overlap_percent`, `offset`, `token_counter`, `n_jobs`, `on_errors`, and `show_progress`). The key differences are:
+The `batch_chunk` method shares most of its core arguments with `PlainTextChunker.batch_chunk` (like `lang`, `max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, `offset`, `token_counter`, `separator`, `n_jobs`, `show_progress`, and `on_errors`). The key differences are:
 
 *   The first argument is `paths` (a list of strings or `pathlib.Path` objects representing the file paths) instead of `texts`.
 *   The `base_metadata` argument is not available, as metadata is automatically extracted and managed by the document processors.
@@ -132,6 +143,9 @@ For this example, we'll be using some sample files from our repository's [sample
 ```python
 from chunklet.document_chunker import DocumentChunker
 
+def word_counter(text: str) -> int:
+    return len(text.split())
+
 paths = [
     "samples/Lorem Ipsum.docx",
     "samples/What_is_rst.rst",
@@ -139,41 +153,47 @@ paths = [
     "samples/sample-pdf-a4-size.pdf",
 ]                                     # (1)!
   
-chunker = DocumentChunker()
+chunker = DocumentChunker(token_counter=word_counter) # (2)!
 
 chunks_generator = chunker.batch_chunk(
     paths=paths,
     overlap_percent=30,
-    n_jobs=2,                    # (2)!
-    on_errors="raise",           # (3)!
-    show_progress=False,         # (4)!
+    max_sentences=12,
+    max_tokens=256,
+    max_section_breaks=1,
+    n_jobs=2,                    # (3)!
+    on_errors="raise",           # (4)!
+    show_progress=False,         # (5)!
 )
 
 for i, chunk in enumerate(chunks_generator):
-    if i == 10:                      # (5)!
+    if i == 10:                      # (6)!
         break
 
+    print(f"--- Chunk {i+1} ---")
     print(f"Content:\n{chunk.content}\n")
     print(f"Metadata:")
     for k, v in chunk.metadata.items():
-        print(f" {k}: {v}")
+        print(f" | {k}: {v}")
 
     print()
 
-chunks_generator.close()          # (6)!
-print("\nAnd so on...")  
+chunks_generator.close()          # (7)!
+print("\nAnd so on...")
 ```
 
 1.  If your files are saved elsewhere make sure to update that accoordingly.
-2.  Specifies the number of parallel processes to use for chunking. The default value is `None` (use all available CPU cores).
-3.  Define how to handle errors during processing. Determines how errors during chunking are handled. If set to `"raise"` (default), an exception will be raised immediately. If set to `"break"`, the process will be halt and partial result will be returned.
+2.  Initializes the `DocumentChunker` with a `token_counter` function. This is crucial when using `max_tokens` for chunking.
+3.  Specifies the number of parallel processes to use for chunking. The default value is `None` (use all available CPU cores).
+4.  Define how to handle errors during processing. Determines how errors during chunking are handled. If set to `"raise"` (default), an exception will be raised immediately. If set to `"break"`, the process will be halt and partial result will be returned.
  If set to `"ignore"`, errors will be silently ignored.
-4.  Display a progress bar during batch processing. The default value is `False`.
-5.  We break the loop early to demonstrate the cleanup mechanism.
-6.  Explicitly close the generator to ensure proper cleanup.
+5.  Display a progress bar during batch processing. The default value is `False`.
+6.  We break the loop early to demonstrate the cleanup mechanism.
+7.  Explicitly close the generator to ensure proper cleanup.
 
 ??? success "Click to show output"
     ```
+    --- Chunk 1 ---
     Content:
     Quantum Aristoxeni ingenium consumptum videmus in musicis?
     Lorem ipsum dolor sit amet, consectetur adipiscing elit.
@@ -186,20 +206,20 @@ print("\nAnd so on...")
     Sit sane ista voluptas.
     Non quam nostram quidem, inquit Pomponius iocans; An tu me de L.
     Sed haec omittamus; Cave putes quicquam esse verius.
-    [Image here]
+    [Image - 1]
 
     Metadata:
+     chunk_num: 1
+     span: (-1, -1)
      source: samples/Lorem Ipsum.docx
-     title: 
      author: train11
-     subject: 
-     keywords: 
      last_modified_by: Microsoft Office User
      created: 2012-08-07 08:50:00+00:00
      modified: 2019-12-05 23:29:00+00:00
      section_count: 1
      curr_section: 1
 
+    --- Chunk 2 ---
     Content:
     xml version="1.0" encoding="utf-8"?
     ReStructuredText (rst): plain text markup
@@ -215,15 +235,19 @@ print("\nAnd so on...")
     and parser system, abbreviated *rst*.
 
     Metadata:
+     chunk_num: 1
+     span: (-1, -1)
      source: samples/What_is_rst.rst
      section_count: 1
      curr_section: 1
 
+    --- Chunk 3 ---
     Content:
     An easy-to-read,
     what-you-see-is-what-you-get plaintext markup syntax
     and parser system,
     abbreviated *rst*.
+    In other words, using a simple
     text editor, documents can be created which
     * are easy to read in text editor and
     * can be *automatically* converted to
@@ -231,57 +255,84 @@ print("\nAnd so on...")
     + latex (and therefore pdf)
     [2   What is it good for?](#toc-entry-2)=====
     reStructuredText can be used, for example, to
-    * write technical documentation (so that it can easily be offered as a
 
     Metadata:
+     chunk_num: 2
+     span: (-1, -1)
      source: samples/What_is_rst.rst
      section_count: 1
      curr_section: 2
 
+    --- Chunk 4 ---
     Content:
-    ... reStructuredText can be used,
+    ... + latex (and therefore pdf)
+    [2   What is it good for?](#toc-entry-2)=====
+    reStructuredText can be used,
     for example,
     to
     * write technical documentation (so that it can easily be offered as a
+    pdf file or a web page)
     * create html webpages without knowing html
     * to document source code
     [3   Show me some formatting examples](#toc-entry-3)=====
     You can highlight text in *italics* or, to provide even more emphasis
     in **bold**.
-    Often, when describing computer code, we like to use a
-    fixed space font to quote code snippets.
-    We can also include footnotes [[1]](#footnote-1).
 
     Metadata:
+     chunk_num: 3
+     span: (-1, -1)
      source: samples/What_is_rst.rst
      section_count: 1
      curr_section: 3
 
+    --- Chunk 5 ---
     Content:
-    ... when describing computer code,
-    we like to use a
+    ... [3   Show me some formatting examples](#toc-entry-3)=====
+    You can highlight text in *italics* or,
+    to provide even more emphasis
+    in **bold**.
+    Often, when describing computer code, we like to use a
     fixed space font to quote code snippets.
     We can also include footnotes [[1]](#footnote-1).
+    We could include source code files
     (by specifying their name) which is useful when documenting code.
     We
     can also copy source code verbatim (i.e. include it in the rst
     document) like this:```
-    int main ( int argc, char *argv[] ) {
-    printf("Hello World\n");
-    return 0;}```
-    We have already seen at itemised list in section [What is it good
 
     Metadata:
+     chunk_num: 4
+     span: (-1, -1)
      source: samples/What_is_rst.rst
      section_count: 1
      curr_section: 4
 
+    --- Chunk 6 ---
     Content:
-    ... char *argv[] )
-    {
+    ... which is useful when documenting code.
+    We
+    can also copy source code verbatim (i.e. include it in the rst
+    document)
+    like this:```
+    int main ( int argc, char *argv[] ) {
     printf("Hello World\n");
     return 0;}```
     We have already seen at itemised list in section [What is it good
+    for?
+    ](#what-is-it-good-for).
+    Enumerated list and descriptive lists are supported as
+
+    Metadata:
+     chunk_num: 5
+     span: (-1, -1)
+     source: samples/What_is_rst.rst
+     section_count: 1
+     curr_section: 5
+
+    --- Chunk 7 ---
+    Content:
+    We have already seen at itemised list in section [What is it good
+    for?
     ](#what-is-it-good-for).
     Enumerated list and descriptive lists are supported as
     well.
@@ -289,17 +340,21 @@ print("\nAnd so on...")
     variety of ways.
     Any section and subsections defined can be linked to,
     as well.
+    [4   Where can I learn more?](#toc-entry-4)=====
+    reStructuredText is described at
+    <http://docutils.sourceforge.net/rst.html>.
 
     Metadata:
+     chunk_num: 6
+     span: (-1, -1)
      source: samples/What_is_rst.rst
      section_count: 1
-     curr_section: 5
+     curr_section: 6
 
+    --- Chunk 8 ---
     Content:
-    It provides very good support for including html-links in a
-    variety of ways.
-    Any section and subsections defined can be linked to,
-    as well.
+    ... as well.
+    [4   Where can I learn more?](#toc-entry-4)=====
     reStructuredText is described at
     <http://docutils.sourceforge.net/rst.html>.
     We provide some geeky small
@@ -308,30 +363,47 @@ print("\nAnd so on...")
     We can also include figures:
     ![image.png](image.png)
     The magnetisation in a small ferromagnetic disk.
+    The diametre is of the order of 120 nanometers and the material is Ni20Fe
+    80.
+    Png is a file format that is both acceptable for html pages as well as fo
+    r (pdf)latex.
 
     Metadata:
-     source: samples/What_is_rst.rst
-     section_count: 1
-     curr_section: 6
-
-    Content:
-    ... please](#toc-entry-5)=====
-    We can also include figures:
-    ![image.png](image.png)
-    The magnetisation in a small ferromagnetic disk.
-    Png is a file format that is both acceptable for html pages as well as for (pdf)latex.---
-    |  |  |
-    | --- | --- |
-    | [[1]](#footnote-reference-1) | although there isn't much point of using a footnote here.|
-    |  |  |
-    | --- | --- |
-    | [[2]](#footnote-reference-2) | Random facts:   * Emacs provides an rst mode * when converting rst to html, a style sheet can be provided (there is a similar feature for latex) * rst can also be converted into XML * the recommended file extension for rst is .txt |
-
-    Metadata:
+     chunk_num: 7
+     span: (-1, -1)
      source: samples/What_is_rst.rst
      section_count: 1
      curr_section: 7
 
+    --- Chunk 9 ---
+    Content:
+    ... ![image.png](image.png)
+    The magnetisation in a small ferromagnetic disk.
+    The diametre is of the order of 120 nanometers and the material is Ni20Fe
+    80.
+    Png is a file format that is both acceptable for html pages as well as fo
+    r (pdf)latex.
+
+    ---
+    |  |  |
+    | --- | --- |
+    | [[1]](#footnote-reference-1) | although there isn't much point of using
+     a footnote here.|
+    |  |  |
+    | --- | --- |
+    | [[2]](#footnote-reference-2) | Random facts:   * Emacs provides an rst
+     mode * when converting rst to html, a style sheet can be provided (there
+     is a similar feature for latex) * rst can also be converted into XML * th
+    e recommended file extension for rst is .txt |
+
+    Metadata:
+     chunk_num: 8
+     span: (2499, 3150)
+     source: samples/What_is_rst.rst
+     section_count: 1
+     curr_section: 8
+
+    --- Chunk 10 ---
     Content:
     Table of Contents=====
     1. [Chapter 1](chapter_1.xhtml)
@@ -339,35 +411,13 @@ print("\nAnd so on...")
     3. [Copyright](copyright.xhtml)
 
     Metadata:
+     chunk_num: 1
+     span: (-1, -1)
      source: samples/minimal.epub
      title: Sample .epub Book
      creator: Thomas Hansen
-     language: en
      section_count: 4
      curr_section: 1
-
-    Content:
-    Chapter 1=====
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-    Morbi id lectus dictum, lobortis urna a, luctus libero.
-    Integer ultricies nisi nec nisi gravida, sit amet tempor diam posuere.
-    Morbi consequat libero fringilla pellentesque venenatis.
-    Donec ut porta metus.
-    Etiam condimentum cursus elit pulvinar gravida.
-    Nulla consequat interdum leo sed tincidunt.
-    Suspendisse potenti.
-    Integer pretium cursus libero, eu ornare erat dictum eu.
-    Cras ultrices mi vel odio tempus fringilla.
-    Nulla tristique nisi nisl, id scelerisque risus gravida a.
-
-    Metadata:
-     source: samples/minimal.epub
-     title: Sample .epub Book
-     creator: Thomas Hansen
-     language: en
-     section_count: 3
-     curr_section: 1
-
 
     And so on...
     ```
@@ -375,6 +425,11 @@ print("\nAnd so on...")
 !!! warning "Generator Cleanup"
     When using `batch_chunk`, it's crucial to ensure the generator is properly closed, especially if you don't iterate through all the chunks. This is necessary to release the underlying multiprocessing resources. The recommended way is to use a `try...finally` block to call `close()` on the generator. For more details, see the [Troubleshooting](../../troubleshooting.md) guide.
 
+!!! note "Token Counter Requirement"
+    When using the `max_tokens` constraint, a `token_counter` function is essential. This function, which you provide, should accept a string and return an integer representing its token count. Failing to provide a `token_counter` will result in a [`MissingTokenCounterError`](../../exceptions-and-warnings.md#missingtokencountererror).
+
+!!! tip "Overrides token_counter"
+    You can also provide the `token_counter` directly to the `chunk` method. within the `chunk` method call (e.g., `chunker.chunk(..., token_counter=my_tokenizer_function)`). If a `token_counter` is provided in both the constructor and the `chunk` method, the one in the `chunk` method will be used.
 ### Separator
 
 The `separator` parameter is also available in `DocumentChunker`. It is used to yield a custom value after all chunks for a given document have been processed, which is useful for distinguishing between documents in a batch run.

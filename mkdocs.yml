@@ -52,6 +52,7 @@ nav:
   - 'Getting Started':
     - 'Installation': 'getting-started/installation.md'
     - 'CLI': 'getting-started/cli.md'
+    - 'Metadata': 'getting-started/metadata.md'
     - 'Programmatic Usage':
       - 'Overview': 'getting-started/programmatic/index.md'
       - 'Sentence Splitter': 'getting-started/programmatic/sentence_splitter.md'

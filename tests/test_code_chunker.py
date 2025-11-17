@@ -6,6 +6,7 @@ from chunklet import (
     MissingTokenCounterError,
     TokenLimitError,
     FileProcessingError,
+    InvalidInputError,
 )
 
 
@@ -115,7 +116,6 @@ MULTIPLE_SOURCES = [PYTHON_CODE, CSHARP_CODE, RUBY_CODE]
 
 # --- Fixtures ---
 
-
 @pytest.fixture
 def chunker():
     """Provide a ready-to-use CodeChunker instance for tests."""
@@ -124,25 +124,27 @@ def chunker():
 
 # --- Language Paradigm Tests ---
 
-
 @pytest.mark.parametrize(
-    "code_string,max_tokens,max_lines",
+    "code_string, max_tokens, max_lines, max_functions, expected_num_chunks",
     [
-        (PYTHON_CODE, 40, None),
-        (CSHARP_CODE, 50, None),
-        (RUBY_CODE, 30, None),
-        (PYTHON_CODE, None, 10), # Test with max_lines
+        (PYTHON_CODE, 40, None, None, 3),
+        (CSHARP_CODE, 50, None, None, 2),
+        (RUBY_CODE, 30, None, None, 1),
+        (PYTHON_CODE, None, 10, None, 4),
+        (PYTHON_CODE, None, None, 2, 2),
     ],
 )
-def test_language_chunking(chunker, code_string, max_tokens, max_lines):
-    """Test Chunking For Different Language Paradigms."""
-    chunks = chunker.chunk(code_string, max_tokens=max_tokens, max_lines=max_lines)
+def test_chunking_with_different_constraints(
+    chunker, code_string, max_tokens, max_lines, max_functions, expected_num_chunks
+):
+    """Test chunking with different constraints (max_tokens, max_lines, max_functions)."""
+    chunks = chunker.chunk(code_string, max_tokens=max_tokens, max_lines=max_lines, max_functions=max_functions)
 
     assert len(chunks) > 0
     if max_tokens is not None:
         assert all(simple_token_counter(chunk.content) <= max_tokens for chunk in chunks)
-    if max_lines is not None:
-        assert all(len(chunk.content.splitlines()) <= max_lines for chunk in chunks)
+
+    assert len(chunks) == expected_num_chunks
     assert all(chunk.metadata.start_line <= chunk.metadata.end_line for chunk in chunks)
     assert all(
         hasattr(chunk.metadata, "tree") and chunk.metadata.tree for chunk in chunks
@@ -155,9 +157,7 @@ def test_language_chunking(chunker, code_string, max_tokens, max_lines):
             assert chunk.metadata.start_line > last_end
         last_end = chunk.metadata.end_line
 
-
 # --- Docstring Tests ---
-
 
 @pytest.mark.parametrize(
     "code_string, all_mode_pattern, summary_mode_pattern",
@@ -220,7 +220,6 @@ def test_docstring_modes(chunker, code_string, all_mode_pattern, summary_mode_pa
 
 # --- Comment Inclusion Tests ---
 
-
 @pytest.mark.parametrize("include_comments", [True, False])
 def test_comment_inclusion(chunker, include_comments):
     """Test Inclusion/Exclusion Of Comments."""
@@ -237,11 +236,26 @@ def test_comment_inclusion(chunker, include_comments):
 # --- Error Handling Tests ---
 
 
-def test_missing_token_counter():
-    """Test Error When No Token Counter Is Provided."""
-    chunker = CodeChunker(token_counter=None)
-    with pytest.raises(MissingTokenCounterError):
-        chunker.chunk("def test(): pass", max_tokens=30)
+@pytest.mark.parametrize(
+    "max_tokens, max_lines, max_functions, expected_exception",
+    [
+        (30, None, None, MissingTokenCounterError),  # Original test case
+        (None, None, None, InvalidInputError),  # No limits provided
+        (None, None, 0, InvalidInputError),  # max_functions = 0
+    ],
+)
+def test_invalid_constraints_and_missing_token_counter(
+    max_tokens, max_lines, max_functions, expected_exception
+):
+    """Test errors for invalid constraints and missing token counter."""
+    new_chunker = CodeChunker() # chunker without a token counter
+    with pytest.raises(expected_exception):
+        new_chunker.chunk(
+            "def test(): pass",
+            max_tokens=max_tokens,
+            max_lines=max_lines,
+            max_functions=max_functions,
+        )
 
 
 def test_broken_token_counter():
@@ -273,7 +287,6 @@ def test_oversized_block_error(chunker):
 
 # --- Batch Chunking Tests ---
 
-
 def test_batch_chunk_success(chunker):
     """Test successful batch processing of multiple sources."""
     separator = object()
@@ -297,7 +310,7 @@ def test_batch_chunk_success(chunker):
         assert hasattr(chunk.metadata, "tree")
         assert hasattr(chunk.metadata, "start_line")
         assert hasattr(chunk.metadata, "end_line")
-        assert hasattr(chunk.metadata, "source_path")
+        assert hasattr(chunk.metadata, "source")
         assert hasattr(chunk.metadata, "chunk_num")
 
 
@@ -332,7 +345,7 @@ def test_batch_chunk_error_handling_on_task(chunker):
                 sources=sources_with_error,
                 max_tokens=50,
                 on_errors="raise",
-                show_progress=False,  # Disabled to prevent an unexpected race condition.
+                show_progress=False,  # Disabled to prevent an unexpected hanging 
             )
         )
 

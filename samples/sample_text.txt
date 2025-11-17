@@ -1,0 +1,6 @@
+The quick brown fox jumps over the lazy dog. This is the first sentence, and it's a classic.
+Here is the second sentence, which is a bit longer and more descriptive. And this is the third one, short and sweet.
+The fourth sentence concludes our initial example, but we need more text to demonstrate the chunking effectively.
+Let's add a fifth sentence to make the text a bit more substantial. The sixth sentence will provide even more content for our test.
+This is the seventh sentence, and we are still going. The eighth sentence is here to make the text even longer.
+Finally, the ninth sentence will be the last one for this example, making sure we have enough content to create multiple chunks.

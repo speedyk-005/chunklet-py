@@ -48,6 +48,7 @@ def chunker():
 
 
 # --- Core Tests ---
+
 def test_init_validation_error():
     """Test that InvalidInputError is raised for invalid initialization parameters."""
     with pytest.raises(
@@ -59,10 +60,10 @@ def test_init_validation_error():
 @pytest.mark.parametrize(
     "max_tokens, max_sentences, max_section_breaks, expected_chunks",
     [
-        (None, 3, None, 7),  # Sentence-based
+        (None, 3, None, 10),  # Sentence-based
         (30, None, None, 3),  # Token-based
         (None, None, 1, 2), # Heading-based
-        (30, 3, 1, 7),  # Hybrid
+        (30, 3, 1, 10),  # Hybrid
     ],
 )
 def test_constraint_based_chunking(
@@ -155,6 +156,7 @@ def test_long_sentence_truncation(chunker):
 
 
 # --- Overlap Related Tests ---
+
 def test_overlap_behavior(chunker):
     """Test that overlap produces multiple chunks and the overlap content is correct."""
     
@@ -228,7 +230,14 @@ def test_batch_chunk_error_handling_on_task(chunker):
         CallbackError,
         match="Token counter failed while processing text starting with:",
     ):
-        list(chunker.batch_chunk(texts, max_tokens=12, on_errors="raise"))
+        list(
+            chunker.batch_chunk(
+                texts,
+                max_tokens=12,
+                on_errors="raise",
+                show_progress=False  # Disabled to prevent an unexpected hanging 
+            )
+        )
 
     # Test on_errors = 'skip'
     results = chunker.batch_chunk(

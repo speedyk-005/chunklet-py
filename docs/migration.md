@@ -1,5 +1,8 @@
 # Migration Guide from v1 to v2: What's New and How to Adapt!   
 
+!!! warning "Important: Python Version Support"
+    Chunklet-py v2.0.0 has dropped official support for Python 3.8 and 3.9. The minimum required Python version is now **3.10**. Please ensure your environment is updated to Python 3.10 or newer for compatibility.
+
 Hello there, fellow Chunklet enthusiast! 👋 Ready to explore the exciting new world of Chunklet v2? We've been hard at work, making Chunklet-py even more robust, flexible, and, dare we say, *efficient*! This guide is designed to walk you through all the fantastic changes and help you smoothly transition your existing code. No need to worry, we're here to support you every step of the way!
 
 ## 💥 Breaking Changes: A Quick Heads-Up! 💥
@@ -80,28 +83,34 @@ The `preview_sentences` method has been removed from the main chunker class.
     sentences = splitter.split(text, lang="en")
     ```
 
-### Default Limits for `max_tokens` and `max_sentences`
+### Constraint Handling: `mode` Removed, Explicit Limits
 
-We've adjusted the default chunking limits to provide more optimized defaults for common use cases.
+We've streamlined how chunking constraints are managed, moving towards more explicit control and introducing new options for granular segmentation.
 
-**Slightly smaller, but way smarter defaults!** We've tweaked the default `max_tokens` from `512` to `256`, and `max_sentences` from a whopping `100` to a more sensible `12`.
+**What's changed?**
+- **Removed `mode` argument:** The `mode` argument (e.g., "sentence", "token", "hybrid") has been removed from the CLI and `PlainTextChunker`'s `chunk` and `batch_chunk` methods. The chunking strategy is now implicitly determined by the combination of constraint flags you provide (`max_tokens`, `max_sentences`, `max_section_breaks`).
+- **No More Default Values:** `max_tokens` and `max_sentences` no longer have implicit default values. You must now explicitly set these if you wish to use them.
+- **New Constraint Flags:** We've introduced `max_section_breaks` (for `PlainTextChunker` and `DocumentChunker`) and `max_lines` (for `CodeChunker`) to provide even more granular control over your chunking strategy.
 
-**Why the new numbers?** These defaults are now perfectly tailored for typical LLM context window sizes and common chunking strategies. Less configuration headache, more seamless chunking bliss!
+**Why the change?** This approach provides clearer, more explicit control over your chunking strategy, preventing unexpected behavior from implicit defaults and allowing for more precise customization. It simplifies the API by removing a redundant argument and provides more direct control over how chunks are formed.
 
-**Prefer the previous defaults?** If you'd like to retain the older default values, you can easily do so by explicitly setting `max_tokens` or `max_sentences` in your `chunk` or `batch_chunk` calls.
+**How to adapt your code:**
+- Instead of specifying a `mode`, simply provide the desired constraint flags. For example, to chunk by sentences, provide `max_sentences`. To chunk by tokens, provide `max_tokens`.
+- Explicitly set `max_tokens` or `max_sentences` if you were relying on their previous defaults.
+- Utilize the new `max_section_breaks` and `max_lines` flags for advanced chunking control.
 
-=== "Before (v1.4.0 - implicit defaults)"
+=== "Before (v1.4.0)"
 
     ```python
     chunker = PlainTextChunker()
-    chunks = chunker.chunk(text, mode="token") # max_tokens=512
+    chunks = chunker.chunk(text, mode="sentence", max_sentences=5) # Implicit max_tokens=512
     ```
 
-=== "After (v2.0.0 - explicit for old behavior)"
+=== "After (v2.0.0)"
 
     ```python
     chunker = PlainTextChunker()
-    chunks = chunker.chunk(text, mode="token", max_tokens=512) # To retain old default
+    chunks = chunker.chunk(text, max_sentences=5, max_tokens=512) # Mode is implicit, max_tokens explicit
     ```
 
 ### Language Detection Logic Integrated
@@ -197,7 +206,7 @@ Have a unique way you prefer your sentences split? We've made it even simpler to
     # Now, when you use PlainTextChunker with lang="en", it will use your splitter!
     chunker = PlainTextChunker()
     text = "Hello world! How are you? I am fine."
-    sentences = chunker.chunk(text, lang="en", mode="sentence") # Use chunk method
+    sentences = chunker.chunk(text, lang="en", max_sentences=1) # Use chunk method
     print(sentences)
     ```
 
@@ -230,10 +239,10 @@ For more details, see the [CLI Usage documentation](getting-started/cli.md).
 
     ```bash
     # Chunking a string uses PlainTextChunker
-    chunklet chunk "Your text here." --mode sentence --max-sentences 5
+    chunklet chunk "Your text here." --max-sentences 5
 
     # Chunking a file from a path uses DocumentChunker by default
-    chunklet chunk --source your_text.txt --mode sentence --max-sentences 5
+    chunklet chunk --source your_text.txt --max-sentences 5
     ```
     
 That's all for this migration guide! We truly hope these updates enhance your Chunklet-py experience and make your chunking tasks even more enjoyable. Happy chunking! 🎉

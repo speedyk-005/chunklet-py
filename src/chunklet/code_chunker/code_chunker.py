@@ -15,19 +15,11 @@ Limitations
 or macro-generated sources may not fully respect its boundary patterns, though such
 cases fall outside its intended domain.
 
-Summary
--------
-`CodeChunker` is not a naive regex heuristic — it's a **pattern-driven, convention-aware,
-language-agnostic structural chunker** engineered for practical accuracy in real-world
-projects. It trades full grammatical precision for flexibility, speed, and cross-language
-adaptability.
-
 Inspired by:
     - Camel.utils.chunker.CodeChunker (@ CAMEL-AI.org)
-    - whats_that_code by matthewdeanmartin
     - code-chunker by JimAiMoment
-    - ctags and similar structural code parsers
-
+    - whats_that_code by matthewdeanmartin
+    - CintraAI Code Chunker
 """
 import sys
 from pathlib import Path
@@ -65,6 +57,7 @@ from chunklet.common.batch_runner import run_in_batch
 from chunklet.common.validation import validate_input, restricted_iterable
 from chunklet.common.token_utils import count_tokens
 from chunklet.exceptions import (
+    InvalidInputError,
     FileProcessingError,
     MissingTokenCounterError,
     TokenLimitError,
@@ -133,7 +126,7 @@ class CodeChunker:
         Raises:
             FileProcessingError: When file cannot be read or doesn't exist.
         """
-        if isinstance(source, (str, Path)) and is_path_like(source):
+        if isinstance(source, Path) or is_path_like(source):
             path = Path(source)
             if not path.exists():
                 raise FileProcessingError(f"File does not exist: {path}")
@@ -639,7 +632,7 @@ class CodeChunker:
                                     "start_line": start_line,
                                     "end_line": end_line,
                                     "span": (start_span, end_span),
-                                    "source_path": (
+                                    "source": (
                                         str(source)
                                         if isinstance(source, (str, Path))
                                         else "N/A"
@@ -672,7 +665,7 @@ class CodeChunker:
                             "start_line": start_line,
                             "end_line": end_line,
                             "span": (start_span, end_span),
-                            "source_path": (
+                            "source": (
                                 str(source)
                                 if (isinstance(source, Path) or is_path_like(source))
                                 else "N/A"
@@ -684,6 +677,48 @@ class CodeChunker:
 
         return sub_boxes
 
+    def _validate_constraints(
+        self,
+        max_tokens: int | None,
+        max_lines: int | None,
+        max_functions: int | None,
+        token_counter: Callable[[str], int] | None,
+    ) -> tuple[int, int, int]:
+        """
+        Validates that at least one chunking constraint is provided and sets default values.
+
+        Args:
+            max_tokens (int | None): Maximum number of tokens per chunk.
+            max_lines (int | None): Maximum number of lines per chunk.
+            max_functions (int | None): Maximum number of functions per chunk.
+            token_counter (Callable[[str], int] | None): Function that counts tokens in text.
+
+        Returns:
+            tuple[int, int, int]: Adjusted max_tokens, max_lines, and max_functions values.
+
+        Raises:
+            InvalidInputError: If no chunking constraints are provided.
+            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
+        """
+        if not any((max_tokens, max_lines, max_functions)):
+            raise InvalidInputError(
+                "At least one of 'max_tokens', 'max_lines', or 'max_functions' must be provided."
+            )
+
+        # If token_counter is required but not provided
+        if max_tokens is not None and not (token_counter or self.token_counter):
+            raise MissingTokenCounterError()
+
+        # Adjust limits for internal use
+        if max_tokens is None:
+            max_tokens = sys.maxsize
+        if max_lines is None:
+            max_lines = sys.maxsize
+        if max_functions is None:
+            max_functions = sys.maxsize
+
+        return max_tokens, max_lines, max_functions
+            
     @validate_input
     def chunk(
         self,
@@ -691,6 +726,7 @@ class CodeChunker:
         *,
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
         max_lines: Annotated[int | None, Field(ge=5)] = None,
+        max_functions: Annotated[int | None, Field(ge=1)] = None,
         token_counter: Callable[[str], int] | None = None,
         include_comments: bool = False,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
@@ -707,6 +743,7 @@ class CodeChunker:
             source (str | Path): Raw code string or file path to process.
             max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
             max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
+            max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
             token_counter (Callable, optional): Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
             include_comments (bool): Include comments in output chunks. Default: False.
@@ -734,6 +771,11 @@ class CodeChunker:
             TokenLimitError: Structural block exceeds max_tokens in strict mode.
             CallbackError: If the token counter fails or returns an invalid type.
         """
+        max_tokens, max_lines, max_functions = self._validate_constraints(
+            max_tokens, max_lines, max_functions, token_counter
+        )
+        token_counter = token_counter or self.token_counter
+
         if self.verbose:
             logger.info(
                 "Starting chunk processing for {}",
@@ -744,21 +786,10 @@ class CodeChunker:
                 ),
             )
 
-        token_counter = token_counter or self.token_counter
-
-        # If token_counter is required but not provided
-        if max_tokens is not None and not token_counter:
-            raise MissingTokenCounterError()
-
-        # Validate that at least one limit is provided
-        if max_tokens is None and max_lines is None:
-            raise InvalidInputError("At least one of 'max_tokens' or 'max_lines' must be provided.")
-
-        # Adjust limits for internal use
-        if max_tokens is None:
-            max_tokens = sys.maxsize
-        if max_lines is None:
-            max_lines = sys.maxsize
+        if not source.strip():
+            if self.verbose:
+                logger.info("Input source is empty. Returning empty list.")
+            return []
 
         snippet_dicts, cumulative_lengths = self._extract_code_structures(
             source, include_comments, docstring_mode
@@ -768,6 +799,8 @@ class CodeChunker:
             logger.info(
                 "Extracted {} structural blocks from source", len(snippet_dicts)
             )
+        
+        # Grouping logic
 
         merged_content = []
         relations_list = []
@@ -775,42 +808,49 @@ class CodeChunker:
         end_line = None
         token_count = 0
         line_count = 0
+        function_count = 0
         result_chunks = []
 
-        i = 0
-        while i < len(snippet_dicts):
-            snippet_dict = snippet_dicts[i]
+        index = 0
+        while index < len(snippet_dicts):
+            snippet_dict = snippet_dicts[index]
             box_tokens = (
                 count_tokens(snippet_dict["content"], token_counter)
                 if max_tokens != sys.maxsize
                 else 0
             )
             box_lines = snippet_dict["content"].count('\n') + (1 if snippet_dict["content"] else 0)
+            is_function = bool(snippet_dict.get("func_partial_signature"))
 
-            # Check if adding this snippet exceeds either token or line limits
-            token_limit_reached = (max_tokens != sys.maxsize) and (token_count + box_tokens > max_tokens)
-            line_limit_reached = (max_lines != sys.maxsize) and (line_count + box_lines > max_lines)
+            # Check if adding this snippet exceeds any limits
+            token_limit_reached = (token_count + box_tokens > max_tokens)
+            line_limit_reached = (line_count + box_lines > max_lines)
+            function_limit_reached = is_function and (function_count + 1 > max_functions)
 
-            if not (token_limit_reached or line_limit_reached):
+            if not (token_limit_reached or line_limit_reached or function_limit_reached):
                 # Fits: merge normally
                 merged_content.append(snippet_dict["content"])
                 relations_list.append(snippet_dict["relations"])
                 token_count += box_tokens
                 line_count += box_lines
+                if is_function:
+                    function_count += 1
 
                 if start_line is None:
                     start_line = snippet_dict["start_line"]
                 end_line = snippet_dict["end_line"]
-                i += 1
+                index += 1
 
             elif not merged_content:
-                # too big and nothing merged yet: handle single oversize
+                # Too big and nothing merged yet: handle oversize
                 if strict:
                     raise TokenLimitError(
-                        f"Structural block exceeds maximum limit (tokens: {box_tokens} > {max_tokens} or lines: {box_lines} > {max_lines}).\n"
+                        f"Structural block exceeds maximum limit (tokens: {box_tokens} > {max_tokens}, "
+                        f"lines: {box_lines} > {max_lines}, or functions: {int(is_function)} > {max_functions}).\n"
                         f"Content starting with: \n```\n{snippet_dict['content'][:100]}...\n```\n"
-                        f"Reason: Prevent splitting inside interest points (function, class, region, ...)\n"
-                        f"💡Hint: Consider increasing 'max_tokens' or 'max_lines', refactoring the oversized block, or setting 'strict=False' to allow automatic splitting of oversized blocks."
+                        "Reason: Prevent splitting inside interest points (function, class, region, ...)\n"
+                        "💡Hint: Consider increasing 'max_tokens', 'max_lines', or 'max_functions', "
+                        "refactoring the oversized block, or setting 'strict=False' to allow automatic splitting of oversized blocks."
                     )
                 else:  # Else split further
                     if self.verbose:
@@ -819,7 +859,6 @@ class CodeChunker:
                             box_tokens, box_lines,
                         )
 
-                    # Pass the dict as a Box object to _split_oversized
                     sub_chunks = self._split_oversized(
                         snippet_dict,
                         max_tokens,
@@ -832,12 +871,9 @@ class CodeChunker:
                     for sub_chunk in sub_chunks:
                         sub_chunk.metadata.chunk_num = len(result_chunks) + 1
                         result_chunks.append(sub_chunk)
-                    i += 1
+                    index += 1
             else:
-                # end_span uses end_line - 1 to get the cumulative length at the end of the
-                # current line.
-                # start_span uses start_line - 2 to get the cumulative length at the end of the
-                # previous line, which is the same as the beginning of the current line.
+                # Flush current merged content as a chunk
                 start_span = 0 if start_line == 1 else cumulative_lengths[start_line - 2]
                 end_span = cumulative_lengths[end_line - 1]
                 merged_chunk = Box(
@@ -849,7 +885,7 @@ class CodeChunker:
                             "start_line": start_line,
                             "end_line": end_line,
                             "span": (start_span, end_span),
-                            "source_path": (
+                            "source": (
                                 str(source)
                                 if (isinstance(source, Path) or is_path_like(source))
                                 else "N/A"
@@ -859,12 +895,14 @@ class CodeChunker:
                 )
                 result_chunks.append(merged_chunk)
 
+                # Reset for next chunk
                 merged_content.clear()
                 relations_list.clear()
                 start_line = None
                 end_line = None
                 token_count = 0
                 line_count = 0
+                function_count = 0
 
         # Flush remaining content
         if merged_content:
@@ -879,7 +917,7 @@ class CodeChunker:
                         "start_line": start_line,
                         "end_line": end_line,
                         "span": (start_span, end_span),
-                        "source_path": (
+                        "source": (
                             str(source)
                             if (isinstance(source, Path) or is_path_like(source))
                             else "N/A"
@@ -896,9 +934,9 @@ class CodeChunker:
                 (
                     f"source: {str(Path)}"
                     if (isinstance(str, Path) or is_path_like(source))
-                    else f"code starting with:\n```\n{source[:100]}...\n```\n"
+                    else f"code starting with:\n```\n{source[:100]}..\n```\n"
                 ),
-            )
+            )  
 
         return result_chunks
 
@@ -909,6 +947,7 @@ class CodeChunker:
         *,
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
         max_lines: Annotated[int | None, Field(ge=5)] = None,
+        max_functions: Annotated[int | None, Field(ge=1)] = None,
         token_counter: Callable[[str], int] | None = None,
         separator: Any = None,
         include_comments: bool = False,
@@ -928,6 +967,7 @@ class CodeChunker:
             sources (restricted_iterable[str | Path]): A restricted iterable of file paths or raw code strings to process.
             max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
             max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
+            max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
             token_counter (Callable | None): Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
             separator (Any): A value to be yielded after the chunks of each text are processed.
@@ -966,6 +1006,7 @@ class CodeChunker:
             self.chunk,
             max_tokens=max_tokens,
             max_lines=max_lines,
+            max_functions=max_functions,
             token_counter=token_counter or self.token_counter,
             include_comments=include_comments,
             docstring_mode=docstring_mode,
