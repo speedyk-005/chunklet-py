@@ -1,7 +1,7 @@
 [project]
 name = "chunklet-py"
 version = "2.0.0"
-description = "One library to split them all. Advanced, RAG-ready text, code, and document chunking for LLMs, supporting multilingual, token-aware, and multi-format."
+description = "A comprehensive library for advanced text, code, and document chunking, designed for LLM applications. It offers flexible, context-aware segmentation across various content types."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
 ]
@@ -29,17 +29,19 @@ classifiers = [
 keywords = [
   "nlp", "chunking", "text-splitting", "llm", "rag", "ai", "multilingual",
   "text processing", "natural language processing", "data processing",
-  "information retrieval", "semantic search", "document processing"
+  "information retrieval", "semantic search", "document processing",
+  "code chunking", "source code analysis", "programming languages",
+  "ast parsing", "syntax highlighting", "code structure"
 ]
 
 dependencies = [
   "pysbd>=0.3.4",
   "sentsplit>=1.0.7",
- 
+
   # Pinning to the last known working version with a reliable binary/build.
   # The 1.0.x series has a broken sdist package structure.
-  "sentencex<=0.6.1", 
-  
+  "sentencex<=0.6.1",
+
   "indic-nlp-library>=0.90",
   "py3langid>=0.3.0",
   "mpire>=2.10.0",
@@ -86,7 +88,7 @@ dev = [
 [project.urls]
 Homepage = "https://github.com/speedyk-005/chunklet-py"
 Repository = "https://github.com/speedyk-005/chunklet-py"
-Documentation = "https://github.com/speedyk-005/chunklet-py/blob/main/README.md"
+Documentation = "https://speedyk-005.github.io/chunklet-py/"
 Issues = "https://github.com/speedyk-005/chunklet-py/issues"
 Changelog = "https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md"
 
@@ -111,7 +113,11 @@ packages = [
 
 [tool.pytest.ini_options]
 minversion = "7.4"
-addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --durations=10"
+
+# disable coverage report to prevent racing with multiprocessing
+# addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --durations=10"
+
+addopts = "--durations=10"
 testpaths = ["tests"]
 python_files = "test_*.py"
 
@@ -122,7 +128,21 @@ omit = [
 
 [tool.black]
 line-length = 88
-exclude = "src/chunklet/code_chunker/patterns.py"
+force-exclude = '''
+/(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+  )/
+  | src/chunklet/code_chunker/patterns.py
+'''
 
 [tool.flake8]
 per-file-ignores = [
@@ -133,3 +153,4 @@ per-file-ignores = [
 ]
 extend-ignore = ["E501", "E203"]
 count = true
+exclude = ["src/chunklet/code_chunker/patterns.py"]

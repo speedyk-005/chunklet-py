@@ -1,7 +1,7 @@
 # Welcome to the Chunklet-py Documentation!
 
 <p align="center">
-  <img src="https://github.com/speedyk-005/chunklet-py/blob/main/images/logo_with_tagline.png?raw=true" alt="Chunklet-py Logo" width="300"/>
+  <img src="img/logo_with_tagline.png" alt="Chunklet-py Logo" width="300"/>
 </p>
 
 “One library to split them all: Sentence, Code, Docs.”

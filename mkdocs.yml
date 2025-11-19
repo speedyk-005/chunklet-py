@@ -68,7 +68,7 @@ nav:
 
 plugins:
   - search
-  - mike
+  # - mike  # Commented out for local development
   - mkdocstrings:
       handlers:
         python:
@@ -77,6 +77,7 @@ plugins:
             docstring_style: google
             filters: ["!^_"]
             heading_level: 1
+            line_numbers: true
             merge_init_into_class: true
             parameter_headings: true
             separate_signature: true

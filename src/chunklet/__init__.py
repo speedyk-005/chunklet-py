@@ -12,6 +12,7 @@ Version 2.0.0 introduces a revamped architecture with:
 - Flexible batch processing with `on_errors` parameter and memory-optimized generators.
 - Enhanced modularity, extensibility, and performance.
 """
+
 from .exceptions import (
     ChunkletError,
     InvalidInputError,

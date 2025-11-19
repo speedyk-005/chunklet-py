@@ -6,6 +6,7 @@ from chunklet import CallbackError
 
 # --- Fixture ---
 
+
 @pytest.fixture
 def splitter():
     """Provides a configured SentenceSplitter instance"""
@@ -19,6 +20,7 @@ def registry():
 
 
 # --- Multilingual Splitting Tests ---
+
 
 @pytest.mark.parametrize(
     "text, expected_sentences",
@@ -78,6 +80,7 @@ def test_unsupported_language_fallback(splitter, text, expected_sentences):
 
 
 # --- Custom Splitter Tests ---
+
 
 def test_custom_splitter_usage(registry):
     """Test that the splitter can work a custom splitter without errors."""

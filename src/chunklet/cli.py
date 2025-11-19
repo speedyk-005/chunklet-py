@@ -65,6 +65,7 @@ def create_external_tokenizer(command_str: str):
 
     return external_tokenizer
 
+
 @app.command(name="split", help="Splits text or a single file into sentences.")
 def split_command(
     text: Optional[str] = typer.Argument(
@@ -150,7 +151,7 @@ def split_command(
     if destination:
         output_str = "\n".join(sentences)
         source_display = f"from {source.name}" if source else "(from stdin)"
-        
+
         try:
             destination.write_text(output_str, encoding="utf-8")
             typer.echo(
@@ -168,7 +169,7 @@ def split_command(
             f"--- Sentences ({len(sentences)}): "
             f" [{source_display} | Lang: {lang.upper()} | Confidence: {confidence}] ---"
         )
-        
+
         for sentence in sentences:
             typer.echo(sentence)
 
@@ -184,7 +185,6 @@ def chunk_command(
         "-s",
         help="Path(s) to one or more files or directories to read input from. Overrides the 'text' argument.",
     ),
-    
     # flags for chunker type
     code: bool = typer.Option(False, "--code", help="Use CodeChunker for code files."),
     doc: bool = typer.Option(
@@ -202,7 +202,9 @@ def chunk_command(
         help="Language of the text (e.g., 'en', 'fr', 'auto'). (default: auto)",
     ),
     max_tokens: int = typer.Option(
-        None, "--max-tokens", help="Maximum number of tokens per chunk. Applies to all chunking strategies. (must be >= 12)"
+        None,
+        "--max-tokens",
+        help="Maximum number of tokens per chunk. Applies to all chunking strategies. (must be >= 12)",
     ),
     max_sentences: int = typer.Option(
         None,
@@ -220,7 +222,9 @@ def chunk_command(
         help="Percentage of overlap between chunks (0-85). Applies to PlainTextChunker and DocumentChunker. (default: 20)",
     ),
     offset: int = typer.Option(
-        0, "--offset", help="Starting sentence offset for chunking. Applies to PlainTextChunker and DocumentChunker. (default: 0)"
+        0,
+        "--offset",
+        help="Starting sentence offset for chunking. Applies to PlainTextChunker and DocumentChunker. (default: 0)",
     ),
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging."
@@ -242,7 +246,6 @@ def chunk_command(
             "included inline in the output."
         ),
     ),
-    
     # for Batching
     n_jobs: Optional[int] = typer.Option(
         None,
@@ -254,7 +257,6 @@ def chunk_command(
         "--on-errors",
         help="How to handle errors during processing: 'raise', 'skip' or 'break'",
     ),
-    
     # CodeChunker specific arguments
     max_lines: int = typer.Option(
         None,
@@ -408,7 +410,11 @@ def chunk_command(
             )
             raise typer.Exit(code=0)
 
-        if len(file_paths) == 1 and file_paths[0].suffix not in {".pdf", ".epub", ".docx"}:
+        if len(file_paths) == 1 and file_paths[0].suffix not in {
+            ".pdf",
+            ".epub",
+            ".docx",
+        }:
             single_file = file_paths[0]
             chunks = chunker_instance.chunk(
                 path=single_file,
@@ -517,7 +523,7 @@ def chunk_command(
             destination.write_text(output_str, encoding="utf-8")
         else:
             typer.echo(output_str)
-        
+
 
 @app.callback(invoke_without_command=True)
 def main_callback(
@@ -528,6 +534,7 @@ def main_callback(
     if version:
         typer.echo(f"chunklet v{__version__}")
         raise typer.Exit()
+
 
 if __name__ == "__main__":
     app()

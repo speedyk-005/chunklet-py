@@ -21,14 +21,14 @@ Our core chunking class now has a new, more descriptive name!
 
 === "Before (v1.4.0)"
 
-    ```python
+    ```py
     from chunklet import Chunklet
     chunker = Chunklet()
     ```
 
 === "After (v2.0.0)"
 
-    ```python
+    ```py
     from chunklet import PlainTextChunker
     chunker = PlainTextChunker()
     ```
@@ -45,14 +45,14 @@ The `use_cache` flag has been removed from the `PlainTextChunker`.
 
 === "Before (v1.4.0)"
 
-    ```python
+    ```py
     chunker = PlainTextChunker()
     chunks = chunker.chunk(text, use_cache=False)
     ```
 
 === "After (v2.0.0)"
 
-    ```python
+    ```py
     chunker = PlainTextChunker()
     chunks = chunker.chunk(text)
     ```
@@ -69,7 +69,7 @@ The `preview_sentences` method has been removed from the main chunker class.
 
 === "Before (v1.4.0)"
 
-    ```python
+    ```py
     from chunklet import Chunklet
     chunker = Chunklet()
     sentences, warnings = chunker.preview_sentences(text, lang="en")
@@ -77,7 +77,7 @@ The `preview_sentences` method has been removed from the main chunker class.
 
 === "After (v2.0.0)"
 
-    ```python
+    ```py
     from chunklet import SentenceSplitter
     splitter = SentenceSplitter()
     sentences = splitter.split(text, lang="en")
@@ -101,14 +101,14 @@ We've streamlined how chunking constraints are managed, moving towards more expl
 
 === "Before (v1.4.0)"
 
-    ```python
+    ```py
     chunker = PlainTextChunker()
     chunks = chunker.chunk(text, mode="sentence", max_sentences=5) # Implicit max_tokens=512
     ```
 
 === "After (v2.0.0)"
 
-    ```python
+    ```py
     chunker = PlainTextChunker()
     chunks = chunker.chunk(text, max_sentences=5, max_tokens=512) # Mode is implicit, max_tokens explicit
     ```
@@ -125,14 +125,14 @@ The standalone language detection utility has found a new home!
 
 === "Before (v1.4.0)"
 
-    ```python
+    ```py
     from chunklet.utils.detect_text_language import detect_text_language
     lang, confidence = detect_text_language(text)
     ```
 
 === "After (v2.0.0)"
 
-    ```python
+    ```py
     from chunklet.sentence_splitter import SentenceSplitter
     splitter = SentenceSplitter()
     lang, confidence = splitter.detected_top_language(text)
@@ -150,7 +150,7 @@ Have a unique way you prefer your sentences split? We've made it even simpler to
 
 === "Before (v1.4.0)"
 
-    ```python
+    ```py
     import re
     from chunklet import Chunklet
     from typing import List
@@ -187,7 +187,7 @@ Have a unique way you prefer your sentences split? We've made it even simpler to
 
 === "After (v2.0.0)"
 
-    ```python
+    ```py
     from chunklet.sentence_splitter.registry import registered_splitter
     from chunklet import PlainTextChunker # Updated class name
     import re

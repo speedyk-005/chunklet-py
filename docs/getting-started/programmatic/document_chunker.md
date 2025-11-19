@@ -34,7 +34,7 @@ The `DocumentChunker` has two main methods: `chunk` for processing a single file
     - `.epub`: Processed by `EpubProcessor`
     - `.pdf`: Processed by `PDFProcessor`
 
-    These processors can also provide unique optional metadata, enriching your chunks with valuable context. For more details, check out the [Metadata in Chunklet-py documentation](../../getting-started/metadata.md).
+    These processors can also provide unique optional metadata, enriching your chunks with valuable context. For more details, check out the [Metadata in Chunklet-py documentation](../../getting-started/metadata.md#documentchunker-metadata).
 
     Due to the streaming nature of these processors (they yield content page by page or in blocks), it is highly recommended to use them with the `batch_chunk` method. Attempting to use these processors with the `chunk` method (which expects a single string input) will result in a [`FileProcessingError`](../../exceptions-and-warnings.md#fileprocessingerror) as the `chunk` method is not designed to consume the generator output of these processors.
 
@@ -60,7 +60,7 @@ Finally, the ninth sentence will be the last one for this example, making sure w
 
 Save this content into a file named `sample_text.txt`. Here's how you would use it with `DocumentChunker`:
 
-```python
+```py
 from chunklet.document_chunker import DocumentChunker
 
 # Assuming sample_text.txt is in the same directory as your script
@@ -89,7 +89,7 @@ for i, chunk in enumerate(chunks):
 4.  Specifies that chunking should start from the very beginning of the text (the first sentence). The default is 0.
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     --- Chunk 1 ---
     Metadata: {'source': 'sample_text.txt', 'chunk_num': 1, 'span': (0, 209)}
     Content: The quick brown fox jumps over the lazy dog.
@@ -112,20 +112,20 @@ for i, chunk in enumerate(chunks):
 
 !!! tip "Enable Verbose Logging"
     To see detailed logging during the chunking process, you can set the `verbose` parameter to `True` when initializing the `DocumentChunker`:
-    ```python
+    ```py
     chunker = DocumentChunker(verbose=True)
     ```
 
 !!! tip "Customizing the Continuation Marker"
     You can customize the continuation marker, which is prepended to clauses that don't fit in the previous chunk. To do this, pass the `continuation_marker` parameter to the chunker's constructor.
 
-    ```python
+    ```py
     chunker = DocumentChunker(continuation_marker="[...]")
     ```
 
     If you don't want any continuation marker, you can set it to an empty string:
 
-    ```python
+    ```py
     chunker = DocumentChunker(continuation_marker="")
     ```
 
@@ -140,7 +140,7 @@ The `batch_chunk` method shares most of its core arguments with `PlainTextChunke
 
 For this example, we'll be using some sample files from our repository's [samples directory](https://github.com/speedyk-005/chunklet-py/tree/main/samples).
 
-```python
+```py
 from chunklet.document_chunker import DocumentChunker
 
 def word_counter(text: str) -> int:
@@ -152,7 +152,7 @@ paths = [
     "samples/minimal.epub",
     "samples/sample-pdf-a4-size.pdf",
 ]                                     # (1)!
-  
+
 chunker = DocumentChunker(token_counter=word_counter) # (2)!
 
 chunks_generator = chunker.batch_chunk(
@@ -192,7 +192,7 @@ print("\nAnd so on...")
 7.  Explicitly close the generator to ensure proper cleanup.
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     --- Chunk 1 ---
     Content:
     Quantum Aristoxeni ingenium consumptum videmus in musicis?
@@ -443,12 +443,18 @@ You can provide your own custom document processors to `DocumentChunker`. This i
 !!! warning "Global Registry: Be Mindful of Side Effects"
     Custom processors are registered globally. This means that once you register a processor, it's available everywhere in your application. Be mindful of potential side effects if you're registering processors in different parts of your codebase, especially in multi-threaded or long-running applications.
 
-To use a custom processor, you leverage the [`@registry.register`](../../reference/chunklet/document_chunker/registry.md) decorator. This decorator allows you to register your function for one or more file extensions directly.
+To use a custom processor, you leverage the [`@registry.register`](../../reference/chunklet/document_chunker/registry.md) decorator. This decorator allows you to register your function for one or more file extensions directly. Your custom processor function must accept a single `file_path` parameter (str) and return a `tuple[str | list[str], dict]` containing extracted text (or list of texts for multi-section documents) and a metadata dictionary.
 
-!!! note "Error Handling"
-    If an error occurs during the document processing (e.g., an issue with the custom processor function), a [`CallbackError`](../../exceptions-and-warnings.md#callbackerror) will be raised.
+!!! important "Important constraints"
+    - Your function must accept exactly one required parameter (the file path)
+    - Optional parameters with default values are allowed
+    - File extensions must start with a dot (e.g., `.json`, `.custom`)
+    - Lambda functions are not supported unless you provide a `name` parameter
+    - The metadata dictionary will be merged with common metadata (chunk_num, span, source)
+    - For multi-section documents, return a list of strings - each will be processed as a separate section
+    - If an error occurs during the document processing (e.g., an issue with the custom processor function), a [`CallbackError`](../../exceptions-and-warnings.md#callbackerror) will be raised
 
-```python
+```py
 import os
 import re
 import json
@@ -463,7 +469,7 @@ registry = CustomProcessorRegistry()
 def my_json_processor(file_path: str) -> tuple[str, dict]:
     with open(file_path, 'r') as f:
         data = json.load(f)
-    
+
     # Assuming the json has a "text" field with paragraphs
     text_content = "\n".join(data.get("text", []))
     metadata = data.get("metadata", {})
@@ -501,13 +507,13 @@ with tempfile.NamedTemporaryFile(mode='w+', suffix=".json") as tmp:
         print(f"Content:\n{chunk.content}\n")
         print(f"Metadata:\n{chunk.metadata}")
         print()
-        
+
 # Optionally unregister
 registry.unregister(".json")
 ```
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     --- Chunk 1 ---
     Content:
     This is the first paragraph of our longer JSON sample.
@@ -530,7 +536,7 @@ registry.unregister(".json")
 !!! note "Registering Without the Decorator"
     If you prefer not to use decorators, you can directly use the `registry.register()` method. This is particularly useful when registering processors dynamically.
 
-    ```python
+    ```py
     from chunklet.document_chunker import CustomProcessorRegistry
 
     registry = CustomProcessorRegistry()

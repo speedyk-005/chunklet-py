@@ -1,5 +1,4 @@
 from typing import Any, Generator
-from io import StringIO
 import regex as re
 from more_itertools import ilen
 
@@ -16,18 +15,18 @@ STANDALONE_NUMBER_PATTERN = re.compile(r"\n\s*\p{N}+\s*\n")
 
 # Pattern to merge single newlines within logical text blocks
 HEADING_OR_LIST_PATTERN = re.compile(
-    r"(\n"               # A newline
-        r"[\p{L}\p{N}]"   # A Unicode letter or a Unicode number
-        r"[.\-)*]"      # Followed by a punctuation
-    r")\n"             # The newline character to be replaced
-    , re.U
+    r"(\n"  # A newline
+    r"[\p{L}\p{N}]"  # A Unicode letter or a Unicode number
+    r"[.\-)*]"  # Followed by a punctuation
+    r")\n",  # The newline character to be replaced
+    re.U,
 )
 
 PAGE_PATTERN = re.compile(
-    r"Page \p{N}+ of \p{N}+.*|"    # standalone page number
-    r"-\s*\p{N}+\s*-|"         # Page numbers with dashes
-    r"\s*\|\s*Page\s+\p{N}+\s*\|\s*"  # Boxed page numbers
-    , re.M
+    r"Page \p{N}+ of \p{N}+.*|"  # standalone page number
+    r"-\s*\p{N}+\s*-|"  # Page numbers with dashes
+    r"\s*\|\s*Page\s+\p{N}+\s*\|\s*",  # Boxed page numbers
+    re.M,
 )
 
 
@@ -55,8 +54,8 @@ class PDFProcessor(BaseProcessor):
         "publisher",
         "created",
         "modified",
-    ] 
-    
+    ]
+
     def __init__(self, file_path: str):
         """Initialize the PDFProcessor.
 
@@ -113,10 +112,10 @@ class PDFProcessor(BaseProcessor):
 
         with open(self.file_path, "rb") as fp:
             page_count = ilen(PDFPage.get_pages(fp))
-            
+
             for page_num in range(page_count):
                 # Call extract_text on the file path, specifying the page number.
-                # This is efficient as it avoids repeated file seeks/parsing 
+                # This is efficient as it avoids repeated file seeks/parsing
                 # within the loop that was present in the old `extract_text_to_fp` approach.
                 raw_text = extract_text(
                     self.file_path,
@@ -126,7 +125,7 @@ class PDFProcessor(BaseProcessor):
                 yield self._cleanup_text(raw_text)
 
     def extract_metadata(self) -> dict[str, Any]:
-        """Extracts metadata from the PDF document's information dictionary.  
+        """Extracts metadata from the PDF document's information dictionary.
 
         Includes source path, page count, and PDF info fields.
 
@@ -148,15 +147,15 @@ class PDFProcessor(BaseProcessor):
         with open(self.file_path, "rb") as f:
             # Initialize parser on the file stream
             parser = PDFParser(f)
-            
+
             # The PDFDocument constructor reads file structure and advances the pointer
             doc = PDFDocument(parser)
-            
+
             # Count pages: Reset pointer to the start of the file stream to count pages correctly
             f.seek(0)
-            
+
             metadata["page_count"] = ilen(PDFPage.get_pages(f))
-            
+
             # Extract info fields from the document object
             if hasattr(doc, "info") and doc.info:
                 for info in doc.info:
@@ -166,7 +165,6 @@ class PDFProcessor(BaseProcessor):
                         k = "created" if k == "CreationDate" else k
                         k = "modified" if k == "ModDate" else k
 
-                        
                         if k.lower() in self.METADATA_FIELDS:
                             if isinstance(k, bytes):
                                 k = k.decode("utf-8", "ignore")
@@ -179,10 +177,10 @@ class PDFProcessor(BaseProcessor):
 # --- Example usage ---
 if __name__ == "__main__":
     pdf_file = "samples/sample-pdf-a4-size.pdf"
-    
+
     processor = PDFProcessor(pdf_file)
     meta = processor.extract_metadata()
-    
+
     print("Metadata:")
     for k, v in meta.items():
         print(f"{k}: {v}")

@@ -11,6 +11,7 @@ try:
 except ImportError:
     rtf_to_text = None
 
+from chunklet.sentence_splitter import BaseSplitter
 from chunklet.plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker.processors import (
     pdf_processor,
@@ -96,7 +97,7 @@ class DocumentChunker:
             sentence_splitter=sentence_splitter,
             verbose=self._verbose,
             continuation_marker=self.continuation_marker,
-            token_counter=self.token_counter
+            token_counter=self.token_counter,
         )
 
         self.processors = {
@@ -274,17 +275,13 @@ class DocumentChunker:
                 if on_errors == "raise":
                     logger.error(
                         "Document validation failed for '{}' at paths[{}].\nReason: {}.",
-                        path,
-                        i,
-                        error,
+                        path, i, e,
                     )
                     raise error
                 elif on_errors == "break":
                     logger.error(
                         "Stopping due to validation error on '{path}' at paths[{}].\nReason: {error}.",
-                        path,
-                        i,
-                        error,
+                        path, i, e,
                     )
                     break
                 else:  # skip

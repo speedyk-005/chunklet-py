@@ -1,9 +1,4 @@
-import os 
-import sys
-import re
 from typing import Any, Literal, Callable
-from itertools import tee
-from more_itertools import ilen
 from collections.abc import Iterable, Generator
 
 # mpire is lazy imported
@@ -45,7 +40,7 @@ def run_in_batch(
     from mpire import WorkerPool
 
     total, iterable_of_args = safely_count_iterable(iterable_name, iterable_of_args)
-        
+
     if verbose:
         logger.info("Starting batch chunking for {} items.", total)
 
@@ -66,7 +61,7 @@ def run_in_batch(
     try:
         with WorkerPool(n_jobs=n_jobs) as pool:
             imap_func = pool.imap if separator is not None else pool.imap_unordered
-            
+
             progress_bar_options = {
                 "bar_format": "{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}, {rate_fmt}]",
                 "desc": "Chunking ...",
@@ -95,7 +90,7 @@ def run_in_batch(
                     else:  # skip
                         logger.warning("Skipping a failed task.\nReason: {}", error)
                         continue
-                    
+
                 yield from res
 
                 if separator is not None:

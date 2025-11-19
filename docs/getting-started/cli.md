@@ -269,7 +269,7 @@ Align `chunklet`'s chunk sizes perfectly with your LLM's token limits using *any
 
 Create your external script (e.g., `my_llm_tokenizer.py`):
 
-```python
+```py
 # my_llm_tokenizer.py
 import sys
 import tiktoken # Or your LLM's specific tokenizer library

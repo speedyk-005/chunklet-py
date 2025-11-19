@@ -33,7 +33,7 @@ The `PlainTextChunker` is engineered with a robust set of features, making it hi
 | `max_tokens`         | `int >= 12`       | Got a strict token budget? This constraint is your best friend! Chunklet carefully adds sentences to your chunk, keeping a watchful eye on the token limit. If a sentence is a bit too chatty, it'll even politely split it at clause boundaries to keep everything perfectly snug. |
 | `max_section_breaks` | `int >= 1`        | Perfect for structured documents! This constraint lets you limit the number of Markdown-style section breaks (like headings `##` or horizontal rules `---`) in each chunk. It's a fantastic way to keep your document's structure intact while chunking. |
 
-The `PlainTextChunker` has two main methods: `chunk` for processing a single text and `batch_chunk` for processing multiple texts. Both methods return a generator that yields a [`Box`](https://pypi.org/project/python-box/#:~:text=Overview,strings%20or%20files.) object for each chunk. The `Box` object has two main keys: `content` (str) and `metadata` (dict).
+The `PlainTextChunker` has two main methods: `chunk` for processing a single text and `batch_chunk` for processing multiple texts. Both methods return a generator that yields a [`Box`](https://pypi.org/project/python-box/#:~:text=Overview,strings%20or%20files.) object for each chunk. The `Box` object has two main keys: `content` (str) and `metadata` (dict). For detailed information about metadata structure and usage, see the [Metadata guide](../metadata.md#plaintextchunker-metadata).
 
 !!! note "Constraint Requirement"
     At least one limit mode (e.g., `max_sentences`, `max_tokens`, or `max_section_breaks`) must be provided when calling `chunk` or `batch_chunk`. Failing to specify any limit mode will result in an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror).
@@ -42,7 +42,7 @@ The `PlainTextChunker` has two main methods: `chunk` for processing a single tex
 
 Given the following text for our examples:
 
-```python
+```py
 text = """
 # Introduction to Chunking
 
@@ -78,7 +78,7 @@ In conclusion, mastering chunking is key to unlocking the full potential of your
 
 Here's how you can use `PlainTextChunker` to chunk text by the number of sentences:
 
-```python
+```py
 from chunklet.plain_text_chunker import PlainTextChunker
 
 chunker = PlainTextChunker()  # (1)!
@@ -86,7 +86,7 @@ chunker = PlainTextChunker()  # (1)!
 chunks = chunker.chunk(
     text=text,
     lang="auto",             # (2)!
-    max_sentences=2, 
+    max_sentences=2,
     overlap_percent=0,       # (3)!
     offset=0                 # (4)!
 )
@@ -104,7 +104,7 @@ for i, chunk in enumerate(chunks):
 4.  Specifies that chunking should start from the very beginning of the text (the first sentence). The default is 0.
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     --- Chunk 1 ---
     Metadata: {'chunk_num': 1, 'span': (0, 73)}
     Content: # Introduction to Chunking
@@ -167,7 +167,7 @@ for i, chunk in enumerate(chunks):
 
 !!! tip "Enable Verbose Logging"
     To see detailed logging during the chunking process, you can set the `verbose` parameter to `True` when initializing the `DocumentChunker`:
-    ```python
+    ```py
     chunker = PlainTextChunker(verbose=True)
     ```
 
@@ -177,7 +177,7 @@ for i, chunk in enumerate(chunks):
     When using the `max_tokens` constraint, a `token_counter` function is essential. This function, which you provide, should accept a string and return an integer representing its token count. Failing to provide a `token_counter` will result in a [`MissingTokenCounterError`](../../exceptions-and-warnings.md#missingtokencountererror).
 
 #### Setup
-```python
+```py
 from chunklet.plain_text_chunker import PlainTextChunker
 
 # Simple counter for demonstration purpose
@@ -189,7 +189,7 @@ chunker = PlainTextChunker(token_counter=word_counter)         # (1)!
 
 1.  Initializes `PlainTextChunker` with a custom `word_counter` function. This function will be used to count tokens when `max_tokens` is used.
 
-```python
+```py
 chunks = chunker.chunk(
     text=text,
     lang="auto",
@@ -203,7 +203,7 @@ for i, chunk in enumerate(chunks):
 ```
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     --- Chunk 1 ---
     Metadata: {'chunk_num': 1, 'span': (0, 291)}
     Content: # Introduction to Chunking
@@ -269,7 +269,7 @@ for i, chunk in enumerate(chunks):
 ### Chunking by Section Breaks
 This constraint is useful for documents structured with Markdown headings or thematic breaks.
 
-```python
+```py
 chunks = chunker.chunk(
     text=text,
     max_section_breaks=2
@@ -282,7 +282,7 @@ for i, chunk in enumerate(chunks):
 ```
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     --- Chunk 1 ---
     Metadata: {'chunk_num': 1, 'span': (0, 503)}
     Content: # Introduction to Chunking
@@ -337,9 +337,9 @@ for i, chunk in enumerate(chunks):
     In conclusion, mastering chunking is key to unlocking the full potential of your text data.
     Experiment with different constraints to find the optimal strategy for your needs.
     ```
-    
+
 !!! tip "Adding Base Metadata"
-    You can pass a `base_metadata` dictionary to the `chunk` method. This metadata will be included in the `metadata` of each chunk. For example: `chunker.chunk(..., base_metadata={"source": "my_document.txt"})`.
+    You can pass a `base_metadata` dictionary to the `chunk` method. This metadata will be included in the `metadata` of each chunk. For example: `chunker.chunk(..., base_metadata={"source": "my_document.txt"})`. For more details on metadata structure and available fields, see the [Metadata guide](../metadata.md#plaintextchunker-metadata).
 
 ### Combining Multiple Constraints
 The real power of `PlainTextChunker` comes from combining multiple constraints. This allows for highly specific and granular control over how your text is chunked. Here are a few examples of how you can combine different constraints.
@@ -350,7 +350,7 @@ The real power of `PlainTextChunker` comes from combining multiple constraints. 
 #### By Sentences and Tokens
 This is useful when you want to limit by both the number of sentences and the overall token count, whichever is reached first.
 
-```python
+```py
 chunks = chunker.chunk(
     text=text,
     max_sentences=5,
@@ -361,7 +361,7 @@ chunks = chunker.chunk(
 #### By Sentences and Section Breaks
 This combination is great for ensuring that chunks don't span across too many sections while also keeping the sentence count in check.
 
-```python
+```py
 chunks = chunker.chunk(
     text=text,
     max_sentences=10,
@@ -372,7 +372,7 @@ chunks = chunker.chunk(
 #### By Tokens and Section Breaks
 A powerful combination for structured documents where you want to respect section boundaries while adhering to a strict token budget.
 
-```python
+```py
 chunks = chunker.chunk(
     text=text,
     max_tokens=256,
@@ -383,7 +383,7 @@ chunks = chunker.chunk(
 #### By Sentences, Tokens, and Section Breaks
 For the ultimate level of control, you can combine all three constraints. The chunking will stop as soon as any of the three limits is reached.
 
-```python
+```py
 chunks = chunker.chunk(
     text=text,
     max_sentences=8,
@@ -394,13 +394,13 @@ chunks = chunker.chunk(
 !!! tip "Customizing the Continuation Marker"
     You can customize the continuation marker, which is prepended to clauses that don't fit in the previous chunk. To do this, pass the `continuation_marker` parameter to the chunker's constructor.
 
-    ```python
+    ```py
     chunker = PlainTextChunker(continuation_marker="[...]")
     ```
 
     If you don't want any continuation marker, you can set it to an empty string:
 
-    ```python
+    ```py
     chunker = PlainTextChunker(continuation_marker="")
     ```
 
@@ -410,7 +410,7 @@ While the `chunk` method is perfect for processing a single text, the `batch_chu
 
 Here's an example of how to use `batch_chunk`:
 
-```python
+```py
 from chunklet.plain_text_chunker import PlainTextChunker
 
 def word_counter(text: str) -> int:
@@ -421,7 +421,7 @@ ES_TEXT = "Este es el primer documento. Contiene varias frases para la segmentac
 FR_TEXT = "Ceci est le premier document. Il est essentiel pour l'évaluation multilingue. Le deuxième document est court mais important. La variation est la clé."
 
 # Initialize PlainTextChunker
-chunker = PlainTextChunker(token_counter=word_counter) 
+chunker = PlainTextChunker(token_counter=word_counter)
 
 chunks = chunker.batch_chunk(
     texts=[EN_TEXT, ES_TEXT, FR_TEXT],
@@ -445,7 +445,7 @@ for i, chunk in enumerate(chunks):
 3.  Display a progress bar during batch processing. The default value is `False`.
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
       0%|                                              | 0/3 [00:00<?, ?it/s]
     --- Chunk 1 ---
     Metadata: {'chunk_num': 1, 'span': (0, 97)}
@@ -497,7 +497,7 @@ for i, chunk in enumerate(chunks):
     When using `batch_chunk`, it's crucial to ensure the generator is properly closed, especially if you don't iterate through all the chunks. This is necessary to release the underlying multiprocessing resources. The recommended way is to use a `try...finally` block to call `close()` on the generator. For more details, see the [Troubleshooting](../../troubleshooting.md) guide.
 
 !!! tip "Adding Base Metadata to Batches"
-    Just like with the `chunk` method, you can pass a `base_metadata` dictionary to `batch_chunk`. This is useful for adding common information, like a source filename, to all chunks processed in the batch.
+    Just like with the `chunk` method, you can pass a `base_metadata` dictionary to `batch_chunk`. This is useful for adding common information, like a source filename, to all chunks processed in the batch. For more details on metadata structure and available fields, see the [Metadata guide](../metadata.md#plaintextchunker-metadata).
 
 ### Separator
 
@@ -506,7 +506,7 @@ The `separator` parameter allows you to specify a custom value to be yielded aft
 !!! note "note"
     `None` cannot be used as a separator.
 
-```python
+```py
 from more_itertools import split_at
 from chunklet.plain_text_chunker import PlainTextChunker
 
@@ -538,7 +538,7 @@ for i, doc_chunks in enumerate(chunk_groups):
 1.  Avoid processing the empty list at the end if stream ends with separator
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     --- Chunks for Document 1 ---
     Content: This is the first document.
     Metadata: {'chunk_num': 1, 'span': (0, 27)}

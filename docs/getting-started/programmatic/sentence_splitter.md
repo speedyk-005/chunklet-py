@@ -26,7 +26,7 @@ The `SentenceSplitter` is more than just a basic rule-based tool; it's a sophist
 
 Here's a quick example of how you can use the `SentenceSplitter` to split a block of text into sentences:
 
-```python
+```py
 from chunklet.sentence_splitter import SentenceSplitter
 
 TEXT = """
@@ -40,7 +40,7 @@ The Playlist contains:
 Robots are learning. It's raining. Let's code. Mars is red. Sr. sleep is rare. Consider item 1. This is a test. The year is 2025. This is a good year since N.A.S.A. reached 123.4 light year more.
 """
 
-splitter = SentenceSplitter(verbose=True) 
+splitter = SentenceSplitter(verbose=True)
 sentences = splitter.split(TEXT, lang="en")
 
 for sentence in sentences:
@@ -48,7 +48,7 @@ for sentence in sentences:
 ```
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     2025-11-02 16:27:29.277 | WARNING  | chunklet.sentence_splitter.sentence_splitter:split:136 - The language is set to `auto`. Consider setting the `lang` parameter to a specific language to improve reliability.
     2025-11-02 16:27:29.316 | INFO     | chunklet.sentence_splitter.sentence_splitter:detected_top_language:109 - Language detection: 'en' with confidence 10/10.
     2025-11-02 16:27:29.447 | INFO     | chunklet.sentence_splitter.sentence_splitter:split:167 - Text splitted into sentences. Total sentences detected: 19
@@ -80,7 +80,7 @@ for sentence in sentences:
 
 Here's how you can detect the top language of a given text using the `SentenceSplitter`:
 
-```python
+```py
 from chunklet.sentence_splitter import SentenceSplitter
 
 lang_texts = {
@@ -101,7 +101,7 @@ for lang, text in lang_texts.items():
 ```
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     Original language: en
     Detected language: en with confidence 1.00
     --------------------
@@ -126,12 +126,17 @@ You can provide your own custom sentence splitting functions to Chunklet. This i
 !!! warning "Global Registry: Be Mindful of Side Effects"
     Custom splitters are registered globally. This means that once you register a splitter, it's available everywhere in your application. Be mindful of potential side effects if you're registering splitters in different parts of your codebase, especially in multi-threaded or long-running applications.
 
-To use a custom splitter, you leverage the [`@registry.register`](../../reference/chunklet/sentence_splitter/registry.md) decorator. This decorator allows you to register your function for one or more languages directly.
+To use a custom splitter, you leverage the [`@registry.register`](../../reference/chunklet/sentence_splitter/registry.md) decorator. This decorator allows you to register your function for one or more languages directly. Your custom splitter function must accept a single `text` parameter (str) and return a `list[str]` of sentences.
 
-!!! note "Error Handling"
-    If an error occurs during the sentence splitting process (e.g., an issue with the custom splitter function), a [`CallbackError`](../../exceptions-and-warnings.md#callbackerror) will be raised.
+!!! important "Important constraints"
+    - Your function must accept exactly one required parameter (the text)
+    - Optional parameters with default values are allowed
+    - The function must return a list of strings
+    - Empty strings in the returned list will be filtered out automatically
+    - Lambda functions are not supported unless you provide a `name` parameter
+    - If an error occurs during the sentence splitting process (e.g., an issue with the custom splitter function), a [`CallbackError`](../../exceptions-and-warnings.md#callbackerror) will be raised
 
-```python
+```py
 import re
 from chunklet.sentence_splitter import SentenceSplitter, CustomSplitterRegistry
 
@@ -178,7 +183,7 @@ registry.unregister("en")            # (1)!
 1.  This will remove the custom splitter associated with the "en" language code. Note that you can unregister multiple languages if you had registered them with the same function: registry.unregister("fr", "es")
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     --- Sentences using Custom Splitter ---
     Sentence 1: This is the first sentence.
     Sentence 2: This is the second sentence.
@@ -196,7 +201,7 @@ registry.unregister("en")            # (1)!
 !!! note "Registering Without the Decorator"
     If you prefer not to use decorators, you can directly use the `registry.register()` method. This is particularly useful when registering splitters dynamically or when the callback function is not defined in the global scope.
 
-    ```python
+```py
     from chunklet.sentence_splitter import CustomSplitterRegistry
 
     registry = CustomSplitterRegistry()

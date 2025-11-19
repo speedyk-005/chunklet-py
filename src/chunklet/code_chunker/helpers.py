@@ -1,4 +1,3 @@
-import sys
 import regex as re
 import ast
 import mimetypes
@@ -6,7 +5,7 @@ from pathlib import Path
 from pygments.lexers import guess_lexer
 from pygments.util import ClassNotFound
 from chunklet.common.validation import validate_input
-from chunklet.common.path_utils import is_path_like 
+from chunklet.common.path_utils import is_path_like
 
 
 @validate_input
@@ -74,10 +73,10 @@ def is_python_code(source: str | Path) -> bool:
         try:
             ast.parse(source)
             # If parsing succeeds, it's definitely Python code
-            return True 
+            return True
         except Exception:
             # If fails, it might still be Python code (e.g., incomplete snippet), so continue with heuristics
-            pass  
+            pass
 
     # Pygments heuristic (Lowest confidence, last resort)
     try:
@@ -85,4 +84,3 @@ def is_python_code(source: str | Path) -> bool:
         return lexer.name.lower() == "python"
     except ClassNotFound:
         return False
-        

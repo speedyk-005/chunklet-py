@@ -10,6 +10,7 @@ from chunklet import (
 
 # --- Fixtures ---
 
+
 @pytest.fixture
 def chunker():
     """Provides a DocumentChunker instance."""
@@ -24,6 +25,7 @@ def registry():
 
 # --- Core Tests ---
 
+
 @pytest.mark.parametrize(
     "path",
     [
@@ -36,7 +38,6 @@ def test_chunk_simple_files(chunker, path):
     chunks = chunker.chunk(path, max_sentences=5)
     assert len(chunks) > 0
     assert "source" in chunks[0].metadata
-
 
 
 def test_chunk_unsupported_file(chunker, tmp_path):
@@ -77,6 +78,7 @@ def test_batch_chunk_with_different_file_type(chunker):
 
 
 # --- Custom Processor Tests ---
+
 
 def test_chunk_method_with_custom_processor(tmp_path, mocker, chunker, registry):
     """Test that the chunk method correctly uses a custom processor."""

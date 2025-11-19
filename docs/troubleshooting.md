@@ -20,7 +20,7 @@ Welcome to the troubleshooting guide! Here you'll find solutions to common issue
 
     Here is an example:
 
-    ```python
+    ```py
     from chunklet import DocumentChunker
 
     paths = ["path/to/your/doc1.pdf", "path/to/your/doc2.txt"]
@@ -42,7 +42,7 @@ Welcome to the troubleshooting guide! Here you'll find solutions to common issue
 
     If you don't need to process chunks as they are generated and prefer to have all chunks available at once, you can convert the generator to a list. This forces the generator to be fully consumed, ensuring the multiprocessing pool is properly terminated.
 
-    ```python
+    ```py
     from chunklet import DocumentChunker
 
     paths = ["path/to/your/doc1.pdf", "path/to/your/doc2.txt"]

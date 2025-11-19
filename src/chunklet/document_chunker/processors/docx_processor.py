@@ -13,7 +13,7 @@ class DocxProcessor(BaseProcessor):
 
     Text content is extracted, images are replaced with a placeholder,
     and the resulting text is formatted using Markdown conversion.
-    
+
     This class extracts **metadata** which typically uses a mix of
     **Open Packaging Conventions (OPC)** properties and elements that align
     with **Dublin Core** standards.
@@ -32,8 +32,8 @@ class DocxProcessor(BaseProcessor):
         "modified",
         "rights",
         "version",
-    ] 
-    
+    ]
+
     def extract_metadata(self) -> dict[str, Any]:
         """Extracts core properties (a mix of OPC and Dublin Core elements) from the DOCX file.
 
@@ -65,7 +65,7 @@ class DocxProcessor(BaseProcessor):
             if value:
                 metadata[field] = str(value)
         return metadata
-        
+
     def extract_text(self) -> Generator[str, None, None]:
         """Extracts the text content from the DOCX file in Markdown format.
 
@@ -85,6 +85,7 @@ class DocxProcessor(BaseProcessor):
             ) from e
 
         count = 0
+
         def placeholder_images(image):
             """Replace all images with a placeholder text."""
             nonlocal count

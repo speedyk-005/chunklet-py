@@ -1,11 +1,8 @@
 import re
 import pytest
 from more_itertools import split_at
-from chunklet.plain_text_chunker import (
-    PlainTextChunker,
-    SECTION_BREAK_PATTERN,
-    CLAUSE_END_PATTERN,
-)
+from chunklet.plain_text_chunker import PlainTextChunker, SECTION_BREAK_PATTERN
+
 from chunklet import (
     InvalidInputError,
     CallbackError,
@@ -23,7 +20,7 @@ TEXT = """
 
 She loves cooking. He studies AI. "You are a Dr.", she said. The weather is great. We play chess. Books are fun, aren't they?
 
-##  My playlist 
+##  My playlist
 
 The Playlist contains:
   - two videos
@@ -49,6 +46,7 @@ def chunker():
 
 # --- Core Tests ---
 
+
 def test_init_validation_error():
     """Test that InvalidInputError is raised for invalid initialization parameters."""
     with pytest.raises(
@@ -62,7 +60,7 @@ def test_init_validation_error():
     [
         (None, 3, None, 10),  # Sentence-based
         (30, None, None, 3),  # Token-based
-        (None, None, 1, 2), # Heading-based
+        (None, None, 1, 2),  # Heading-based
         (30, 3, 1, 10),  # Hybrid
     ],
 )
@@ -76,7 +74,7 @@ def test_constraint_based_chunking(
         max_sentences=max_sentences,
         max_section_breaks=max_section_breaks,
     )
-    assert chunks, f"Expected chunks but got empty list"
+    assert chunks, "Expected chunks but got empty list"
     assert (
         len(chunks) == expected_chunks
     ), f"Expected {expected_chunks} chunks, but got {len(chunks)}"
@@ -92,28 +90,32 @@ def test_constraint_based_chunking(
     # Verify limits are respected for each chunk
     for chunk_box in chunks:
         content = chunk_box.content
-        
+
         if max_sentences is not None:
             # Split by sentence and check count
             sentences_in_chunk = chunker.sentence_splitter.split(content)
-            assert len(sentences_in_chunk) <= max_sentences, \
-                f"Chunk exceeded max_sentences: {len(sentences_in_chunk)} > {max_sentences}"
-            
+            assert (
+                len(sentences_in_chunk) <= max_sentences
+            ), f"Chunk exceeded max_sentences: {len(sentences_in_chunk)} > {max_sentences}"
+
         if max_tokens is not None:
             # Count tokens and check
             tokens_in_chunk = chunker.token_counter(content)
-            assert tokens_in_chunk <= max_tokens, \
-                f"Chunk exceeded max_tokens: {tokens_in_chunk} > {max_tokens}"
-            
+            assert (
+                tokens_in_chunk <= max_tokens
+            ), f"Chunk exceeded max_tokens: {tokens_in_chunk} > {max_tokens}"
+
         if max_section_breaks is not None:
             # Count headings and check
             headings_in_chunk = [
-                s for s in chunker.sentence_splitter.split(content)
+                s
+                for s in chunker.sentence_splitter.split(content)
                 if SECTION_BREAK_PATTERN.match(s)
             ]
-            assert len(headings_in_chunk) <= max_section_breaks, \
-                f"Chunk exceeded max_section_breaks: {len(headings_in_chunk)} > {max_section_breaks}"
-    
+            assert (
+                len(headings_in_chunk) <= max_section_breaks
+            ), f"Chunk exceeded max_section_breaks: {len(headings_in_chunk)} > {max_section_breaks}"
+
 
 @pytest.mark.parametrize(
     "offset, expect_chunks",
@@ -157,9 +159,10 @@ def test_long_sentence_truncation(chunker):
 
 # --- Overlap Related Tests ---
 
+
 def test_overlap_behavior(chunker):
     """Test that overlap produces multiple chunks and the overlap content is correct."""
-    
+
     chunks = chunker.chunk(
         TEXT,
         max_sentences=4,
@@ -169,8 +172,8 @@ def test_overlap_behavior(chunker):
 
     # Expected that about 50% of first chunk content is present in the second one
     expected_overlap = re.split(r"(?<=[,\n])", chunks[0].content)[3:]
-    assert (
-        all([cls.strip() in chunks[1].content for cls in expected_overlap])
+    assert all(
+        [cls.strip() in chunks[1].content for cls in expected_overlap]
     ), f"Expected second chunk to start with '{expected_overlap}'."
 
 
@@ -235,7 +238,7 @@ def test_batch_chunk_error_handling_on_task(chunker):
                 texts,
                 max_tokens=12,
                 on_errors="raise",
-                show_progress=False  # Disabled to prevent an unexpected hanging 
+                show_progress=False,  # Disabled to prevent an unexpected hanging
             )
         )
 

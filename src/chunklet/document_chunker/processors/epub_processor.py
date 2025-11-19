@@ -23,7 +23,7 @@ class EpubProcessor(BaseProcessor):
 
     For more details on EPUB metadata and the Dublin Core standard, refer to the
     `ebooklib` tutorial:
-    
+
     https://docs.sourcefabric.org/projects/ebooklib/en/latest/tutorial.html
     """
 
@@ -34,8 +34,8 @@ class EpubProcessor(BaseProcessor):
         "publisher",
         "date",
         "rights",
-    ] 
-    
+    ]
+
     def __init__(self, file_path: str):
         """
         Initializes the EpubProcessor with a path to the EPUB file
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     print("Metadata:")
     for k, v in metadata.items():
         print(f"{k}: {v}")
-        
+
     print("\nText content preview:\n")
     for i, text in enumerate(processor.extract_text(), start=1):
         print(f"--- {i} ---")

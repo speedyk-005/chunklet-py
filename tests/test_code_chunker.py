@@ -116,6 +116,7 @@ MULTIPLE_SOURCES = [PYTHON_CODE, CSHARP_CODE, RUBY_CODE]
 
 # --- Fixtures ---
 
+
 @pytest.fixture
 def chunker():
     """Provide a ready-to-use CodeChunker instance for tests."""
@@ -123,6 +124,7 @@ def chunker():
 
 
 # --- Language Paradigm Tests ---
+
 
 @pytest.mark.parametrize(
     "code_string, max_tokens, max_lines, max_functions, expected_num_chunks",
@@ -138,11 +140,18 @@ def test_chunking_with_different_constraints(
     chunker, code_string, max_tokens, max_lines, max_functions, expected_num_chunks
 ):
     """Test chunking with different constraints (max_tokens, max_lines, max_functions)."""
-    chunks = chunker.chunk(code_string, max_tokens=max_tokens, max_lines=max_lines, max_functions=max_functions)
+    chunks = chunker.chunk(
+        code_string,
+        max_tokens=max_tokens,
+        max_lines=max_lines,
+        max_functions=max_functions,
+    )
 
     assert len(chunks) > 0
     if max_tokens is not None:
-        assert all(simple_token_counter(chunk.content) <= max_tokens for chunk in chunks)
+        assert all(
+            simple_token_counter(chunk.content) <= max_tokens for chunk in chunks
+        )
 
     assert len(chunks) == expected_num_chunks
     assert all(chunk.metadata.start_line <= chunk.metadata.end_line for chunk in chunks)
@@ -157,7 +166,9 @@ def test_chunking_with_different_constraints(
             assert chunk.metadata.start_line > last_end
         last_end = chunk.metadata.end_line
 
+
 # --- Docstring Tests ---
+
 
 @pytest.mark.parametrize(
     "code_string, all_mode_pattern, summary_mode_pattern",
@@ -220,10 +231,13 @@ def test_docstring_modes(chunker, code_string, all_mode_pattern, summary_mode_pa
 
 # --- Comment Inclusion Tests ---
 
+
 @pytest.mark.parametrize("include_comments", [True, False])
 def test_comment_inclusion(chunker, include_comments):
     """Test Inclusion/Exclusion Of Comments."""
-    chunks = chunker.chunk(PYTHON_CODE, max_tokens=200, include_comments=include_comments)
+    chunks = chunker.chunk(
+        PYTHON_CODE, max_tokens=200, include_comments=include_comments
+    )
     content = "\n".join(chunk.content for chunk in chunks)
 
     # Use correct case and exact comment text from fixture
@@ -248,7 +262,7 @@ def test_invalid_constraints_and_missing_token_counter(
     max_tokens, max_lines, max_functions, expected_exception
 ):
     """Test errors for invalid constraints and missing token counter."""
-    new_chunker = CodeChunker() # chunker without a token counter
+    new_chunker = CodeChunker()  # chunker without a token counter
     with pytest.raises(expected_exception):
         new_chunker.chunk(
             "def test(): pass",
@@ -286,6 +300,7 @@ def test_oversized_block_error(chunker):
 
 
 # --- Batch Chunking Tests ---
+
 
 def test_batch_chunk_success(chunker):
     """Test successful batch processing of multiple sources."""
@@ -345,16 +360,22 @@ def test_batch_chunk_error_handling_on_task(chunker):
                 sources=sources_with_error,
                 max_tokens=50,
                 on_errors="raise",
-                show_progress=False,  # Disabled to prevent an unexpected hanging 
+                show_progress=False,  # Disabled to prevent an unexpected hanging
             )
         )
 
     # Test on_errors = 'skip'
     # Should still get chunks from valid sources
-    chunks = list(chunker.batch_chunk(sources=sources_with_error, max_tokens=50, on_errors="skip"))
+    chunks = list(
+        chunker.batch_chunk(sources=sources_with_error, max_tokens=50, on_errors="skip")
+    )
     assert len(chunks) > 0
 
     # Test on_errors = 'break'
     # Should get no chunks since file error occurs first and breaks
-    chunks = list(chunker.batch_chunk(sources=sources_with_error, max_tokens=50, on_errors="break"))
+    chunks = list(
+        chunker.batch_chunk(
+            sources=sources_with_error, max_tokens=50, on_errors="break"
+        )
+    )
     assert len(chunks) == 0

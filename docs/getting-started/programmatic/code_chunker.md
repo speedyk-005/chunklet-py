@@ -36,7 +36,7 @@ The `CodeChunker` operates primarily in a structural chunking mode, allowing you
     You must provide at least one of these limits (`max_tokens`, `max_lines`, or `max_functions`) when calling `chunk` or `batch_chunk`. Failing to specify any limit will result in an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror). The `CodeChunker` will ensure your code blocks are appropriately sized according to the provided constraints.
 
 
-The `CodeChunker` has two main methods: `chunk` for processing a single text and `batch_chunk` for processing multiple codes. Both methods return a generator that yields a [`Box`](https://pypi.org/project/python-box/#:~:text=Overview,strings%20or%20files.) object for each chunk. The `Box` object has two main keys: `content` (str) and `metadata` (dict).
+The `CodeChunker` has two main methods: `chunk` for processing a single text and `batch_chunk` for processing multiple codes. Both methods return a generator that yields a [`Box`](https://pypi.org/project/python-box/#:~:text=Overview,strings%20or%20files.) object for each chunk. The `Box` object has two main keys: `content` (str) and `metadata` (dict). For detailed information about metadata structure and usage, see the [Metadata guide](../metadata.md#codechunker-metadata).
 
 ## Single Run
 This section demonstrates how to use the `CodeChunker` to process a single code input with various constraints. To begin, it's important to note the flexibility of the `source` parameter, which is designed to accommodate your preferred method of input. It can accept:
@@ -47,7 +47,7 @@ This section demonstrates how to use the `CodeChunker` to process a single code 
 
 When a file path (either as a string or a `pathlib.Path` object) is provided, the `CodeChunker` will automatically handle reading the file's content for you.
 
-```python
+```py
 from pathlib import Path
 
 # All of the following are valid:
@@ -60,7 +60,7 @@ chunks_from_path_obj = chunker.chunk(Path("/path/to/your/code.py"))
 
 Here's how you can use `CodeChunker` to chunk code by the number of lines:
 
-```python
+```py
 from chunklet.experimental.code_chunker import CodeChunker
 
 PYTHON_CODE = '''
@@ -123,19 +123,19 @@ for i, chunk in enumerate(chunks):
 2.  Set to True to include comments in the output chunks.
 3.  `docstring_mode="all"` ensures that complete docstrings, with all their multi-line details, are preserved in the code chunks. Other options are `"summary"` to include only the first line, or `"excluded"` to remove them entirely. Default is "all".
 4.  When `strict=False`, structural blocks (like functions or classes) that exceed the limit set will be split into smaller chunks. If `strict=True` (default), a `TokenLimitError` would be raised instead.
-   
+
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     --- Chunk 1 ---
     Content:
-    
+
     """
     Module docstring
     """
-    
+
     import os
-    
-    
+
+
     Metadata:
         chunk_num: 1
         tree: global
@@ -143,17 +143,17 @@ for i, chunk in enumerate(chunks):
         end_line: 7
         span: (0, 38)
         source: N/A
-    
+
     --- Chunk 2 ---
     Content:
     class Calculator:
         """
         A simple calculator class.
-    
+
         A calculator that Contains basic arithmetic operations for demonstration purposes.
         """
-    
-    
+
+
     Metadata:
         chunk_num: 2
         tree: global
@@ -162,19 +162,19 @@ for i, chunk in enumerate(chunks):
         end_line: 14
         span: (38, 192)
         source: N/A
-    
+
     --- Chunk 3 ---
     Content:
         def add(self, x, y):
             """Add two numbers and return result.
-    
+
             This is a longer description that should be truncated
             in summary mode. It has multiple lines and details.
             """
             result = x + y
             return result
-    
-    
+
+
     Metadata:
         chunk_num: 3
         tree: global
@@ -184,18 +184,18 @@ for i, chunk in enumerate(chunks):
         end_line: 23
         span: (192, 444)
         source: N/A
-    
+
     --- Chunk 4 ---
     Content:
         def multiply(self, x, y):
             # Multiply two numbers
             return x * y
-    
+
     def standalone_function():
         """A standalone function."""
         return True
-    
-    
+
+
     Metadata:
         chunk_num: 4
         tree: global
@@ -210,15 +210,15 @@ for i, chunk in enumerate(chunks):
 
 !!! tip "Enable Verbose Logging"
     To see detailed logging during the chunking process, you can set the `verbose` parameter to `True` when initializing the `CodeChunker`:
-    ```python
+    ```py
     chunker = CodeChunker(verbose=True)
     ```
-  
+
 ### Chunking by Tokens
 
 Here's how you can use `CodeChunker` to chunk code by the number of tokens:
 
-```python
+```py
 # Helper function
 def simple_token_counter(text: str) -> int:
     """Simple Token Counter For Testing."""
@@ -241,7 +241,7 @@ for i, chunk in enumerate(chunks):
 ```
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     --- Chunk 1 ---
     Content:
 
@@ -312,13 +312,13 @@ for i, chunk in enumerate(chunks):
     ```
 
 !!! tip "Overrides token_counter"
-    You can also provide the `token_counter` directly to the `chunk` method. within the `chunk` method call (e.g., `chunker.chunk(..., token_counter=my_tokenizer_function)`). If a `token_counter` is provided in both the constructor and the `chunk` method, the one in the `chunk` method will be used. 
+    You can also provide the `token_counter` directly to the `chunk` method. within the `chunk` method call (e.g., `chunker.chunk(..., token_counter=my_tokenizer_function)`). If a `token_counter` is provided in both the constructor and the `chunk` method, the one in the `chunk` method will be used.
 
 
 ### Chunking by Functions
 This constraint is useful when you want to ensure that each chunk contains a specific number of functions, helping to maintain logical code units.
 
-```python
+```py
 chunks = chunker.chunk(
     PYTHON_CODE,
     max_functions=1,
@@ -334,7 +334,7 @@ for i, chunk in enumerate(chunks):
 ```
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     --- Chunk 1 ---
     Content:
 
@@ -412,7 +412,7 @@ The real power of `CodeChunker` comes from combining multiple constraints. This 
 #### By Lines and Tokens
 This is useful when you want to limit by both the number of lines and the overall token count, whichever is reached first.
 
-```python
+```py
 chunks = chunker.chunk(
     PYTHON_CODE,
     max_lines=5,
@@ -423,7 +423,7 @@ chunks = chunker.chunk(
 #### By Lines and Functions
 This combination is great for ensuring that chunks don't span across too many functions while also keeping the line count in check.
 
-```python
+```py
 chunks = chunker.chunk(
     PYTHON_CODE,
     max_lines=10,
@@ -434,7 +434,7 @@ chunks = chunker.chunk(
 #### By Tokens and Functions
 A powerful combination for structured code where you want to respect function boundaries while adhering to a strict token budget.
 
-```python
+```py
 chunks = chunker.chunk(
     PYTHON_CODE,
     max_tokens=100,
@@ -445,7 +445,7 @@ chunks = chunker.chunk(
 #### By Lines, Tokens, and Functions
 For the ultimate level of control, you can combine all three constraints. The chunking will stop as soon as any of the three limits is reached.
 
-```python
+```py
 chunks = chunker.chunk(
     PYTHON_CODE,
     max_lines=8,
@@ -456,7 +456,7 @@ chunks = chunker.chunk(
 
 ## Batch Run
 
-While the `chunk` method is perfect for processing a single text, the `batch_chunk` method is designed for efficiently processing multiple code sources in parallel. It returns a generator, allowing you to process large volumes of code without exhausting memory. 
+While the `chunk` method is perfect for processing a single text, the `batch_chunk` method is designed for efficiently processing multiple code sources in parallel. It returns a generator, allowing you to process large volumes of code without exhausting memory.
 
 Given we have the following code snippets saved as individual files in a `code_examples` directory:
 # cpp_calculator.cpp
@@ -485,7 +485,7 @@ package com.chunker.data;
 
 public class DataProcessor {
     private String sourcePath;
-    
+
     // Constructor
     public DataProcessor(String path) {
         this.sourcePath = path;
@@ -519,7 +519,7 @@ function processArray(data) {
     if (!data || data.length === 0) {
         return 0;
     }
-    
+
     let total = 0;
     // Loop structure
     for (let i = 0; i < data.length; i++) {
@@ -558,7 +558,7 @@ func (c *Config) displayInfo() {
 ```
 
 We can process them all at once by providing a list of paths to the `batch_chunk` method. Assuming these files are saved in a `code_examples` directory:
-```python
+```py
 from chunklet.code_chunker import CodeChunker
 
 # Helper function
@@ -752,7 +752,7 @@ The `separator` parameter allows you to specify a custom value to be yielded aft
 !!! note "note"
     `None` cannot be used as a separator.
 
-```python
+```py
 from chunklet.code_chunker import CodeChunker
 from more_itertools import split_at
 
@@ -806,7 +806,7 @@ for i, code_chunks in enumerate(chunk_groups):
 1.  Avoid processing the empty list at the end if stream ends with separator
 
 ??? success "Click to show output"
-    ```
+    ```linenums="0"
     Chunking ...:   0%|          | 0/2 [00:00, ?it/s]
     --- Chunks for Document 1 ---
     Content:
@@ -846,7 +846,7 @@ The `CodeChunker` draws inspiration from various projects and concepts in the fi
 
 -  [code_chunker](https://github.com/camel-ai/camel/blob/master/camel/utils/chunker/code_chunker.py) by Camel AI
 -  [code_chunker](https://github.com/JimAiMoment/code-chunker) by JimAiMoment
--  [whats_that_code](https://github.com/matthewdeanmartin/whats_that_code) by matthewdeanmartin 
+-  [whats_that_code](https://github.com/matthewdeanmartin/whats_that_code) by matthewdeanmartin
 -  [CintraAI Code Chunker](https://github.com/CintraAI/code-chunker)
 
 ??? info "API Reference"

@@ -25,11 +25,12 @@ CLAUSE_END_PATTERN = re.compile(r"(?<=[;,’：—)&…])\s")
 
 # Pattern to detect markdown headings
 SECTION_BREAK_PATTERN = re.compile(
-    r"^\s*#{1,6}\s*.+?$|"    # heading
-    r"^\s*([\-\*_]\s*)(?:\1){2,}\s*$|"      # thematic Breaks
-    r"\s*<details>",       # collapsed Sections opening
-    re.M
+    r"^\s*#{1,6}\s*.+?$|"  # heading
+    r"^\s*([\-\*_]\s*)(?:\1){2,}\s*$|"  # thematic Breaks
+    r"\s*<details>",  # collapsed Sections opening
+    re.M,
 )
+
 
 class PlainTextChunker:
     """
@@ -114,7 +115,7 @@ class PlainTextChunker:
             text_portion,
             full_text,
             max_l_dist=10,
-        )    
+        )
 
         if matches:
             first = matches[0]
@@ -183,9 +184,9 @@ class PlainTextChunker:
         overlapped_clauses = detected_clauses[-overlap_num:]
 
         # The Condition to add the continuation marker
-        if ( 
-            overlapped_clauses 
-            and overlapped_clauses[0] 
+        if (
+            overlapped_clauses
+            and overlapped_clauses[0]
             and not overlapped_clauses[0][0].isupper()
         ):
             overlapped_clauses[0] = (
@@ -295,7 +296,7 @@ class PlainTextChunker:
         index = 0
         while index < len(sentences):
             sentence = sentences[index]
-            
+
             if SECTION_BREAK_PATTERN.match(sentence):
                 is_heading = True
                 sentence = "\n" + sentence
@@ -307,10 +308,14 @@ class PlainTextChunker:
                 if max_tokens != sys.maxsize
                 else 0
             )
-            
+
             sentence_limit_reached = sentence_count + 1 > max_sentences
-            heading_limit_reached = is_heading and heading_count + 1 > max_section_breaks
-            token_limit_reached = (max_tokens != sys.maxsize) and (token_count + sentence_tokens > max_tokens)
+            heading_limit_reached = (
+                is_heading and heading_count + 1 > max_section_breaks
+            )
+            token_limit_reached = (max_tokens != sys.maxsize) and (
+                token_count + sentence_tokens > max_tokens
+            )
 
             if token_limit_reached or sentence_limit_reached or heading_limit_reached:
                 # for token-based mode, try splitting further
@@ -328,37 +333,43 @@ class PlainTextChunker:
                     # and _find_clauses_that_fit would return it as unfitted.
                     # (e.g, urls, bad formated text, image uris).
                     if not curr_chunk and not fitted and unfitted:
-                        curr_chunk = [self._resolve_unpunctuated_text(
-                            text=sentence,
-                            max_tokens=max_tokens,
-                            token_counter=token_counter,
-                        )]
+                        curr_chunk = [
+                            self._resolve_unpunctuated_text(
+                                text=sentence,
+                                max_tokens=max_tokens,
+                                token_counter=token_counter,
+                            )
+                        ]
                         index += 1
                         continue
-                        
+
                     curr_chunk.append(fitted)
 
                     if unfitted:
                         # We need to process the remants separately
-                        sentences[index] = unfitted  
+                        sentences[index] = unfitted
 
-                else: 
+                else:
                     unfitted = ""
 
-                chunks.append("\n".join(curr_chunk))  # Considered complete 
-                
+                chunks.append("\n".join(curr_chunk))  # Considered complete
+
                 # Prepare data for next chunk
                 curr_chunk = self._get_overlap_clauses(curr_chunk, overlap_percent)
 
                 if max_tokens != sys.maxsize:
-                    token_count = sum(count_tokens(s, token_counter) for s in curr_chunk)
+                    token_count = sum(
+                        count_tokens(s, token_counter) for s in curr_chunk
+                    )
 
                 if max_sentences != sys.maxsize:
                     sentence_count = len(curr_chunk)
 
                 if max_section_breaks != sys.maxsize:
-                    heading_count = sum(1 for s in curr_chunk if SECTION_BREAK_PATTERN.match(s))
-            
+                    heading_count = sum(
+                        1 for s in curr_chunk if SECTION_BREAK_PATTERN.match(s)
+                    )
+
             else:
                 curr_chunk.append(sentence)
                 token_count += sentence_tokens
@@ -414,12 +425,14 @@ class PlainTextChunker:
         """
         # Validate that at least one limit is provided
         if not any((max_tokens, max_sentences, max_section_breaks)):
-            raise InvalidInputError("At least one of 'max_tokens', 'max_sentences', or 'max_section_break' must be provided.")
+            raise InvalidInputError(
+                "At least one of 'max_tokens', 'max_sentences', or 'max_section_break' must be provided."
+            )
 
         # If token_counter is required but not provided
         if max_tokens is not None and not (token_counter or self.token_counter):
             raise MissingTokenCounterError()
-            
+
         if self.verbose:
             logger.info(
                 "Starting chunk processing for text starting with: {}.",
@@ -432,7 +445,7 @@ class PlainTextChunker:
         if max_sentences is None:
             max_sentences = sys.maxsize
         if max_section_breaks is None:
-            max_section_breaks = sys.maxsize        
+            max_section_breaks = sys.maxsize
 
         if not text.strip():
             if self.verbose:
@@ -525,7 +538,7 @@ class PlainTextChunker:
 
         Raises:
             InvalidInputError: If `texts` is not an iterable of strings, or if `n_jobs` is less than 1.
-            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided. 
+            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
             CallbackError: If an error occurs during sentence splitting
                 or token counting within a chunking task.
         """

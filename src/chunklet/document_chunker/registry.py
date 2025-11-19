@@ -53,14 +53,18 @@ class CustomProcessorRegistry:
             name (str | None): The name of the processor. If None, attempts to use the callback's name.
         """
         if not args:
-            raise ValueError("At least one file extension or a callback must be provided.")
+            raise ValueError(
+                "At least one file extension or a callback must be provided."
+            )
 
         if callable(args[0]):
             # Direct call: register(callback, ext1, ext2, ...)
             callback = args[0]
             exts = args[1:]
             if not exts:
-                raise ValueError("At least one file extension must be provided for the callback.")
+                raise ValueError(
+                    "At least one file extension must be provided for the callback."
+                )
             self._register_logic(exts, callback, name)
             return callback
         else:
@@ -100,7 +104,7 @@ class CustomProcessorRegistry:
             )
 
         if name is None:
-            if hasattr(callback, '__name__') and callback.__name__ != '<lambda>':
+            if hasattr(callback, "__name__") and callback.__name__ != "<lambda>":
                 processor_name = callback.__name__
             else:
                 raise ValueError(

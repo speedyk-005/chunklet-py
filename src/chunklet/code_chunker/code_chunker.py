@@ -21,6 +21,7 @@ Inspired by:
     - whats_that_code by matthewdeanmartin
     - CintraAI Code Chunker
 """
+
 import sys
 from pathlib import Path
 from typing import Any, Literal, Callable, Generator, Annotated
@@ -31,13 +32,14 @@ import regex as re
 from pydantic import Field
 from collections import defaultdict, namedtuple
 from box import Box
+
 try:
     from littletree import Node
     import defusedxml.ElementTree as ET
 except ImportError:
     Node = None
     Et = None
-    
+
 from loguru import logger
 
 from chunklet.code_chunker.patterns import (
@@ -52,7 +54,7 @@ from chunklet.code_chunker.patterns import (
     CLOSURE,
 )
 from chunklet.code_chunker.helpers import is_binary_file, is_python_code
-from chunklet.common.path_utils import is_path_like   
+from chunklet.common.path_utils import is_path_like
 from chunklet.common.batch_runner import run_in_batch
 from chunklet.common.validation import validate_input, restricted_iterable
 from chunklet.common.token_utils import count_tokens
@@ -67,6 +69,7 @@ from chunklet.exceptions import (
 CodeLine = namedtuple(
     "CodeLine", ["line_number", "content", "indent_level", "func_partial_signature"]
 )
+
 
 class CodeChunker:
     """
@@ -85,7 +88,7 @@ class CodeChunker:
         - Parallel batch processing for multiple files
         - Comprehensive logging and progress tracking
     """
-    
+
     @validate_input
     def __init__(
         self,
@@ -106,12 +109,12 @@ class CodeChunker:
     def _replace_with_newlines(self, match: re.Match) -> str:
         """Replaces the matched content with an equivalent number of newlines."""
         matched_text = match.group(0)
-        
+
         # To preserve the line count when replacing a multi-line block,
         # we need to replace N lines of content with N-1 newline characters.
         # This is because N-1 newlines create N empty lines in the context of the surrounding text.
         num_newlines = max(0, len(matched_text.splitlines()) - 1)
-    
+
         return "\n" * num_newlines
 
     def _read_source(self, source: str | Path) -> str:
@@ -169,8 +172,6 @@ class CodeChunker:
         Returns:
             str: The summarized docstring line.
         """
-        newline_count = len(match.group(0).splitlines())
-
         # HACK: The `DOCSTRING_STYLE_ONE` regex contains multiple alternative patterns,
         # which results in `None` values for the capturing groups that did not match.
         # This list comprehension filters out the `None` values to reliably extract
@@ -187,7 +188,7 @@ class CodeChunker:
             if stripped_line:
                 first_line = stripped_line
                 break
-                
+
         summarized_line_content = f"{indent}{l_end}{first_line}{r_end}".strip()
         padding_count = len(match.group(0).splitlines()) - 1
         return summarized_line_content + "\n" * padding_count
@@ -210,7 +211,7 @@ class CodeChunker:
                 "Please install it with 'pip install 'defusedxml>=0.7.1'' or install the code processing extras "
                 "with 'pip install 'chunklet-py[code]''"
             )
-            
+
         indent = match.group(1)
         raw_doc = match.group(0)
         prefix = re.match(r"^\s*(//[/!])\s*", raw_doc).group(1)
@@ -238,13 +239,13 @@ class CodeChunker:
 
         # Construct the summarized docstring line
         summarized_line_content = "".join(
-            f"{indent}{prefix} {line}" 
-            for line in summary.splitlines()
-            if line.strip()
+            f"{indent}{prefix} {line}" for line in summary.splitlines() if line.strip()
         ).lstrip()
-        
-        padding_count = len(raw_doc.splitlines()) - len(summarized_line_content.splitlines()) - 1
-        
+
+        padding_count = (
+            len(raw_doc.splitlines()) - len(summarized_line_content.splitlines()) - 1
+        )
+
         return summarized_line_content + "\n" * padding_count
 
     def _merge_tree(self, relations_list: list[list]) -> str:
@@ -267,12 +268,12 @@ class CodeChunker:
         # Deduplicate relations
         def relation_key(relation: dict):
             return tuple(sorted(relation.items()))
-            
+
         unique_relations = list(unique_everseen(all_relations_flat, key=relation_key))
-        
+
         if not unique_relations:
             return "global"
-            
+
         merged_tree = Node().from_relations(unique_relations, root="global")
 
         return merged_tree.to_string()
@@ -299,7 +300,9 @@ class CodeChunker:
                 (e.g., via removal, summary, or annotations) would cause character counts to vary.
         """
         # Call at first before any code altering
-        cumulative_lengths = tuple(accumulate(len(line) for line in code.splitlines(keepends=True)))
+        cumulative_lengths = tuple(
+            accumulate(len(line) for line in code.splitlines(keepends=True))
+        )
 
         # Remove comments if not required
         if not include_comments:
@@ -327,7 +330,7 @@ class CodeChunker:
             code = DOCSTRING_STYLE_TWO.sub(
                 lambda m: self._replace_with_newlines(m), code
             )
-           
+
         # List of all regex patterns with the tag to annotate them
         patterns_n_tags = [
             (SINGLE_LINE_COMMENT, "COMM"),
@@ -342,7 +345,7 @@ class CodeChunker:
             code = pattern.sub(lambda match: self._annotate_block(tag, match), code)
 
         return code, cumulative_lengths
-        
+
     def _post_processing(self, snippet_dicts: list[dict]):
         """
         Attach a namespace tree structure (as a list of relations) to each snippet incrementally.
@@ -362,19 +365,18 @@ class CodeChunker:
 
         def _add_namespace_node(name, indent_level):
             new_node = Node(identifier=name)
-            
+
             current_parent_node, _ = namespaces_stack[-1]
-            current_parent_node.add_child(new_node) 
-            
+            current_parent_node.add_child(new_node)
+
             namespaces_stack.append((new_node, indent_level))
 
-        
         # The root node will be 'global'
         tree_root = Node(identifier="global")
-    
+
         # namespaces_stack: [ (node_reference, indent_level) ]
         namespaces_stack = [(tree_root, -1)]
-    
+
         for snippet_dict in snippet_dicts:
             # Remove namespaces until we find the appropriate parent level
             while (
@@ -383,27 +385,26 @@ class CodeChunker:
             ):
                 node_to_detach, _ = namespaces_stack.pop()
                 if node_to_detach is not tree_root:
-                    node_to_detach.detach() 
+                    node_to_detach.detach()
 
             # Handle Namespace Declaration
-            matched = NAMESPACE_DECLARATION.search(snippet_dict["content"]) 
+            matched = NAMESPACE_DECLARATION.search(snippet_dict["content"])
             if matched:
                 namespace_name = matched.group(1)
                 _add_namespace_node(
-                    name=namespace_name, 
-                    indent_level=snippet_dict["indent_level"]
+                    name=namespace_name, indent_level=snippet_dict["indent_level"]
                 )
-            
+
             # Handle Partial Function Signature
             if snippet_dict.get("func_partial_signature"):
                 _add_namespace_node(
-                    name=snippet_dict["func_partial_signature"].strip(), 
-                    indent_level=snippet_dict["indent_level"]
+                    name=snippet_dict["func_partial_signature"].strip(),
+                    indent_level=snippet_dict["indent_level"],
                 )
 
             # Attach the current tree structure as relations
             snippet_dict["relations"] = list(tree_root.to_relations())
-        
+
         # Normalize newlines in chunk in place
         for snippet_dict in snippet_dicts:
             snippet_dict["content"] = re.sub(r"\n{3,}", "\n\n", snippet_dict["content"])
@@ -610,9 +611,7 @@ class CodeChunker:
             snippet_dict["content"].splitlines(), start=snippet_dict["start_line"]
         ):
             line_tokens = (
-                count_tokens(line, token_counter)
-                if max_tokens != sys.maxsize
-                else 0
+                count_tokens(line, token_counter) if max_tokens != sys.maxsize else 0
             )
 
             # If adding this line would exceed either max_tokens or max_lines, commit current chunk
@@ -620,15 +619,17 @@ class CodeChunker:
                 if curr_chunk:  # avoid empty chunk creation
                     start_line = line_no - len(curr_chunk)
                     end_line = line_no - 1
-                    start_span = 0 if start_line == 1 else cumulative_lengths[start_line - 2]
+                    start_span = (
+                        0 if start_line == 1 else cumulative_lengths[start_line - 2]
+                    )
                     end_span = cumulative_lengths[end_line - 1]
-                    tree = Node.from_relations(snippet_dict['relations']).to_string()
+                    tree = Node.from_relations(snippet_dict["relations"]).to_string()
                     sub_boxes.append(
                         Box(
                             {
                                 "content": "\n".join(curr_chunk),
                                 "metadata": {
-                                    "tree": tree,                               
+                                    "tree": tree,
                                     "start_line": start_line,
                                     "end_line": end_line,
                                     "span": (start_span, end_span),
@@ -655,7 +656,7 @@ class CodeChunker:
             end_line = snippet_dict["end_line"]
             start_span = 0 if start_line == 1 else cumulative_lengths[start_line - 2]
             end_span = cumulative_lengths[end_line - 1]
-            tree = Node.from_relations(snippet_dict['relations']).to_string()
+            tree = Node.from_relations(snippet_dict["relations"]).to_string()
             sub_boxes.append(
                 Box(
                     {
@@ -718,7 +719,7 @@ class CodeChunker:
             max_functions = sys.maxsize
 
         return max_tokens, max_lines, max_functions
-            
+
     @validate_input
     def chunk(
         self,
@@ -799,7 +800,7 @@ class CodeChunker:
             logger.info(
                 "Extracted {} structural blocks from source", len(snippet_dicts)
             )
-        
+
         # Grouping logic
 
         merged_content = []
@@ -819,15 +820,21 @@ class CodeChunker:
                 if max_tokens != sys.maxsize
                 else 0
             )
-            box_lines = snippet_dict["content"].count('\n') + (1 if snippet_dict["content"] else 0)
+            box_lines = snippet_dict["content"].count("\n") + (
+                1 if snippet_dict["content"] else 0
+            )
             is_function = bool(snippet_dict.get("func_partial_signature"))
 
             # Check if adding this snippet exceeds any limits
-            token_limit_reached = (token_count + box_tokens > max_tokens)
-            line_limit_reached = (line_count + box_lines > max_lines)
-            function_limit_reached = is_function and (function_count + 1 > max_functions)
+            token_limit_reached = token_count + box_tokens > max_tokens
+            line_limit_reached = line_count + box_lines > max_lines
+            function_limit_reached = is_function and (
+                function_count + 1 > max_functions
+            )
 
-            if not (token_limit_reached or line_limit_reached or function_limit_reached):
+            if not (
+                token_limit_reached or line_limit_reached or function_limit_reached
+            ):
                 # Fits: merge normally
                 merged_content.append(snippet_dict["content"])
                 relations_list.append(snippet_dict["relations"])
@@ -856,7 +863,8 @@ class CodeChunker:
                     if self.verbose:
                         logger.warning(
                             "Splitting oversized block (tokens: {} lines: {}) into sub-chunks",
-                            box_tokens, box_lines,
+                            box_tokens,
+                            box_lines,
                         )
 
                     sub_chunks = self._split_oversized(
@@ -874,7 +882,9 @@ class CodeChunker:
                     index += 1
             else:
                 # Flush current merged content as a chunk
-                start_span = 0 if start_line == 1 else cumulative_lengths[start_line - 2]
+                start_span = (
+                    0 if start_line == 1 else cumulative_lengths[start_line - 2]
+                )
                 end_span = cumulative_lengths[end_line - 1]
                 merged_chunk = Box(
                     {
@@ -936,7 +946,7 @@ class CodeChunker:
                     if (isinstance(str, Path) or is_path_like(source))
                     else f"code starting with:\n```\n{source[:100]}..\n```\n"
                 ),
-            )  
+            )
 
         return result_chunks
 

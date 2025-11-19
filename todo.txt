@@ -1,6 +1,5 @@
 # documentation
 - highlight code line in docs
-- add line numbers in the code blocks
 
 # next version
 - add support for csv, excel and eml files in subquent version
@@ -17,8 +16,8 @@ for paragraph in doc.getElementsByType(text.P):
 ``
 
 # what we have done
-- modify sentence splitter to prevent merge on thematic break lines punctuation
-- add a new constraint in code chunker; max_functions
-- update documentation
+- update metadata link ref
+- elaborate on registry for sentence splitter and document chunker md
+- add line numbers in the code blocks
 
 # done, not yet changelog

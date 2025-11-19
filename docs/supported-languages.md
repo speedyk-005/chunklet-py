@@ -117,7 +117,7 @@ You can integrate your own sentence splitting logic in two ways:
 
 **a) The Function Call Method (A Direct Approach):**
 
-```python
+```py
 from chunklet.sentence_splitter.registry import register_splitter
 
 def my_custom_splitter(text: str) -> list[str]:
@@ -130,7 +130,7 @@ register_splitter('en', callback=my_custom_splitter, name='MyCustomSplitter')
 
 **b) The Decorator Method (An Elegant Approach):**
 
-```python
+```py
 from chunklet.sentence_splitter.registry import registered_splitter
 
 @registered_splitter('fr', name='MyFrenchSplitter')

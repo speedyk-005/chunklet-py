@@ -38,7 +38,7 @@ class BaseSplitter(ABC):
 
         text (str): The input text to be split.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto').
-            
+
         Returns:
             list[str]: A list of sentences extracted from the text.
 
@@ -97,7 +97,9 @@ class SentenceSplitter(BaseSplitter):
             stripped_sent = sent.strip()
             if stripped_sent:
                 # If sentence is made of stray punctuation only
-                if PUNCTUATION_ONLY_PATTERN.fullmatch(stripped_sent) and not THEMATIC_BREAK_PATTERN.match(stripped_sent):
+                if PUNCTUATION_ONLY_PATTERN.fullmatch(
+                    stripped_sent
+                ) and not THEMATIC_BREAK_PATTERN.match(stripped_sent):
                     if processed_sentences:
                         # Limits to the first 5 ones
                         processed_sentences[-1] += stripped_sent[:5]

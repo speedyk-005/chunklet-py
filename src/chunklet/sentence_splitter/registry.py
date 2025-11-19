@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable, Iterable, Any
+from typing import Callable, Any
 from pydantic import TypeAdapter, ValidationError
 from chunklet.common.validation import validate_input, pretty_errors
 from chunklet.exceptions import CallbackError
@@ -56,7 +56,9 @@ class CustomSplitterRegistry:
             callback = args[0]
             langs = args[1:]
             if not langs:
-                raise ValueError("At least one language must be provided for the callback.")
+                raise ValueError(
+                    "At least one language must be provided for the callback."
+                )
             self._register_logic(langs, callback, name)
             return callback
         else:
@@ -96,7 +98,7 @@ class CustomSplitterRegistry:
             )
 
         if name is None:
-            if hasattr(callback, '__name__') and callback.__name__ != '<lambda>':
+            if hasattr(callback, "__name__") and callback.__name__ != "<lambda>":
                 splitter_name = callback.__name__
             else:
                 raise ValueError(
@@ -104,7 +106,7 @@ class CustomSplitterRegistry:
                 )
         else:
             splitter_name = name
-        
+
         for lang in langs:
             self._splitters[lang] = (splitter_name, callback)
 
