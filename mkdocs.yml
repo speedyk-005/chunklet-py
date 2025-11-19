@@ -68,7 +68,7 @@ nav:
 
 plugins:
   - search
-  # - mike  # Commented out for local development
+  - mike
   - mkdocstrings:
       handlers:
         python:
