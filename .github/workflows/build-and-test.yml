@@ -17,7 +17,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        pip install -e .[dev,document,code]
-    - name: Test with pytest
+        pip install -e .[dev,document,code] coveralls
+    - name: Test with pytest and generate coverage report
       run: |
-        PYTEST_ADDOPTS="" pytest tests
+        pytest --cov=src/chunklet --cov-report=xml tests
+    - name: Upload coverage to Coveralls
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+      run: |
+        coveralls --service=github
