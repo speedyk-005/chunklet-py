@@ -30,8 +30,8 @@ keywords = [
   "nlp", "chunking", "text-splitting", "llm", "rag", "ai", "multilingual",
   "text processing", "natural language processing", "data processing",
   "information retrieval", "semantic search", "document processing",
-  "code chunking", "source code analysis", "programming languages",
-  "ast parsing", "syntax highlighting", "code structure"
+  "code chunking", "source code analysis", "programming languages", 
+  "code structure",
 ]
 
 dependencies = [
