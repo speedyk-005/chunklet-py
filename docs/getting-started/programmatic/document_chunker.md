@@ -13,7 +13,7 @@
 
 Are you tired of managing multiple tools for different file types? The `DocumentChunker` offers a unified solution for processing a wide array of document formats. From PDFs and DOCX files to EPUBs and more, it handles diverse documents efficiently and elegantly.
 
-Consider the `DocumentChunker` as the orchestrator of your document processing workflow. It intelligently identifies the file type, employs the appropriate specialist to extract the text, and then seamlessly passes the content to the `PlainTextChunker` for further processing. This provides a smooth, end-to-end solution for transforming your documents into clean, chunked data.
+Consider the `DocumentChunker` as the orchestrator of your document processing workflow. It intelligently identifies the file type, employs the appropriate specialist to extract and convert the text (often to Markdown if possible), and then seamlessly passes the processed content to the `PlainTextChunker` for further segmentation. This provides a smooth, end-to-end solution for transforming your documents into clean, chunked data.
 
 Ready to simplify your document processing? Let's explore how!
 

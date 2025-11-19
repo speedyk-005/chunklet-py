@@ -122,19 +122,25 @@ Now, go forth and code! And remember, good developers always write tests. (Even 
 - [x] CLI interface
 - [x] Documents chunking with metadata.
 - [x] Code chunking based on interest point.
+- [ ] Visualization for chunks (e.g., highlighting spans in original documents)
 - Extend the file supported:
-  - [ ] Support for odf and eml files
+  - [ ] Support for odt and eml files
   - [ ] Support for tabular: csv, excel, ...
-  - [ ] support for config files: json, yalm (Flattened and converted to markdown)
 ---
 
-## Related Projects
+## How Chunklet-py Compares
 
-- [**Semchunk**](https://github.com/isaacus-dev/semchunk)
-- [**semantic-chunker**](https://github.com/Goldziher/semantic-chunker)
-- [**Chonkie**](https://github.com/chonkie-inc/chonkie)
-- [**code_chunker**](https://github.com/JimAiMoment/code-chunker) by JimAiMoment
-- [**CintraAI Code Chunker**](https://github.com/CintraAI/code-chunker)
+While there are other chunking libraries available, Chunklet-py stands out for its unique combination of versatility, performance, and ease of use. Here's a quick look at how it compares to some of the alternatives:
+
+| Library | Key Differentiator | Focus |
+| :--- | :--- | :--- |
+| **chunklet-py** | **All-in-one, lightweight, and language-agnostic with specialized algorithms.** | **Text, Code, Docs** |
+| [CintraAI Code Chunker](https://github.com/CintraAI/code-chunker) | Relies on `tree-sitter`, which can add setup complexity. | Code |
+| [Chonkie](https://github.com/chonkie-inc/chonkie) | A feature-rich pipeline tool with cloud/vector integrations, but uses a more basic sentence splitter and `tree-sitter` for code. | Pipelines, Integrations |
+| [code_chunker (JimAiMoment)](https://github.com/JimAiMoment/code-chunker) | Uses basic regex and rules with limited language support. | Code |
+| [Semchunk](https://github.com/isaacus-dev/semchunk) | Primarily for text, using a general-purpose sentence splitter. | Text |
+
+Chunklet-py's rule-based, language-agnostic approach to code chunking avoids the need for heavy dependencies like `tree-sitter`, which can sometimes introduce compatibility issues. For sentence splitting, it uses specialized libraries and algorithms for higher accuracy, rather than a one-size-fits-all approach. This makes Chunklet-py a great choice for projects that require a balance of power, flexibility, and a small footprint.
 
 ---
 

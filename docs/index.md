@@ -89,6 +89,20 @@ Here's how to get your hands dirty and unleash the power of Chunklet-py:
 
 No matter which path you choose, Chunklet is designed to make text chunking as painless (and perhaps, as entertaining) as possible. Let's get chunking!
 
+## How Chunklet-py Compares
+
+While there are other chunking libraries available, Chunklet-py stands out for its unique combination of versatility, performance, and ease of use. Here's a quick look at how it compares to some of the alternatives:
+
+| Library | Key Differentiator | Focus |
+| :--- | :--- | :--- |
+| **chunklet-py** | **All-in-one, lightweight, and language-agnostic with specialized algorithms.** | **Text, Code, Docs** |
+| [CintraAI Code Chunker](https://github.com/CintraAI/code-chunker) | Relies on `tree-sitter`, which can add setup complexity. | Code |
+| [Chonkie](https://github.com/chonkie-inc/chonkie) | A feature-rich pipeline tool with cloud/vector integrations, but uses a more basic sentence splitter and `tree-sitter` for code. | Pipelines, Integrations |
+| [code_chunker (JimAiMoment)](https://github.com/JimAiMoment/code-chunker) | Uses basic regex and rules with limited language support. | Code |
+| [Semchunk](https://github.com/isaacus-dev/semchunk) | Primarily for text, using a general-purpose sentence splitter. | Text |
+
+Chunklet-py's rule-based, language-agnostic approach to code chunking avoids the need for heavy dependencies like `tree-sitter`, which can sometimes introduce compatibility issues. For sentence splitting, it uses specialized libraries and algorithms for higher accuracy, rather than a one-size-fits-all approach. This makes Chunklet-py a great choice for projects that require a balance of power, flexibility, and a small footprint.
+
 ## The Grand Tour
 
 Wanna know what's under the hood?
@@ -98,26 +112,30 @@ Wanna know what's under the hood?
 *   [**Metadata:**](getting-started/metadata.md) Understand the rich context `chunklet` attaches to your chunks.
 *   [**Troubleshooting:**](troubleshooting.md) Solutions to common issues you might encounter.
 
-## Keeping Up-to-Date 
- 
+## Keeping Up-to-Date
+
  Stay informed about Chunklet's evolution:
- 
+
  *   [**What's New:**](whats-new.md) Discover all the exciting new features and improvements in Chunklet 2.0.
  *   [**Migration Guide:**](migration.md) Learn how to smoothly transition from previous versions to Chunklet 2.0.
- 
+
  *   [**Changelog:**](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md) See what's new, what's fixed, and what's been improved in recent versions.
- 
- 
+
+
+## 🧪 Planned Features
+
+- [x] CLI interface
+- [x] Documents chunking with metadata.
+- [x] Code chunking based on interest point.
+- [ ] Visualization for chunks (e.g., highlighting spans in original documents)
+- Extend the file supported:
+  - [ ] Support for odt and eml files
+  - [ ] Support for tabular: csv, excel, ...
+
+---
+
 ## Project Information & Contributing For the serious stuff (and if you want to join the fun):
- 
+
  *   [**GitHub Repository:**](https://github.com/speedyk-005/chunklet-py) The main hub for all things Chunklet.
  *   [**License Information:**](https://github.com/speedyk-005/chunklet-py/blob/main/LICENSE) All the necessary bits and bobs about Chunklet's license.
  *   [**Contributing:**](https://github.com/speedyk-005/chunklet-py/blob/main/CONTRIBUTING.md) Want to help make Chunklet even better? Find out how you can contribute!                                            
-
-## Related Projects
-
-- [**Semchunk**](https://github.com/isaacus-dev/semchunk)
-- [**semantic-chunker**](https://github.com/Goldziher/semantic-chunker)
-- [**Chonkie**](https://github.com/chonkie-inc/chonkie)
-- [**code_chunker**](https://github.com/JimAiMoment/code-chunker) by JimAiMoment
-- [**CintraAI Code Chunker**](https://github.com/CintraAI/code-chunker)
