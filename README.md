@@ -59,7 +59,7 @@ Whether you're preparing data for Large Language Models (LLMs), developing Retri
 And there's even more to discover!
 
 > [!NOTE]
-> For the documentation, visit our [documentation site](https://speedyk-005.github.io/chunklet-py/).
+> For the documentation, visit our [documentation site](https://speedyk-005.github.io/chunklet-py/latest).
 
 ---
 
