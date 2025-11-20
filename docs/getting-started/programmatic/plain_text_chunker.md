@@ -1,7 +1,7 @@
 # Plain Text Chunker
 
 <p align="center">
-  <img src="../../img/plain_text_chunker.jpg" alt="Plain Text Chunker" width="300"/>
+  <img src="../../../img/plain_text_chunker.jpg" alt="Plain Text Chunker" width="512"/>
 </p>
 
 ## Taming Your Text with Precision

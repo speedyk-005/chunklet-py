@@ -1,7 +1,7 @@
 # Document Chunker
 
 <p align="center">
-  <img src="../../img/document_chunker.jpeg" alt="Document Chunker" width="300"/>
+  <img src="../../../img/document_chunker.jpeg" alt="Document Chunker" width="512"/>
 </p>
 
 !!! note "Psst... Read `PlainTextChunker` First!"

@@ -1,7 +1,7 @@
 # Code Chunker
 
 <p align="center">
-  <img src="../../img/code_chunker.png" alt="Code Chunker" width="300"/>
+  <img src="../../../img/code_chunker.png" alt="Code Chunker" width="512"/>
 </p>
 
 ## Cracking the Code with Ease

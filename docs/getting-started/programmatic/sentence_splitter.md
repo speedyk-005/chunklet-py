@@ -1,7 +1,7 @@
 # Sentence Splitter
 
 <p align="center">
-  <img src="https://github.com/speedyk-005/chunklet-py/blob/major-changes/docs/img/logo_with_tagline.svg?raw=true" alt="Sentence splitter" width="300"/>
+  <img src="../../../img/sentence_splitter.jpg?raw=true" alt="Sentence splitter" width="512"/>
 </p>
 
 ## The Art of Precise Sentence Splitting
