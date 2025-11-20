@@ -17,7 +17,7 @@
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/speedyk-005/chunklet-py/actions)
 
 <p align="center">
-  <a href="https://speedyk-005.github.io/chunklet-py/" target="_blank" rel="noopener noreferrer">
+  <a href="https://speedyk-005.github.io/chunklet-py/latest" target="_blank" rel="noopener noreferrer">
     -- documentation site --
   </a>
 </p>
