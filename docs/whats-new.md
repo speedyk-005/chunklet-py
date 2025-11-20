@@ -1,3 +1,9 @@
+# What's New in Chunklet v2.0.1! 🎉
+
+## ✨ Patch Fixes in v2.0.1
+
+- **CLI Bug:** Fixed a critical unpacking bug in the `split` command. The line intended to extract sentences and confidence from `splitter.split` (e.g., `sentences, confidence = splitter.split(...)`) caused either a `ValueError` (if `splitter.split` returned a number of sentences other than exactly two) or silent, incorrect unpacking (if exactly two sentences were returned, assigning the first sentence string to `sentences` and the second to `confidence`, leading to character-level iteration). The fix now correctly separates language detection and confidence retrieval from sentence splitting, resolving both issues and ensuring accurate output.
+
 # What's New in Chunklet v2.0.0! 🎉
 
 Welcome to Chunklet v2.0.0, where we've taken a giant leap forward in text and code chunking! Our team has been hard at work refining the core architecture, enhancing language support, and making the library even more robust and user-friendly. Get ready for a quick tour of the exciting new features and significant improvements:

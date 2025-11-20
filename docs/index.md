@@ -29,7 +29,7 @@ You might be thinking, 'Can't I just split my text or code with a simple charact
 
 Each of these is tailored to preserve the original meaning and structure of your data.
 
-Whether you're preparing data for Large Language Models (LLMs), developing Retrieval-Augmented Generation (RAG) pipelines, or enhancing AI-driven document search, Chunklet-py (version 2.0) provides the precision and flexibility needed for efficient indexing, embedding, and inference across multiple formats and languages.
+Whether you're preparing data for Large Language Models (LLMs), developing Retrieval-Augmented Generation (RAG) pipelines, or enhancing AI-driven document search, Chunklet-py (version 2) provides the precision and flexibility needed for efficient indexing, embedding, and inference across multiple formats and languages.
 
 <div class="grid cards" markdown>
 

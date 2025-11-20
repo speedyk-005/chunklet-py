@@ -28,17 +28,17 @@ Chunklet-py offers optional dependencies to unlock additional functionalities, s
     ```
 *   **All Extras:** To install all optional dependencies:
     ```bash
-    pip install "chunklet-py[document,code]"
+    pip install "chunklet-py[all]"
     ```
 
 ## The Alternative Way
 
-For those who prefer to build from source, you can clone the repository and install it manually:
+For those who prefer to build from source, you can clone the repository and install it manually. This method allows for direct modification of the source code and installation of all optional features:
 
 ```bash
 git clone https://github.com/speedyk-005/chunklet-py.git
 cd chunklet-py
-pip install .
+pip install .[all]
 ```
 
 But why would you want to do that? The easy way is so much easier.
@@ -50,9 +50,14 @@ Interested in helping make Chunklet-py even better? That's fantastic! Before you
 ```bash
 git clone https://github.com/speedyk-005/chunklet-py.git
 cd chunklet-py
+# For basic development (testing, linting)
 pip install -e ".[dev]"
+# For documentation development
+pip install -e ".[docs]"
+# For comprehensive development (including all optional features like document and code chunking + docs dependencies)
+pip install -e ".[dev-all]"
 ```
 
-This command installs Chunklet-py in "editable" mode, ensuring that any changes you make to the source code are immediately reflected. The `[dev]` option includes all the necessary dependencies for running tests and building the documentation.
+These commands install Chunklet-py in "editable" mode, ensuring that any changes you make to the source code are immediately reflected. The `[dev]`, `[docs]`, and `[dev-all]` options include the necessary dependencies for specific development tasks.
 
 Now, go forth and code! And remember, good developers always write tests. (Even in a Python project, we appreciate all forms of excellent code examples!)

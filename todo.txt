@@ -16,8 +16,18 @@ for paragraph in doc.getElementsByType(text.P):
 ``
 
 # what we have done
-- update metadata link ref
-- elaborate on registry for sentence splitter and document chunker md
-- add line numbers in the code blocks
+- fix a bug in cli.py
+
+by changing
+# Split Logic
+splitter = SentenceSplitter(verbose=verbose)
+sentences, confidence = splitter.split(input_text, lang=lang)
+
+to
+# Split Logic
+splitter = SentenceSplitter(verbose=verbose)
+lang_detected, confidence = splitter.detected_top_language(input_text)
+sentences = splitter.split(input_text, lang=lang or lang_detected)
+
 
 # done, not yet changelog

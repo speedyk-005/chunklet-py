@@ -1,6 +1,6 @@
 [project]
 name = "chunklet-py"
-version = "2.0.0"
+version = "2.0.1"
 description = "A comprehensive library for advanced text, code, and document chunking, designed for LLM applications. It offers flexible, context-aware segmentation across various content types."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
@@ -71,6 +71,10 @@ code = [
   "littletree>=0.8.4",
 ]
 
+all = [
+  "chunklet-py[document,code]",
+]
+
 dev = [
   "pytest>=8.3.5",
   "pytest-cov>=6.2.1",
@@ -78,11 +82,18 @@ dev = [
   "black>=25.1.0",
   "flake8>=7.3.0",
   "flake8-pyproject>=1.2.3",
+]
+
+docs = [
   "mike>=2.1.2",
   "mkdocs-material>=9.6.20",
   "mkdocs-api-autonav>=0.4.0",
   "mkdocstrings-python>=1.17.0",
   "pymdown-extensions>=10.16.1",
+]
+
+dev-all = [
+  "chunklet-py[dev,docs,document,code]",
 ]
 
 [project.urls]

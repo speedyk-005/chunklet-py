@@ -145,7 +145,8 @@ def split_command(
 
     # Split Logic
     splitter = SentenceSplitter(verbose=verbose)
-    sentences, confidence = splitter.split(input_text, lang=lang)
+    lang_detected, confidence = splitter.detected_top_language(input_text)
+    sentences = splitter.split(input_text, lang=lang or lang_detected)
 
     # Output Handling
     if destination:
