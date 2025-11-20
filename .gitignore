@@ -7,6 +7,7 @@ __pycache__/
 
 # Installer files
 *.egg-info/
+.tar.gz
 dist/
 build/
 .pypirc
