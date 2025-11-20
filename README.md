@@ -16,6 +16,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/speedyk-005/chunklet-py/actions)
 
+<p align="center">
+  <a href="https://speedyk-005.github.io/chunklet-py/" target="_blank" rel="noopener noreferrer">
+    -- documentation site --
+  </a>
+</p>
 
 ## Why Bother with Smart Chunking?
 
