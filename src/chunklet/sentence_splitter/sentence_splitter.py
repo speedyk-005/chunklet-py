@@ -92,7 +92,6 @@ class SentenceSplitter(BaseSplitter):
         Returns:
             list[str]: Cleaned list of sentences with proper punctuation handling.
         """
-        print("before cleanup", sentences)
         processed_sentences = []
         for sent in sentences:
             stripped_sent = sent.strip()
@@ -108,7 +107,6 @@ class SentenceSplitter(BaseSplitter):
                         processed_sentences.append(stripped_sent[:2])
                 else:
                     processed_sentences.append(sent.rstrip())
-        print("after cleanup", processed_sentences)
         return processed_sentences
 
     @validate_input
