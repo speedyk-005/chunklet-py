@@ -1,6 +1,6 @@
 [project]
 name = "chunklet-py"
-version = "2.0.2"
+version = "2.0.3"
 description = "A comprehensive library for advanced text, code, and document chunking, designed for LLM applications. It offers flexible, context-aware segmentation across various content types."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }

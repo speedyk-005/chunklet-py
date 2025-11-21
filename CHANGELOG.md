@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.3] - 2025-11-21
+
+### Fixed
+
+- **Span Detection:** Fixed hardcoded distance limit that caused spans to always return (-1, -1) for longer text portions.
+- **Accuracy:** Improved span detection with adaptive budget calculation and continuation marker handling.
+
+### Changed
+
+- **Find Span Logic:** Replaced fuzzysearch-based implementation with enhanced regex-based approach for better performance and accuracy.
+
+### Removed
+
+- **Dependencies:** Removed fuzzysearch dependency.
+
 ## [2.0.2] - 2025-11-20
 
 ### Fixed
