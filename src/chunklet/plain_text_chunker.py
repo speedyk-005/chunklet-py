@@ -3,7 +3,6 @@ from collections.abc import Iterable
 import sys
 import copy
 import regex as re
-from fuzzysearch import find_near_matches
 from box import Box
 from functools import partial
 from pydantic import Field
@@ -97,29 +96,48 @@ class PlainTextChunker:
 
     def _find_span(self, text_portion: str, full_text: str) -> tuple[int, int]:
         """
-        Finds the start and end indices of a text portion within a larger text using a fuzzy match.
+        Find a multi-line substring inside a full text, ignoring separators
+        like whitespace, newlines, and punctuation between lines.
 
         Args:
-            text_portion (str): The smaller text to find.
-            full_text (str): The larger text to search within.
+            text_portion: The substring (can be multi-line) to search for.
+            full_text: The text to search within.
 
         Returns:
-            tuple[int, int]: A tuple containing the start and end indices of the match,
-                or (-1, -1) if no match is found.
+            A tuple (start, end) representing the span in full_text.
+            Returns (-1, -1) if not found.
         """
-        if not text_portion:
+        # Fast path for exact match
+        if text_portion in full_text:
+            start = full_text.find(text_portion)
+            return start, start + len(text_portion)
+
+        # Remove continuation marker from the beginning of text_portion first
+        if text_portion.startswith(self.continuation_marker):
+            text_portion = text_portion[len(self.continuation_marker):].lstrip()
+
+        lines = [line.strip() for line in text_portion.splitlines() if line.strip()]
+        if not lines:
             return -1, -1
 
-        # Search for the pattern in the full text
-        matches = find_near_matches(
-            text_portion,
-            full_text,
-            max_l_dist=10,
-        )
+        budget = len(text_portion) // 5   # 20 %
 
-        if matches:
-            first = matches[0]
-            return first.start, first.end
+        # Build flexible separator pattern that allows newlines, Unicode separators, and punctuation
+        sep = rf"""
+            [          # character class for allowed artifacts between lines
+                \n     # newline characters
+                \p{{Z}} # Unicode whitespace separators
+                \p{{P}} # punctuation characters
+            ]{{0,{budget}}}?  # bounded (0 to budget), lazy quantifier
+        """
+
+        # Join escaped lines with the separator
+        pattern = sep.join(re.escape(line) for line in lines)
+
+        m = re.search(pattern, full_text, re.M | re.VERBOSE)
+        if m:
+            return m.span()
+
         return -1, -1
 
     def _create_chunk_boxes(
@@ -150,8 +168,8 @@ class PlainTextChunker:
             chunk_box = Box()
             chunk_box.content = chunk_str.strip()
             chunk_box.metadata = copy.deepcopy(base_metadata)
-            chunk_box.metadata.chunk_num = i
-            chunk_box.metadata.span = self._find_span(chunk_str, text)
+            chunk_box.metadata['chunk_num'] = i
+            chunk_box.metadata['span'] = self._find_span(chunk_str, text)
             chunk_boxes.append(chunk_box)
         return chunk_boxes
 
@@ -199,12 +217,13 @@ class PlainTextChunker:
         sentence: str,
         remaining_tokens: int,
         token_counter: Callable[[str], int],
-    ) -> tuple[list[str], list[str]]:
+    ) -> tuple[str, str]:
         """
         Splits a sentence into clauses and fits them into a token budget.
 
         This method takes a sentence and attempts to fit its component clauses
-        into the number of remaining tokens available.
+        into the number of remaining tokens available. It returns the fitted
+        and unfitted portions as joined strings.
 
         Args:
             sentence (str): The input string to be split into clauses.
@@ -212,9 +231,9 @@ class PlainTextChunker:
             token_counter (Callable): The function needed for token counting.
 
         Returns:
-            list[str]: A List containing two strings:
-                - The clauses that fit within the token budget.
-                - The remaining unfitted clauses.
+            tuple[str, str]: A tuple containing two strings:
+                - The clauses that fit within the token budget (joined as a string).
+                - The remaining unfitted clauses (joined as a string).
         """
         clauses = CLAUSE_END_PATTERN.split(sentence)
         clauses = [cl for cl in clauses if cl.strip()]
@@ -266,7 +285,7 @@ class PlainTextChunker:
     def _group_by_chunk(
         self,
         sentences: list[str],
-        token_counter: Callable[[str], int],
+        token_counter: Callable[[str], int] | None,
         max_tokens: int,
         max_sentences: int,
         max_section_breaks: int,
@@ -278,7 +297,7 @@ class PlainTextChunker:
 
         Args:
             sentences (list[str]): A list of sentences to be chunked.
-            token_counter (Callable): The token counting function.
+            token_counter (Callable, optional): The token counting function.
             max_tokens (int): Maximum number of tokens per chunk.
             max_sentences (int): Maximum number of sentences per chunk.
             max_section_breaks (int, optional): Maximum number of section breaks per chunk.
