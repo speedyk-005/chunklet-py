@@ -75,7 +75,8 @@ DOCSTRING_STYLE_ONE = re.compile(
         r"(['\"]{3})([\s\S]*?)(['\"]{3})|"
 
         # ### ... ### or ## ... (Nim)
-        r"(###)([\s\S]*?)(###)|" r"(##)(.*?)(\s*)"
+        r"(###)([\s\S]*?)(###)|"
+        r"(##)(.*?)(\s*)|"
 
         # /** ... */ (Javadoc, C, C#, C++, etc.)
         r"(/\*{2})([\s\S]*?)(\*/)|"
@@ -106,7 +107,7 @@ FUNCTION_DECLARATION = re.compile(
     
         # C#/Java/C++/D/etc. with alphabetized modifiers
         r"(?:constexpr|friend|inline|internal|override|private|protected|public|sealed|static|virtual)\s+"
-        r"[\w\[\]<>:*]+"  # return type
+        r"[\w\[\]<>:*]+"  # The return type
         r".*?\("  # Anything including name (non-greedy) until the first open parentheses
     r")",
     re.M,

@@ -125,7 +125,7 @@ class SentenceSplitter(BaseSplitter):
             logger.info(
                 "Language detection: '{}' with confidence {}.",
                 lang_detected,
-                f"{round(confidence)  * 10}/10",
+                f"{round(confidence) * 10}/10",
             )
         return lang_detected, confidence
 

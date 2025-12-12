@@ -131,7 +131,7 @@ def chunker():
     [
         (PYTHON_CODE, 40, None, None, 3),
         (CSHARP_CODE, 50, None, None, 2),
-        (RUBY_CODE, 30, None, None, 1),
+        (RUBY_CODE, 40, None, None, 3),
         (PYTHON_CODE, None, 10, None, 4),
         (PYTHON_CODE, None, None, 2, 2),
     ],
@@ -192,6 +192,7 @@ def test_docstring_modes(chunker, code_string, all_mode_pattern, summary_mode_pa
     # Test "all" mode - full docstring should be present
     chunks_all = chunker.chunk(code_string, max_tokens=200, docstring_mode="all")
     content_all = "".join(chunk.content for chunk in chunks_all)
+    
     assert re.search(
         all_mode_pattern, content_all, re.DOTALL
     ), f"Full docstring pattern not found in 'all' mode for {code_string[:20]}..."
@@ -201,6 +202,7 @@ def test_docstring_modes(chunker, code_string, all_mode_pattern, summary_mode_pa
         code_string, max_tokens=200, docstring_mode="excluded"
     )
     content_excluded = "".join(chunk.content for chunk in chunks_excluded)
+
     assert not re.search(
         all_mode_pattern, content_excluded, re.DOTALL
     ), f"Docstring found in 'excluded' mode for {code_string[:20]}..."
@@ -210,6 +212,7 @@ def test_docstring_modes(chunker, code_string, all_mode_pattern, summary_mode_pa
         code_string, max_tokens=200, docstring_mode="summary"
     )
     content_summary = "".join(chunk.content for chunk in chunks_summary)
+
     assert re.search(
         summary_mode_pattern, content_summary
     ), f"Summary pattern not found in 'summary' mode for {code_string[:20]}..."

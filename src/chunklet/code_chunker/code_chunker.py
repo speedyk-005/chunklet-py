@@ -314,22 +314,21 @@ class CodeChunker:
             )
 
         # Process docstrings according to mode
-        if docstring_mode == "all":
-            pass
-        elif docstring_mode == "summary":
+        if docstring_mode == "summary":
             code = DOCSTRING_STYLE_ONE.sub(
                 lambda m: self._summarize_docstring_style_one(m), code
             )
             code = DOCSTRING_STYLE_TWO.sub(
                 lambda m: self._summarize_docstring_style_two(m), code
             )
-        else:  # "excluded"
+        elif docstring_mode == "excluded":
             code = DOCSTRING_STYLE_ONE.sub(
                 lambda m: self._replace_with_newlines(m), code
             )
             code = DOCSTRING_STYLE_TWO.sub(
                 lambda m: self._replace_with_newlines(m), code
             )
+        # else "all": do nothing
 
         # List of all regex patterns with the tag to annotate them
         patterns_n_tags = [
@@ -342,7 +341,7 @@ class CodeChunker:
 
         # Apply _annotate_block to all matches for each pattern
         for pattern, tag in patterns_n_tags:
-            code = pattern.sub(lambda match: self._annotate_block(tag, match), code)
+            code = pattern.sub(lambda match, tag=tag: self._annotate_block(tag, match), code)
 
         return code, cumulative_lengths
 
@@ -489,7 +488,7 @@ class CodeChunker:
 
         curr_struct = []
         buffer = defaultdict(list)
-        last_indent = -1
+        last_indent = None
         inside_func = False
         snippet_dicts = []
 
@@ -506,7 +505,6 @@ class CodeChunker:
                     inside_func = False
 
                 tag = matched.group(1)
-                deannoted_line = re.sub(rf"{matched.group(0)}", "", line)
                 deannoted_line = (
                     line[: matched.start()] + line[matched.end() :]
                 )  # slice off the annotation
@@ -729,16 +727,16 @@ class CodeChunker:
         max_lines: Annotated[int | None, Field(ge=5)] = None,
         max_functions: Annotated[int | None, Field(ge=1)] = None,
         token_counter: Callable[[str], int] | None = None,
-        include_comments: bool = False,
+        include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
         strict: bool = True,
     ) -> list[Box]:
         """
-        Extract semantic code chunks from source using structural analysis.
+        Extract semantic code chunks from source using multi-dimensional analysis.
 
         Processes source code by identifying structural boundaries (functions, classes,
-        namespaces) and grouping content into token-limited chunks while preserving
-        logical code units.
+        namespaces) and grouping content based on multiple constraints including
+        tokens, lines, and logical units while preserving semantic coherence.
 
         Args:
             source (str | Path): Raw code string or file path to process.
@@ -747,7 +745,7 @@ class CodeChunker:
             max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
             token_counter (Callable, optional): Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
-            include_comments (bool): Include comments in output chunks. Default: False.
+            include_comments (bool): Include comments in output chunks. Default: True.
             docstring_mode(Literal["summary", "all", "excluded"]): Docstring processing strategy:
                 - "summary": Include only first line of docstrings
                 - "all": Include complete docstrings
@@ -777,6 +775,11 @@ class CodeChunker:
         )
         token_counter = token_counter or self.token_counter
 
+        if not source.strip():
+            if self.verbose:
+                logger.info("Input source is empty. Returning empty list.")
+            return []
+
         if self.verbose:
             logger.info(
                 "Starting chunk processing for {}",
@@ -786,11 +789,6 @@ class CodeChunker:
                     else f"code starting with:\n```\n{source[:100]}...\n```\n"
                 ),
             )
-
-        if not source.strip():
-            if self.verbose:
-                logger.info("Input source is empty. Returning empty list.")
-            return []
 
         snippet_dicts, cumulative_lengths = self._extract_code_structures(
             source, include_comments, docstring_mode
@@ -960,7 +958,7 @@ class CodeChunker:
         max_functions: Annotated[int | None, Field(ge=1)] = None,
         token_counter: Callable[[str], int] | None = None,
         separator: Any = None,
-        include_comments: bool = False,
+        include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
         strict: bool = True,
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
@@ -982,7 +980,7 @@ class CodeChunker:
                 counter if None. Required for token-based chunking.
             separator (Any): A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
-            include_comments (bool): Include comments in output chunks. Default: False.
+            include_comments (bool): Include comments in output chunks. Default: True.
             docstring_mode(Literal["summary", "all", "excluded"]): Docstring processing strategy:
                 - "summary": Include only first line of docstrings
                 - "all": Include complete docstrings

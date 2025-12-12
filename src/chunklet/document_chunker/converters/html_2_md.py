@@ -47,7 +47,7 @@ def html_to_md(
             url = url[: max_url_length - 3] + "..."
         return f"{prefix}({url})"
 
-    return re.sub(r"(!?\[.*?\])\((.*?)\)", truncate_url, markdown_content)
+    return re.sub(r"(!?\[[^\]]*\])\((.*?)\)", truncate_url, markdown_content)
 
 
 # Example usage

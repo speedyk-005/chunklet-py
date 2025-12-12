@@ -74,7 +74,7 @@ def is_python_code(source: str | Path) -> bool:
             ast.parse(source)
             # If parsing succeeds, it's definitely Python code
             return True
-        except Exception:
+        except Exception: # noqa: S110
             # If fails, it might still be Python code (e.g., incomplete snippet), so continue with heuristics
             pass
 

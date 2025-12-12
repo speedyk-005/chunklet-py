@@ -434,14 +434,12 @@ class DocumentChunker:
         sentinel = object()
 
         # Validate all paths upfront
-        sucess_count = 0
         validated_paths = []
         for i, path in enumerate(paths):
             path = Path(path)
             try:
                 ext = self._validate_and_get_extension(path)
                 validated_paths.append((path, ext, None))
-                sucess_count += 1
             except Exception as e:
                 validated_paths.append((path, None, e))
 
