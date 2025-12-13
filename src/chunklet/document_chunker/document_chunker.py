@@ -11,6 +11,7 @@ try:
 except ImportError:
     rtf_to_text = None
 
+from chunklet.base_chunker import BaseChunker
 from chunklet.sentence_splitter import BaseSplitter
 from chunklet.plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker.processors import (
@@ -28,7 +29,7 @@ from chunklet.common.validation import validate_input, restricted_iterable
 from chunklet.exceptions import InvalidInputError, UnsupportedFileTypeError
 
 
-class DocumentChunker:
+class DocumentChunker(BaseChunker):
     """
     A comprehensive document chunker that handles various file formats.
 
@@ -185,16 +186,14 @@ class DocumentChunker:
             either a string (for simple text files) or a generator of strings (for processed documents)
             and a dictionary of metadata.
         """
-        if self.verbose:
-            logger.info("Extracting text from file {}", path)
+        self.log_info("Extracting text from file {}", path)
 
         # Prioritize custom processors from registry
         if self.processor_registry.is_registered(ext):
             texts_and_metadata, processor_name = self.processor_registry.extract_data(
                 str(path), ext
             )
-            if self.verbose:
-                logger.info("Used registered processor: {}", processor_name)
+            self.log_info("Used registered processor: {}", processor_name)
             text_or_gen, metadata = texts_and_metadata
             metadata["source"] = metadata.get("source", str(path))
             return text_or_gen, metadata
@@ -356,8 +355,7 @@ class DocumentChunker:
                 "💡 Hint: use `chunker.batch_chunk()` for this file type."
             )
 
-        if self.verbose:
-            logger.info("Starting chunk processing for path: {}.", path)
+        self.log_info("Starting chunk processing for path: {}.", path)
 
         text_content = text_content_or_generator
 
@@ -374,8 +372,7 @@ class DocumentChunker:
             base_metadata=document_metadata,
         )
 
-        if self.verbose:
-            logger.info("Generated {} chunks for {}.", len(chunk_boxes), path)
+        self.log_info("Generated {} chunks for {}.", len(chunk_boxes), path)
 
         return chunk_boxes
 

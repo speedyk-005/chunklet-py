@@ -10,11 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.1.0] - 2025-12-11
 
 ### Changed
-- Changed default `include_comments` to True
+- **Default `include_comments`:** Changed the default value of the `include_comments` parameter to `True` in the `CodeChunker.chunk()` method to align with most developer expectations for comprehensive code processing.
+- **Code Chunker Modularization:** Refactored the `CodeChunker` class for better maintainability.
+    - Split into two files: `code_chunker.py` (main chunker logic) and `_code_structure_extractor.py` (structure extraction).
+    - Modularized the complex `extract_code_structure` method by extracting helper functions to reduce cognitive load.
+- **Base Chunker Inheritance:** Introduced a new `BaseChunker` abstract base class in `base_chunker.py` to standardize the interface for all chunkers.
 
 ### Fixed
-- Fixed late-binding issue in code chunker by modifying lambda pattern substitution
-- Fixed duplicate line de-annotation logic in code chunker
+- **Late-Binding Closure Bug:** Fixed a classic Python closure bug in the code annotation loop of `CodeChunker`. The original `pattern.sub(lambda match: self._annotate_block(tag, match), code)` caused the lambda to reference the final value of `tag` after the loop completed. Resolved by changing to `pattern.sub(lambda match, tag=tag: self._annotate_block(tag, match), code)`, using the default argument trick to capture the current `tag` value at definition time.
+- **Duplicate Line De-annotation:** Removed redundant string slicing logic in `CodeChunker`'s internal processing. The line de-annotation was being called twice—once during regex substitution and again via manual slicing—creating ambiguity and potential "ghost slicing" where lines could be misinterpreted. Now relies solely on regex substitution for de-annotation, simplifying the control flow.
+- **Decorator Separation Bug:** Fixed an issue in `CodeChunker` where decorators (e.g., `@property`) were incorrectly separated from their associated functions into different chunks. Added a flush condition in `extract_code_structure` to handle the first decorator/attribute (`len(buffer["META"]) == 1`) and non-consecutive DOC lines, ensuring decorators group with their functions for better semantic chunking.
 
 ---
 

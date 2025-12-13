@@ -258,7 +258,7 @@ def test_comment_inclusion(chunker, include_comments):
     [
         (30, None, None, MissingTokenCounterError),  # Original test case
         (None, None, None, InvalidInputError),  # No limits provided
-        (None, None, 0, InvalidInputError),  # max_functions = 0
+        (None, None, 0, InvalidInputError),  # max functions = 0
     ],
 )
 def test_invalid_constraints_and_missing_token_counter(
@@ -340,7 +340,6 @@ def test_batch_chunk_different_max_tokens(max_tokens, chunker):
         chunker.batch_chunk(
             sources=MULTIPLE_SOURCES,
             max_tokens=max_tokens,
-            # show_progress=False,
         )
     )
 

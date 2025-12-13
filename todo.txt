@@ -1,8 +1,9 @@
 # documentation
 - highlight code line in docs
+- rebuild documentation
 
 # next version
-- fix bug in code chunker that make decorator get separated
+- introduced a base for the chunkers and add some fx or helpers that will be helpful for all
 - come with the vizualization of the chunking process
 - add support for csv, excel and eml files in subquent version
 - add support for odf with odfpy
@@ -10,10 +11,11 @@
 
 # what we have done
 
+- modularize code chunker. split it into two files, and modularize its complex method futher to reduce cognitive effort
+- make all chunkers inherit from a base to insure consistencies
+- fix bug in code chunker that make decorator get separated
 
 # done, not yet changelog
-- Fix a bug in code chunker where line de-annotation logic was called twice, once in regex substitution and a string slice. That might cause ghost chunking bugs. we keep the regex one
-- set include_comments to True by default
-- fix a late-binding problem by chaninging pattern.sub(lambda match: self._annotate_block(tag, match), code) by pattern.sub(lambda match, tag=tag: self._annotate_block(tag, match), code)
-- plus some other code cleaning
+
+
 

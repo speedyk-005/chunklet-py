@@ -8,6 +8,7 @@ from functools import partial
 from pydantic import Field
 from loguru import logger
 
+from chunklet.base_chunker import BaseChunker
 from chunklet.sentence_splitter import SentenceSplitter, BaseSplitter
 from chunklet.common.validation import validate_input, restricted_iterable
 from chunklet.common.batch_runner import run_in_batch
@@ -31,7 +32,7 @@ SECTION_BREAK_PATTERN = re.compile(
 )
 
 
-class PlainTextChunker:
+class PlainTextChunker(BaseChunker):
     """
     A powerful text chunking utility offering flexible strategies for optimal text segmentation.
 
@@ -452,11 +453,10 @@ class PlainTextChunker:
         if max_tokens is not None and not (token_counter or self.token_counter):
             raise MissingTokenCounterError()
 
-        if self.verbose:
-            logger.info(
-                "Starting chunk processing for text starting with: {}.",
-                f"{text[:100]}...",
-            )
+        self.log_info(
+            "Starting chunk processing for text starting with: {}.",
+            f"{text[:100]}...",
+        )
 
         # Adjust limits for _group_by_chunk's internal use
         if max_tokens is None:
@@ -467,8 +467,7 @@ class PlainTextChunker:
             max_section_breaks = sys.maxsize
 
         if not text.strip():
-            if self.verbose:
-                logger.info("Input text is empty. Returning empty list.")
+            self.log_info("Input text is empty. Returning empty list.")
             return []
 
         try:

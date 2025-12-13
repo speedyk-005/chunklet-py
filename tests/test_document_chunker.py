@@ -85,7 +85,7 @@ def test_chunk_method_with_custom_processor(tmp_path, mocker, chunker, registry)
 
     # Define and register a mock custom processor callback
     @registry.register(".mock", name="MockProcessor")
-    def mock_custom_processor_callback(file_path: str) -> str:
+    def mock_custom_processor_callback(file_path: str) -> tuple[str, dict]:
         return "Processed failed.", {"mock": "metadata"}
 
     try:

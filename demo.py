@@ -1,29 +1,57 @@
-from chunklet.plain_text_chunker import PlainTextChunker
-from chunklet.common.token_utils import count_tokens
+from chunklet.code_chunker import CodeChunker
 
 
-def simple_token_counter(text: str) -> int:
-    """A simple token counter that splits by spaces."""
-    return len(text.split())
+# Python code sample with decorators
+code_sample = '''
+"""Module docstring for demo."""
 
+import os
 
-# Text from the example
-haystack = "I am writing a letter ! Sometimes, I forget to put spaces and do weird stuff with punctuation ?"
+class Calculator:
+    """A simple calculator class."""
 
-# Instantiate the chunker with a simple token counter
-chunker = PlainTextChunker(token_counter=simple_token_counter)
+    def __init__(self):
+        self._value = 0
+        self._verbose = True
 
-# Chunk the text with a max_tokens limit that will likely split the text
-# The goal is to see if the span of the second chunk is correctly identified.
-chunk_boxes = chunker.chunk(text=haystack, max_tokens=12)
+    @property
+    def current_value(self):
+        """Get the current value."""
+        return self.value
+
+    @current_value.setter
+    def current_value(self, value):
+        """Set the current value."""
+        self.value = value
+
+    def add(self, x, y):
+        """Add two numbers."""
+        result = x + y
+        return result
+
+    def multiply(self, x, y):
+        """Multiply two numbers."""
+        return x * y
+
+def standalone_function():
+    """A standalone function."""
+    return True
+'''
+
+# Instantiate the chunker
+chunker = CodeChunker(verbose=True)
+
+# Chunk the code with max_functions=1 to see splitting
+chunk_boxes = chunker.chunk(source=code_sample, max_functions=1)
 
 # Print the results
-print(f"Original Text: '{haystack}'")
-print("-" * 20)
+print("=" * 50)
 for i, chunk_box in enumerate(chunk_boxes):
     print(f"Chunk #{i+1}:")
-    print(f"  Content: '{chunk_box.content}'")
-    print(f"  Metadata Span: {chunk_box.metadata.span}")
-    start, end = chunk_box.metadata.span
-    print(f"  Span in Original: '{haystack[start:end]}'")
-    print("-" * 20)
+    print(f"  Content:\n{chunk_box.content}")
+    print(f"  Tree: {chunk_box.metadata.tree}")
+    print(f"  Start Line: {chunk_box.metadata.start_line}")
+    print(f"  End Line: {chunk_box.metadata.end_line}")
+    print(f"  Span: {chunk_box.metadata.span}")
+    print(f"  Source: {chunk_box.metadata.source}")
+    print("=" * 50)
