@@ -354,8 +354,59 @@ class CodeChunker(BaseChunker):
             source, include_comments, docstring_mode
         )
 
-        # Grouping logic
+        result_chunks = self._group_by_chunk(
+            snippet_dicts=snippet_dicts,
+            cumulative_lengths=cumulative_lengths,
+            token_counter=token_counter,
+            max_tokens=max_tokens,
+            max_lines=max_lines,
+            max_functions=max_functions,
+            strict=strict,
+            source=source,
+        )
 
+        self.log_info(
+            "Generated {} chunk(s) for the {}",
+            len(result_chunks),
+            (
+                f"source: {str(Path)}"
+                if (isinstance(str, Path) or is_path_like(source))
+                else f"code starting with:\n```\n{source[:100]}...\n```\n"
+            ),
+        )
+
+        return result_chunks
+
+    def _group_by_chunk(
+        self,
+        snippet_dicts: list[dict],
+        cumulative_lengths: tuple[int, ...],
+        token_counter: Callable[[str], int] | None,
+        max_tokens: int,
+        max_lines: int,
+        max_functions: int,
+        strict: bool,
+        source: str | Path,
+    ) -> list[Box]:
+        """
+        Group code snippets into chunks based on specified constraints.
+
+        Iteratively merges snippets into chunks while respecting token, line, and function limits.
+        Handles oversized snippets by splitting them if strict mode is disabled.
+
+        Args:
+            snippet_dicts (list[dict]): List of extracted code snippet dictionaries.
+            cumulative_lengths (tuple[int, ...]): Cumulative character lengths for span calculation.
+            token_counter (Callable[[str], int] | None): Function to count tokens in text.
+            max_tokens (int): Maximum tokens per chunk.
+            max_lines (int): Maximum lines per chunk.
+            max_functions (int): Maximum functions per chunk.
+            strict (bool): If True, raise error on oversized snippets; if False, split them.
+            source (str | Path): Original source for metadata.
+
+        Returns:
+            list[Box]: List of chunk boxes with content and metadata.
+        """
         merged_content = []
         relations_list = []
         start_line = None
@@ -413,11 +464,12 @@ class CodeChunker(BaseChunker):
                         "refactoring the oversized block, or setting 'strict=False' to allow automatic splitting of oversized blocks."
                     )
                 else:  # Else split further
-                    logger.warning(
-                        "Splitting oversized block (tokens: {} lines: {}) into sub-chunks",
-                        box_tokens,
-                        box_lines,
-                    )
+                    if self.verbose:
+                        logger.warning(
+                            "Splitting oversized block (tokens: {} lines: {}) into sub-chunks",
+                            box_tokens,
+                            box_lines,
+                        )
 
                     sub_chunks = self._split_oversized(
                         snippet_dict,
@@ -488,16 +540,6 @@ class CodeChunker(BaseChunker):
                 }
             )
             result_chunks.append(merged_chunk)
-
-        self.log_info(
-            "Generated {} chunk(s) for the {}",
-            len(result_chunks),
-            (
-                f"source: {str(Path)}"
-                if (isinstance(str, Path) or is_path_like(source))
-                else f"code starting with:\n```\n{source[:100]}...\n```\n"
-            ),
-        )
 
         return result_chunks
 

@@ -66,7 +66,7 @@ The `chunk` command is where the real magic happens! It's your versatile tool fo
 |---|---|---|
 | `<TEXT>` | The input text to chunk. If not provided, `--source` must be used. | None |
 | `--source, -s <PATH>` | Path(s) to one or more files or directories to read input from. Repeat for multiple sources (e.g., `-s file1.txt -s dir/`). | None |
-| `--destination, -d <PATH>` | Path to a file (for single output) or a directory (for batch output) to write the chunks. If not provided, output goes to STDOUT. | STDOUT |
+| `--destination, -d <PATH>` | Path to a file (writes JSON for `.json` extensions or existing files) or directory (writes separate files) to write the chunks. If a non-JSON file exists, a warning is shown and JSON is written. If not provided, output goes to STDOUT. | STDOUT |
 | `--max-tokens` | Maximum number of tokens per chunk. Applies to all chunking strategies. (Must be >= 12) | None |
 | `--max-sentences` | Maximum number of sentences per chunk. Applies to PlainTextChunker and DocumentChunker. (Must be >= 1) | None |
 | `--max-section-breaks` | Maximum number of section breaks per chunk. Applies to PlainTextChunker and DocumentChunker. (Must be >= 1) | None |
@@ -292,6 +292,14 @@ chunklet chunk \
   --max-tokens 50 \
   --tokenizer-command "python ./my_llm_tokenizer.py" \
   --metadata
+```
+
+##### Scenario 5: Saving Chunks as JSON with Metadata
+
+Save processed chunks directly as a JSON file for easy parsing and integration:
+
+```bash
+chunklet chunk --source document.pdf --doc --destination chunks.json --metadata
 ```
 
 ---

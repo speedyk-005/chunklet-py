@@ -254,7 +254,7 @@ class CodeStructureExtractor:
             code = DOCSTRING_STYLE_TWO.sub(
                 lambda m: self._replace_with_newlines(m), code
             )
-        # else "all": do nothing
+        # Else "all": do nothing
 
         # List of all regex patterns with the tag to annotate them
         patterns_n_tags = [

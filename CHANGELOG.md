@@ -15,11 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Split into two files: `code_chunker.py` (main chunker logic) and `_code_structure_extractor.py` (structure extraction).
     - Modularized the complex `extract_code_structure` method by extracting helper functions to reduce cognitive load.
 - **Base Chunker Inheritance:** Introduced a new `BaseChunker` abstract base class in `base_chunker.py` to standardize the interface for all chunkers.
+- **Refactoring for Readability and Modularity:** Split functions into helpers across PlainTextChunker, CodeChunker, and CLI to reduce cognitive load. Improved variable names, added docstrings, and simplified conditionals for better codebase readability.
+- **Documentation Updates:** Modified `cli.md` and `code_chunker.md` to clarify destination behavior, JSON output, and add new scenarios for better user guidance.
 
 ### Fixed
 - **Late-Binding Closure Bug:** Fixed a classic Python closure bug in the code annotation loop of `CodeChunker`. The original `pattern.sub(lambda match: self._annotate_block(tag, match), code)` caused the lambda to reference the final value of `tag` after the loop completed. Resolved by changing to `pattern.sub(lambda match, tag=tag: self._annotate_block(tag, match), code)`, using the default argument trick to capture the current `tag` value at definition time.
 - **Duplicate Line De-annotation:** Removed redundant string slicing logic in `CodeChunker`'s internal processing. The line de-annotation was being called twice—once during regex substitution and again via manual slicing—creating ambiguity and potential "ghost slicing" where lines could be misinterpreted. Now relies solely on regex substitution for de-annotation, simplifying the control flow.
 - **Decorator Separation Bug:** Fixed an issue in `CodeChunker` where decorators (e.g., `@property`) were incorrectly separated from their associated functions into different chunks. Added a flush condition in `extract_code_structure` to handle the first decorator/attribute (`len(buffer["META"]) == 1`) and non-consecutive DOC lines, ensuring decorators group with their functions for better semantic chunking.
+- **CLI Destination Logic:** Broke down the `chunk` command into smaller methods and fixed out-of-design destination handling by removing input count restrictions, ensuring consistent JSON file output and directory handling.
 
 ---
 
