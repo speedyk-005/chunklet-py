@@ -11,11 +11,12 @@
 
 # what we have done
 
-- modularize code chunker. split it into two files, and modularize its complex method futher to reduce cognitive effort
-- make all chunkers inherit from a base to insure consistencies
-- fix bug in code chunker that make decorator get separated
 
 # done, not yet changelog
 
+refator:
 
-
+- split some fx into helpers to reduce cognitive load
+- do some refactor to make the codebasde more readable
+- modularize cli methods
+- fix the out of design logic and restricted usage in cli for destinationa as file.

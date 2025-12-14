@@ -7,6 +7,17 @@ from loguru import logger
 from chunklet.common.validation import safely_count_iterable
 
 
+def capture_result_and_exception(func):
+    """Decorator to capture result and exception from a function call."""
+    def wrapper(*args, **kwargs):
+        try:
+            res = func(*args, **kwargs)
+            return res, None
+        except Exception as e:
+            return None, e
+    return wrapper
+
+
 def run_in_batch(
     func: Callable,
     iterable_of_args: Iterable,
@@ -49,14 +60,6 @@ def run_in_batch(
             logger.info("Input {} is empty. Returning empty iterator.", iterable_name)
         return iter([])
 
-    # Wrapper to capture result/exception
-    def chunk_func(*args, **kwargs):
-        try:
-            res = func(*args, **kwargs)
-            return res, None
-        except Exception as e:
-            return None, e
-
     failed_count = 0
     try:
         with WorkerPool(n_jobs=n_jobs) as pool:
@@ -68,7 +71,7 @@ def run_in_batch(
             }
 
             task_iter = imap_func(
-                chunk_func,
+                capture_result_and_exception(func),
                 iterable_of_args,
                 iterable_len=total,
                 progress_bar=show_progress,
@@ -87,9 +90,10 @@ def run_in_batch(
                             error,
                         )
                         break
-                    else:  # skip
-                        logger.warning("Skipping a failed task.\nReason: {}", error)
-                        continue
+                        
+                    #  Else: skip
+                    logger.warning("Skipping a failed task.\nReason: {}", error)
+                    continue
 
                 yield from res
 

@@ -45,7 +45,7 @@ app = typer.Typer(
 )
 
 
-def create_external_tokenizer(command_str: str):
+def _create_external_tokenizer(command_str: str):
     command_list = shlex.split(command_str)
 
     def external_tokenizer(text):
@@ -64,6 +64,139 @@ def create_external_tokenizer(command_str: str):
             sys.exit(1)
 
     return external_tokenizer
+
+
+def _extract_files(source: Optional[List[Path]]) -> List[Path]:
+    """Extract and validate file paths from the source list."""
+    file_paths = []
+
+    for path in source:
+        path = path.resolve()
+
+        if is_path_like(str(path)):
+            if path.is_file():
+                file_paths.append(path)
+            elif path.is_dir():
+                file_paths.extend([p for p in path.glob("**/*") if p.is_file()])
+            else:
+                # This single 'else' catches paths that pass the heuristic but
+                # either don't exist OR exist but are special file types
+                # (e.g., pipes, sockets, broken symlinks, etc.)
+                typer.echo(
+                    f"Warning: '{path}' is path-like but was not found "
+                    "or is not a processable file/directory. Skipping.",
+                    err=True,
+                )
+        else:
+            # Fails the path-like regex heuristic check
+            typer.echo(
+                f"Warning: '{path}' does not resemble a valid file system path "
+                "(failed heuristic check). Skipping.",
+                err=True,
+            )
+
+    if not file_paths:
+        typer.echo(
+            "Warning: No processable files found in the specified source(s). Exiting.",
+            err=True,
+        )
+        raise typer.Exit(code=0)
+
+    return file_paths
+
+
+def _write_chunks(chunks, destination: Path, metadata: bool):
+    """Write chunks to a destination (file as JSON or directory as separate files)."""
+    if destination.suffix == '.json' or destination.is_file():
+        # Write as JSON
+        if destination.suffix != '.json':
+            typer.echo(
+                f"Warning: Writing to a non-JSON file extension '{destination.suffix}'. Output will be JSON format.",
+                err=True,
+            )
+            
+        all_chunks = [chunk_box.to_dict() for chunk_box in chunks]
+        
+        if not metadata:
+            for chunk_dict in all_chunks:
+                del chunk_dict["metadata"]
+                
+        json_str = json.dumps(all_chunks, indent=4)
+        destination.write_text(json_str, encoding="utf-8")
+        typer.echo(f"Successfully wrote {len(all_chunks)} chunks to {destination} as JSON")
+        
+    else:
+        # Write to directory
+        destination.mkdir(parents=True, exist_ok=True)
+        total_chunks_written = 0
+        processed_sources = set()
+
+        for chunk_box in chunks:
+            source_name = chunk_box.metadata["source"]
+            base_name = Path(source_name).stem
+
+            base_output_filename = (
+                f"{base_name}_chunk_{chunk_box.metadata['chunk_num']}"
+            )
+
+            # Write content file
+            output_txt_path = destination / f"{base_output_filename}.txt"
+            with open(output_txt_path, "w", encoding="utf-8") as f:
+                f.write(chunk_box.content + "\n")
+
+            total_chunks_written += 1
+
+            # Write metadata file if requested
+            if metadata:
+                output_json_path = destination / f"{base_output_filename}.json"
+                with open(output_json_path, "w", encoding="utf-8") as f:
+                    # Ensures metadata is a standard dict before dumping
+                    data_to_dump = (
+                        chunk_box.metadata.to_dict()
+                        if hasattr(chunk_box.metadata, "to_dict")
+                        else dict(chunk_box.metadata)
+                    )
+                    json.dump(data_to_dump, f, indent=4)
+
+            processed_sources.add(source_name)
+
+        message = (
+            f"Successfully processed {len(processed_sources)} input(s)"
+            f"and wrote {total_chunks_written} chunk file(s) to {destination}"
+        )
+        if metadata:
+            message += " (with .json metadata files)."
+        else:
+            message += "."
+        typer.echo(message)
+
+
+def _print_chunks(chunks, destination: Optional[Path], metadata: bool):
+    """Print or write chunks to stdout or a single file."""
+    output_content = []
+
+    chunk_counter = 0
+    for chunk_box in chunks:
+        chunk_counter += 1
+        output_content.append(f"## --- Chunk {chunk_counter} ---")
+        output_content.append(chunk_box.content)
+        output_content.append("")
+        if metadata:
+            chunk_metadata = chunk_box.metadata.to_dict()
+            output_content.append("\n--- Metadata ---")  # Use a sub-header
+
+            for key, value in chunk_metadata.items():
+                # Use clean pipe formatting for terminal style tables
+                output_content.append(f"| {key}: {value}")
+
+            output_content.append("\n")
+
+    output_str = "\n".join(output_content)
+
+    if destination:
+        destination.write_text(output_str, encoding="utf-8")
+    else:
+        typer.echo(output_str)
 
 
 @app.command(name="split", help="Splits text or a single file into sentences.")
@@ -296,19 +429,11 @@ def chunk_command(
             "Error: No input provided. Please provide a text, or use the --source option.",
             err=True,
         )
-        typer.echo(
-            "💡 Hint: Use 'chunklet --help' for more information and usage examples.",
-            err=True,
-        )
         raise typer.Exit(code=1)
 
     if len(provided_inputs) > 1:
         typer.echo(
             "Error: Please provide either a text string, or use the --source option, but not both.",
-            err=True,
-        )
-        typer.echo(
-            "💡 Hint: Use 'chunklet --help' for more information and usage examples.",
             err=True,
         )
         raise typer.Exit(code=1)
@@ -323,9 +448,7 @@ def chunk_command(
     # --- Tokenizer setup ---
     token_counter = None
     if tokenizer_command:
-        token_counter = create_external_tokenizer(tokenizer_command)
-
-    all_results = []
+        token_counter = _create_external_tokenizer(tokenizer_command)
 
     # Construct chunk_kwargs dynamically
     chunk_kwargs = {
@@ -374,66 +497,34 @@ def chunk_command(
             text=text,
             **chunk_kwargs,
         )
-        all_results.append(chunks)
 
     elif source:
-        file_paths = []
+        file_paths = _extract_files(source)
 
-        for path in source:
-            path = path.resolve()
-
-            if is_path_like(str(path)):
-                if path.is_file():
-                    file_paths.append(path)
-                elif path.is_dir():
-                    file_paths.extend([p for p in path.glob("**/*") if p.is_file()])
-                else:
-                    # This single 'else' catches paths that pass the heuristic but
-                    # either don't exist OR exist but are special file types
-                    # (e.g., pipes, sockets, broken symlinks, etc.)
-                    typer.echo(
-                        f"Warning: '{path}' is path-like but was not found "
-                        "or is not a processable file/directory. Skipping.",
-                        err=True,
-                    )
-            else:
-                # Fails the path-like regex heuristic check
-                typer.echo(
-                    f"Warning: '{path}' does not resemble a valid file system path "
-                    "(failed heuristic check). Skipping.",
-                    err=True,
-                )
-
-        if not file_paths:
-            typer.echo(
-                "Warning: No processable files found in the specified source(s). Exiting.",
-                err=True,
-            )
-            raise typer.Exit(code=0)
-
-        if len(file_paths) == 1 and file_paths[0].suffix not in {
-            ".pdf",
-            ".epub",
-            ".docx",
-        }:
+        if (
+            len(file_paths) == 1 
+            and file_paths[0].suffix not in {
+                ".pdf",
+                ".epub",
+                ".docx",
+            }
+        ):
             single_file = file_paths[0]
             chunks = chunker_instance.chunk(
                 path=single_file,
                 **chunk_kwargs,
             )
-            all_results.append(chunks)
         else:
             # Batch input logic
-            all_results_gen = chunker_instance.batch_chunk(
+            chunks = chunker_instance.batch_chunk(
                 paths=file_paths,
                 n_jobs=n_jobs,
                 show_progress=True,
                 on_errors=on_errors,
                 **chunk_kwargs,
             )
-            all_results.append(all_results_gen)
-
-    if not all_results:
+        
+    if not chunks:
         typer.echo(
             "Warning: No chunks were generated. "
             "This might be because the input was empty or did not contain any processable content.",
@@ -443,87 +534,11 @@ def chunk_command(
 
     # --- Output handling ---
 
-    # Check for conflict: multi-input requires directory destination
-    if destination and destination.is_file():
-        typer.echo(
-            "Error: When processing multiple inputs, '--destination' must be a directory, not a file.",
-            err=True,
-        )
-        raise typer.Exit(code=1)
-
-    if destination and len(destination):
-        # This is the equivalent of the old `if output_dir:` block
-        destination.mkdir(parents=True, exist_ok=True)
-        total_chunks_written = 0
-        processed_sources = set()
-
-        for res in all_results:
-            for chunk_box in res:
-                source_name = chunk_box.metadata["source"]
-                base_name = Path(source_name).stem
-
-                base_output_filename = (
-                    f"{base_name}_chunk_{chunk_box.metadata['chunk_num']}"
-                )
-
-                # Write content file
-                output_txt_path = destination / f"{base_output_filename}.txt"
-                with open(output_txt_path, "w", encoding="utf-8") as f:
-                    f.write(chunk_box.content + "\n")
-
-                total_chunks_written += 1
-
-                # Write metadata file if requested
-                if metadata:
-                    output_json_path = destination / f"{base_output_filename}.json"
-                    with open(output_json_path, "w", encoding="utf-8") as f:
-                        # Ensures metadata is a standard dict before dumping
-                        data_to_dump = (
-                            chunk_box.metadata.to_dict()
-                            if hasattr(chunk_box.metadata, "to_dict")
-                            else dict(chunk_box.metadata)
-                        )
-                        json.dump(data_to_dump, f, indent=4)
-
-                processed_sources.add(source_name)
-
-        message = (
-            f"Successfully processed {len(processed_sources)} input(s)"
-            f"and wrote {total_chunks_written} chunk file(s) to {destination}"
-        )
-        if metadata:
-            message += " (with .json metadata files)."
-        else:
-            message += "."
-        typer.echo(message)
+    if destination:
+        _write_chunks(chunks, destination, metadata)
 
     else:
-        # This is the equivalent of the old `else:` block (stdout or single output_file)
-        output_content = []
-
-        chunk_counter = 0
-        for res in all_results:
-            for chunk_box in res:
-                chunk_counter += 1
-                output_content.append(f"## --- Chunk {chunk_counter} ---")
-                output_content.append(chunk_box.content)
-                output_content.append("")
-                if metadata:
-                    chunk_metadata = chunk_box.metadata.to_dict()
-                    output_content.append("\n--- Metadata ---")  # Use a sub-header
-
-                    for key, value in chunk_metadata.items():
-                        # Use clean pipe formatting for terminal style tables
-                        output_content.append(f"| {key}: {value}")
-
-                    output_content.append("\n")
-
-        output_str = "\n".join(output_content)
-
-        if destination:
-            destination.write_text(output_str, encoding="utf-8")
-        else:
-            typer.echo(output_str)
+        _print_chunks(chunks, destination, metadata)
 
 
 @app.callback(invoke_without_command=True)

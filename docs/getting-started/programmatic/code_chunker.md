@@ -120,7 +120,7 @@ for i, chunk in enumerate(chunks):
 ```
 
 1.  Sets the maximum number of lines per chunk. If a code block exceeds this limit, it will be split.
-2.  Set to True to include comments in the output chunks.
+2.  Set to True to include comments in the output chunks. Defaults is True.
 3.  `docstring_mode="all"` ensures that complete docstrings, with all their multi-line details, are preserved in the code chunks. Other options are `"summary"` to include only the first line, or `"excluded"` to remove them entirely. Default is "all".
 4.  When `strict=False`, structural blocks (like functions or classes) that exceed the limit set will be split into smaller chunks. If `strict=True` (default), a `TokenLimitError` would be raised instead.
 
