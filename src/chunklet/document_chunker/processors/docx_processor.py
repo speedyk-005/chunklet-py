@@ -1,5 +1,4 @@
 from typing import Any, Generator
-from more_itertools import chunked
 
 # mammoth and docx are lazily imported
 
@@ -7,7 +6,7 @@ from chunklet.document_chunker.processors.base_processor import BaseProcessor
 from chunklet.document_chunker.converters.html_2_md import html_to_md
 
 
-class DocxProcessor(BaseProcessor):
+class DOCXProcessor(BaseProcessor):
     """
     Processor class for extracting text and metadata from DOCX files.
 
@@ -67,13 +66,13 @@ class DocxProcessor(BaseProcessor):
         return metadata
 
     def extract_text(self) -> Generator[str, None, None]:
-        """Extracts the text content from the DOCX file in Markdown format.
+        """Extracts text content from DOCX file in Markdown format, yielding chunks for efficient processing.
 
         Images are replaced with a placeholder "[Image - num]".
-        Text is yielded in blocks of approximately 10 paragraphs each.
+        Text is yielded in chunks of approximately 4000 characters each to simulate pages and enhance parallel execution.
 
         Yields:
-            str: A block of Markdown text, approximately 10 paragraphs each.
+            str: A chunk of text, approximately 4000 characters each.
         """
         try:  # Lazy import
             import mammoth
@@ -102,15 +101,40 @@ class DocxProcessor(BaseProcessor):
         # Now we can convert it to markdown
         markdown_content = html_to_md(raw_text=html_content)
 
-        # Chunk its paragraphs into groups of 8 for faster processing.
+        # Split into paragraphs and accumulate by character count (~4000 chars per chunk)
         paragraphs = markdown_content.split("\n\n")
-        for paragraph_chunk in chunked(paragraphs, 8):
-            yield "\n\n".join(paragraph_chunk)
+        current_chunk = []
+        char_count = 0
+        max_chunk_size = 4000
+
+        for paragraph in paragraphs:
+            para_length = len(paragraph)
+
+            # If adding this paragraph would exceed the limit, yield current chunk
+            if char_count + para_length > max_chunk_size and current_chunk:
+                yield "\n\n".join(current_chunk)
+                current_chunk = []
+                char_count = 0
+
+            # If a single paragraph is longer than max_chunk_size, yield it as its own chunk
+            if para_length > max_chunk_size:
+                if current_chunk:
+                    yield "\n\n".join(current_chunk)
+                    current_chunk = []
+                    char_count = 0
+                yield paragraph
+            else:
+                current_chunk.append(paragraph)
+                char_count += para_length
+
+        # Yield any remaining content
+        if current_chunk:
+            yield "\n\n".join(current_chunk)
 
 
 if __name__ == "__main__":
     file_path = "samples/Lorem Ipsum.docx"
-    processor = DocxProcessor(file_path)
+    processor = DOCXProcessor(file_path)
 
     # Extract metadata
     metadata = processor.extract_metadata()

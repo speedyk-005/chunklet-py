@@ -9,12 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.1.0] - 2025-12-11
 
+### Added
+- **ODF Support:** Added full support for OpenDocument Text (.odt) files with a new `ODTProcessor` class using the `odfpy` library.
+- **Table Processing:** Added support for CSV and Excel (.xlsx) files with automatic Markdown table conversion using the `tabulate2` library.
+- **Character-Based Chunking:** Implemented 4k character chunking for DOCX and ODT processors to simulate page-sized segments and enhance parallel execution capabilities.
+
 ### Changed
 - **Default `include_comments`:** Changed the default value of the `include_comments` parameter to `True` in the `CodeChunker.chunk()` method to align with most developer expectations for comprehensive code processing.
-- **Code Chunker Modularization:** Refactored the `CodeChunker` class for better maintainability.
-    - Split into two files: `code_chunker.py` (main chunker logic) and `_code_structure_extractor.py` (structure extraction).
-    - Modularized the complex `extract_code_structure` method by extracting helper functions to reduce cognitive load.
 - **Base Chunker Inheritance:** Introduced a new `BaseChunker` abstract base class in `base_chunker.py` to standardize the interface for all chunkers.
+- **PDF Processor Modularity:** Refactored `PDFProcessor.extract_text()` method for better modularity with improved text cleaning utilities.
 - **Refactoring for Readability and Modularity:** Split functions into helpers across PlainTextChunker, CodeChunker, and CLI to reduce cognitive load. Improved variable names, added docstrings, and simplified conditionals for better codebase readability.
 - **Documentation Updates:** Modified `cli.md` and `code_chunker.md` to clarify destination behavior, JSON output, and add new scenarios for better user guidance.
 

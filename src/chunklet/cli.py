@@ -504,9 +504,10 @@ def chunk_command(
         if (
             len(file_paths) == 1 
             and file_paths[0].suffix not in {
-                ".pdf",
-                ".epub",
                 ".docx",
+                ".epub",
+                ".pdf",
+                ".odt",
             }
         ):
             single_file = file_paths[0]
