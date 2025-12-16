@@ -1,22 +1,19 @@
 # documentation
 - highlight code line in docs
-- rebuild documentation
+- update the chunk and bastch chunk return type in the docs
+- add instalation link or code block at top for each chunker
 
-# next version
-- introduced a base for the chunkers and add some fx or helpers that will be helpful for all
-- come with the vizualization of the chunking process
-- add support for csv, excel and eml files in subquent version
-- add support for odf with odfpy
 
+- in visualization, use argparse to support bash arg as token counter with the help of the cli cmd to tk
+- add a chunk vizualizer
+- replace mimetypes by content_types in vizualizer
+- use charset-normalizer and ftfy
+- mention the len(path) erro in when suing destination in changelog and linkt to issue
+- add a new test case in test code chunker for the decorator to ensure we always catch such issue again
+- retest it with the code that triggered the bugs
 
 # what we have done
 
 
 # done, not yet changelog
 
-refator:
-
-- split some fx into helpers to reduce cognitive load
-- do some refactor to make the codebasde more readable
-- modularize cli methods
-- fix the out of design logic and restricted usage in cli for destinationa as file.

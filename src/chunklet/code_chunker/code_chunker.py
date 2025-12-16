@@ -238,145 +238,6 @@ class CodeChunker(BaseChunker):
 
         return sub_boxes
 
-    def _validate_constraints(
-        self,
-        max_tokens: int | None,
-        max_lines: int | None,
-        max_functions: int | None,
-        token_counter: Callable[[str], int] | None,
-    ) -> tuple[int, int, int]:
-        """
-        Validates that at least one chunking constraint is provided and sets default values.
-
-        Args:
-            max_tokens (int | None): Maximum number of tokens per chunk.
-            max_lines (int | None): Maximum number of lines per chunk.
-            max_functions (int | None): Maximum number of functions per chunk.
-            token_counter (Callable[[str], int] | None): Function that counts tokens in text.
-
-        Returns:
-            tuple[int, int, int]: Adjusted max_tokens, max_lines, and max_functions values.
-
-        Raises:
-            InvalidInputError: If no chunking constraints are provided.
-            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
-        """
-        if not any((max_tokens, max_lines, max_functions)):
-            raise InvalidInputError(
-                "At least one of 'max_tokens', 'max_lines', or 'max_functions' must be provided."
-            )
-
-        # If token_counter is required but not provided
-        if max_tokens is not None and not (token_counter or self.token_counter):
-            raise MissingTokenCounterError()
-
-        # Adjust limits for internal use
-        if max_tokens is None:
-            max_tokens = sys.maxsize
-        if max_lines is None:
-            max_lines = sys.maxsize
-        if max_functions is None:
-            max_functions = sys.maxsize
-
-        return max_tokens, max_lines, max_functions
-
-    @validate_input
-    def chunk(
-        self,
-        source: str | Path,
-        *,
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_lines: Annotated[int | None, Field(ge=5)] = None,
-        max_functions: Annotated[int | None, Field(ge=1)] = None,
-        token_counter: Callable[[str], int] | None = None,
-        include_comments: bool = True,
-        docstring_mode: Literal["summary", "all", "excluded"] = "all",
-        strict: bool = True,
-    ) -> list[Box]:
-        """
-        Extract semantic code chunks from source using multi-dimensional analysis.
-
-        Processes source code by identifying structural boundaries (functions, classes,
-        namespaces) and grouping content based on multiple constraints including
-        tokens, lines, and logical units while preserving semantic coherence.
-
-        Args:
-            source (str | Path): Raw code string or file path to process.
-            max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
-            max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
-            max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
-            token_counter (Callable, optional): Token counting function. Uses instance
-                counter if None. Required for token-based chunking.
-            include_comments (bool): Include comments in output chunks. Default: True.
-            docstring_mode(Literal["summary", "all", "excluded"]): Docstring processing strategy:
-                - "summary": Include only first line of docstrings
-                - "all": Include complete docstrings
-                - "excluded": Remove all docstrings
-                Defaults to "all"
-            strict (bool): If True, raise error when structural blocks exceed
-                max_tokens. If False, split oversized blocks. Default: True.
-
-        Returns:
-            list[Box]: List of code chunks with metadata. Each Box contains:
-                - content (str): Code content
-                - tree (str): Namespace hierarchy
-                - start_line (int): Starting line in original source
-                - end_line (int): Ending line in original source
-                - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): Source file path or "N/A"
-
-        Raises:
-            InvalidInputError: Invalid configuration parameters.
-            MissingTokenCounterError: No token counter available.
-            FileProcessingError: Source file cannot be read.
-            TokenLimitError: Structural block exceeds max_tokens in strict mode.
-            CallbackError: If the token counter fails or returns an invalid type.
-        """
-        max_tokens, max_lines, max_functions = self._validate_constraints(
-            max_tokens, max_lines, max_functions, token_counter
-        )
-        token_counter = token_counter or self.token_counter
-
-        if not source.strip():
-            self.log_info("Input source is empty. Returning empty list.")
-            return []
-
-        self.log_info(
-            "Starting chunk processing for {}",
-            (
-                f"source: {str(Path)}"
-                if (isinstance(str, Path) or is_path_like(source))
-                else f"code starting with:\n```\n{source[:100]}...\n```\n"
-            ),
-        )
-
-        snippet_dicts, cumulative_lengths = self.extractor.extract_code_structure(
-            source, include_comments, docstring_mode
-        )
-
-        result_chunks = self._group_by_chunk(
-            snippet_dicts=snippet_dicts,
-            cumulative_lengths=cumulative_lengths,
-            token_counter=token_counter,
-            max_tokens=max_tokens,
-            max_lines=max_lines,
-            max_functions=max_functions,
-            strict=strict,
-            source=source,
-        )
-
-        self.log_info(
-            "Generated {} chunk(s) for the {}",
-            len(result_chunks),
-            (
-                f"source: {str(Path)}"
-                if (isinstance(str, Path) or is_path_like(source))
-                else f"code starting with:\n```\n{source[:100]}...\n```\n"
-            ),
-        )
-
-        return result_chunks
-
     def _group_by_chunk(
         self,
         snippet_dicts: list[dict],
@@ -543,6 +404,141 @@ class CodeChunker(BaseChunker):
 
         return result_chunks
 
+    def _validate_constraints(
+        self,
+        max_tokens: int | None,
+        max_lines: int | None,
+        max_functions: int | None,
+        token_counter: Callable[[str], int] | None,
+    ):
+        """
+        Validates that at least one chunking constraint is provided and sets default values.
+
+        Args:
+            max_tokens (int | None): Maximum number of tokens per chunk.
+            max_lines (int | None): Maximum number of lines per chunk.
+            max_functions (int | None): Maximum number of functions per chunk.
+            token_counter (Callable[[str], int] | None): Function that counts tokens in text.
+
+        Raises:
+            InvalidInputError: If no chunking constraints are provided.
+            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
+        """
+        if not any((max_tokens, max_lines, max_functions)):
+            raise InvalidInputError(
+                "At least one of 'max_tokens', 'max_lines', or 'max_functions' must be provided."
+            )
+
+        # If token_counter is required but not provided
+        if max_tokens is not None and not (token_counter or self.token_counter):
+            raise MissingTokenCounterError()
+
+    @validate_input
+    def chunk(
+        self,
+        source: str | Path,
+        *,
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_lines: Annotated[int | None, Field(ge=5)] = None,
+        max_functions: Annotated[int | None, Field(ge=1)] = None,
+        token_counter: Callable[[str], int] | None = None,
+        include_comments: bool = True,
+        docstring_mode: Literal["summary", "all", "excluded"] = "all",
+        strict: bool = True,
+    ) -> list[Box]:
+        """
+        Extract semantic code chunks from source using multi-dimensional analysis.
+
+        Processes source code by identifying structural boundaries (functions, classes,
+        namespaces) and grouping content based on multiple constraints including
+        tokens, lines, and logical units while preserving semantic coherence.
+
+        Args:
+            source (str | Path): Raw code string or file path to process.
+            max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
+            max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
+            max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
+            token_counter (Callable, optional): Token counting function. Uses instance
+                counter if None. Required for token-based chunking.
+            include_comments (bool): Include comments in output chunks. Default: True.
+            docstring_mode(Literal["summary", "all", "excluded"]): Docstring processing strategy:
+                - "summary": Include only first line of docstrings
+                - "all": Include complete docstrings
+                - "excluded": Remove all docstrings
+                Defaults to "all"
+            strict (bool): If True, raise error when structural blocks exceed
+                max_tokens. If False, split oversized blocks. Default: True.
+
+        Returns:
+            list[Box]: List of code chunks with metadata. Each Box contains:
+                - content (str): Code content
+                - tree (str): Namespace hierarchy
+                - start_line (int): Starting line in original source
+                - end_line (int): Ending line in original source
+                - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
+                - source_path (str): Source file path or "N/A"
+
+        Raises:
+            InvalidInputError: Invalid configuration parameters.
+            MissingTokenCounterError: No token counter available.
+            FileProcessingError: Source file cannot be read.
+            TokenLimitError: Structural block exceeds max_tokens in strict mode.
+            CallbackError: If the token counter fails or returns an invalid type.
+        """
+        self._validate_constraints(
+            max_tokens, max_lines, max_functions, token_counter
+        )
+
+        # Adjust limits for internal use
+        if max_tokens is None:
+            max_tokens = sys.maxsize
+        if max_lines is None:
+            max_lines = sys.maxsize
+        if max_functions is None:
+            max_functions = sys.maxsize
+            
+        token_counter = token_counter or self.token_counter
+
+        if not source.strip():
+            self.log_info("Input source is empty. Returning empty list.")
+            return []
+
+        self.log_info(
+            "Starting chunk processing for {}",
+            (
+                f"source: {str(Path)}"
+                if (isinstance(str, Path) or is_path_like(source))
+                else f"code starting with:\n```\n{source[:100]}...\n```\n"
+            ),
+        )
+
+        snippet_dicts, cumulative_lengths = self.extractor.extract_code_structure(
+            source, include_comments, docstring_mode
+        )
+
+        result_chunks = self._group_by_chunk(
+            snippet_dicts=snippet_dicts,
+            cumulative_lengths=cumulative_lengths,
+            token_counter=token_counter,
+            max_tokens=max_tokens,
+            max_lines=max_lines,
+            max_functions=max_functions,
+            strict=strict,
+            source=source,
+        )
+
+        self.log_info(
+            "Generated {} chunk(s) for the {}",
+            len(result_chunks),
+            (
+                f"source: {str(Path)}"
+                if (isinstance(str, Path) or is_path_like(source))
+                else f"code starting with:\n```\n{source[:100]}...\n```\n"
+            ),
+        )
+
+        return result_chunks
+        
     @validate_input
     def batch_chunk(
         self,

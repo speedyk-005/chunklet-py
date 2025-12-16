@@ -10,7 +10,7 @@ from chunklet.document_chunker.processors.base_processor import BaseProcessor
 from chunklet.document_chunker.converters.html_2_md import html_to_md
 
 
-class EpubProcessor(BaseProcessor):
+class EPUBProcessor(BaseProcessor):
     """
     Processor class for extracting text and metadata from EPUB files.
 
@@ -90,7 +90,7 @@ class EpubProcessor(BaseProcessor):
 # Example usage
 if __name__ == "__main__":
     file_path = "samples/minimal.epub"
-    processor = EpubProcessor(file_path)
+    processor = EPUBProcessor(file_path)
 
     metadata = processor.extract_metadata()
     print("Metadata:")

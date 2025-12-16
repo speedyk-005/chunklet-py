@@ -18,11 +18,13 @@ from chunklet.document_chunker.processors import (
     pdf_processor,
     epub_processor,
     docx_processor,
+    odt_processor,
 )
 from chunklet.document_chunker.converters import (
     html_2_md,
     rst_2_md,
     latex_2_md,
+    table_2_md,
 )
 from chunklet.document_chunker.registry import CustomProcessorRegistry
 from chunklet.common.validation import validate_input, restricted_iterable
@@ -48,16 +50,19 @@ class DocumentChunker(BaseChunker):
     """
 
     BUILTIN_SUPPORTED_EXTENSIONS = {
-        ".pdf",
+        ".csv",
         ".docx",
         ".epub",
-        ".txt",
-        ".tex",
-        ".html",
         ".hml",
+        ".html",
         ".md",
+        ".odt",
+        ".pdf",
         ".rst",
         ".rtf",
+        ".tex",
+        ".txt",
+        ".xlsx",
     }
 
     def __init__(
@@ -103,14 +108,17 @@ class DocumentChunker(BaseChunker):
 
         self.processors = {
             ".pdf": pdf_processor.PDFProcessor,
-            ".epub": epub_processor.EpubProcessor,
-            ".docx": docx_processor.DocxProcessor,
+            ".epub": epub_processor.EPUBProcessor,
+            ".docx": docx_processor.DOCXProcessor,
+            ".odt": odt_processor.ODTProcessor,
         }
         self.converters = {
             ".html": html_2_md.html_to_md,
             ".hml": html_2_md.html_to_md,
             ".rst": rst_2_md.rst_to_md,
             ".tex": latex_2_md.latex_to_md,
+            ".csv": table_2_md.table_to_md,
+            ".xlsx": table_2_md.table_to_md,
         }
         self.processor_registry = CustomProcessorRegistry()
 

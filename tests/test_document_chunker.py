@@ -31,6 +31,7 @@ def registry():
     [
         "samples/What_is_rst.rst",
         "samples/complex-layout.rtf",
+        "samples/example.xlsx",
     ],
 )
 def test_chunk_simple_files(chunker, path):
@@ -58,6 +59,7 @@ def test_batch_chunk_with_different_file_type(chunker):
         "samples/What_is_rst.rst",
         "samples/minimal.epub",
         "samples/sample-pdf-a4-size.pdf",
+        "samples/file-sample_100kB.odt",
     ]
     all_document_chunks = list(chunker.batch_chunk(paths, max_sentences=5))
 
