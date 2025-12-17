@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Table Processing:** Added support for CSV and Excel (.xlsx) files with automatic Markdown table conversion using the `tabulate2` library.
 - **Character-Based Chunking:** Implemented 4k character chunking for DOCX and ODT processors to simulate page-sized segments and enhance parallel execution capabilities.
 - **Automatic Encoding Detection:** Integrated charset-normalizer for intelligent text encoding detection in code and document processing, improving reliability by correctly reading files regardless of their encoding instead of assuming UTF-8.
+- **Chunk Visualizer:** Added a comprehensive web-based visualizer interface for interactive text and code chunking with real-time visualization, parameter controls, and file upload capabilities.
+- **CLI Visualize Command:** Added `chunklet visualize` command with options for host, port, tokenizer integration, and headless operation.
 
 ### Changed
 - **Default `include_comments`:** Changed the default value of the `include_comments` parameter to `True` in the `CodeChunker.chunk()` method to align with most developer expectations for comprehensive code processing.
@@ -21,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PDF Processor Modularity:** Refactored `PDFProcessor.extract_text()` method for better modularity with improved text cleaning utilities.
 - **Refactoring for Readability and Modularity:** Split functions into helpers across PlainTextChunker, CodeChunker, and CLI to reduce cognitive load. Improved variable names, added docstrings, and simplified conditionals for better codebase readability.
 - **Documentation Updates:** Modified `cli.md` and `code_chunker.md` to clarify destination behavior, JSON output, and add new scenarios for better user guidance.
+- **CLI Conditional Imports:** Improved CLI error handling with conditional imports for optional dependencies (document chunkers, code chunkers, visualizer) providing clear installation instructions when features are unavailable.
 
 ### Fixed
 - **Late-Binding Closure Bug:** Fixed a classic Python closure bug in the code annotation loop of `CodeChunker`. The original `pattern.sub(lambda match: self._annotate_block(tag, match), code)` caused the lambda to reference the final value of `tag` after the loop completed. Resolved by changing to `pattern.sub(lambda match, tag=tag: self._annotate_block(tag, match), code)`, using the default argument trick to capture the current `tag` value at definition time.

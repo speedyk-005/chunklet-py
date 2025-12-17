@@ -1,6 +1,6 @@
 [project]
 name = "chunklet-py"
-version = "2.0.3"
+version = "2.1.0"
 description = "A comprehensive library for advanced text, code, and document chunking, designed for LLM applications. It offers flexible, context-aware segmentation across various content types."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
@@ -68,15 +68,18 @@ document = [
   "charset-normalizer>=3.4.0",
 ]
 
- code = [
+code = [
   "defusedxml>=0.7.1",
   "littletree>=0.8.4",
   "charset-normalizer>=3.4.0",
- ]
-
-all = [
-  "chunklet-py[document,code]",
 ]
+
+visualization = [
+  "uvicorn>=0.34.0",
+  "fastapi>=0.115.12",
+]
+
+all = ["chunklet-py[document,code,visualization]"]
 
 dev = [
   "pytest>=8.3.5",
@@ -95,9 +98,7 @@ docs = [
   "pymdown-extensions>=10.16.1",
 ]
 
-dev-all = [
-  "chunklet-py[dev,docs,document,code]",
-]
+dev-all = ["chunklet-py[dev,docs,document,code,visualization]"]
 
 [project.urls]
 Homepage = "https://github.com/speedyk-005/chunklet-py"
@@ -126,6 +127,7 @@ packages = [
     "chunklet.document_chunker.processors",
     "chunklet.code_chunker",
     "chunklet.sentence_splitter",
+    "chunklet.visualizer",
 ]
 
 [tool.pytest.ini_options]
