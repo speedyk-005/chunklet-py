@@ -1,6 +1,5 @@
 import re
 import pytest
-from loguru import logger
 from chunklet.sentence_splitter import SentenceSplitter, CustomSplitterRegistry
 from chunklet import CallbackError
 

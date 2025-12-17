@@ -6,13 +6,29 @@ from pathlib import Path
 from enum import Enum
 import subprocess
 import shlex
+import socket
 from importlib.metadata import version, PackageNotFoundError
 
 from chunklet.sentence_splitter import SentenceSplitter
 from chunklet.plain_text_chunker import PlainTextChunker
-from chunklet.document_chunker import DocumentChunker
-from chunklet.code_chunker import CodeChunker
+
+try:
+    from chunklet.document_chunker import DocumentChunker
+except ImportError:
+    DocumentChunker = None
+
+try:
+    from chunklet.code_chunker import CodeChunker
+except ImportError:
+    CodeChunker = None
+
+try:
+    from chunklet.visualizer import Visualizer
+except ImportError:
+    Visualizer = None
+
 from chunklet.common.path_utils import is_path_like
+
 
 try:
     __version__ = version("chunklet-py")
@@ -64,6 +80,17 @@ def _create_external_tokenizer(command_str: str):
             sys.exit(1)
 
     return external_tokenizer
+
+
+def _check_port_available(host: str, port: int) -> bool:
+    """Check if a port is available on the given host."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)
+            result = s.connect_ex((host, port))
+            return result != 0  # 0 means connection successful (port in use)
+    except Exception:
+        return False
 
 
 def _extract_files(source: Optional[List[Path]]) -> List[Path]:
@@ -225,9 +252,7 @@ def split_command(
         False, "--verbose", "-v", help="Enable verbose logging."
     ),
 ):
-    """
-    Split text or a single file into sentences using the SentenceSplitter.
-    """
+    """Split text or a single file into sentences"""
     # Validation and Input Acquisition
     provided_inputs = [arg for arg in [text, source] if arg is not None]
 
@@ -418,9 +443,7 @@ def chunk_command(
         help="Include comments in output chunks for CodeChunker. Applies to CodeChunker only.",
     ),
 ):
-    """
-    Chunk text or files based on specified parameters.
-    """
+    """Chunk text or files based on specified parameters."""
     # --- Input validation logic ---
     provided_inputs = [arg for arg in [text, source] if arg]
 
@@ -457,6 +480,14 @@ def chunk_command(
     }
 
     if code:
+        if CodeChunker is None:
+            typer.echo(
+                "Error: CodeChunker dependencies not available.\n"
+                "Please install with: pip install chunklet-py[code]",
+                err=True
+            )
+            raise typer.Exit(code=1)
+
         chunker_instance = CodeChunker(
             verbose=verbose,
             token_counter=token_counter,
@@ -477,6 +508,14 @@ def chunk_command(
                 token_counter=token_counter,
             )
         else:
+            if DocumentChunker is None:
+                typer.echo(
+                    "Error: DocumentChunker dependencies not available.\n"
+                    "Please install with: pip install chunklet-py[document]",
+                    err=True
+                )
+                raise typer.Exit(code=1)
+
             chunker_instance = DocumentChunker(
                 verbose=verbose,
                 token_counter=token_counter,
@@ -533,13 +572,97 @@ def chunk_command(
         )
         raise typer.Exit(code=0)
 
-    # --- Output handling ---
-
+    
     if destination:
         _write_chunks(chunks, destination, metadata)
-
     else:
         _print_chunks(chunks, destination, metadata)
+
+
+@app.command(
+    name="visualize",
+    help="Start the web-based chunk visualizer interface for interactive text and code chunking."
+)
+def visualize_command(
+    host: str = typer.Option(
+        "127.0.0.1",
+        "--host",
+        help="Host IP to bind the visualizer server. (default: 127.0.0.1)"
+    ),
+    port: int = typer.Option(
+        8000,
+        "--port",
+        "-p",
+        help="Port number to run the visualizer server. (default: 8000)"
+    ),
+    tokenizer_command: Optional[str] = typer.Option(
+        None,
+        "--tokenizer-command",
+        help=(
+            "A shell command to use for token counting in the visualizer. "
+            "The command should take text as stdin and output the token count as a number."
+        ),
+    ),
+    headless: bool = typer.Option(
+        False,
+        "--headless",
+        help="Run visualizer in headless mode (don't open browser automatically)."
+    ),
+):
+    """
+    Start the web-based chunk visualizer interface for interactive text and code chunking.
+    """
+    if Visualizer is None:
+        typer.echo(
+            "Error: Visualization dependencies not available.\n"
+            "Please install with: pip install chunklet-py[visualization]",
+            err=True
+        )
+        raise typer.Exit(code=1)
+
+    # Check if port is available
+    url = f"http://{host}:{port}"
+    if not _check_port_available(host, port):
+        typer.echo(f"Error: Port {port} is already in use on {host}", err=True)
+        typer.echo("Options:", err=True)
+        typer.echo(f"  1. Stop the process currently occupying {url}", err=True)
+        typer.echo(f"  2. Use a different port: chunklet visualize --port <different_port>", err=True)
+        typer.echo(
+            f"  3. Find the PID:\n"
+            f"     - Linux: 'ss -tunlp | grep :{port}' or 'fuser {port}/tcp'\n"
+            f"     - Windows: 'netstat -ano | findstr :{port}'\n"
+            f"     - Mac: 'lsof -i :{port}'",
+            err=True
+        )
+        raise typer.Exit(code=1)
+
+    # Create token counter if tokenizer command provided
+    token_counter = None
+    if tokenizer_command:
+        token_counter = _create_external_tokenizer(tokenizer_command)
+
+    # Start the visualizer
+    visualizer = Visualizer(host=host, port=port, token_counter=token_counter)
+
+    typer.echo(f"Starting Chunklet Visualizer...")
+    typer.echo(f"URL: {url}")
+    typer.echo("Press Ctrl+C to stop the server")
+
+    if not headless:
+        import webbrowser
+        try:
+            webbrowser.open(url)
+            typer.echo("Opened in default browser")
+        except Exception as e:
+            typer.echo(f"Could not open browser: {e}", err=True)
+
+    try:
+        visualizer.serve()
+    except KeyboardInterrupt:
+        typer.echo("\nVisualizer stopped.")
+    except Exception as e:
+        typer.echo(f"Error starting visualizer: {e}", err=True)
+        raise typer.Exit(code=1)
 
 
 @app.callback(invoke_without_command=True)

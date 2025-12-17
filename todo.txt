@@ -2,13 +2,15 @@
 - highlight code line in docs
 - update the chunk and bastch chunk return type in the docs
 - add instalation link or code block at top for each chunker
-
-
-- in visualization, use argparse to support bash arg as token counter with the help of the cli cmd to tk
-- add a chunk vizualizer
-- replace mimetypes by content_types in vizualizer
+- update contribution installation guide
+- update vusalizer, add screenshots and addd ref links and move it
+- update readme and __init__ dosctring and cli and pyproject and indec.md description
 
 
 # what we have done
 
+
 # done, not yet changelog
+
+- add a chunk vizualizer (even with cli)
+- add conditional import for cli
