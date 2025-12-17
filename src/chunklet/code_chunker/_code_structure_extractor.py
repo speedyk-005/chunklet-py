@@ -17,11 +17,11 @@ from collections import defaultdict, namedtuple
 from box import Box
 
 try:
+    from charset_normalizer import from_path
     from littletree import Node
     import defusedxml.ElementTree as ET
 except ImportError:
-    Node = None
-    ET = None
+    from_path, Node, ET = None, None, None
 
 from loguru import logger
 
@@ -85,24 +85,29 @@ class CodeStructureExtractor:
         Raises:
             FileProcessingError: When file cannot be read or doesn't exist.
         """
+        if from_path is None:
+            raise ImportError(
+                "The 'charset-normalizer' library is not installed. "
+                "Please install it with 'pip install charset-normalizer>=3.4.0' "
+                "or install the code processing extras with 'pip install chunklet-py[code]'"
+            )
+            
         if isinstance(source, Path) or is_path_like(source):
             path = Path(source)
             if not path.exists():
                 raise FileProcessingError(f"File does not exist: {path}")
             if is_binary_file(path):
                 raise FileProcessingError(f"Binary file not supported: {path}")
-            try:
-                with open(path, "r", encoding="utf-8", errors="replace") as f:
-                    content = f.read()
-                    if self.verbose:
-                        logger.info(
-                            "Successfully read %d characters from {}",
-                            len(content),
-                            path,
-                        )
-                    return content
-            except Exception as e:
-                raise FileProcessingError(f"Failed to read file: {path}") from e
+
+            match = from_path(str(path)).best()
+            content = str(match) if match else ""
+            if self.verbose:
+                logger.info(
+                    "Successfully read %d characters from {} using charset detection",
+                    len(content),
+                    path,
+                )
+            return content
         return source
 
     def _annotate_block(self, tag: str, match: re.Match) -> str:

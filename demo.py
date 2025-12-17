@@ -42,7 +42,7 @@ def standalone_function():
 chunker = CodeChunker(verbose=True)
 
 # Chunk the code with max_functions=1 to see splitting
-chunk_boxes = chunker.chunk(source=code_sample, max_functions=1)
+chunk_boxes = chunker.chunk(source=code_sample, max_functions=2)
 
 # Print the results
 print("=" * 50)

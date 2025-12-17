@@ -34,11 +34,11 @@ from collections import defaultdict, namedtuple
 from box import Box
 
 try:
+    from charset_normalizer import from_path
     from littletree import Node
     import defusedxml.ElementTree as ET
 except ImportError:
-    Node = None
-    ET = None
+    from_path, Node, ET = None, None, None
 
 from loguru import logger
 
