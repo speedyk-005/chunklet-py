@@ -10,7 +10,5 @@
 
 
 # what we have done
-- Integrated charset-normalizer for intelligent text encoding detection in code and document processing, improving reliability by correctly reading files regardless of their encoding instead of assuming UTF-8.
-- We added the decorator separation test to prevent regression of the bug where decorators could be separated from their associated functions during code chunking, ensuring proper semantic preservation of Python code structure.
 
 # done, not yet changelog
