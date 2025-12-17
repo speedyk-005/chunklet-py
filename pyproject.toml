@@ -48,9 +48,8 @@ dependencies = [
   "python-box>=7.3.0",
   "more-itertools>=10.6.0",
   "regex>=2024.11.6",
-   "pydantic>=2.11",
-   "typer>=0.19.0",
-   "ftfy>=6.2.0",
+  "pydantic>=2.11",
+  "typer>=0.19.0",
  ]
 
 [project.optional-dependencies]
@@ -63,16 +62,16 @@ document = [
   "markdownify>=1.1.0",
   "striprtf>=0.0.29",
   "pylatexenc>=2.10",
-   "odfpy>=1.4.1",
-   "openpyxl>=3.1.2",
-   "tabulate2>=1.10.0",
-   "charset-normalizer>=3.4.0",
- ]
+  "odfpy>=1.4.1",
+  "openpyxl>=3.1.2",
+  "tabulate2>=1.10.0",
+  "charset-normalizer>=3.4.0",
+]
 
  code = [
-   "defusedxml>=0.7.1",
-   "littletree>=0.8.4",
-   "charset-normalizer>=3.4.0",
+  "defusedxml>=0.7.1",
+  "littletree>=0.8.4",
+  "charset-normalizer>=3.4.0",
  ]
 
 all = [

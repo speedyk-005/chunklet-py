@@ -11,6 +11,11 @@ try:
 except ImportError:
     rtf_to_text = None
 
+try:
+    from charset_normalizer import from_path
+except ImportError:
+    from_path = None
+
 from chunklet.base_chunker import BaseChunker
 from chunklet.sentence_splitter import BaseSplitter
 from chunklet.plain_text_chunker import PlainTextChunker
@@ -179,6 +184,36 @@ class DocumentChunker(BaseChunker):
 
         return extension
 
+    def _read(self, path: str | Path, ext: str) -> str:
+        """
+        Read text content from a file using charset detection, handling special formats like RTF.
+
+        Args:
+            path (str | Path): Path to the file
+            ext (str): File extension
+
+        Returns:
+            str: The text content of the file
+        """
+        if from_path is None:
+            raise ImportError(
+                "The 'charset-normalizer' library is not installed. "
+                "Please install it with 'pip install charset-normalizer>=3.4.0' "
+                "or install the document processing extras with 'pip install chunklet-py[document]'"
+            )
+
+        match = from_path(str(path)).best()
+        raw_content = str(match) if match else ""
+
+        if ext == ".rtf":
+            if rtf_to_text is None:
+                raise ImportError(
+                    "The 'striprtf' library is not installed. Please install it with 'pip install 'striprtf>=0.0.29'' or install the document processing extras with 'pip install chunklet-py[document]'"
+                )
+            return rtf_to_text(raw_content)
+        else:  # For .txt, .md, and others handled by simple read
+            return raw_content
+
     def _extract_data(
         self, path: str | Path, ext: str
     ) -> tuple[str | Generator[str, None, None], dict[str, Any]]:
@@ -215,16 +250,7 @@ class DocumentChunker(BaseChunker):
             text_content = self.converters[ext](path)
 
         else:
-            with open(path, "r", encoding="utf-8", errors="ignore") as f:
-                raw_content = f.read()
-                if ext == ".rtf":
-                    if rtf_to_text is None:
-                        raise ImportError(
-                            "The 'striprtf' library is not installed. Please install it with 'pip install 'striprtf>=0.0.29'' or install the document processing extras with 'pip install chunklet-py[document]'"
-                        )
-                    text_content = rtf_to_text(raw_content)
-                else:  # For .txt, .md, and others handled by simple read
-                    text_content = raw_content
+            text_content = self._read(path, ext)
 
         return text_content, {"source": str(path)}
 

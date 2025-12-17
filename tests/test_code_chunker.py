@@ -32,6 +32,14 @@ class Calculator:
     A calculator that Contains basic arithmetic operations for demonstration purposes.
     """
 
+    def __init__(self):
+        self.value = 0
+
+    @property
+    def current_value(self):
+        """Get the current value."""
+        return self.value
+
     def add(self, x, y):
         """Add two numbers and return result.
 
@@ -132,8 +140,8 @@ def chunker():
         (PYTHON_CODE, 40, None, None, 3),
         (CSHARP_CODE, 50, None, None, 2),
         (RUBY_CODE, 40, None, None, 3),
-        (PYTHON_CODE, None, 10, None, 4),
-        (PYTHON_CODE, None, None, 2, 2),
+        (PYTHON_CODE, None, 10, None, 5),
+        (PYTHON_CODE, None, None, 1, 5),
     ],
 )
 def test_chunking_with_different_constraints(
@@ -165,6 +173,20 @@ def test_chunking_with_different_constraints(
         if last_end > 0:
             assert chunk.metadata.start_line > last_end
         last_end = chunk.metadata.end_line
+
+    # Test for Decorator Separation Bug: ensure decorators stay with their functions
+    if max_functions is not None:
+        for chunk in chunks:
+            import re
+            # Check for decorator and function patterns in the same chunk
+            decorator_match = re.search(r"\s*@\w+", chunk.content, re.M)
+            function_match = re.search(r"\s*def\b", chunk.content, re.M)
+
+            if decorator_match and function_match:
+                # If both decorator and function are in the same chunk,
+                # decorator must come before the function definition
+                assert decorator_match.start() < function_match.start(), \
+                    f"Decorator found after function in chunk: {chunk.content[:100]}..."
 
 
 # --- Docstring Tests ---
