@@ -101,7 +101,7 @@ class PDFProcessor(BaseProcessor):
 
     def _safe_decode(self, value: str | bytes):
         """Utility to decode bytes to str, ignoring errors, otherwise return as-is.
-    
+
         Args:
             value (str | bytes): The input value, which may be a string or a byte sequence.
 
@@ -179,8 +179,8 @@ class PDFProcessor(BaseProcessor):
                     for k, v in info.items():
                         k = self._safe_decode(k)
                         v = self._safe_decode(v)
-                        
-                       # To keep metadata uniform with the other processorss
+
+                        # To keep metadata uniform with the other processorss
                         k = "created" if k == "CreationDate" else k
                         k = "modified" if k == "ModDate" else k
 

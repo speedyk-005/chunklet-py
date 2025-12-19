@@ -1,6 +1,6 @@
 from typing import Any, Generator
 
-# odfpy is lazy imported 
+# odfpy is lazy imported
 
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
@@ -27,6 +27,7 @@ class ODTProcessor(BaseProcessor):
         """
         try:
             from odf.opendocument import load
+
             self._load_odf = load
         except ImportError as e:
             raise ImportError(
@@ -36,14 +37,14 @@ class ODTProcessor(BaseProcessor):
                 "'pip install chunklet-py[document]'"
             ) from e
 
-        self.file_path = file_path 
+        self.file_path = file_path
         self.doc = self._load_odf(self.file_path)
 
     def extract_metadata(self) -> dict[str, Any]:
         """Extracts metadata from the ODT file, focusing on Dublin Core and OpenDocument fields.
 
         Parses the document's metadata elements, extracting fields such as:
-       
+
         Only present fields are included in the returned dictionary.
 
         Returns:
@@ -89,7 +90,7 @@ class ODTProcessor(BaseProcessor):
                 key = "created" if key == "CreationDate" else key
                 key = "author" if key == "Creator" else key
                 key = "creator" if key == "InitialCreator" else key
-                
+
                 metadata[key.lower()] = value
 
         metadata["source"] = str(self.file_path)
@@ -121,7 +122,9 @@ class ODTProcessor(BaseProcessor):
 
         for p_elem in self.doc.getElementsByType(text.P):
             para_text = "".join(
-                node.data for node in p_elem.childNodes if node.nodeType == node.TEXT_NODE
+                node.data
+                for node in p_elem.childNodes
+                if node.nodeType == node.TEXT_NODE
             ).strip()
             if para_text:
                 para_length = len(para_text)
@@ -148,7 +151,6 @@ class ODTProcessor(BaseProcessor):
             yield "\n".join(current_chunk)
 
 
-
 if __name__ == "__main__":
     file_path = "samples/file-sample_100kB.odt"
     processor = ODTProcessor(file_path)
@@ -164,5 +166,3 @@ if __name__ == "__main__":
         print(f"--- {i} ---")
         print(chunk, "...")
         print("\n --- \n")
-
-

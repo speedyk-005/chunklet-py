@@ -1,16 +1,9 @@
-# documentation
-- highlight code line in docs
-- update the chunk and bastch chunk return type in the docs
-- add instalation link or code block at top for each chunker
-- update contribution installation guide
-- update vusalizer, add screenshots and addd ref links and move it
-- update readme and __init__ dosctring and cli and pyproject and indec.md description
-
+- dont make warning conditional
 
 # what we have done
 
-
-# done, not yet changelog
-
-- add a chunk vizualizer (even with cli)
-- add conditional import for cli
+- Fixed bug in `CodeChunker._split_oversized()` where lines exceeding limits were skipped during chunk creation.
+- readded support for python 3.9
+- added missing lang params in visualizer
+- update documentation fullier
+- ensure code cleaning and quality

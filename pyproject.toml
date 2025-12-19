@@ -1,7 +1,7 @@
 [project]
 name = "chunklet-py"
 version = "2.1.0"
-description = "A comprehensive library for advanced text, code, and document chunking, designed for LLM applications. It offers flexible, context-aware segmentation across various content types."
+description = "Advanced text, code, and document chunking for LLM applications. Split content semantically, visualize chunks interactively, and process multiple file formats with flexible, context-aware segmentation."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
 ]
@@ -27,11 +27,11 @@ classifiers = [
 ]
 
 keywords = [
-  "nlp", "chunking", "text-splitting", "llm", "rag", "ai", "multilingual",
+  "nlp", "chunking", "text-splitting", "sentence-splitting", "llm", "rag", "ai", "multilingual",
   "text processing", "natural language processing", "data processing",
-  "information retrieval", "semantic search", "document processing",
-  "code chunking", "source code analysis", "programming languages",
-  "code structure",
+  "information retrieval", "semantic search", "document processing", "document-chunker",
+  "code chunking", "code-chunker", "source code analysis", "programming languages",
+  "code structure", "chunk-visualization",
 ]
 
 dependencies = [
@@ -169,6 +169,7 @@ per-file-ignores = [
     "src/chunklet/document_chunker/__init__.py:F401,F403",
     "src/chunklet/sentence_splitter/__init__.py:F401,F403",
     "src/chunklet/code_chunker/__init__.py:F401,F403",
+    "src/chunklet/visualizer/__init__.py:F401,F403",
 ]
 extend-ignore = ["E501", "E203"]
 count = true

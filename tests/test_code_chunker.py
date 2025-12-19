@@ -177,7 +177,6 @@ def test_chunking_with_different_constraints(
     # Test for Decorator Separation Bug: ensure decorators stay with their functions
     if max_functions is not None:
         for chunk in chunks:
-            import re
             # Check for decorator and function patterns in the same chunk
             decorator_match = re.search(r"\s*@\w+", chunk.content, re.M)
             function_match = re.search(r"\s*def\b", chunk.content, re.M)
@@ -185,8 +184,9 @@ def test_chunking_with_different_constraints(
             if decorator_match and function_match:
                 # If both decorator and function are in the same chunk,
                 # decorator must come before the function definition
-                assert decorator_match.start() < function_match.start(), \
-                    f"Decorator found after function in chunk: {chunk.content[:100]}..."
+                assert (
+                    decorator_match.start() < function_match.start()
+                ), f"Decorator found after function in chunk: {chunk.content[:100]}..."
 
 
 # --- Docstring Tests ---
@@ -214,7 +214,7 @@ def test_docstring_modes(chunker, code_string, all_mode_pattern, summary_mode_pa
     # Test "all" mode - full docstring should be present
     chunks_all = chunker.chunk(code_string, max_tokens=200, docstring_mode="all")
     content_all = "".join(chunk.content for chunk in chunks_all)
-    
+
     assert re.search(
         all_mode_pattern, content_all, re.DOTALL
     ), f"Full docstring pattern not found in 'all' mode for {code_string[:20]}..."
@@ -280,7 +280,7 @@ def test_comment_inclusion(chunker, include_comments):
     [
         (30, None, None, MissingTokenCounterError),  # Original test case
         (None, None, None, InvalidInputError),  # No limits provided
-        (None, None, 0, InvalidInputError),  # max functions = 0
+        (None, None, 0, InvalidInputError),  # Set max functions to 0
     ],
 )
 def test_invalid_constraints_and_missing_token_counter(

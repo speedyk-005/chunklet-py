@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.1.0] - 2025-12-11
+## [2.1.0] - 2025-12-18
 
 ### Added
 - **ODF Support:** Added full support for OpenDocument Text (.odt) files with a new `ODTProcessor` class using the `odfpy` library.
@@ -27,10 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Late-Binding Closure Bug:** Fixed a classic Python closure bug in the code annotation loop of `CodeChunker`. The original `pattern.sub(lambda match: self._annotate_block(tag, match), code)` caused the lambda to reference the final value of `tag` after the loop completed. Resolved by changing to `pattern.sub(lambda match, tag=tag: self._annotate_block(tag, match), code)`, using the default argument trick to capture the current `tag` value at definition time.
-- **Duplicate Line De-annotation:** Removed redundant string slicing logic in `CodeChunker`'s internal processing. The line de-annotation was being called twice—once during regex substitution and again via manual slicing—creating ambiguity and potential "ghost slicing" where lines could be misinterpreted. 
+- **Duplicate Line De-annotation:** Removed redundant string slicing logic in `CodeChunker`'s internal processing. The line de-annotation was being called twice—once during regex substitution and again via manual slicing—creating ambiguity and potential "ghost slicing" where lines could be misinterpreted.
+- **Oversized Block Line Skipping:** Fixed bug in `CodeChunker._split_oversized()` where lines exceeding limits were skipped during chunk creation. Overflow lines were flushed but never added to any chunk, causing missing content in output. 
 - **Decorator Separation Bug:** Fixed an issue in `CodeChunker` where decorators (e.g., `@property`) were incorrectly separated from their associated functions into different chunks. Added a flush condition in `extract_code_structure` to handle the first decorator/attribute (`len(buffer["META"]) == 1`) and non-consecutive DOC lines, ensuring decorators group with their functions for better semantic chunking.
 - **CLI Destination Logic:** Fixed out-of-design destination handling by removing input count restrictions, ensuring consistent JSON file output and directory handling.
-- **CLI Path Validation Bug (#6):** Resolved a TypeError in v2.0.3 where len(destination) was called on a PosixPath object.
+- **CLI Path Validation Bug (#6):** Resolved a TypeError in v2.0.3 where len(destination) was called on a PosixPath object. Thanks to [@arnoldfranz](https://github.com/arnoldfranz) for reporting this issue.
 
 ---
 

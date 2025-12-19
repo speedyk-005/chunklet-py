@@ -1,7 +1,6 @@
 """Tests for the visualizer module."""
 
 import pytest
-import os
 import json
 import time
 import requests
@@ -48,7 +47,7 @@ def visualizer_server():
             "host": host,
             "port": port,
             "thread": thread,
-            "visualizer": visualizer
+            "visualizer": visualizer,
         }
     except ImportError as e:
         pytest.skip(f"Visualization dependencies not available: {e}")
@@ -57,6 +56,7 @@ def visualizer_server():
 
 
 # --- API Endpoints Testing---
+
 
 def test_visualizer_token_counter_status(visualizer_server):
     """Test that the token counter status endpoint is working."""
@@ -68,7 +68,7 @@ def test_visualizer_token_counter_status(visualizer_server):
 
     data = json.loads(response.read().decode())
     assert "token_counter_available" in data
-    assert data["token_counter_available"] == False
+    assert data["token_counter_available"] is False
 
     # Add token counter
     visualizer_server["visualizer"].token_counter = lambda x: len(x.split())
@@ -82,7 +82,7 @@ def test_visualizer_token_counter_status(visualizer_server):
 
     data = json.loads(response.read().decode())
     assert "token_counter_available" in data
-    assert data["token_counter_available"] == True
+    assert data["token_counter_available"] is True
 
 
 def test_chunk_file(visualizer_server):
@@ -98,10 +98,9 @@ def test_chunk_file(visualizer_server):
         files = {"file": ("sample_text.txt", f, "text/plain")}
         data = {
             "mode": "document",
-            "params": json.dumps({
-                "max_sentences": 3,  # Chunk by 3 sentences
-                "overlap_percent": 20
-            })
+            "params": json.dumps(
+                {"max_sentences": 3, "overlap_percent": 20}  # Chunk by 3 sentences
+            ),
         }
 
         response = requests.post(url, files=files, data=data)
@@ -128,6 +127,7 @@ def test_chunk_file_invalid_format(visualizer_server):
 
     # Create a mock binary file
     import io
+
     binary_data = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR"  # PNG header
 
     files = {"file": ("fake.png", io.BytesIO(binary_data), "image/png")}

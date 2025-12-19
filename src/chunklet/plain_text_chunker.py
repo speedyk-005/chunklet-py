@@ -115,13 +115,13 @@ class PlainTextChunker(BaseChunker):
 
         # Remove continuation marker from the beginning of text_portion first
         if text_portion.startswith(self.continuation_marker):
-            text_portion = text_portion[len(self.continuation_marker):].lstrip()
+            text_portion = text_portion[len(self.continuation_marker) :].lstrip()
 
         lines = [line.strip() for line in text_portion.splitlines() if line.strip()]
         if not lines:
             return -1, -1
 
-        budget = len(text_portion) // 5   # 20 %
+        budget = len(text_portion) // 5  # 20 %
 
         # Build flexible separator pattern that allows newlines, Unicode separators, and punctuation
         sep = rf"""
@@ -169,8 +169,8 @@ class PlainTextChunker(BaseChunker):
             chunk_box = Box()
             chunk_box.content = chunk_str.strip()
             chunk_box.metadata = copy.deepcopy(base_metadata)
-            chunk_box.metadata['chunk_num'] = i
-            chunk_box.metadata['span'] = self._find_span(chunk_str, text)
+            chunk_box.metadata["chunk_num"] = i
+            chunk_box.metadata["span"] = self._find_span(chunk_str, text)
             chunk_boxes.append(chunk_box)
         return chunk_boxes
 
@@ -313,24 +313,24 @@ class PlainTextChunker(BaseChunker):
         """
         next_chunk = self._get_overlap_clauses(curr_chunk, overlap_percent)
 
-        state['token_count'] = 0
+        state["token_count"] = 0
         if max_tokens != sys.maxsize:
-            state['token_count'] = sum(
+            state["token_count"] = sum(
                 count_tokens(s, token_counter) for s in next_chunk
             )
 
-        state['sentence_count'] = 0
+        state["sentence_count"] = 0
         if max_sentences != sys.maxsize:
-            state['sentence_count'] = len(next_chunk)
+            state["sentence_count"] = len(next_chunk)
 
-        state['heading_count'] = 0
+        state["heading_count"] = 0
         if max_section_breaks != sys.maxsize:
-            state['heading_count'] = sum(
+            state["heading_count"] = sum(
                 1 for s in next_chunk if SECTION_BREAK_PATTERN.match(s)
             )
 
         return next_chunk
-         
+
     def _group_by_chunk(
         self,
         sentences: list[str],
@@ -358,9 +358,9 @@ class PlainTextChunker(BaseChunker):
         chunks = []
         curr_chunk = []
         state = {
-            'token_count': 0,
-            'sentence_count': 0,
-            'heading_count': 0,
+            "token_count": 0,
+            "sentence_count": 0,
+            "heading_count": 0,
         }
 
         index = 0
@@ -379,17 +379,19 @@ class PlainTextChunker(BaseChunker):
                 else 0
             )
 
-            sentence_limit_reached = state['sentence_count'] + 1 > max_sentences
-            heading_limit_reached = is_heading and state['heading_count'] + 1 > max_section_breaks
+            sentence_limit_reached = state["sentence_count"] + 1 > max_sentences
+            heading_limit_reached = (
+                is_heading and state["heading_count"] + 1 > max_section_breaks
+            )
             token_limit_reached = (
                 max_tokens != sys.maxsize
-                and state['token_count'] + sentence_tokens > max_tokens
+                and state["token_count"] + sentence_tokens > max_tokens
             )
 
             if token_limit_reached or sentence_limit_reached or heading_limit_reached:
                 # for token-based mode, try splitting further
                 if token_limit_reached:
-                    remaining_tokens = max_tokens - state['token_count']
+                    remaining_tokens = max_tokens - state["token_count"]
                     fitted, unfitted = self._find_clauses_that_fit(
                         sentence,
                         remaining_tokens,
@@ -420,9 +422,9 @@ class PlainTextChunker(BaseChunker):
 
                 else:
                     unfitted = ""
-                    
+
                 chunks.append("\n".join(curr_chunk))  # Considered complete
-                
+
                 curr_chunk = self._prepare_next_chunk(
                     curr_chunk=curr_chunk,
                     overlap_percent=overlap_percent,
@@ -435,10 +437,10 @@ class PlainTextChunker(BaseChunker):
 
             else:
                 curr_chunk.append(sentence)
-                state['token_count'] += sentence_tokens
-                state['sentence_count'] += 1
+                state["token_count"] += sentence_tokens
+                state["sentence_count"] += 1
                 if is_heading:
-                    state['heading_count'] += 1
+                    state["heading_count"] += 1
                 index += 1
 
         # Add the last chunk if it exists
@@ -519,7 +521,9 @@ class PlainTextChunker(BaseChunker):
             MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
             CallbackError: If an error occurs during sentence splitting or token counting within a chunking task.
         """
-        self._validate_constraints(max_tokens, max_sentences, max_section_breaks, token_counter)
+        self._validate_constraints(
+            max_tokens, max_sentences, max_section_breaks, token_counter
+        )
 
         self.log_info(
             "Starting chunk processing for text starting with: {}.",

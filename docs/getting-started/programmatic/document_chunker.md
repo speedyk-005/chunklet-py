@@ -5,49 +5,56 @@
 </p>
 
 !!! note "Psst... Read `PlainTextChunker` First!"
-    Think of `DocumentChunker` as the cool, sophisticated older sibling of `PlainTextChunker`. While `DocumentChunker` knows how to handle all sorts of fancy file formats, the real brains of the chunking operation—the part that does the heavy lifting of splitting text by sentences, tokens, and section breaks—lives inside `PlainTextChunker`.
+    Think of `DocumentChunker` as `PlainTextChunker`'s upgrade that adds document processing superpowers! While `DocumentChunker` handles all sorts of fancy file formats, the core chunking intelligence (splitting by sentences, tokens, and sections) still lives in `PlainTextChunker`.
 
-    So, before you dive in here, do yourself a favor and get cozy with the [PlainTextChunker documentation](plain_text_chunker.md) first. It’s the key to unlocking the full power of chunking! We’ll cover the awesome document-specific stuff here, but the core concepts are all explained over there.
+    Before diving in here, get cozy with the [PlainTextChunker documentation](plain_text_chunker.md) first. It's the foundation for everything! We'll focus on the document-specific upgrades here.
 
-## Streamlined Document Processing
+## Quick Install
 
-Are you tired of managing multiple tools for different file types? The `DocumentChunker` offers a unified solution for processing a wide array of document formats. From PDFs and DOCX files to EPUBs and more, it handles diverse documents efficiently and elegantly.
+```bash
+pip install chunklet-py[document]
+```
 
-Consider the `DocumentChunker` as the orchestrator of your document processing workflow. It intelligently identifies the file type, employs the appropriate specialist to extract and convert the text (often to Markdown if possible), and then seamlessly passes the processed content to the `PlainTextChunker` for further segmentation. This provides a smooth, end-to-end solution for transforming your documents into clean, chunked data.
+This installs all the document processing dependencies needed to handle PDFs, DOCX, EPUB, ODT, Excel, and more! 📚
 
-Ready to simplify your document processing? Let's explore how!
+## Taming Your Documents: Format Freedom Unleashed! 📄
+
+Tired of juggling different tools for every file type you encounter? The `DocumentChunker` is your universal document wrangler that speaks every format under the sun. From corporate DOCX files to academic PDFs, from EPUB novels to everything in between - it handles the complexity of different file types so you can focus on building great applications without worrying about format compatibility.
+
+Think of `DocumentChunker` as the master conductor of your document orchestra! It smartly detects file types, calls in the right specialists to extract and convert text (often to clean Markdown), and then hands off the baton to `PlainTextChunker` for the final segmentation symphony.
+
+Ready to liberate your documents from format chaos? Let's make some magic happen!
 
 ### What's in the Magic Bag?
 
-The `DocumentChunker` comes with a bag of tricks that makes document processing a breeze:
+The `DocumentChunker` comes packed with superpowers that make document processing feel like child's play:
 
--  **Multi-Format Mastery:** From the corporate world of DOCX to the academic realm of PDFs, this chunker speaks a multitude of file languages. It can handle `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, and even `.rtf` files.
--  **Metadata Enrichment:** It's not just about the text. The `DocumentChunker` automatically enriches your chunks with valuable metadata, like the source file path and page numbers for PDFs.
--  **Bulk Processing Beast:** Got a whole folder of documents to process? No sweat. This chunker is built for bulk, efficiently processing multiple documents in a single go.
--  **Pluggable Processors:** Have a weird, esoteric file format that nobody else has heard of? The `DocumentChunker` is ready for the challenge. You can plug in your own custom processors to handle any file type you can throw at it.
+-  **Multi-Format Maestro:** From corporate DOCX boardrooms to academic PDF libraries, this chunker speaks every file language fluently! Handles `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx` files like a pro. 🌍
+-  **Metadata Magician:** Not just text - it automatically enriches your chunks with valuable metadata like source file paths and PDF page numbers. Your chunks come with bonus context! 📊
+-  **Bulk Processing Beast:** Got a mountain of documents to conquer? No problem! This beast efficiently processes multiple documents in parallel. 📚⚡
+-  **Pluggable Processor Power:** Have a mysterious file format that's one-of-a-kind? Plug in your own custom processors - `DocumentChunker` is ready for any challenge you throw at it! 🔌🛠️
 
-The `DocumentChunker` has two main methods: `chunk` for processing a single file and `batch_chunk` for processing multiple files. Both methods return a generator that yields a [`Box`](https://pypi.org/project/python-box/#:~:text=Overview,strings%20or%20files.) object for each chunk. The `Box` object has two main keys: `content` (str) and `metadata` (dict).
+The `DocumentChunker` has two main methods: `chunk` for single file adventures and `batch_chunk` for processing multiple files like a boss. `chunk` returns a list of handy [`Box`](https://pypi.org/project/python-box/#:~:text=Overview,strings%20or%20files.) objects, while `batch_chunk` is a memory-friendly generator that yields chunks one by one. Each `Box` comes with `content` (the actual text) and `metadata` (all the juicy details about your document).
 
-!!! note "Supported Processors and Batch Processing"
-    The `DocumentChunker` supports the following file types out-of-the-box:
-    - `.docx`: Processed by `DocxProcessor`
-    - `.epub`: Processed by `EpubProcessor`
-    - `.pdf`: Processed by `PDFProcessor`
+!!! note "Special Handling for Streaming Processors"
+    Some processors work differently due to their streaming nature - they yield content page by page or in blocks rather than all at once. This means they require special care:
 
-    These processors can also provide unique optional metadata, enriching your chunks with valuable context. For more details, check out the [Metadata in Chunklet-py documentation](../../getting-started/metadata.md#documentchunker-metadata).
+    **Streaming processors** (PDF, EPUB, DOCX, ODT): These beauties process content as they go, so they're designed for `batch_chunk` method. Using them with the regular `chunk` method will throw a [`FileProcessingError`](../../exceptions-and-warnings.md#fileprocessingerror) since `chunk` expects all content upfront.
 
-    Due to the streaming nature of these processors (they yield content page by page or in blocks), it is highly recommended to use them with the `batch_chunk` method. Attempting to use these processors with the `chunk` method (which expects a single string input) will result in a [`FileProcessingError`](../../exceptions-and-warnings.md#fileprocessingerror) as the `chunk` method is not designed to consume the generator output of these processors.
+    **Regular processors** work fine with both `chunk` and `batch_chunk` methods.
 
-## Single Run
+    These processors also add extra metadata magic! Check the [Metadata guide](../../getting-started/metadata.md#documentchunker-metadata) for details.
 
-The `chunk` method of `DocumentChunker` shares most of its arguments with `PlainTextChunker.chunk`. The key differences are:
+## Single File Showdown: Let's Process One Document! 📄
 
-*   The first argument is `path` (a string representing the file path or a `pathlib.Path` object) instead of `text`.
-*   The `base_metadata` argument is not available, as metadata is automatically extracted and managed by the document processors.
+The `DocumentChunker`'s `chunk` method shares most arguments with `PlainTextChunker.chunk`, but with a couple of key twists:
 
-Remember, just like with `PlainTextChunker`, at least one of `max_sentences`, `max_tokens`, or `max_section_breaks` must be provided to avoid an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror).
+*   First argument is `path` (file path string or `pathlib.Path` object) instead of raw `text`
+*   No `base_metadata` parameter - document processors handle metadata automatically
 
-Let's say we have the following text content:
+Just like its sibling, you must specify at least one limit (`max_sentences`, `max_tokens`, or `max_section_breaks`) or you'll get an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror). Rules are rules! 📏
+
+Let's grab some sample content to play with:
 
 ```txt
 The quick brown fox jumps over the lazy dog. This is the first sentence, and it's a classic.
@@ -58,9 +65,9 @@ This is the seventh sentence, and we are still going. The eighth sentence is her
 Finally, the ninth sentence will be the last one for this example, making sure we have enough content to create multiple chunks.
 ```
 
-Save this content into a file named `sample_text.txt`. Here's how you would use it with `DocumentChunker`:
+Pop this into a file called `sample_text.txt`. Now let's see `DocumentChunker` in action:
 
-```py
+``` py linenums="1"
 from chunklet.document_chunker import DocumentChunker
 
 # Assuming sample_text.txt is in the same directory as your script
@@ -83,10 +90,10 @@ for i, chunk in enumerate(chunks):
     print()
 ```
 
-1.  Instructs the chunker to automatically detect the language of the input text. While convenient, explicitly setting the language (e.g., `lang="en"`) can improve accuracy and performance for known languages.
-2.  Sets the maximum number of sentences allowed per chunk. In this example, chunks will contain at most four sentences.
-3.  Configures the chunker to have no overlap between consecutive chunks. The default behavior includes a 20% overlap to maintain context across chunks.
-4.  Specifies that chunking should start from the very beginning of the text (the first sentence). The default is 0.
+1.  `lang="auto"` lets us detect language automatically. Super handy, but specifying a known language like `lang="en"` can boost accuracy and speed.
+2.  `max_sentences=4` caps each chunk at 4 sentences max. Your content gets neatly portioned!
+3.  `overlap_percent=0` means zero overlap between chunks. By default, we add 20% overlap to keep context flowing smoothly.
+4.  `offset=0` starts us from the very beginning. (Zero-based indexing - because programmers love starting from zero!)
 
 ??? success "Click to show output"
     ```linenums="0"
@@ -129,18 +136,18 @@ for i, chunk in enumerate(chunks):
     chunker = DocumentChunker(continuation_marker="")
     ```
 
-## Batch Run
+## Batch Run: Processing Multiple Documents Like a Boss! 📚
 
-While the `chunk` method is perfect for processing a single document, the `batch_chunk` method is designed for efficiently processing multiple documents in parallel. It returns a generator, allowing you to process large volumes of documents without exhausting memory.
+While `chunk` is perfect for single documents, `batch_chunk` is your power tool for processing multiple documents in parallel. It returns a memory-friendly generator so you can handle massive document collections with ease.
 
-The `batch_chunk` method shares most of its core arguments with `PlainTextChunker.batch_chunk` (like `lang`, `max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, `offset`, `token_counter`, `separator`, `n_jobs`, `show_progress`, and `on_errors`). The key differences are:
+The `batch_chunk` method shares most arguments with `PlainTextChunker.batch_chunk` (like `lang`, `max_tokens`, `max_sentences`, etc.). The key differences:
 
-*   The first argument is `paths` (a list of strings or `pathlib.Path` objects representing the file paths) instead of `texts`.
-*   The `base_metadata` argument is not available, as metadata is automatically extracted and managed by the document processors.
+*   First argument is `paths` (list of file paths as strings or `pathlib.Path` objects) instead of raw `texts`
+*   No `base_metadata` parameter - document processors handle metadata automatically
 
-For this example, we'll be using some sample files from our repository's [samples directory](https://github.com/speedyk-005/chunklet-py/tree/main/samples).
+For our example, we'll grab some sample files from the [samples directory](https://github.com/speedyk-005/chunklet-py/tree/main/samples) in the repo.
 
-```py
+```py linenums="1" hl_lines="2 15-24"
 from chunklet.document_chunker import DocumentChunker
 
 def word_counter(text: str) -> int:
@@ -430,31 +437,31 @@ print("\nAnd so on...")
 
 !!! tip "Overrides token_counter"
     You can also provide the `token_counter` directly to the `chunk` method. within the `chunk` method call (e.g., `chunker.chunk(..., token_counter=my_tokenizer_function)`). If a `token_counter` is provided in both the constructor and the `chunk` method, the one in the `chunk` method will be used.
-### Separator
+### Separator: Keeping Your Document Batches Organized! 📋
 
-The `separator` parameter is also available in `DocumentChunker`. It is used to yield a custom value after all chunks for a given document have been processed, which is useful for distinguishing between documents in a batch run.
+The `separator` parameter works the same way here as in `PlainTextChunker` - it yields a custom value after each document's chunks, perfect for keeping your batch processing tidy.
 
-Since the functionality is very similar to the `PlainTextChunker`, please refer to the [PlainTextChunker documentation](plain_text_chunker.md#separator) for a detailed explanation and code examples.
+For detailed examples and code, check out the [PlainTextChunker separator docs](plain_text_chunker.md#separator) - it's all the same functionality!
 
-## Custom Processors
+## Custom Processors: Build Your Own Document Wizards! 🛠️🔮
 
-You can provide your own custom document processors to `DocumentChunker`. This is useful if you have a specialized processor for a particular file type that you want to prioritize over `DocumentChunker`'s built-in processors.
+Want to handle exotic file formats that `DocumentChunker` doesn't know about? Create your own custom processors! This lets you add specialized processing for any file type and prioritize your custom processors over the built-in ones.
 
-!!! warning "Global Registry: Be Mindful of Side Effects"
-    Custom processors are registered globally. This means that once you register a processor, it's available everywhere in your application. Be mindful of potential side effects if you're registering processors in different parts of your codebase, especially in multi-threaded or long-running applications.
+!!! warning "Global Registry Alert!"
+    Custom processors get registered globally - once you add one, it's available everywhere in your app. Watch out for side effects if you're registering processors across different parts of your codebase, especially in multi-threaded or long-running applications!
 
 To use a custom processor, you leverage the [`@registry.register`](../../reference/chunklet/document_chunker/registry.md) decorator. This decorator allows you to register your function for one or more file extensions directly. Your custom processor function must accept a single `file_path` parameter (str) and return a `tuple[str | list[str], dict]` containing extracted text (or list of texts for multi-section documents) and a metadata dictionary.
 
-!!! important "Important constraints"
+!!! important "Custom Processor Rules"
     - Your function must accept exactly one required parameter (the file path)
-    - Optional parameters with default values are allowed
-    - File extensions must start with a dot (e.g., `.json`, `.custom`)
+    - Optional parameters with defaults are totally fine
+    - File extensions must start with a dot (like `.json`, `.custom`)
     - Lambda functions are not supported unless you provide a `name` parameter
     - The metadata dictionary will be merged with common metadata (chunk_num, span, source)
     - For multi-section documents, return a list of strings - each will be processed as a separate section
     - If an error occurs during the document processing (e.g., an issue with the custom processor function), a [`CallbackError`](../../exceptions-and-warnings.md#callbackerror) will be raised
 
-```py
+```py linenums="1" hl_lines="5 8 10-20 55"
 import os
 import re
 import json
@@ -536,7 +543,7 @@ registry.unregister(".json")
 !!! note "Registering Without the Decorator"
     If you prefer not to use decorators, you can directly use the `registry.register()` method. This is particularly useful when registering processors dynamically.
 
-    ```py
+    ```py linenums="1"
     from chunklet.document_chunker import CustomProcessorRegistry
 
     registry = CustomProcessorRegistry()
@@ -558,4 +565,4 @@ registry.unregister(".json")
 *   `extract_data(file_path: str, ext: str)`: Processes a file using a registered processor, returning the extracted data and the name of the processor used.
 
 ??? info "API Reference"
-    For a deep dive into the `DocumentChunker` class, its methods, and all the nitty-gritty details, check out the full [API documentation](../../reference/chunklet/document_chunker/document_chunker.md).
+    For complete technical details on the `DocumentChunker` class, check out the [API documentation](../../reference/chunklet/document_chunker/document_chunker.md).

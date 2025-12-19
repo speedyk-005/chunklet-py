@@ -26,11 +26,10 @@ import sys
 from pathlib import Path
 from typing import Any, Literal, Callable, Generator, Annotated
 from functools import partial
-from itertools import chain, accumulate
+from itertools import chain
+
 from more_itertools import unique_everseen
-import regex as re
 from pydantic import Field
-from collections import defaultdict, namedtuple
 from box import Box
 
 try:
@@ -50,7 +49,6 @@ from chunklet.common.validation import validate_input, restricted_iterable
 from chunklet.common.token_utils import count_tokens
 from chunklet.exceptions import (
     InvalidInputError,
-    FileProcessingError,
     MissingTokenCounterError,
     TokenLimitError,
 )
@@ -133,6 +131,53 @@ class CodeChunker(BaseChunker):
 
         return merged_tree.to_string()
 
+    def _format_limit_msg(
+        self,
+        box_tokens: int,
+        max_tokens: int,
+        box_lines: int,
+        max_lines: int,
+        function_count: int,
+        max_functions: int,
+        content_preview: str,
+    ) -> str:
+        """
+        Format a limit exceeded error message, only including limits that are not sys.maxsize.
+
+        Args:
+            box_tokens: Actual token count in the block
+            max_tokens: Maximum allowed tokens
+            box_lines: Actual line count in the block
+            max_lines: Maximum allowed lines
+            function_count: Actual function count in the block
+            max_functions: Maximum allowed functions
+            content_preview: Preview of the content that exceeded limits
+
+        Returns:
+            Formatted error message with applicable limits
+        """
+        limits = []
+
+        if max_tokens != sys.maxsize:
+            limits.append(f"tokens: {box_tokens} > {max_tokens}")
+        if max_lines != sys.maxsize:
+            limits.append(f"lines: {box_lines} > {max_lines}")
+        if max_functions != sys.maxsize:
+            limits.append(f"functions: {function_count} > {max_functions}")
+
+        if not limits:
+            return "Block exceeds unspecified limits"
+
+        limits_str = ", ".join(limits)
+
+        return (
+            f"Structural block exceeds maximum limit ({limits_str}).\n"
+            f"Content starting with: \n```\n{content_preview}...\n```\n"
+            "Reason: Prevent splitting inside interest points (function, class, region, ...)\n"
+            "💡Hint: Consider increasing 'max_tokens', 'max_lines', or 'max_functions', "
+            "refactoring the oversized block, or setting 'strict=False' to allow automatic splitting of oversized blocks."
+        )
+
     def _split_oversized(
         self,
         snippet_dict: dict,
@@ -176,33 +221,32 @@ class CodeChunker(BaseChunker):
 
             # If adding this line would exceed either max_tokens or max_lines, commit current chunk
             if (token_count + line_tokens > max_tokens) or (line_count + 1 > max_lines):
-                if curr_chunk:  # avoid empty chunk creation
-                    start_line = line_no - len(curr_chunk)
-                    end_line = line_no - 1
-                    start_span = (
-                        0 if start_line == 1 else cumulative_lengths[start_line - 2]
+                start_line = line_no - len(curr_chunk)
+                end_line = line_no - 1
+                start_span = (
+                    0 if start_line == 1 else cumulative_lengths[start_line - 2]
+                )
+                end_span = cumulative_lengths[end_line - 1]
+                tree = Node.from_relations(snippet_dict["relations"]).to_string()
+                sub_boxes.append(
+                    Box(
+                        {
+                            "content": "\n".join(curr_chunk),
+                            "metadata": {
+                                "tree": tree,
+                                "start_line": start_line,
+                                "end_line": end_line,
+                                "span": (start_span, end_span),
+                                "source": (
+                                    str(source)
+                                    if isinstance(source, (str, Path))
+                                    else "N/A"
+                                ),
+                            },
+                        }
                     )
-                    end_span = cumulative_lengths[end_line - 1]
-                    tree = Node.from_relations(snippet_dict["relations"]).to_string()
-                    sub_boxes.append(
-                        Box(
-                            {
-                                "content": "\n".join(curr_chunk),
-                                "metadata": {
-                                    "tree": tree,
-                                    "start_line": start_line,
-                                    "end_line": end_line,
-                                    "span": (start_span, end_span),
-                                    "source": (
-                                        str(source)
-                                        if isinstance(source, (str, Path))
-                                        else "N/A"
-                                    ),
-                                },
-                            }
-                        )
-                    )
-                curr_chunk.clear()
+                )
+                curr_chunk = [line]  # Add the overflow line!
                 token_count = 0
                 line_count = 0
 
@@ -317,20 +361,22 @@ class CodeChunker(BaseChunker):
                 # Too big and nothing merged yet: handle oversize
                 if strict:
                     raise TokenLimitError(
-                        f"Structural block exceeds maximum limit (tokens: {box_tokens} > {max_tokens}, "
-                        f"lines: {box_lines} > {max_lines}, or functions: {int(is_function)} > {max_functions}).\n"
-                        f"Content starting with: \n```\n{snippet_dict['content'][:100]}...\n```\n"
-                        "Reason: Prevent splitting inside interest points (function, class, region, ...)\n"
-                        "💡Hint: Consider increasing 'max_tokens', 'max_lines', or 'max_functions', "
-                        "refactoring the oversized block, or setting 'strict=False' to allow automatic splitting of oversized blocks."
+                        self._format_limit_msg(
+                            box_tokens,
+                            max_tokens,
+                            box_lines,
+                            max_lines,
+                            function_count,
+                            max_functions,
+                            snippet_dict["content"][:100],
+                        )
                     )
                 else:  # Else split further
-                    if self.verbose:
-                        logger.warning(
-                            "Splitting oversized block (tokens: {} lines: {}) into sub-chunks",
-                            box_tokens,
-                            box_lines,
-                        )
+                    logger.warning(
+                        "Splitting oversized block (tokens: {} lines: {}) into sub-chunks",
+                        box_tokens,
+                        box_lines,
+                    )
 
                     sub_chunks = self._split_oversized(
                         snippet_dict,
@@ -485,9 +531,7 @@ class CodeChunker(BaseChunker):
             TokenLimitError: Structural block exceeds max_tokens in strict mode.
             CallbackError: If the token counter fails or returns an invalid type.
         """
-        self._validate_constraints(
-            max_tokens, max_lines, max_functions, token_counter
-        )
+        self._validate_constraints(max_tokens, max_lines, max_functions, token_counter)
 
         # Adjust limits for internal use
         if max_tokens is None:
@@ -496,7 +540,7 @@ class CodeChunker(BaseChunker):
             max_lines = sys.maxsize
         if max_functions is None:
             max_functions = sys.maxsize
-            
+
         token_counter = token_counter or self.token_counter
 
         if not source.strip():
@@ -538,7 +582,7 @@ class CodeChunker(BaseChunker):
         )
 
         return result_chunks
-        
+
     @validate_input
     def batch_chunk(
         self,

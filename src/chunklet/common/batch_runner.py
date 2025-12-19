@@ -9,12 +9,14 @@ from chunklet.common.validation import safely_count_iterable
 
 def capture_result_and_exception(func):
     """Decorator to capture result and exception from a function call."""
+
     def wrapper(*args, **kwargs):
         try:
             res = func(*args, **kwargs)
             return res, None
         except Exception as e:
             return None, e
+
     return wrapper
 
 
@@ -90,7 +92,7 @@ def run_in_batch(
                             error,
                         )
                         break
-                        
+
                     #  Else: skip
                     logger.warning("Skipping a failed task.\nReason: {}", error)
                     continue
