@@ -32,6 +32,7 @@ def registry():
         "samples/What_is_rst.rst",
         "samples/complex-layout.rtf",
         "samples/example.xlsx",
+        "samples/username.csv",
     ],
 )
 def test_chunk_simple_files(chunker, path):
@@ -77,6 +78,21 @@ def test_batch_chunk_with_different_file_type(chunker):
         assert path in chunks_by_source
         assert chunks_by_source[path][0].metadata  # assert metadata presence
         assert len(chunks_by_source[path]) > 0
+
+
+def test_chunk_method_unsupported_iterable_processor(chunker):
+    """Test that chunk method raises UnsupportedFileTypeError when processor returns iterable."""
+    # PDF files return an iterable, so using chunk() method should fail with specific error
+    with pytest.raises(
+        UnsupportedFileTypeError,
+        match=re.escape(
+            "File type '.pdf' is not supported by the general chunk method.\n"
+            "Reason: The processor for this file returns iterable, "
+            "so it must be processed in parallel for efficiency.\n"
+            "💡 Hint: use `chunker.batch_chunk([file.ext])` for this file type."
+        ),
+    ):
+        chunker.chunk("samples/sample-pdf-a4-size.pdf", max_sentences=5)
 
 
 # --- Custom Processor Tests ---
@@ -151,4 +167,39 @@ def test_custom_processor_validation_scenarios(
             chunker.chunk(dummy_file, max_sentences=5)
     finally:
         # Unregister to not affect other tests
+        registry.unregister(".txt")
+
+
+def test_batch_chunk_custom_processor_error_handling(chunker, registry, tmp_path):
+    """Test batch_chunk error handling with failing custom processor."""
+    # Create test files with different extensions
+    file1 = tmp_path / "test1.txt"  # Will use failing processor
+    file1.write_text("content1")
+    file2 = tmp_path / "test2.md"  # Will use default processor (should work)
+    file2.write_text("content2")
+
+    @registry.register(".txt", name="FailingBatchProcessor")
+    def failing_processor(file_path: str):
+        raise ValueError("Custom processor failed in batch")
+
+    try:
+        # Test on_errors="raise" - should re-raise
+        with pytest.raises(CallbackError):
+            list(
+                chunker.batch_chunk([file1, file2], max_sentences=5, on_errors="raise")
+            )
+
+        # Test on_errors="skip" - should skip failed file, process .md file
+        chunks = list(
+            chunker.batch_chunk([file1, file2], max_sentences=5, on_errors="skip")
+        )
+        assert len(chunks) >= 1  # Should get chunks from successful .md file
+
+        # Test on_errors="break" - should stop on first error (txt file)
+        chunks = list(
+            chunker.batch_chunk([file1, file2], max_sentences=5, on_errors="break")
+        )
+        assert len(chunks) == 0  # Should get no chunks since txt fails first
+
+    finally:
         registry.unregister(".txt")

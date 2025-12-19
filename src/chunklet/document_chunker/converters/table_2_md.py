@@ -61,7 +61,7 @@ def table_to_md(file_path: str | Path) -> str:
 
 
 # Exemple usage
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # Convert sample Excel file to Markdown
     sample_file = "samples/example.xlsx"
     md_table = table_to_md(sample_file)

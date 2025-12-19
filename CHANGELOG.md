@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.1.0] - 2025-12-18
+## [2.1.0] - 2025-12-19
 
 ### Added
 - **ODF Support:** Added full support for OpenDocument Text (.odt) files with a new `ODTProcessor` class using the `odfpy` library.
@@ -26,12 +26,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLI Conditional Imports:** Improved CLI error handling with conditional imports for optional dependencies (document chunkers, code chunkers, visualizer) providing clear installation instructions when features are unavailable.
 
 ### Fixed
-- **Late-Binding Closure Bug:** Fixed a classic Python closure bug in the code annotation loop of `CodeChunker`. The original `pattern.sub(lambda match: self._annotate_block(tag, match), code)` caused the lambda to reference the final value of `tag` after the loop completed. Resolved by changing to `pattern.sub(lambda match, tag=tag: self._annotate_block(tag, match), code)`, using the default argument trick to capture the current `tag` value at definition time.
-- **Duplicate Line De-annotation:** Removed redundant string slicing logic in `CodeChunker`'s internal processing. The line de-annotation was being called twice—once during regex substitution and again via manual slicing—creating ambiguity and potential "ghost slicing" where lines could be misinterpreted.
-- **Oversized Block Line Skipping:** Fixed bug in `CodeChunker._split_oversized()` where lines exceeding limits were skipped during chunk creation. Overflow lines were flushed but never added to any chunk, causing missing content in output. 
-- **Decorator Separation Bug:** Fixed an issue in `CodeChunker` where decorators (e.g., `@property`) were incorrectly separated from their associated functions into different chunks. Added a flush condition in `extract_code_structure` to handle the first decorator/attribute (`len(buffer["META"]) == 1`) and non-consecutive DOC lines, ensuring decorators group with their functions for better semantic chunking.
+- **Code Chunker Issues:**
+  - Fixed a classic Python closure bug in the code annotation loop. The original `pattern.sub(lambda match: self._annotate_block(tag, match), code)` caused the lambda to reference the final value of `tag` after the loop completed. Resolved by using the default argument trick to capture the current `tag` value at definition time.
+  - Removed redundant string slicing logic where line de-annotation was called twice, creating ambiguity and potential "ghost slicing" issues.
+  - Fixed bug in `_split_oversized()` where lines exceeding limits were skipped during chunk creation. Overflow lines were flushed but never added to any chunk, causing missing content in output.
+  - Fixed issue where decorators (e.g., `@property`) were incorrectly separated from their associated functions into different chunks. Added proper flush conditions to ensure decorators group with their functions.
+  - Fixed critical bug where path detection logic incorrectly called `is_path_like()` on Path objects instead of strings, causing validation errors when PosixPath objects were passed. Corrected the logic to properly check `isinstance(source, Path)` first, then only call `is_path_like()` on string inputs.
 - **CLI Destination Logic:** Fixed out-of-design destination handling by removing input count restrictions, ensuring consistent JSON file output and directory handling.
-- **CLI Path Validation Bug (#6):** Resolved a TypeError in v2.0.3 where len(destination) was called on a PosixPath object. Thanks to [@arnoldfranz](https://github.com/arnoldfranz) for reporting this issue.
+- **CLI Path Validation Bug (#6):** Resolved TypeError where len(destination) was called on a PosixPath object. Thanks to [@arnoldfranz](https://github.com/arnoldfranz) for reporting this issue.
+- **Document Chunker Batch Error Handling Bugs:** Fixed multiple bugs in `DocumentChunker._gather_all_data()` that were hidden due to missing test coverage. Issues included incorrect exception raising (`raise error` instead of `raise`), malformed logging format strings, KeyError when accessing path_section_counts for failed files, and missing early return when no files are successfully processed. These bugs were discovered and fixed while adding comprehensive test coverage for batch processing error handling.
 
 ---
 

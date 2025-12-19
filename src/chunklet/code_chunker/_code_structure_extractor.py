@@ -182,7 +182,7 @@ class CodeStructureExtractor:
             for line in clean_doc.splitlines():
                 # Skip lines that contain *only tags* (with optional whitespace)
                 stripped_line = line.strip()
-                if stripped_line and not re.fullmatch(r"<.*>\s*", stripped_line):
+                if stripped_line and not re.fullmatch(r"\s*<[^>]*>\s*", stripped_line):
                     summary = stripped_line
                     break
 
@@ -352,9 +352,6 @@ class CodeStructureExtractor:
 
         candidates = [entry for v in buffer.values() for entry in v] + curr_struct
         sorted_candidates = sorted(candidates, key=lambda x: x.line_number)
-
-        if not sorted_candidates:
-            return
 
         content = "\n".join(c.content for c in sorted_candidates)
         start_line = sorted_candidates[0].line_number

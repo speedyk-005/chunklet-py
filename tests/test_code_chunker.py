@@ -275,28 +275,6 @@ def test_comment_inclusion(chunker, include_comments):
 # --- Error Handling Tests ---
 
 
-@pytest.mark.parametrize(
-    "max_tokens, max_lines, max_functions, expected_exception",
-    [
-        (30, None, None, MissingTokenCounterError),  # Original test case
-        (None, None, None, InvalidInputError),  # No limits provided
-        (None, None, 0, InvalidInputError),  # Set max functions to 0
-    ],
-)
-def test_invalid_constraints_and_missing_token_counter(
-    max_tokens, max_lines, max_functions, expected_exception
-):
-    """Test errors for invalid constraints and missing token counter."""
-    new_chunker = CodeChunker()  # chunker without a token counter
-    with pytest.raises(expected_exception):
-        new_chunker.chunk(
-            "def test(): pass",
-            max_tokens=max_tokens,
-            max_lines=max_lines,
-            max_functions=max_functions,
-        )
-
-
 def test_broken_token_counter():
     """Test Error When Token Counter Fails."""
 
@@ -308,6 +286,64 @@ def test_broken_token_counter():
         chunker.chunk("def test(): pass", max_tokens=30)
 
 
+def test_missing_token_counter_error():
+    """Test MissingTokenCounterError when token counter is required but not provided."""
+    new_chunker = CodeChunker()  # chunker without a token counter
+    with pytest.raises(MissingTokenCounterError):
+        new_chunker.chunk(
+            "def test(): pass",
+            max_tokens=30,
+        )
+
+
+@pytest.mark.parametrize(
+    "max_tokens, max_lines, max_functions",
+    [
+        (None, None, None),  # No limits provided
+        (None, None, 0),  # Set max functions to 0
+    ],
+)
+def test_invalid_constraints_error(max_tokens, max_lines, max_functions):
+    """Test InvalidInputError for invalid constraint combinations."""
+    new_chunker = CodeChunker()  # chunker without a token counter
+    with pytest.raises(InvalidInputError):
+        new_chunker.chunk(
+            "def test(): pass",
+            max_tokens=max_tokens,
+            max_lines=max_lines,
+            max_functions=max_functions,
+        )
+
+
+def test_empty_source_code():
+    """Test that empty source code returns empty list."""
+    chunker = CodeChunker()
+    result = chunker.chunk("", max_lines=30)
+    assert result == []
+
+
+def test_code_chunker_with_file(tmp_path):
+    """Test CodeChunker with temporary files - both valid Python and binary."""
+    from chunklet import FileProcessingError
+
+    chunker = CodeChunker(token_counter=simple_token_counter)
+
+    # Test 1: Valid Python file
+    python_file = tmp_path / "test_code.py"
+    python_file.write_text(PYTHON_CODE)
+
+    chunks = chunker.chunk(python_file, max_tokens=50)
+    assert len(chunks) > 0
+    assert all(chunk.metadata.start_line <= chunk.metadata.end_line for chunk in chunks)
+
+    # Test 2: Binary file should raise FileProcessingError
+    binary_file = tmp_path / "binary_file.bin"
+    binary_file.write_bytes(b"\x00\x01\x02\x03\xff\xfe\xfd\xfc")  # Binary data
+
+    with pytest.raises(FileProcessingError, match="Binary file not supported"):
+        chunker.chunk(binary_file, max_tokens=50)
+
+
 def test_nonexistent_file(chunker):
     """Test Error For Non-Existent File."""
     with pytest.raises(FileProcessingError):
@@ -316,11 +352,17 @@ def test_nonexistent_file(chunker):
 
 def test_oversized_block_error(chunker):
     """Test Error For Blocks Exceeding Max Tokens."""
+    params = {
+        "source": LONG_FUNCTION_CODE,
+        "max_tokens": 30,
+        "max_lines": 5,
+        "max_functions": 1,
+    }
     with pytest.raises(TokenLimitError):
-        chunker.chunk(LONG_FUNCTION_CODE, max_tokens=30, strict=True)
+        chunker.chunk(**params, strict=True)
 
     # should not raise on strict mode is disabled
-    chunks = chunker.chunk(LONG_FUNCTION_CODE, max_tokens=30, strict=False)
+    chunks = chunker.chunk(**params, strict=False)
     assert len(chunks) > 0  # Should split into multiple chunks
 
 

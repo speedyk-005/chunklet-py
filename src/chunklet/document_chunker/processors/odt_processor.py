@@ -151,7 +151,7 @@ class ODTProcessor(BaseProcessor):
             yield "\n".join(current_chunk)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     file_path = "samples/file-sample_100kB.odt"
     processor = ODTProcessor(file_path)
 

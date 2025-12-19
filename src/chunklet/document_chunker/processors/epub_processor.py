@@ -88,7 +88,7 @@ class EPUBProcessor(BaseProcessor):
 
 
 # Example usage
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     file_path = "samples/minimal.epub"
     processor = EPUBProcessor(file_path)
 

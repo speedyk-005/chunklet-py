@@ -190,7 +190,7 @@ class PDFProcessor(BaseProcessor):
 
 
 # --- Example usage ---
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     pdf_file = "samples/sample-pdf-a4-size.pdf"
 
     processor = PDFProcessor(pdf_file)
