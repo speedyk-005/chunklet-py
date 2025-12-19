@@ -24,7 +24,7 @@ No more guessing games - see your chunking results in real-time!
 First, make sure you have the visualization dependencies:
 
 ```bash
-pip install "chunklet[visualization]"
+pip install "chunklet-py[visualization]"
 ```
 
 Here's the basic code to get it running:
