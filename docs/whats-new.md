@@ -12,9 +12,9 @@
 
 ### 🐛 Bug Fixes in v2.1.0
 
-*   **Code Chunker Line Skipping:** 🔧 Fixed critical bug where some lines could go missing when chunking oversized code blocks - now every line gets properly included!
-*   **Decorator Separation:** 🎯 Fixed issue where Python decorators (like `@property`) were getting split from their functions into separate chunks.
-*   **CLI Path Validation Bug:** Resolved TypeError where len() was called on PosixPath object.
+*   **Code Chunker Issues:** 🔧 Fixed multiple bugs in CodeChunker including line skipping in oversized blocks, decorator separation, path detection errors, and redundant processing logic.
+*   **CLI Path Validation Bug:** Resolved TypeError where len() was called on PosixPath object. Thanks to [@arnoldfranz](https://github.com/arnoldfranz) for reporting this issue.
+*   **Hidden Bugs Uncovered:** 🕵️‍♂️ Adding comprehensive test coverage revealed and fixed multiple hidden bugs in document chunker batch processing error handling that were previously undetected.
 
 ---
 

@@ -312,10 +312,10 @@ class DocumentChunker(BaseChunker):
                         i,
                         e,
                     )
-                    raise error
+                    raise
                 elif on_errors == "break":
                     logger.error(
-                        "Stopping due to validation error on '{path}' at paths[{}].\nReason: {error}.",
+                        "Stopping due to validation error on '{}' at paths[{}].\nReason: {}.",
                         path,
                         i,
                         e,
@@ -504,10 +504,14 @@ class DocumentChunker(BaseChunker):
         # The only work-around to add a sentinel at paths
         paths = list(path_section_counts.keys()) + [None]
 
+        # If no files were successfully processed, return empty
+        if not path_section_counts:
+            return
+
         doc_count = 0
         curr_path = paths[0]
         for chunks in all_chunk_groups:
-            if path_section_counts[curr_path] == 0:
+            if path_section_counts.get(curr_path, 0) == 0:
                 if separator is not None:
                     yield separator
 

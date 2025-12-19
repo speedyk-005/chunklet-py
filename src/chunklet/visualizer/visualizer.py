@@ -217,6 +217,6 @@ class Visualizer:
         uvicorn.run(self.app, host=self.host, port=self.port)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     visualizer = Visualizer()
     visualizer.serve()

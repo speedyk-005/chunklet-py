@@ -165,9 +165,6 @@ class CodeChunker(BaseChunker):
         if max_functions != sys.maxsize:
             limits.append(f"functions: {function_count} > {max_functions}")
 
-        if not limits:
-            return "Block exceeds unspecified limits"
-
         limits_str = ", ".join(limits)
 
         return (
@@ -239,7 +236,10 @@ class CodeChunker(BaseChunker):
                                 "span": (start_span, end_span),
                                 "source": (
                                     str(source)
-                                    if isinstance(source, (str, Path))
+                                    if isinstance(source, Path)
+                                    or (
+                                        isinstance(source, str) and is_path_like(source)
+                                    )
                                     else "N/A"
                                 ),
                             },
@@ -440,7 +440,8 @@ class CodeChunker(BaseChunker):
                         "span": (start_span, end_span),
                         "source": (
                             str(source)
-                            if (isinstance(source, Path) or is_path_like(source))
+                            if isinstance(source, Path)
+                            or (isinstance(source, str) and is_path_like(source))
                             else "N/A"
                         ),
                     },
@@ -543,15 +544,16 @@ class CodeChunker(BaseChunker):
 
         token_counter = token_counter or self.token_counter
 
-        if not source.strip():
+        if isinstance(source, str) and not source.strip():
             self.log_info("Input source is empty. Returning empty list.")
             return []
 
         self.log_info(
             "Starting chunk processing for {}",
             (
-                f"source: {str(Path)}"
-                if (isinstance(str, Path) or is_path_like(source))
+                f"source: {source}"
+                if isinstance(source, Path)
+                or (isinstance(source, str) and is_path_like(source))
                 else f"code starting with:\n```\n{source[:100]}...\n```\n"
             ),
         )
@@ -575,8 +577,9 @@ class CodeChunker(BaseChunker):
             "Generated {} chunk(s) for the {}",
             len(result_chunks),
             (
-                f"source: {str(Path)}"
-                if (isinstance(str, Path) or is_path_like(source))
+                f"source: {source}"
+                if isinstance(source, Path)
+                or (isinstance(source, str) and is_path_like(source))
                 else f"code starting with:\n```\n{source[:100]}...\n```\n"
             ),
         )

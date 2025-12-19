@@ -77,6 +77,7 @@ code = [
 visualization = [
   "uvicorn>=0.34.0",
   "fastapi>=0.115.12",
+  "python-multipart>=0.0.20",
 ]
 
 all = ["chunklet-py[document,code,visualization]"]
@@ -136,7 +137,6 @@ minversion = "7.4"
 # disable coverage report to prevent racing with multiprocessing
 # addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --durations=10"
 
-addopts = "--durations=10"
 testpaths = ["tests"]
 python_files = "test_*.py"
 

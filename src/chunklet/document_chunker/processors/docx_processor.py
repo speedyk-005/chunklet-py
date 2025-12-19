@@ -132,7 +132,7 @@ class DOCXProcessor(BaseProcessor):
             yield "\n\n".join(current_chunk)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     file_path = "samples/Lorem Ipsum.docx"
     processor = DOCXProcessor(file_path)
 
