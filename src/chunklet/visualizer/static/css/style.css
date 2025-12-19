@@ -262,6 +262,13 @@ h1 {
     gap: 5px;
 }
 
+.button-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
 
 
 
@@ -284,6 +291,8 @@ h1 {
     word-wrap: break-word;
     line-height: 1.8;
     min-height: 200px;
+    max-height: 180vh;
+    overflow-y: auto;
 }
 
 .placeholder-text {
@@ -776,10 +785,6 @@ h1 {
     }
 }
 
-
-
-
-
 .metadata-table {
     width: 100%;
     border-collapse: collapse;
@@ -809,5 +814,51 @@ h1 {
 .metadata-table td:last-child {
     width: 70%;
     word-break: break-all;
+}
+
+/* Go to Top Button */
+.go-to-top-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.go-to-top-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--shadow-color);
+}
+
+.go-to-top-btn.visible {
+    display: flex;
+}
+
+/* Mobile only */
+@media (max-width: 768px) {
+    .go-to-top-btn.visible {
+        display: flex;
+    }
+}
+
+/* Desktop - hide by default */
+@media (min-width: 769px) {
+    .go-to-top-btn {
+        display: none !important;
+    }
 }
 

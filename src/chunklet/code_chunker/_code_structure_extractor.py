@@ -5,16 +5,10 @@ Internal module for extracting code structures from source code.
 Split from CodeChunker for modularity.
 """
 
-import sys
 from pathlib import Path
-from typing import Any, Literal, Callable, Generator, Annotated
-from functools import partial
-from itertools import chain, accumulate
-from more_itertools import unique_everseen
+from itertools import accumulate
 import regex as re
-from pydantic import Field
 from collections import defaultdict, namedtuple
-from box import Box
 
 try:
     from charset_normalizer import from_path
@@ -38,14 +32,8 @@ from chunklet.code_chunker.patterns import (
 )
 from chunklet.code_chunker.helpers import is_binary_file, is_python_code
 from chunklet.common.path_utils import is_path_like
-from chunklet.common.validation import validate_input, restricted_iterable
-from chunklet.common.token_utils import count_tokens
-from chunklet.exceptions import (
-    InvalidInputError,
-    FileProcessingError,
-    MissingTokenCounterError,
-    TokenLimitError,
-)
+from chunklet.common.validation import validate_input
+from chunklet.exceptions import FileProcessingError
 
 
 CodeLine = namedtuple(
@@ -91,7 +79,7 @@ class CodeStructureExtractor:
                 "Please install it with 'pip install charset-normalizer>=3.4.0' "
                 "or install the code processing extras with 'pip install chunklet-py[code]'"
             )
-            
+
         if isinstance(source, Path) or is_path_like(source):
             path = Path(source)
             if not path.exists():
@@ -272,7 +260,9 @@ class CodeStructureExtractor:
 
         # Apply _annotate_block to all matches for each pattern
         for pattern, tag in patterns_n_tags:
-            code = pattern.sub(lambda match, tag=tag: self._annotate_block(tag, match), code)
+            code = pattern.sub(
+                lambda match, tag=tag: self._annotate_block(tag, match), code
+            )
 
         return code, cumulative_lengths
 
@@ -412,8 +402,9 @@ class CodeStructureExtractor:
         """
         # Flush if DOC buffered lines are not consecutive
         if (
-            len(buffer["META"]) == 1   # First decorator/attribute
-            or buffer["DOC"] and buffer["DOC"][-1].line_number != line_no - 1
+            len(buffer["META"]) == 1  # First decorator/attribute
+            or buffer["DOC"]
+            and buffer["DOC"][-1].line_number != line_no - 1
         ):
             self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
             state["inside_func"] = False
@@ -422,9 +413,7 @@ class CodeStructureExtractor:
         deannoted_line = (
             line[: matched.start()] + line[matched.end() :]
         )  # slice off the annotation
-        buffer[tag].append(
-            CodeLine(line_no, deannoted_line, indent_level, None)
-        )
+        buffer[tag].append(CodeLine(line_no, deannoted_line, indent_level, None))
 
     def _handle_block_start(
         self,
@@ -433,11 +422,11 @@ class CodeStructureExtractor:
         buffer: dict[list],
         state: dict,
         source: str | Path,
-        func_start: str | None = None
+        func_start: str | None = None,
     ):
         """
         Detects top-level namespace or function starts and performs language-aware flushing.
-        
+
         Args:
             line (str): The annotated line detected.
             indent_level (int):
@@ -448,7 +437,7 @@ class CodeStructureExtractor:
             func_start (str, optional): Line corresponds to a function partial signature
         """
         namespace_start = NAMESPACE_DECLARATION.match(line)
-        
+
         if (
             namespace_start
             # If decorator/attribute exists in buffer, skip flushing
@@ -458,19 +447,23 @@ class CodeStructureExtractor:
 
             # If it is a Python code, we can flush everything, else we won't flush the docstring yet
             # This helps including the docstring that is on top of block definition in the other languages
-            if state['curr_struct']:
+            if state["curr_struct"]:
                 if is_python_code(source):
-                    self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
+                    self._flush_snippet(
+                        state["curr_struct"], state["snippet_dicts"], buffer
+                    )
                 else:
                     doc = buffer.pop("DOC", [])
-                    self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
+                    self._flush_snippet(
+                        state["curr_struct"], state["snippet_dicts"], buffer
+                    )
                     buffer.clear()
                     buffer["doc"] = doc
 
         # Nestled blocks are not to be extracted
         if func_start:
-            state['inside_func'] = True
-    
+            state["inside_func"] = True
+
     def extract_code_structure(
         self,
         source: str | Path,
@@ -500,10 +493,10 @@ class CodeStructureExtractor:
         )
 
         state = {
-            'curr_struct': [],
-            'last_indent': 0,
-            'inside_func': False,
-            'snippet_dicts': []
+            "curr_struct": [],
+            "last_indent": 0,
+            "inside_func": False,
+            "snippet_dicts": [],
         }
         buffer = defaultdict(list)
 
@@ -522,10 +515,9 @@ class CodeStructureExtractor:
                     state=state,
                 )
                 continue
-                
 
             # Manage block accumulation
-            
+
             func_start = FUNCTION_DECLARATION.match(line)
             self._handle_block_start(
                 line=line,
@@ -535,8 +527,8 @@ class CodeStructureExtractor:
                 source=source,
                 func_start=func_start.group(0) if func_start else None,
             )
-            
-            if not state["curr_struct"]: # Fresh block
+
+            if not state["curr_struct"]:  # Fresh block
                 state["curr_struct"] = [
                     CodeLine(
                         line_no,
@@ -552,7 +544,9 @@ class CodeStructureExtractor:
                 and indent_level <= state["last_indent"]
                 and not (OPENER.match(line) or CLOSURE.match(line))
             ):  # Block end
-                self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
+                self._flush_snippet(
+                    state["curr_struct"], state["snippet_dicts"], buffer
+                )
                 state["curr_struct"] = [
                     CodeLine(
                         line_no,
@@ -577,4 +571,3 @@ class CodeStructureExtractor:
             )
 
         return snippet_dicts, cumulative_lengths
-        

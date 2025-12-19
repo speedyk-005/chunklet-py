@@ -65,6 +65,20 @@ class SentenceSplitter(BaseSplitter):
     - Intelligent Post-processing: Cleans up split sentences by filtering empty strings and rejoining stray punctuation.
     """
 
+    # Language handler mapping - each library chosen for specific linguistic capabilities
+    LANGUAGE_HANDLERS = {
+        frozenset(PYSBD_SUPPORTED_LANGUAGES): lambda lang, text: Segmenter(
+            language=lang
+        ).segment(text),
+        frozenset(SENTSPLIT_UNIQUE_LANGUAGES): lambda lang, text: SentSplit(
+            lang
+        ).segment(text),
+        frozenset(
+            INDIC_NLP_UNIQUE_LANGUAGES
+        ): lambda lang, text: sentence_tokenize.sentence_split(text, lang),
+        frozenset(SENTENCEX_UNIQUE_LANGUAGES): lambda lang, text: segment(lang, text),
+    }
+
     @validate_input
     def __init__(self, verbose: bool = False):
         """
@@ -154,13 +168,11 @@ class SentenceSplitter(BaseSplitter):
             if self.verbose:
                 logger.info("Input text is empty. Returning empty list.")
             return []
-        sentences = []
 
         if lang == "auto":
-            if self.verbose:
-                logger.warning(
-                    "The language is set to `auto`. Consider setting the `lang` parameter to a specific language to improve reliability."
-                )
+            logger.warning(
+                "The language is set to `auto`. Consider setting the `lang` parameter to a specific language to improve reliability."
+            )
             lang_detected, confidence = self.detected_top_language(text)
             lang = lang_detected if confidence >= 0.7 else lang
 
@@ -169,21 +181,21 @@ class SentenceSplitter(BaseSplitter):
             sentences, splitter_name = self.custom_splitter_registry.split(text, lang)
             if self.verbose:
                 logger.info("Using registered splitter: {}", splitter_name)
-        elif lang in PYSBD_SUPPORTED_LANGUAGES:
-            sentences = Segmenter(language=lang).segment(text)
-        elif lang in SENTSPLIT_UNIQUE_LANGUAGES:
-            sentences = SentSplit(lang).segment(text)
-        elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
-            sentences = sentence_tokenize.sentence_split(text, lang)
-        elif lang in SENTENCEX_UNIQUE_LANGUAGES:
-            sentences = segment(lang, text)
         else:
-            if self.verbose:
+            # Find and use the appropriate handler
+            sentences = None
+            for lang_set, handler in self.LANGUAGE_HANDLERS.items():
+                if lang in lang_set:
+                    sentences = handler(lang, text)
+                    break
+
+            # If no handler found, use fallback
+            if sentences is None:
                 logger.warning(
                     "Using a universal rule-based splitter.\n"
                     "Reason: Language not supported or detected with low confidence."
                 )
-            sentences = self.fallback_splitter.split(text)
+                sentences = self.fallback_splitter.split(text)
 
         # Apply post-processing filter
         processed_sentences = self._filter_sentences(sentences)

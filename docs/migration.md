@@ -1,7 +1,7 @@
 # Migration Guide from v1 to v2: What's New and How to Adapt!   
 
 !!! warning "Important: Python Version Support"
-    Chunklet-py v2.0.0 has dropped official support for Python 3.8 and 3.9. The minimum required Python version is now **3.10**. Please ensure your environment is updated to Python 3.10 or newer for compatibility.
+    Chunklet-py v2.x.x has dropped official support for Python 3.8 and 3.9. The minimum required Python version is now **3.10**. Please ensure your environment is updated to Python 3.10 or newer for compatibility.
 
 Hello there, fellow Chunklet enthusiast! 👋 Ready to explore the exciting new world of Chunklet v2? We've been hard at work, making Chunklet-py even more robust, flexible, and, dare we say, *efficient*! This guide is designed to walk you through all the fantastic changes and help you smoothly transition your existing code. No need to worry, we're here to support you every step of the way!
 
@@ -26,7 +26,7 @@ Our core chunking class now has a new, more descriptive name!
     chunker = Chunklet()
     ```
 
-=== "After (v2.0.0)"
+=== "After (v2.x.x)"
 
     ```py
     from chunklet import PlainTextChunker
@@ -50,7 +50,7 @@ The `use_cache` flag has been removed from the `PlainTextChunker`.
     chunks = chunker.chunk(text, use_cache=False)
     ```
 
-=== "After (v2.0.0)"
+=== "After (v2.x.x)"
 
     ```py
     chunker = PlainTextChunker()
@@ -75,7 +75,7 @@ The `preview_sentences` method has been removed from the main chunker class.
     sentences, warnings = chunker.preview_sentences(text, lang="en")
     ```
 
-=== "After (v2.0.0)"
+=== "After (v2.x.x)"
 
     ```py
     from chunklet import SentenceSplitter
@@ -106,7 +106,7 @@ We've streamlined how chunking constraints are managed, moving towards more expl
     chunks = chunker.chunk(text, mode="sentence", max_sentences=5) # Implicit max_tokens=512
     ```
 
-=== "After (v2.0.0)"
+=== "After (v2.x.x)"
 
     ```py
     chunker = PlainTextChunker()
@@ -130,7 +130,7 @@ The standalone language detection utility has found a new home!
     lang, confidence = detect_text_language(text)
     ```
 
-=== "After (v2.0.0)"
+=== "After (v2.x.x)"
 
     ```py
     from chunklet.sentence_splitter import SentenceSplitter
@@ -185,7 +185,7 @@ Have a unique way you prefer your sentences split? We've made it even simpler to
             print(warning)
     ```
 
-=== "After (v2.0.0)"
+=== "After (v2.x.x)"
 
     ```py
     from chunklet.sentence_splitter.registry import registered_splitter
@@ -218,7 +218,7 @@ We've refined our exception handling to provide more clarity and specificity.
 
 ### CLI Usage Changes
 
-In v1.4.0, the `chunklet` CLI had a simpler structure, primarily focused on plain text. In v2.0.0, the CLI has been reorganized for clarity and to support different chunkers.
+In v1.4.0, the `chunklet` CLI had a simpler structure, primarily focused on plain text. In v2.x.x, the CLI has been reorganized for clarity and to support different chunkers.
 
 **New `chunk` command and chunker selection!** A new `chunk` command is now the main entrypoint for all chunking operations.
 - When you provide text directly as an argument, `PlainTextChunker` is used.
@@ -235,7 +235,7 @@ For more details, see the [CLI Usage documentation](getting-started/cli.md).
     chunklet "Your text here." --mode sentence --max-sentences 5
     ```
 
-=== "After (v2.0.0)"
+=== "After (v2.x.x)"
 
     ```bash
     # Chunking a string uses PlainTextChunker

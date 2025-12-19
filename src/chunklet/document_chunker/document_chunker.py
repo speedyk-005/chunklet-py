@@ -308,13 +308,17 @@ class DocumentChunker(BaseChunker):
                 if on_errors == "raise":
                     logger.error(
                         "Document validation failed for '{}' at paths[{}].\nReason: {}.",
-                        path, i, e,
+                        path,
+                        i,
+                        e,
                     )
                     raise error
                 elif on_errors == "break":
                     logger.error(
                         "Stopping due to validation error on '{path}' at paths[{}].\nReason: {error}.",
-                        path, i, e,
+                        path,
+                        i,
+                        e,
                     )
                     break
                 else:  # skip
@@ -386,7 +390,7 @@ class DocumentChunker(BaseChunker):
                 f"File type '{ext}' is not supported by the general chunk method.\n"
                 "Reason: The processor for this file returns iterable, "
                 "so it must be processed in parallel for efficiency.\n"
-                "💡 Hint: use `chunker.batch_chunk()` for this file type."
+                "💡 Hint: use `chunker.batch_chunk([file.ext])` for this file type."
             )
 
         self.log_info("Starting chunk processing for path: {}.", path)

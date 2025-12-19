@@ -2,6 +2,12 @@
 
 Ready to get Chunklet-py up and running? Fantastic! This guide will walk you through the installation process, making it as smooth as possible.
 
+!!! info "Requirements"
+    Chunklet-py requires **Python 3.9 or newer**. We recommend using Python 3.11+ for the best experience.
+
+!!! note "Package Name Change"
+    Chunklet-py was previously named `chunklet`. The old `chunklet` package is no longer maintained. When installing, make sure to use `chunklet-py` (with the hyphen) to get the latest version.
+    
 ## The Easy Way
 
 The most straightforward method to install Chunklet-py is by using `pip`:
@@ -25,6 +31,10 @@ Chunklet-py offers optional dependencies to unlock additional functionalities, s
 *   **Code Chunking:** For advanced code analysis and chunking features:
     ```bash
     pip install "chunklet-py[code]"
+    ```
+*   **Visualization:** For the interactive web-based chunk visualizer:
+    ```bash
+    pip install "chunklet-py[visualization]"
     ```
 *   **All Extras:** To install all optional dependencies:
     ```bash
@@ -54,7 +64,7 @@ cd chunklet-py
 pip install -e ".[dev]"
 # For documentation development
 pip install -e ".[docs]"
-# For comprehensive development (including all optional features like document and code chunking + docs dependencies)
+# For comprehensive development (including all optional features)
 pip install -e ".[dev-all]"
 ```
 

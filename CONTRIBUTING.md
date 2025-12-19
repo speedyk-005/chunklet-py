@@ -4,22 +4,25 @@ First and foremost, thank you for considering contributing to Chunklet! We appre
 
 ## Getting Started
 
-1.  **Fork the repository:** Click the "Fork" button at the top right of the [repository page](https://github.com/speedyk-005/chunklet).
-
-2.  **Clone your fork:**
+1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/YOUR_USERNAME/chunklet.git
-    cd chunklet
+    git clone https://github.com/speedyk-005/chunklet-py.git
+    cd chunklet-py
     ```
 
-3.  **Install dependencies:** It is recommended to use a virtual environment.
+2.  **Install dependencies:** It is recommended to use a virtual environment.
 
     ```bash
     python -m venv .venv
     source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
+    # For basic development (testing, linting)
     pip install -e ".[dev]"
+    # For comprehensive development (including all optional features)
+    pip install -e ".[dev-all]"
     ```
+
+    These commands install the package in development mode with all development dependencies (pytest, black, flake8, etc.).
 
 ## Making Changes
 
@@ -47,6 +50,13 @@ First and foremost, thank you for considering contributing to Chunklet! We appre
 
     ```bash
     flake8 src/ tests/
+    ```
+
+6.  **Build documentation (if you've made docs changes):** This project uses MkDocs for documentation. Test your changes by building the docs.
+
+    ```bash
+    pip install -e ".[docs]"
+    ./build_docs.sh
     ```
 
 ## Coding Style Guidelines

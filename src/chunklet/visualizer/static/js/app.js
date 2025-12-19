@@ -15,6 +15,7 @@ let toastTimeoutId = null;
 
 // DOM Elements
 const elements = {
+    goToTopBtn: document.getElementById('goToTopBtn'),
     fileInput: document.getElementById('fileInput'),
     uploadArea: document.getElementById('uploadArea'),
     uploadContent: document.getElementById('uploadContent'),
@@ -40,6 +41,7 @@ const elements = {
     documentParams: document.getElementById('documentParams'),
     codeParams: document.getElementById('codeParams'),
     
+    language: document.getElementById('language'),
     max_sentences: document.getElementById('max_sentences'),
     max_tokens: document.getElementById('max_tokens'),
     max_tokens_hint: document.querySelector('#max_tokens + small'),
@@ -61,33 +63,21 @@ const elements = {
  */
 function init() {
     const now = new Date();
-    const formattedDate = now.toLocaleString("en-US", {
-        month: "long",
-        day: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true
-    });
-    if (elements.generatedDate) {
-        elements.generatedDate.textContent = ''; // Clear content initially
-    }
-    if (elements.generatedInfo) {
-        elements.generatedInfo.style.display = 'none'; // Hide generated info initially
-    }
+    const formattedDate = formatDate(now);
+    
+    setElementText(elements.generatedDate, ''); // Clear content initially
+    setElementStyle(elements.generatedInfo, 'display', 'none'); // Hide generated info initially
     
     if (elements.overlap_percent && elements.overlapValue) {
         elements.overlap_percent.value = 20;
-        elements.overlapValue.textContent = '20%';
+        setElementText(elements.overlapValue, '20%');
     }
     
     setupEventListeners();
     updateModeUI('document');
     
     // Set initial text for process button
-    if (elements.processBtn) {
-        elements.processBtn.textContent = 'No file is uploaded yet';
-    }
+    setElementText(elements.processBtn, 'No file is uploaded yet');
     
     console.log('Text Chunk Visualizer initialized');
     fetchConfigAndSetupUI();
@@ -101,48 +91,16 @@ async function fetchConfigAndSetupUI() {
         const response = await fetch('/api/token_counter_status');
         const config = await response.json();
         
-        if (!config.token_counter_available) {
-            if (elements.max_tokens) {
-                elements.max_tokens.disabled = true;
-                elements.max_tokens.value = '';
-            }
-            if (elements.max_tokens_hint) {
-                elements.max_tokens_hint.textContent = 'Chunk by token count (token counter not available)';
-                elements.max_tokens_hint.style.color = 'var(--error-color)';
-            }
-            
-            if (elements.max_tokens_code) {
-                elements.max_tokens_code.disabled = true;
-                elements.max_tokens_code.value = '';
-            }
-            if (elements.max_tokens_code_hint) {
-                elements.max_tokens_code_hint.textContent = 'Chunk by token count (token counter not available)';
-                elements.max_tokens_code_hint.style.color = 'var(--error-color)';
-            }
-        } else {
-            if (elements.max_tokens) {
-                elements.max_tokens.disabled = false;
-            }
-            if (elements.max_tokens_hint) {
-                elements.max_tokens_hint.textContent = 'Chunk by token count';
-                elements.max_tokens_hint.style.color = 'var(--text-tertiary)';
-            }
-            if (elements.max_tokens_code) {
-                elements.max_tokens_code.disabled = false;
-            }
-            if (elements.max_tokens_code_hint) {
-                elements.max_tokens_code_hint.textContent = 'Chunk by token count';
-                elements.max_tokens_code_hint.style.color = 'var(--text-tertiary)';
-            }
-        }
+        updateTokenElements(elements, config.token_counter_available);
+        
     } catch (error) {
         console.error('Error fetching config:', error);
         showToast('Failed to fetch server configuration.', 'error');
         // Default to disabling if config cannot be fetched
-        if (elements.max_tokens) elements.max_tokens.disabled = true;
-        if (elements.max_tokens_code) elements.max_tokens_code.disabled = true;
-        if (elements.max_tokens_hint) elements.max_tokens_hint.textContent = 'Chunk by token count (config error)';
-        if (elements.max_tokens_code_hint) elements.max_tokens_code_hint.textContent = 'Chunk by token count (config error)';
+        setElementDisabled(elements.max_tokens, true);
+        setElementDisabled(elements.max_tokens_code, true);
+        setElementText(elements.max_tokens_hint, 'Chunk by token count (config error)');
+        setElementText(elements.max_tokens_code_hint, 'Chunk by token count (config error)');
     }
 }
 
@@ -152,45 +110,35 @@ async function fetchConfigAndSetupUI() {
  * overlap toggling, and modal interactions.
  */
 function setupEventListeners() {
-    if (elements.browseBtn && elements.fileInput) {
-        elements.browseBtn.addEventListener('click', () => elements.fileInput.click());
-        elements.fileInput.addEventListener('change', handleFileSelect);
-    }
+    addElementListener(elements.browseBtn, 'click', () => elements.fileInput.click());
+    addElementListener(elements.fileInput, 'change', handleFileSelect);
     
-    if (elements.uploadArea) {
-        elements.uploadArea.addEventListener('dragover', handleDragOver);
-        elements.uploadArea.addEventListener('dragleave', handleDragLeave);
-        elements.uploadArea.addEventListener('drop', handleDrop);
-    }
+    addElementListener(elements.uploadArea, 'dragover', handleDragOver);
+    addElementListener(elements.uploadArea, 'dragleave', handleDragLeave);
+    addElementListener(elements.uploadArea, 'drop', handleDrop);
     
-    if (elements.modeSelect) {
-        elements.modeSelect.addEventListener('change', handleModeChange);
-    }
+    addElementListener(elements.modeSelect, 'change', handleModeChange);
     
-    if (elements.processBtn) {
-        elements.processBtn.addEventListener('click', (e) => {
-            if (elements.processBtn.disabled) {
-                e.preventDefault(); // Prevent the default action for disabled button
-                showToast('Please upload a file first to enable processing.', 'warning');
-            } else {
-                processUploadedFile();
-            }
-        });
-    }
+    addElementListener(elements.processBtn, 'click', (e) => {
+        if (elements.processBtn.disabled) {
+            e.preventDefault();
+            showToast('Please upload a file first to enable processing.', 'warning');
+        } else {
+            processUploadedFile();
+        }
+    });
     
-    if (elements.toggleOverlapsBtn) {
-        elements.toggleOverlapsBtn.addEventListener('click', toggleOverlaps);
-    }
+    addElementListener(elements.toggleOverlapsBtn, 'click', toggleOverlaps);
     
     if (elements.overlap_percent && elements.overlapValue) {
-        elements.overlap_percent.addEventListener('input', function() {
-            elements.overlapValue.textContent = this.value + '%';
+        addElementListener(elements.overlap_percent, 'input', function() {
+            setElementText(elements.overlapValue, this.value + '%');
         });
     }
     
     if (elements.closeModalBtn && elements.metadataModal) {
-        elements.closeModalBtn.addEventListener('click', closeMetadataModal);
-        elements.metadataModal.addEventListener('click', (e) => {
+        addElementListener(elements.closeModalBtn, 'click', closeMetadataModal);
+        addElementListener(elements.metadataModal, 'click', (e) => {
             if (e.target === elements.metadataModal) {
                 closeMetadataModal();
             }
@@ -204,13 +152,35 @@ function setupEventListeners() {
         }
     });
     
-    if (elements.downloadChunksBtn) {
-        elements.downloadChunksBtn.addEventListener('click', downloadChunksAsJson);
-    }
+    addElementListener(elements.downloadChunksBtn, 'click', downloadChunksAsJson);
+    addElementListener(elements.clearUploadBtn, 'click', resetUploadArea);
+    
+    // Setup go-to-top button
+    setupGoToTopButton();
+}
 
-    if (elements.clearUploadBtn) {
-        elements.clearUploadBtn.addEventListener('click', resetUploadArea);
-    }
+/**
+ * Sets up go-to-top button functionality for mobile devices
+ */
+function setupGoToTopButton() {
+    if (!elements.goToTopBtn) return;
+    
+    // Show/hide button based on scroll position
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 200) {
+            toggleElementClass(elements.goToTopBtn, 'visible', true);
+        } else {
+            toggleElementClass(elements.goToTopBtn, 'visible', false);
+        }
+    });
+    
+    // Scroll to top when clicked
+    addElementListener(elements.goToTopBtn, 'click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
 }
 
 /**
@@ -228,25 +198,21 @@ function resetUploadArea() {
         console.log('uploadContent innerHTML after remove:', elements.uploadContent.innerHTML);
     }
 
-    elements.uploadContent.innerHTML = `
+    setElementHTML(elements.uploadContent, `
         <div class="upload-icon">📁</div>
         <h3>Upload Text File</h3>
         <p>Drag & drop a text file here or click to browse</p>
         <p class="upload-hint">Any plain text file is supported.</p>
         <button class="control-btn" id="browseBtn">Browse Files</button>
-    `;
+    `);
     console.log('uploadContent innerHTML after reset:', elements.uploadContent.innerHTML);
-    elements.fileInput.value = '';
-    elements.processBtn.disabled = true;
-    elements.processBtn.textContent = 'No file is uploaded yet';
+    setElementValue(elements.fileInput, '');
+    setElementDisabled(elements.processBtn, true);
+    setElementText(elements.processBtn, 'No file is uploaded yet');
     state.uploadedFileName = '';
 
-    if (elements.downloadChunksBtn) {
-        elements.downloadChunksBtn.disabled = true;
-    }
-    if (elements.generatedInfo) {
-        elements.generatedInfo.style.display = 'none'; // Hide generated info
-    }
+    setElementDisabled(elements.downloadChunksBtn, true);
+    setElementStyle(elements.generatedInfo, 'display', 'none'); // Hide generated info
     
     // Re-query browseBtn and re-attach event listener
     const newBrowseBtn = document.getElementById('browseBtn');
@@ -324,7 +290,7 @@ function updateUploadUI(fileName) {
         <p><strong>${fileName}</strong></p>
         <p>Click "Process Text" to analyze chunks</p>
     `;
-    elements.uploadContent.innerHTML = newContentHtml;
+    setElementHTML(elements.uploadContent, newContentHtml);
 
     // Create and prepend the clear button
     let clearBtn = document.createElement('button');
@@ -334,8 +300,8 @@ function updateUploadUI(fileName) {
     clearBtn.addEventListener('click', resetUploadArea);
     elements.uploadContent.prepend(clearBtn); // Add button as the first child
 
-    elements.processBtn.disabled = false;
-    elements.processBtn.textContent = state.currentMode === 'document' ? 'Process Document' : 'Process Code';
+    setElementDisabled(elements.processBtn, false);
+    setElementText(elements.processBtn, state.currentMode === 'document' ? 'Process Document' : 'Process Code');
 }
 
 /**
@@ -353,16 +319,10 @@ function handleModeChange(event) {
  * @param {string} mode - The current chunking mode ('document' or 'code').
  */
 function updateModeUI(mode) {
-    if (elements.documentParams) {
-        elements.documentParams.classList.toggle('active', mode === 'document');
-    }
-    if (elements.codeParams) {
-        elements.codeParams.classList.toggle('active', mode === 'code');
-    }
+    toggleElementClass(elements.documentParams, 'active', mode === 'document');
+    toggleElementClass(elements.codeParams, 'active', mode === 'code');
     
-    if (elements.processBtn) {
-        elements.processBtn.textContent = mode === 'document' ? 'Process Document' : 'Process Code';
-    }
+    setElementText(elements.processBtn, mode === 'document' ? 'Process Document' : 'Process Code');
 }
 
 /**
@@ -386,10 +346,8 @@ async function processUploadedFile() {
     }
     
     try {
-        if (elements.processBtn) {
-            elements.processBtn.disabled = true;
-            elements.processBtn.textContent = 'Processing...';
-        }
+        setElementDisabled(elements.processBtn, true);
+        setElementText(elements.processBtn, 'Processing...');
         
         // Create FormData with file and parameters as JSON
         const formData = new FormData();
@@ -437,47 +395,28 @@ async function processUploadedFile() {
         updateStats();
         renderTextWithSpans();
         
-        if (elements.toggleOverlapsBtn) {
-            elements.toggleOverlapsBtn.disabled = false;
-        }
-        if (elements.downloadChunksBtn) {
-            elements.downloadChunksBtn.disabled = false;
-        }
+        setElementDisabled(elements.toggleOverlapsBtn, false);
+        setElementDisabled(elements.downloadChunksBtn, false);
         
         const now = new Date();
-        const formattedDate = now.toLocaleString("en-US", {
-            month: "long",
-            day: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true
-        });
-        if (elements.generatedDate) {
-            elements.generatedDate.textContent = formattedDate;
-        }
-        if (elements.generatedInfo) {
-            elements.generatedInfo.style.display = ''; // Show generated info
-        }
+        const formattedDate = formatDate(now);
+        setElementText(elements.generatedDate, formattedDate);
+        setElementStyle(elements.generatedInfo, 'display', ''); // Show generated info
         
         showToast(`Processed ${data.chunks.length} chunks from "${file.name}"`, 'success');
         
     } catch (error) {
         console.error('Error processing file:', error);
-        if (elements.textDisplay) {
-            elements.textDisplay.innerHTML = `
-                <div class="placeholder-text" style="color: var(--error-color);">
-                    <p>Error processing file: ${escapeHtml(error.message)}</p>
-                    <p>Please check the file format and parameters.</p>
-                </div>
-            `;
-        }
+        setElementHTML(elements.textDisplay, `
+            <div class="placeholder-text" style="color: var(--error-color);">
+                <p>Error processing file: ${escapeHtml(error.message)}</p>
+                <p>Please check the file format and parameters.</p>
+            </div>
+        `);
 
     } finally {
-        if (elements.processBtn) {
-            elements.processBtn.disabled = false;
-            elements.processBtn.textContent = state.currentMode === 'document' ? 'Process Document' : 'Process Code';
-        }
+        setElementDisabled(elements.processBtn, false);
+        setElementText(elements.processBtn, state.currentMode === 'document' ? 'Process Document' : 'Process Code');
     }
 }
 
@@ -485,6 +424,7 @@ function getCurrentParameters() {
     const params = {};
     
     if (state.currentMode === 'document') {
+        if (elements.language?.value) params.lang = elements.language.value;
         if (elements.max_sentences?.value) params.max_sentences = elements.max_sentences.value;
         if (elements.max_tokens?.value) params.max_tokens = elements.max_tokens.value;
         if (elements.max_section_breaks?.value) params.max_section_breaks = elements.max_section_breaks.value;
@@ -550,10 +490,10 @@ function renderTextWithSpans() {
         html += createSpanElement(currentText, currentChunks, i - currentText.length);
     }
     
-    elements.textDisplay.innerHTML = html;
+    setElementHTML(elements.textDisplay, html);
     
-    elements.textDisplay.addEventListener('click', handleChunkClick);
-    elements.textDisplay.addEventListener('dblclick', handleChunkDoubleClick);
+    addElementListener(elements.textDisplay, 'click', handleChunkClick);
+    addElementListener(elements.textDisplay, 'dblclick', handleChunkDoubleClick);
 }
 
 function createSpanElement(text, chunkIds, startPos) {
@@ -677,10 +617,8 @@ function getOverlapsForChunk(chunkId) {
 
 function toggleOverlaps() {
     state.showOverlaps = !state.showOverlaps;
-    if (elements.toggleOverlapsBtn) {
-        elements.toggleOverlapsBtn.classList.toggle('active', state.showOverlaps);
-        elements.toggleOverlapsBtn.textContent = state.showOverlaps ? 'Hide Overlaps' : 'Reveal Overlaps';
-    }
+    toggleElementClass(elements.toggleOverlapsBtn, 'active', state.showOverlaps);
+    setElementText(elements.toggleOverlapsBtn, state.showOverlaps ? 'Hide Overlaps' : 'Reveal Overlaps');
     updateAllHighlights();
     updateStats();
 }
@@ -727,21 +665,15 @@ function showMetadata(chunkId) {
         </div>
     `;
     
-    if (elements.modalBody) {
-        elements.modalBody.innerHTML = html;
-    }
+    setElementHTML(elements.modalBody, html);
     
     document.body.style.overflow = 'hidden';
-    if (elements.metadataModal) {
-        elements.metadataModal.classList.add('active');
-    }
+    toggleElementClass(elements.metadataModal, 'active', true);
 }
 
 function closeMetadataModal() {
     document.body.style.overflow = '';
-    if (elements.metadataModal) {
-        elements.metadataModal.classList.remove('active');
-    }
+    toggleElementClass(elements.metadataModal, 'active', false);
 }
 
 // Handle scroll hint visibility
@@ -760,12 +692,8 @@ function setupScrollHint() {
 }
 
 function updateStats() {
-    if (elements.totalChunksElem) {
-        elements.totalChunksElem.textContent = `Chunks: ${state.chunksData.length}`;
-    }
-    if (elements.textLengthElem) {
-        elements.textLengthElem.textContent = `Text Length: ${state.originalText.length} chars`;
-    }
+    setElementText(elements.totalChunksElem, `Chunks: ${state.chunksData.length}`);
+    setElementText(elements.textLengthElem, `Text Length: ${state.originalText.length} chars`);
 }
 
 function downloadChunksAsJson() {
@@ -811,35 +739,23 @@ function showToast(message, type = 'info') {
         clearTimeout(toastTimeoutId);
     }
 
-    elements.toastMessage.textContent = message;
+    setElementText(elements.toastMessage, message);
 
-    switch (type) {
-        case 'error':
-            elements.toastNotification.style.backgroundColor = 'var(--error-color)';
-            break;
-        case 'success':
-            elements.toastNotification.style.backgroundColor = 'var(--success-color)';
-            break;
-        case 'warning':
-            elements.toastNotification.style.backgroundColor = 'var(--warning-color)';
-            break;
-        default:
-            elements.toastNotification.style.backgroundColor = 'var(--accent-color)';
-    }
+    const colors = {
+        error: 'var(--error-color)',
+        success: 'var(--success-color)',
+        warning: 'var(--warning-color)',
+        info: 'var(--accent-color)'
+    };
+    
+    setElementStyle(elements.toastNotification, 'backgroundColor', colors[type] || colors.info);
 
-    elements.toastNotification.classList.add('show');
+    toggleElementClass(elements.toastNotification, 'show', true);
 
     toastTimeoutId = setTimeout(() => {
-        elements.toastNotification.classList.remove('show');
+        toggleElementClass(elements.toastNotification, 'show', false);
         toastTimeoutId = null;
     }, 5000);
-}
-
-function escapeHtml(text) {
-    if (text == null) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 }
 
 function renderMetadataTable(metadataObject) {

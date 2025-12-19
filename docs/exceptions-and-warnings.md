@@ -100,36 +100,36 @@ Warnings from Chunklet-py are like friendly nudges – they let you know about s
 
 ### "No valid files found after validation. Returning empty generator."
 
-*   **What it means:** During batch processing, after validating all the input paths, it was determined that there are no valid files to process. This could be because the paths were incorrect, the files were of unsupported types, or they were all skipped due to validation errors.
+*   **What it means:** During batch processing, after checking all your input paths, Chunklet-py discovered that none of them made the cut! 🫣 This could happen if the paths were pointing to the wrong place, the files were in formats we don't speak, or they all got politely excused due to validation issues. In any case, we're returning an empty generator since there's nothing to work with.
 *   **Where Logged:** `src/chunklet/document_chunker/document_chunker.py` (during `batch_chunk` operations)
-*   **What to do:** Verify your input file paths and ensure they are supported file types.
+*   **What to do:** Double-check those file paths and make sure they're pointing to supported file types - we're ready whenever you are!
 
 ### "Splitting oversized block ({} tokens) into sub-chunks"
 
-*   **What it means:** In `CodeChunker`'s lenient mode, a code block was too big for the `max_tokens` limit. Instead of throwing an error, Chunklet decided to be helpful and split it into smaller sub-chunks.
+*   **What it means:** In `CodeChunker`'s more relaxed mode, one of your code blocks turned out to be a bit of a heavyweight - too big for the `max_tokens` limit! 💪 Rather than throwing up its hands in defeat, Chunklet-py decided to be extra helpful and split it into more manageable sub-chunks.
 *   **Where Logged:** `src/chunklet/experimental/code_chunker/code_chunker.py` (during `chunk` operations when `strict_mode=False`)
-*   **What to do:** This is usually just an informational warning. If you prefer stricter adherence to token limits for code blocks, consider setting `strict_mode=True` in `CodeChunker`.
+*   **What to do:** This is just a friendly heads-up about what we're doing. If you want us to be more strict about those token limits for code blocks, just set `strict_mode=True` in `CodeChunker`.
 
 ### "Warning: '{path}' is path-like but was not found or is not a processable file/directory. Skipping."
 
-*   **What it means:** A path provided via the `--source` option looks like a valid path, but it either doesn't exist or it's a special file type (like a socket or a pipe) that the CLI cannot process. The CLI will skip this path.
+*   **What it means:** The path you provided via `--source` looked promising at first glance, but when we went to find it, it was either playing hide-and-seek (doesn't exist!) or turned out to be something special like a socket or pipe that we can't process. No worries - we'll just skip this one and keep going.
 *   **Where Logged:** `src/chunklet/cli.py`
-*   **What to do:** Check that the path is correct and points to a regular file or a directory.
+*   **What to do:** Give that path another look to make sure it's correct and points to a regular file or directory we can handle.
 
 ### "Warning: '{path}' does not resemble a valid file system path (failed heuristic check). Skipping."
 
-*   **What it means:** A string provided via the `--source` option does not appear to be a valid file system path. The CLI uses a heuristic to check for path-like strings, and this one failed. It will be skipped.
+*   **What it means:** The string you gave us via `--source` just doesn't look like a proper file system path to our trained eye. We use a clever heuristic to spot path-like strings, but this one didn't pass the test. We'll politely skip it and move along.
 *   **Where Logged:** `src/chunklet/cli.py`
-*   **What to do:** Ensure that the provided source path is a valid and correctly formatted file system path.
+*   **What to do:** Make sure your source path is a proper, well-formed file system path - we're all set to handle it once it's right.
 
 ### "Warning: No processable files found in the specified source(s). Exiting."
 
-*   **What it means:** The CLI was unable to find any files to process from the provided `--source` paths. This could be because the directories were empty or only contained unsupported file types. The program will exit.
+*   **What it means:** We searched high and low through all the `--source` paths you provided, but couldn't find a single file we could process. 🕵️‍♀️ Maybe the directories are feeling a bit empty, or they only contain file types we don't speak yet. In any case, there's nothing for us to do, so we're gracefully bowing out.
 *   **Where Logged:** `src/chunklet/cli.py`
-*   **What to do:** Verify that the source paths are correct and that they contain processable files.
+*   **What to do:** Double-check those source paths and make sure they contain files in formats we support.
 
 ### "Warning: No chunks were generated. This might be because the input was empty or did not contain any processable content."
 
-*   **What it means:** The chunking process completed, but no chunks were produced. This usually happens if the input text was empty or if the files provided for chunking contained no extractable text. The program will exit.
+*   **What it means:** The chunking process ran its course, but unfortunately, no chunks came out the other side. This often happens when your input text was empty, or the files you provided turned out to be text-free zones with nothing we could extract. Since there's nothing to show for our efforts, we're calling it a day.
 *   **Where Logged:** `src/chunklet/cli.py`
-*   **What to do:** Check your input to make sure it contains processable text content.
+*   **What to do:** Take a peek at your input to make sure there's some actual text content we can work with.

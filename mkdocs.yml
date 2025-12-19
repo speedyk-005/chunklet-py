@@ -59,6 +59,7 @@ nav:
       - 'Plain Text Chunker': 'getting-started/programmatic/plain_text_chunker.md'
       - 'Document Chunker': 'getting-started/programmatic/document_chunker.md'
       - 'Code Chunker': 'getting-started/programmatic/code_chunker.md'
+      - 'Visualizer': 'getting-started/programmatic/visualizer.md'
       
   - 'Supported Languages': 'supported-languages.md'
   - 'Exceptions and Warnings': 'exceptions-and-warnings.md'

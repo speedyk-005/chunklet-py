@@ -4,45 +4,54 @@
   <img src="../../../img/plain_text_chunker.jpg" alt="Plain Text Chunker" width="512"/>
 </p>
 
+## Quick Install
+
+```bash
+pip install chunklet-py
+```
+
+No extra dependencies needed - `PlainTextChunker` is ready to roll right out of the box! 🚀
+
 ## Taming Your Text with Precision
 
-Do you have large blocks of text that need to be organized into smaller, more manageable pieces? The `PlainTextChunker` is designed to help you transform unruly text into perfectly sized, context-aware chunks. Whether you're preparing data for a Large Language Model (LLM) or building a search index, this tool aims to simplify your workflow.
+Got a wall of text that's feeling a bit... overwhelming? The `PlainTextChunker` is your friendly neighborhood text organizer that transforms unruly paragraphs into perfectly sized, context-aware chunks. Perfect for RAG systems, document analysis, and any workflow that needs smart text segmentation with full control over chunk sizes.
 
-Our approach goes beyond simple text splitting; it's about intelligent segmentation. The `PlainTextChunker` prioritizes context, working diligently to preserve the meaning and natural flow of your text.
+Forget dumb splitting - we're talking intelligent segmentation that actually understands context! The `PlainTextChunker` works hard to preserve meaning and flow, so your chunks don't end up as confusing puzzle pieces.
 
-Ready to bring order to your text? Let's explore how!
+Ready to bring some order to the chaos? Let's dive in and make your text behave!
 
-### Where `PlainTextChunker` Excels
+### Where `PlainTextChunker` Really Shines
 
-The `PlainTextChunker` is engineered with a robust set of features, making it highly adaptable for diverse text-chunking needs:
+The `PlainTextChunker` comes packed with smart features that make it your go-to text wrangling sidekick:
 
--  **Flexible Constraint-Based Chunking:** Imagine having ultimate control over your text chunks! `PlainTextChunker` empowers you to define exactly how your text is segmented. You can set limits based on sentence count, token count, or even those handy Markdown section breaks. The best part? You can combine them in any way you like, giving you unparalleled precision over your chunk's size and structure.
--  **Intelligent Overlap for Context Preservation:** Features clause-level overlap to ensure smooth transitions and maintain contextual coherence between consecutive chunks.
--  **Extensive Multilingual Support:** Leveraging the capabilities of our sentence splitter, this chunker supports a broad spectrum of languages, enhancing its global applicability.
--  **Customizable Token Counting:** Facilitates easy integration of custom token counting functions, allowing precise alignment with the specific tokenization requirements of different Large Language Models.
--  **Optimized Parallel Processing:** Designed to efficiently handle large text volumes by utilizing multiple processors, significantly accelerating the chunking workflow.
--  **Memory-Conscious Operation:** Processes even extensive documents with high memory efficiency by yielding chunks iteratively, thereby minimizing overall memory footprint.
+-  **Flexible Constraint-Based Chunking:** Ultimate control over your chunks! Mix and match limits based on sentences, tokens, or Markdown section breaks. Craft exactly the chunk size you need with precision control! 🎯
+-  **Intelligent Overlap for Context Preservation:** Adds smart overlaps between chunks so your text flows smoothly. No more jarring transitions that leave readers scratching their heads!
+-  **Extensive Multilingual Support:** Speaks over 50 languages fluently, thanks to our trusty sentence splitter. Global domination through better text chunking! 🌍
+-  **Customizable Token Counting:** Plug in your own token counter for perfect alignment with different LLMs. Because one size definitely doesn't fit all models!
+-  **Optimized Parallel Processing:** Turbocharges through large texts using multiple processors. Speed demon mode activated! ⚡
+-  **Memory-Conscious Operation:** Handles massive documents efficiently by yielding chunks one at a time. Your RAM will thank you later! 💾
 
-### Constraint-Based Chunking Explained
+### Constraint-Based Chunking: Your Text, Your Rules!
 
-`PlainTextChunker` uses a constraint-based approach to chunking. You can mix and match constraints to get the perfect chunk size. Here's a quick rundown of the available constraints:
+`PlainTextChunker` lets you call the shots with constraint-based chunking. Mix and match limits to craft the perfect chunk size for your needs. Here's the constraint menu:
 
 | Constraint           | Value Requirement | Description |
 | :------------------- | :---------------- | :---------- |
-| `max_sentences`      | `int >= 1`        | This constraint is all about sentence power! You tell Chunklet how many sentences you want per chunk, and it gracefully groups them together, making sure your ideas flow smoothly from one chunk to the next. |
-| `max_tokens`         | `int >= 12`       | Got a strict token budget? This constraint is your best friend! Chunklet carefully adds sentences to your chunk, keeping a watchful eye on the token limit. If a sentence is a bit too chatty, it'll even politely split it at clause boundaries to keep everything perfectly snug. |
-| `max_section_breaks` | `int >= 1`        | Perfect for structured documents! This constraint lets you limit the number of Markdown-style section breaks (like headings `##` or horizontal rules `---`) in each chunk. It's a fantastic way to keep your document's structure intact while chunking. |
+| `max_sentences`      | `int >= 1`        | Sentence power mode! Tell us how many sentences per chunk, and we'll group them thoughtfully so your ideas flow like a well-written story. |
+| `max_tokens`         | `int >= 12`       | Token budget watcher! We'll carefully pack sentences into chunks while respecting your token limits. If a sentence gets too chatty, we'll politely split it at clause boundaries. 🤐 |
+| `max_section_breaks` | `int >= 1`        | Structure superhero! Limits Markdown section breaks per chunk (headings `##`, rules `---`) to keep your document's organization intact. Your headings stay where they belong! |
 
-The `PlainTextChunker` has two main methods: `chunk` for processing a single text and `batch_chunk` for processing multiple texts. Both methods return a generator that yields a [`Box`](https://pypi.org/project/python-box/#:~:text=Overview,strings%20or%20files.) object for each chunk. The `Box` object has two main keys: `content` (str) and `metadata` (dict). For detailed information about metadata structure and usage, see the [Metadata guide](../metadata.md#plaintextchunker-metadata).
+The `PlainTextChunker` has two main methods: `chunk` for single texts and `batch_chunk` for processing multiple texts at once. `chunk` returns a list of handy [`Box`](https://pypi.org/project/python-box/#:~:text=Overview,strings%20or%20files.) objects, while `batch_chunk` is a memory-friendly generator that yields chunks one by one. Each `Box` has `content` (the actual text) and `metadata` (all the juicy details). Check the [Metadata guide](../metadata.md#plaintextchunker-metadata) for the full scoop!
 
-!!! note "Constraint Requirement"
-    At least one limit mode (e.g., `max_sentences`, `max_tokens`, or `max_section_breaks`) must be provided when calling `chunk` or `batch_chunk`. Failing to specify any limit mode will result in an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror).
+!!! note "Quick Note: Constraints Required!"
+    You must specify at least one limit (like `max_sentences`, `max_tokens`, or `max_section_breaks`) when using `chunk` or `batch_chunk`. Forget to add one? You'll get an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror) - but don't worry, it's an easy fix!
 
-## Single Run
 
-Given the following text for our examples:
+## Single Run:
 
-```py
+For our examples, we'll use this sample text:
+
+```py linenums="1"
 text = """
 # Introduction to Chunking
 
@@ -58,13 +67,13 @@ There are several strategies for chunking, including splitting by sentences, by 
 
 ---
 
-## Advanced Chunking Techniques
+## Advanced Chunking Techniques: Level Up Your Skills!
 
-Beyond basic splitting, advanced techniques involve understanding the document's structure. For instance, preserving section breaks can significantly improve the quality of chunks for hierarchical documents. This section will delve into such methods.
+Ready to go beyond the basics? Let's explore some pro-level techniques that make your chunks even smarter!
 
-### Overlap Considerations
+### Overlap Considerations: Keeping Things Connected
 
-To ensure smooth transitions between chunks, an overlap mechanism is often employed. This means that a portion of the previous chunk is included in the beginning of the next, providing continuity.
+Want your chunks to flow smoothly like a well-told story? Overlap is your secret weapon! It includes a bit of the previous chunk at the start of the next one, ensuring your text doesn't feel choppy or disconnected. Continuity is key!
 
 ---
 
@@ -74,11 +83,11 @@ In conclusion, mastering chunking is key to unlocking the full potential of your
 """
 ```
 
-### Chunking by Sentences
+### Chunking by Sentences: Sentence Power Mode! 📝
 
-Here's how you can use `PlainTextChunker` to chunk text by the number of sentences:
+Ready to chunk by sentence count? This is perfect when you want predictable, idea-focused chunks. Let's see it in action:
 
-```py
+```py linenums="1"
 from chunklet.plain_text_chunker import PlainTextChunker
 
 chunker = PlainTextChunker()  # (1)!
@@ -98,10 +107,10 @@ for i, chunk in enumerate(chunks):
     print()
 ```
 
-1.  Setting `verbose=True` enables detailed logging, which is `False` by default, showing internal processes like language detection.
-2.  Instructs the chunker to automatically detect the language of the input text. While convenient, explicitly setting the language (e.g., `lang="en"`) can improve accuracy and performance for known languages.
-3.  Configures the chunker to have no overlap between consecutive chunks. The default behavior includes a 20% overlap to maintain context across chunks.
-4.  Specifies that chunking should start from the very beginning of the text (the first sentence). The default is 0.
+1.  `verbose=True` turns on the chatty mode - you'll see detailed logging of internal processes like language detection. (Default is quiet mode!)
+2.  `lang="auto"` lets us detect the language automatically. Super convenient, but specifying a known language like `lang="en"` can boost accuracy and speed.
+3.  `overlap_percent=0` means no overlap between chunks. By default, we add 20% overlap to keep your text flowing smoothly across chunks.
+4.  `offset=0` starts us from the very beginning of the text. (Zero-based indexing - because programmers love starting from zero!)
 
 ??? success "Click to show output"
     ```linenums="0"
@@ -167,17 +176,16 @@ for i, chunk in enumerate(chunks):
 
 !!! tip "Enable Verbose Logging"
     To see detailed logging during the chunking process, you can set the `verbose` parameter to `True` when initializing the `DocumentChunker`:
-    ```py
+    ``` py linenums="1"
     chunker = PlainTextChunker(verbose=True)
     ```
 
-### Chunking by Tokens
+### Chunking by Tokens: Token Budget Master! 🪙
 
 !!! note "Token Counter Requirement"
     When using the `max_tokens` constraint, a `token_counter` function is essential. This function, which you provide, should accept a string and return an integer representing its token count. Failing to provide a `token_counter` will result in a [`MissingTokenCounterError`](../../exceptions-and-warnings.md#missingtokencountererror).
 
-#### Setup
-```py
+```py linenums="1" hl_lines="3-5 712"
 from chunklet.plain_text_chunker import PlainTextChunker
 
 # Simple counter for demonstration purpose
@@ -185,11 +193,7 @@ def word_counter(text: str) -> int:
     return len(text.split())
 
 chunker = PlainTextChunker(token_counter=word_counter)         # (1)!
-```
 
-1.  Initializes `PlainTextChunker` with a custom `word_counter` function. This function will be used to count tokens when `max_tokens` is used.
-
-```py
 chunks = chunker.chunk(
     text=text,
     lang="auto",
@@ -201,6 +205,9 @@ for i, chunk in enumerate(chunks):
     print(f"Content: {chunk.content}")
     print()
 ```
+
+
+1.  Initializes `PlainTextChunker` with a custom `word_counter` function. This function will be used to count tokens when `max_tokens` is used.
 
 ??? success "Click to show output"
     ```linenums="0"
@@ -266,10 +273,10 @@ for i, chunk in enumerate(chunks):
 !!! tip "Overrides token_counter"
     You can also provide the `token_counter` directly to the `chunk` method. within the `chunk` method call (e.g., `chunker.chunk(..., token_counter=my_tokenizer_function)`). If a `token_counter` is provided in both the constructor and the `chunk` method, the one in the `chunk` method will be used.
 
-### Chunking by Section Breaks
+### Chunking by Section Breaks: Structure Superhero! 🦸‍♀️
 This constraint is useful for documents structured with Markdown headings or thematic breaks.
 
-```py
+``` py linenums="1" hl_lines="3"
 chunks = chunker.chunk(
     text=text,
     max_section_breaks=2
@@ -341,7 +348,7 @@ for i, chunk in enumerate(chunks):
 !!! tip "Adding Base Metadata"
     You can pass a `base_metadata` dictionary to the `chunk` method. This metadata will be included in the `metadata` of each chunk. For example: `chunker.chunk(..., base_metadata={"source": "my_document.txt"})`. For more details on metadata structure and available fields, see the [Metadata guide](../metadata.md#plaintextchunker-metadata).
 
-### Combining Multiple Constraints
+### Combining Multiple Constraints: Mix and Match Magic! 🎭
 The real power of `PlainTextChunker` comes from combining multiple constraints. This allows for highly specific and granular control over how your text is chunked. Here are a few examples of how you can combine different constraints.
 
 !!! note "Token Counter Requirement"
@@ -350,7 +357,7 @@ The real power of `PlainTextChunker` comes from combining multiple constraints. 
 #### By Sentences and Tokens
 This is useful when you want to limit by both the number of sentences and the overall token count, whichever is reached first.
 
-```py
+``` py linenums="1"
 chunks = chunker.chunk(
     text=text,
     max_sentences=5,
@@ -361,7 +368,7 @@ chunks = chunker.chunk(
 #### By Sentences and Section Breaks
 This combination is great for ensuring that chunks don't span across too many sections while also keeping the sentence count in check.
 
-```py
+``` py linenums="1"
 chunks = chunker.chunk(
     text=text,
     max_sentences=10,
@@ -372,7 +379,7 @@ chunks = chunker.chunk(
 #### By Tokens and Section Breaks
 A powerful combination for structured documents where you want to respect section boundaries while adhering to a strict token budget.
 
-```py
+``` py linenums="1"
 chunks = chunker.chunk(
     text=text,
     max_tokens=256,
@@ -383,7 +390,7 @@ chunks = chunker.chunk(
 #### By Sentences, Tokens, and Section Breaks
 For the ultimate level of control, you can combine all three constraints. The chunking will stop as soon as any of the three limits is reached.
 
-```py
+``` py linenums="1"
 chunks = chunker.chunk(
     text=text,
     max_sentences=8,
@@ -404,13 +411,13 @@ chunks = chunker.chunk(
     chunker = PlainTextChunker(continuation_marker="")
     ```
 
-## Batch Run
+## Batch Run: Processing Multiple Texts Like a Pro! 📚
 
-While the `chunk` method is perfect for processing a single text, the `batch_chunk` method is designed for efficiently processing multiple texts in parallel. It returns a generator, allowing you to process large volumes of text without exhausting memory. It shares most of its core arguments with `chunk` (like `max_sentences`, `max_tokens`, `lang`, `overlap_percent`, `offset`, and `token_counter`), but introduces additional parameters to manage batch processing.
+While `chunk` is perfect for single texts, `batch_chunk` is your power player for processing multiple texts in parallel. It uses a memory-friendly generator so you can handle massive text collections with ease. It shares most arguments with `chunk` (like `max_sentences`, `max_tokens`, `lang`, etc.), plus some extra parameters for batch management.
 
 Here's an example of how to use `batch_chunk`:
 
-```py
+```py linenums="1" hl_lines="13-20"
 from chunklet.plain_text_chunker import PlainTextChunker
 
 def word_counter(text: str) -> int:
@@ -499,16 +506,16 @@ for i, chunk in enumerate(chunks):
 !!! tip "Adding Base Metadata to Batches"
     Just like with the `chunk` method, you can pass a `base_metadata` dictionary to `batch_chunk`. This is useful for adding common information, like a source filename, to all chunks processed in the batch. For more details on metadata structure and available fields, see the [Metadata guide](../metadata.md#plaintextchunker-metadata).
 
-### Separator
+### Separator: Keeping Your Batches Organized! 📋 {#separator}
 
-The `separator` parameter allows you to specify a custom value to be yielded after all chunks for a given text have been processed. This is particularly useful when processing multiple texts in a batch, as it helps to clearly distinguish between the chunks originating from different input texts in the output stream.
+The `separator` parameter lets you add a custom marker that gets yielded after all chunks from a single text are processed. Super handy for batch processing when you want to clearly separate chunks from different source texts.
 
-!!! note "note"
-    `None` cannot be used as a separator.
+!!! note "Quick Note"
+    `None` won't work as a separator - you'll need something more substantial!
 
-```py
-from more_itertools import split_at
+```py linenums="1" hl_lines="2 14 18-21"
 from chunklet.plain_text_chunker import PlainTextChunker
+from more_itertools import split_at
 
 chunker = PlainTextChunker()
 texts = [
@@ -553,4 +560,4 @@ for i, doc_chunks in enumerate(chunk_groups):
     ```
 
 ??? info "API Reference"
-    For a deep dive into the `PlainTextChunker` class, its methods, and all the nitty-gritty details, check out the full [API documentation](../../reference/chunklet/plain_text_chunker.md).````
+    For complete technical details on the `PlainTextChunker` class, check out the [API documentation](../../reference/chunklet/plain_text_chunker.md).````

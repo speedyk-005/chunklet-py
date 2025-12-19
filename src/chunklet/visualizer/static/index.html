@@ -27,7 +27,7 @@
             <!-- File Upload Section -->
             <div class="upload-section">
                 <div class="upload-area" id="uploadArea">
-                    <input type="file" id="fileInput" accept="text/*" style="display: none;">
+                    <input type="file" id="fileInput" style="display: none;">
                     <div id="uploadContent">
                         <div class="upload-icon">📁</div>
                         <h3>Upload Text File</h3>
@@ -56,6 +56,15 @@
                     <p class="param-hint">Select at least one constraint:</p>
                     
                     <div class="param-grid">
+                        <!-- Language Parameter -->
+                        <div class="param-group">
+                            <label class="param-label">Language</label>
+                            <div class="param-input-group">
+                                <input type="text" id="language" placeholder="auto" maxlength="2" style="text-transform: uppercase;">
+                                <small>ISO 639-1 language code (auto-detect if empty) - e.g., 'en', 'es', 'fr'</small>
+                            </div>
+                        </div>
+                        
                         <!-- Required Constraints -->
                         <div class="param-group">
                             <label class="param-label">Max Sentences</label>
@@ -86,7 +95,7 @@
                             <label class="param-label">Overlap</label>
                             <div class="param-input-group">
                                 <div class="range-group">
-                                   <input type="range" id="overlap_percent" min="0" max="100" value="20">
+                                   <input type="range" id="overlap_percent" min="0" max="75" value="20">
                                    <span class="range-value" id="overlapValue">20%</span>
                                 </div>
                                 <small>Percentage overlap between chunks</small>
@@ -162,7 +171,12 @@
                 </div>
                 <div class="button-label" id="buttonLabel">
                 <div class="button-subtitle">Click button below to toggle</div>
-                <button class="control-btn" id="toggleOverlapsBtn" disabled>Reveal Overlaps</button>
+                <div class="button-row">
+                    <button class="control-btn" id="toggleOverlapsBtn" disabled>Reveal Overlaps</button>
+                    <button class="control-btn secondary" id="downloadChunksBtn" disabled>
+                        📥 Download Chunks as JSON
+                    </button>
+                </div>
             </div>
             </div>
             
@@ -172,13 +186,6 @@
                     <p>Upload a text file and click "Process Text" to see the visualization here.</p>
                     <p>Interactive chunk highlighting and metadata will appear.</p>
                 </div>
-            </div>
-            
-            <!-- Download Options -->
-            <div class="download-options">
-                <button class="control-btn secondary" id="downloadChunksBtn" disabled>
-                    📥 Download Chunks as JSON
-                </button>
             </div>
             
             <div class="generated-info" id="generatedInfo">
@@ -205,6 +212,10 @@
         </div>
     </div>
     
+    <!-- Go to Top Button (Mobile) -->
+    <button class="go-to-top-btn" id="goToTopBtn" title="Go to top">↑</button>
+    
+    <script src="/static/js/utils.js"></script>
     <script src="/static/js/app.js"></script>
 </body>
 </html>

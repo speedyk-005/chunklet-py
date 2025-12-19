@@ -107,7 +107,7 @@ FUNCTION_DECLARATION = re.compile(
     
         # C#/Java/C++/D/etc. with alphabetized modifiers
         r"(?:constexpr|friend|inline|internal|override|private|protected|public|sealed|static|virtual)\s+"
-        r"[\w\[\]<>:*]+"  # The return type
+        r"[\w\[\]<>:*]+"  # Return type
         r".*?\("  # Anything including name (non-greedy) until the first open parentheses
     r")",
     re.M,

@@ -1,5 +1,5 @@
-import os
 import csv
+from pathlib import Path
 
 # openpyxyl is lazy imported
 
@@ -9,17 +9,18 @@ except ImportError:
     tabulate = None
 
 
-def table_to_md(file_path):
+def table_to_md(file_path: str | Path) -> str:
     """
     Convert a CSV or XLSX file into a Markdown-formatted table string.
 
     Args:
-        file_path (str): Path to the input file (.csv or .xlsx).
+        file_path (str | Path): Path to the input file (.csv or .xlsx).
 
     Returns:
         str: Markdown table representation of the file contents.
     """
-    ext = os.path.splitext(file_path)[1].lower()
+    file_path = Path(file_path)
+    ext = file_path.suffix.lower()
 
     # Read CSV
     if ext == ".csv":
@@ -29,7 +30,7 @@ def table_to_md(file_path):
     # Read Excel (.xlsx)
     elif ext == ".xlsx":
         try:
-            from openpyxl import Workbook, load_workbook
+            from openpyxl import load_workbook
         except ImportError as e:
             raise ImportError(
                 "The 'openpyxl' library is not installed. "
@@ -39,10 +40,7 @@ def table_to_md(file_path):
             ) from e
         wb = load_workbook(file_path, read_only=True)
         sheet = wb.active
-        data = [
-            [cell for cell in row]
-            for row in sheet.iter_rows(values_only=True)
-        ]
+        data = [[cell for cell in row] for row in sheet.iter_rows(values_only=True)]
         wb.close()
 
     else:

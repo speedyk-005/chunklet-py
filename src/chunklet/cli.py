@@ -56,8 +56,9 @@ class DocstringMode(str, Enum):
 
 app = typer.Typer(
     name="chunklet",
-    help="A comprehensive library for advanced text, code, and document chunking, designed for LLM applications. It offers flexible, context-aware segmentation across various content types.",
+    help="Advanced text, code, and document chunking for LLM applications. Split content semantically, visualize chunks interactively, and process multiple file formats with flexible, context-aware segmentation.",
     rich_help_panel=True,
+    add_completion=False,
 )
 
 
@@ -134,24 +135,26 @@ def _extract_files(source: Optional[List[Path]]) -> List[Path]:
 
 def _write_chunks(chunks, destination: Path, metadata: bool):
     """Write chunks to a destination (file as JSON or directory as separate files)."""
-    if destination.suffix == '.json' or destination.is_file():
+    if destination.suffix == ".json" or destination.is_file():
         # Write as JSON
-        if destination.suffix != '.json':
+        if destination.suffix != ".json":
             typer.echo(
                 f"Warning: Writing to a non-JSON file extension '{destination.suffix}'. Output will be JSON format.",
                 err=True,
             )
-            
+
         all_chunks = [chunk_box.to_dict() for chunk_box in chunks]
-        
+
         if not metadata:
             for chunk_dict in all_chunks:
                 del chunk_dict["metadata"]
-                
+
         json_str = json.dumps(all_chunks, indent=4)
         destination.write_text(json_str, encoding="utf-8")
-        typer.echo(f"Successfully wrote {len(all_chunks)} chunks to {destination} as JSON")
-        
+        typer.echo(
+            f"Successfully wrote {len(all_chunks)} chunks to {destination} as JSON"
+        )
+
     else:
         # Write to directory
         destination.mkdir(parents=True, exist_ok=True)
@@ -484,7 +487,7 @@ def chunk_command(
             typer.echo(
                 "Error: CodeChunker dependencies not available.\n"
                 "Please install with: pip install chunklet-py[code]",
-                err=True
+                err=True,
             )
             raise typer.Exit(code=1)
 
@@ -512,7 +515,7 @@ def chunk_command(
                 typer.echo(
                     "Error: DocumentChunker dependencies not available.\n"
                     "Please install with: pip install chunklet-py[document]",
-                    err=True
+                    err=True,
                 )
                 raise typer.Exit(code=1)
 
@@ -540,15 +543,12 @@ def chunk_command(
     elif source:
         file_paths = _extract_files(source)
 
-        if (
-            len(file_paths) == 1 
-            and file_paths[0].suffix not in {
-                ".docx",
-                ".epub",
-                ".pdf",
-                ".odt",
-            }
-        ):
+        if len(file_paths) == 1 and file_paths[0].suffix not in {
+            ".docx",
+            ".epub",
+            ".pdf",
+            ".odt",
+        }:
             single_file = file_paths[0]
             chunks = chunker_instance.chunk(
                 path=single_file,
@@ -563,7 +563,7 @@ def chunk_command(
                 on_errors=on_errors,
                 **chunk_kwargs,
             )
-        
+
     if not chunks:
         typer.echo(
             "Warning: No chunks were generated. "
@@ -572,7 +572,6 @@ def chunk_command(
         )
         raise typer.Exit(code=0)
 
-    
     if destination:
         _write_chunks(chunks, destination, metadata)
     else:
@@ -581,19 +580,19 @@ def chunk_command(
 
 @app.command(
     name="visualize",
-    help="Start the web-based chunk visualizer interface for interactive text and code chunking."
+    help="Start the web-based chunk visualizer interface for interactive text and code chunking.",
 )
 def visualize_command(
     host: str = typer.Option(
         "127.0.0.1",
         "--host",
-        help="Host IP to bind the visualizer server. (default: 127.0.0.1)"
+        help="Host IP to bind the visualizer server. (default: 127.0.0.1)",
     ),
     port: int = typer.Option(
         8000,
         "--port",
         "-p",
-        help="Port number to run the visualizer server. (default: 8000)"
+        help="Port number to run the visualizer server. (default: 8000)",
     ),
     tokenizer_command: Optional[str] = typer.Option(
         None,
@@ -606,7 +605,7 @@ def visualize_command(
     headless: bool = typer.Option(
         False,
         "--headless",
-        help="Run visualizer in headless mode (don't open browser automatically)."
+        help="Run visualizer in headless mode (don't open browser automatically).",
     ),
 ):
     """
@@ -616,7 +615,7 @@ def visualize_command(
         typer.echo(
             "Error: Visualization dependencies not available.\n"
             "Please install with: pip install chunklet-py[visualization]",
-            err=True
+            err=True,
         )
         raise typer.Exit(code=1)
 
@@ -626,13 +625,16 @@ def visualize_command(
         typer.echo(f"Error: Port {port} is already in use on {host}", err=True)
         typer.echo("Options:", err=True)
         typer.echo(f"  1. Stop the process currently occupying {url}", err=True)
-        typer.echo(f"  2. Use a different port: chunklet visualize --port <different_port>", err=True)
         typer.echo(
-            f"  3. Find the PID:\n"
+            "  2. Use a different port: chunklet visualize --port <different_port>",
+            err=True,
+        )
+        typer.echo(
+            "  3. Find the PID:\n"
             f"     - Linux: 'ss -tunlp | grep :{port}' or 'fuser {port}/tcp'\n"
             f"     - Windows: 'netstat -ano | findstr :{port}'\n"
             f"     - Mac: 'lsof -i :{port}'",
-            err=True
+            err=True,
         )
         raise typer.Exit(code=1)
 
@@ -644,12 +646,13 @@ def visualize_command(
     # Start the visualizer
     visualizer = Visualizer(host=host, port=port, token_counter=token_counter)
 
-    typer.echo(f"Starting Chunklet Visualizer...")
+    typer.echo("Starting Chunklet Visualizer...")
     typer.echo(f"URL: {url}")
     typer.echo("Press Ctrl+C to stop the server")
 
     if not headless:
         import webbrowser
+
         try:
             webbrowser.open(url)
             typer.echo("Opened in default browser")

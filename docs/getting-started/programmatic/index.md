@@ -1,4 +1,4 @@
-Welcome to the programmatic side of Chunklet-py! This is where you integrate Chunklet's intelligent text and code chunking capabilities directly into your Python applications. Whether you're building RAG pipelines, data processing workflows, or custom AI solutions, Chunklet provides a flexible and powerful API to meet your needs.
+Welcome to the programmatic interface! This is where you integrate Chunklet-py's intelligent text and code chunking capabilities directly into your Python applications. Whether you're building RAG pipelines, data processing workflows, or custom AI solutions, our flexible API has everything you need.
 
 <div class="grid cards" markdown>
 
@@ -6,7 +6,9 @@ Welcome to the programmatic side of Chunklet-py! This is where you integrate Chu
 
     ---
 
-    Precisely split raw text into semantically meaningful sentences, fluently handling over 50 languages with intelligent detection and complex structures.
+    Precisely splits text into semantically meaningful sentences across 50+ languages with intelligent detection and complex structure handling.
+
+    Essential for preparing clean text data for NLP tasks, LLMs, and any application that needs accurate sentence boundaries.
 
     [:octicons-arrow-right-24: Learn More](sentence_splitter.md)
     
@@ -14,7 +16,9 @@ Welcome to the programmatic side of Chunklet-py! This is where you integrate Chu
 
     ---
 
-    Process and chunk plain text documents into perfectly sized, context-aware segments. It offers flexible constraint-based chunking with intelligent overlap, optimizing text for downstream tasks like embedding and LLM input.
+    Transforms plain text into perfectly sized, context-aware chunks with flexible constraint-based chunking and intelligent overlap for optimal LLM and embedding performance.
+
+    Perfect for RAG systems, document analysis, and any workflow that needs smart text segmentation with full control over chunk sizes.
 
     [:octicons-arrow-right-24: Learn More](plain_text_chunker.md)
 
@@ -22,7 +26,9 @@ Welcome to the programmatic side of Chunklet-py! This is where you integrate Chu
 
     ---
 
-    Work with diverse document formats including `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, and `.rtf`, transforming them into structured, chunked outputs.
+    Work with diverse document formats including `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`, transforming them into structured, chunked outputs.
+
+    Handles the complexity of different file types so you can focus on building great applications without worrying about format compatibility.
 
     [:octicons-arrow-right-24: Learn More](document_chunker.md)
 
@@ -30,10 +36,22 @@ Welcome to the programmatic side of Chunklet-py! This is where you integrate Chu
 
     ---
 
-    Intelligently chunk source code, preserving its logical structure and context. This language-agnostic and lightweight tool is perfect for analysis, documentation, or AI model training.
+    Intelligently chunks source code while preserving logical structure and context and maintaining code semantics across functions, classes, and modules.
+
+    Language-agnostic and lightweight - ideal for code understanding and generation tasks, analysis, documentation, and AI model training.
 
     [:octicons-arrow-right-24: Learn More](code_chunker.md)
 
+-   :material-monitor-shimmer:{ .lg .middle } __Text Chunk Visualizer__
+
+    ---
+
+    Interactive web interface for real-time chunk visualization, parameter tuning, and exploring chunking results with live feedback.
+
+    Perfect for experimenting with chunking strategies, comparing different settings, and understanding how your text gets processed.
+
+    [:octicons-arrow-right-24: Learn More](visualizer.md)
+
 </div>
 
-Ready to get started? Click on any of the cards above to explore the specific chunker that fits your needs!
+Ready to dive in? Click any card above to explore the chunker that matches your mission! Let's turn that text into perfectly chunked gold! ✨
