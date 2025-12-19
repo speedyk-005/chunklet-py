@@ -24,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Refactoring for Readability and Modularity:** Split functions into helpers across PlainTextChunker, CodeChunker, and CLI to reduce cognitive load. Improved variable names, added docstrings, and simplified conditionals for better codebase readability.
 - **Documentation Updates:** Modified `cli.md` and `code_chunker.md` to clarify destination behavior, JSON output, and add new scenarios for better user guidance.
 - **CLI Conditional Imports:** Improved CLI error handling with conditional imports for optional dependencies (document chunkers, code chunkers, visualizer) providing clear installation instructions when features are unavailable.
-- **Python 3.9 Support:** Restored support for Python 3.9, expanding compatibility to Python 3.9 through 3.14.
 
 ### Fixed
 - **Late-Binding Closure Bug:** Fixed a classic Python closure bug in the code annotation loop of `CodeChunker`. The original `pattern.sub(lambda match: self._annotate_block(tag, match), code)` caused the lambda to reference the final value of `tag` after the loop completed. Resolved by changing to `pattern.sub(lambda match, tag=tag: self._annotate_block(tag, match), code)`, using the default argument trick to capture the current `tag` value at definition time.

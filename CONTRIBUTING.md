@@ -2,16 +2,21 @@
 
 First and foremost, thank you for considering contributing to Chunklet! We appreciate the time and effort you are willing to invest. Every contribution, whether it's a bug report, a new feature, or a documentation update, helps make Chunklet better for everyone.
 
+
 ## Getting Started
 
-1.  **Clone the repository:**
+1.  **Prerequisites:**
+
+    - **Python 3.10 or newer** is required. We recommend Python 3.11+ for the best development experience.
+
+2.  **Clone the repository:**
 
     ```bash
     git clone https://github.com/speedyk-005/chunklet-py.git
     cd chunklet-py
     ```
 
-2.  **Install dependencies:** It is recommended to use a virtual environment.
+3.  **Install dependencies:** It is recommended to use a virtual environment.
 
     ```bash
     python -m venv .venv
