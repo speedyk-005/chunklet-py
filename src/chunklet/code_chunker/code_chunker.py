@@ -131,42 +131,6 @@ class CodeChunker(BaseChunker):
 
         return merged_tree.to_string()
 
-    def _format_limit_msg(
-        self,
-        box_tokens: int,
-        max_tokens: int,
-        box_lines: int,
-        max_lines: int,
-        function_count: int,
-        max_functions: int,
-        content_preview: str,
-    ) -> str:
-        """
-        Format a limit exceeded error message, only including limits that are not sys.maxsize.
-
-        Args:
-            box_tokens: Actual token count in the block
-            max_tokens: Maximum allowed tokens
-            box_lines: Actual line count in the block
-            max_lines: Maximum allowed lines
-            function_count: Actual function count in the block
-            max_functions: Maximum allowed functions
-            content_preview: Preview of the content that exceeded limits
-
-        Returns:
-            Formatted error message with applicable limits
-        """
-        limits = []
-
-        if max_tokens != sys.maxsize:
-            limits.append(f"tokens: {box_tokens} > {max_tokens}")
-        if max_lines != sys.maxsize:
-            limits.append(f"lines: {box_lines} > {max_lines}")
-        if max_functions != sys.maxsize:
-            limits.append(f"functions: {function_count} > {max_functions}")
-
-        return ", ".join(limits)
-
     def _split_oversized(
         self,
         snippet_dict: dict,
@@ -272,6 +236,45 @@ class CodeChunker(BaseChunker):
 
         return sub_boxes
 
+    def _format_limit_msg(
+        self,
+        box_tokens: int,
+        max_tokens: int,
+        box_lines: int,
+        max_lines: int,
+        function_count: int,
+        max_functions: int,
+        content_preview: str,
+    ) -> str:
+        """
+        Format a limit exceeded error message, only including limits that are not sys.maxsize.
+
+        Args:
+            box_tokens: Actual token count in the block
+            max_tokens: Maximum allowed tokens
+            box_lines: Actual line count in the block
+            max_lines: Maximum allowed lines
+            function_count: Actual function count in the block
+            max_functions: Maximum allowed functions
+            content_preview: Preview of the content that exceeded limits
+
+        Returns:
+            Formatted error message with applicable limits
+        """
+        limits = []
+
+        if max_tokens != sys.maxsize:
+            limits.append(f"tokens: {box_tokens} > {max_tokens}")
+        if max_lines != sys.maxsize:
+            limits.append(f"lines: {box_lines} > {max_lines}")
+        if max_functions != sys.maxsize:
+            limits.append(f"functions: {function_count} > {max_functions}")
+        
+        return (
+            f"Limits: {', '.join(limits)}\n"
+            f"Content starting with: \n```\n{content_preview}...\n```" 
+        )
+        
     def _group_by_chunk(
         self,
         snippet_dicts: list[dict],
@@ -364,16 +367,14 @@ class CodeChunker(BaseChunker):
                 )
                 if strict:
                     raise TokenLimitError(
-                        f"Structural block exceeds maximum limit.\n"
-                        f"Limits: {limit_msg}\n"
-                        f"Content starting with: \n```\n{snippet_dict['content'][:100]}...\n```\n"
+                        f"Structural block exceeds maximum limit.\n{limit_msg}\n"
                         "Reason: Prevent splitting inside interest points (function, class, region, ...)\n"
                         "💡Hint: Consider increasing 'max_tokens', 'max_lines', or 'max_functions', "
                         "refactoring the oversized block, or setting 'strict=False' to allow automatic splitting of oversized blocks."
                     )
                 else:  # Else split further
                     logger.warning(
-                        "Splitting oversized block (%s) into sub-chunks",
+                        "Splitting oversized block into sub-chunks.\n(%s)",
                         limit_msg,
                     )
 
