@@ -218,8 +218,9 @@ class CodeStructureExtractor:
                 The `cumulative_lengths` are pre-calculated on the original code because altering the code
                 (e.g., via removal, summary, or annotations) would cause character counts to vary.
         """
-        # Call at first before any code altering
-        cumulative_lengths = tuple(
+        # Call at first to preserve span accurary befire any altering
+        # Pad with 0 so cumulative_lengths[line_number - 1] == start_char_offset
+        cumulative_lengths = (0,) + tuple(
             accumulate(len(line) for line in code.splitlines(keepends=True))
         )
 
@@ -516,13 +517,15 @@ class CodeStructureExtractor:
             # Manage block accumulation
 
             func_start = FUNCTION_DECLARATION.match(line)
+            func_start = func_start.group(0) if func_start else None
+
             self._handle_block_start(
                 line=line,
                 indent_level=indent_level,
                 buffer=buffer,
                 state=state,
                 source=source,
-                func_start=func_start.group(0) if func_start else None,
+                func_start=func_start,
             )
 
             if not state["curr_struct"]:  # Fresh block
@@ -531,7 +534,7 @@ class CodeStructureExtractor:
                         line_no,
                         line,
                         indent_level,
-                        func_start.group(0) if func_start else None,
+                        func_start,
                     )
                 ]
                 continue
@@ -544,18 +547,12 @@ class CodeStructureExtractor:
                 self._flush_snippet(
                     state["curr_struct"], state["snippet_dicts"], buffer
                 )
-                state["curr_struct"] = [
-                    CodeLine(
-                        line_no,
-                        line,
-                        indent_level,
-                        func_start.group(0) if func_start else None,
-                    )
-                ]
                 state["last_indent"] = 0
                 state["inside_func"] = False
-            else:
-                state["curr_struct"].append(CodeLine(line_no, line, indent_level, None))
+
+            state["curr_struct"].append(
+                CodeLine(line_no, line, indent_level, func_start)
+            )
 
         # Append last snippet
         if state["curr_struct"]:

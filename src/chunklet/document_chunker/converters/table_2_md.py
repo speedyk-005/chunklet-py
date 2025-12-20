@@ -40,7 +40,7 @@ def table_to_md(file_path: str | Path) -> str:
             ) from e
         wb = load_workbook(file_path, read_only=True)
         sheet = wb.active
-        data = [[cell for cell in row] for row in sheet.iter_rows(values_only=True)]
+        data = list(sheet.iter_rows(values_only=True))
         wb.close()
 
     else:
@@ -51,8 +51,8 @@ def table_to_md(file_path: str | Path) -> str:
 
     if not tabulate:
         raise ImportError(
-            "The 'tabulate' library is not installed. "
-            "Please install it with 'pip install tabulate>=1.10.0' "
+            "The 'tabulate2' library is not installed. "
+            "Please install it with 'pip install tabulate2>=1.10.0' "
             "or install the document processing extras with "
             "'pip install chunklet-py[document]'"
         )

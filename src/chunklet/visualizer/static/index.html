@@ -43,7 +43,7 @@
             <div class="control-panel" id="controlPanel">
                 <!-- Mode Selection -->
                 <div class="mode-selector">
-                    <label>Chunking Mode:</label>
+                    <label for="modeSelect">Chunking Mode:</label>
                     <select id="modeSelect">
                         <option value="document">📄 Document</option>
                         <option value="code">💻 Code</option>
@@ -58,7 +58,7 @@
                     <div class="param-grid">
                         <!-- Language Parameter -->
                         <div class="param-group">
-                            <label class="param-label">Language</label>
+                            <label class="param-label" for="language">Language</label>
                             <div class="param-input-group">
                                 <input type="text" id="language" placeholder="auto" maxlength="2" style="text-transform: uppercase;">
                                 <small>ISO 639-1 language code (auto-detect if empty) - e.g., 'en', 'es', 'fr'</small>
@@ -67,7 +67,7 @@
                         
                         <!-- Required Constraints -->
                         <div class="param-group">
-                            <label class="param-label">Max Sentences</label>
+                            <label class="param-label" for="max_sentences">Max Sentences</label>
                             <div class="param-input-group">
                                 <input type="number" id="max_sentences" min="1" placeholder="e.g., 10">
                                 <small>Chunk by sentence count</small>
@@ -75,7 +75,7 @@
                         </div>
                         
                         <div class="param-group">
-                            <label class="param-label">Max Tokens</label>
+                            <label class="param-label" for="max_tokens">Max Tokens</label>
                             <div class="param-input-group">
                                 <input type="number" id="max_tokens" min="12" placeholder="e.g., 1000">
                             <small>Chunk by token count (requires token counter)</small>
@@ -83,7 +83,7 @@
                         </div>
                         
                         <div class="param-group">
-                            <label class="param-label">Max Sections</label>
+                            <label class="param-label" for="max_section_breaks">Max Sections</label>
                             <div class="param-input-group">
                                 <input type="number" id="max_section_breaks" min="1" placeholder="e.g., 3">
                                 <small>Chunk by document sections</small>
@@ -92,7 +92,7 @@
                         
                         <!-- Optional Parameters -->
                         <div class="param-group">
-                            <label class="param-label">Overlap</label>
+                            <label class="param-label" for="overlap_percent">Overlap</label>
                             <div class="param-input-group">
                                 <div class="range-group">
                                    <input type="range" id="overlap_percent" min="0" max="75" value="20">
@@ -103,7 +103,7 @@
                         </div>
                         
                         <div class="param-group">
-                            <label class="param-label">Offset</label>
+                            <label class="param-label" for="offset">Offset</label>
                             <div class="param-input-group">
                                 <input type="number" id="offset" min="0" value="0">
                                 <small>Overlap starting position</small>
@@ -121,7 +121,7 @@
                     <div class="param-grid">
                         <!-- Required Constraints -->
                         <div class="param-group">
-                            <label class="param-label">Max Tokens</label>
+                            <label class="param-label" for="max_tokens_code">Max Tokens</label>
                             <div class="param-input-group">
                                 <input type="number" id="max_tokens_code" min="12" placeholder="e.g., 1000">
                                 <small>Chunk by token count (requires token counter)</small>
@@ -129,7 +129,7 @@
                         </div>
                         
                         <div class="param-group">
-                            <label class="param-label">Max Lines</label>
+                            <label class="param-label" for="max_lines">Max Lines</label>
                             <div class="param-input-group">
                                 <input type="number" id="max_lines" min="5" placeholder="e.g., 50">
                                 <small>Chunk by line count</small>
@@ -137,7 +137,7 @@
                         </div>
                         
                         <div class="param-group">
-                            <label class="param-label">Max Functions</label>
+                            <label class="param-label" for="max_functions">Max Functions</label>
                             <div class="param-input-group">
                                 <input type="number" id="max_functions" min="1" placeholder="e.g., 5">
                                 <small>Chunk by function count</small>
@@ -146,7 +146,7 @@
                         
                         <!-- Optional Parameters -->
                         <div class="param-group checkbox-group">
-                            <label class="param-label">Strict Mode</label>
+                            <label class="param-label" for="strict">Strict Mode</label>
                             <div class="param-input-group">
                                 <input type="checkbox" id="strict" checked>
                                 <small>Prevent splitting code blocks</small>

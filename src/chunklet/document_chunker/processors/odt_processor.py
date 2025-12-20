@@ -57,15 +57,7 @@ class ODTProcessor(BaseProcessor):
                  - author_name
 
         """
-        try:
-            from odf import text, meta, dc
-        except ImportError as e:
-            raise ImportError(
-                "The 'odfpy' library is not installed. "
-                "Please install it with 'pip install odfpy>=1.4.1' "
-                "or install the document processing extras with "
-                "'pip install chunklet-py[document]'"
-            ) from e
+        from odf import text, meta, dc
 
         metadata = {}
         for field in [
@@ -106,19 +98,11 @@ class ODTProcessor(BaseProcessor):
         Yields:
             str: A chunk of text, approximately 4000 characters each.
         """
-        try:
-            from odf import text
-        except ImportError as e:
-            raise ImportError(
-                "The 'odfpy' library is not installed. "
-                "Please install it with 'pip install odfpy>=1.4.1' "
-                "or install the document processing extras with "
-                "'pip install chunklet-py[document]'"
-            ) from e
+        from odf import text
 
-        current_chunk = []
-        char_count = 0
-        max_chunk_size = 4000
+        curr_chunk = []
+        curr_size = 0
+        max_size = 4000
 
         for p_elem in self.doc.getElementsByType(text.P):
             para_text = "".join(
@@ -126,29 +110,23 @@ class ODTProcessor(BaseProcessor):
                 for node in p_elem.childNodes
                 if node.nodeType == node.TEXT_NODE
             ).strip()
-            if para_text:
-                para_length = len(para_text)
+            if not para_text:
+                continue
 
-                # If adding this paragraph would exceed the limit, yield current chunk
-                if char_count + para_length > max_chunk_size and current_chunk:
-                    yield "\n".join(current_chunk)
-                    current_chunk = []
-                    char_count = 0
+            para_len = len(para_text)
 
-                # If a single paragraph is longer than max_chunk_size, yield it as its own chunk
-                if para_length > max_chunk_size:
-                    if current_chunk:
-                        yield "\n".join(current_chunk)
-                        current_chunk = []
-                        char_count = 0
-                    yield para_text
-                else:
-                    current_chunk.append(para_text)
-                    char_count += para_length
+            # If adding this paragraph would exceed the limit, yield current chunk
+            if curr_size + para_len > max_size and curr_chunk:
+                yield "\n".join(curr_chunk)
+                curr_chunk = []
+                curr_size = 0
+
+            curr_chunk.append(para_text)
+            curr_size += para_len
 
         # Yield any remaining content
-        if current_chunk:
-            yield "\n".join(current_chunk)
+        if curr_chunk:
+            yield "\n".join(curr_chunk)
 
 
 if __name__ == "__main__":  # pragma: no cover

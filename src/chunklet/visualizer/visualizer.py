@@ -4,22 +4,26 @@ import tempfile
 import traceback
 import mimetypes
 from typing import Callable
+import aiofiles
 
 try:
     import uvicorn
     from charset_normalizer import detect
-    from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+    from fastapi import FastAPI, UploadFile, File, Form, HTTPException
     from fastapi.responses import HTMLResponse
     from fastapi.staticfiles import StaticFiles
 except ImportError:
+    # Lambda placeholders prevent "None is not callable" errors when imports fail
+    # This allows the module to be imported without dependencies, with proper error handling later
     uvicorn = None
     detect = None
     FastAPI = None
-    FastAPI = None
     UploadFile = None
-    File = None
+    File = lambda x: x  # noqa: E731
+    Form = lambda x: x  # noqa: E731
     HTTPException = None
-    Form = None
+    HTMLResponse = lambda x: x  # noqa: E731
+    StaticFiles = None
 
 from chunklet.document_chunker import DocumentChunker
 from chunklet.code_chunker import CodeChunker
@@ -86,10 +90,10 @@ class Visualizer:
         self.app.post("/api/chunk")(self._chunk_file)
 
     # Instance endpoint methods
-    async def _get_token_counter_status(self):
+    def _get_token_counter_status(self):
         return {"token_counter_available": self.token_counter is not None}
 
-    async def _get_health_check(self):
+    def _get_health_check(self):
         """Health check endpoint for testing."""
         return {"status": "healthy"}
 
@@ -103,8 +107,9 @@ class Visualizer:
         static_dir = os.path.join(base_dir, "static")
         index_path = os.path.join(static_dir, "index.html")
         if os.path.exists(index_path):
-            with open(index_path, "r", encoding="utf-8") as f:
-                return HTMLResponse(content=f.read())
+            async with aiofiles.open(index_path, "r", encoding="utf-8") as f:
+                content = await f.read()
+                return HTMLResponse(content=content)
         return HTMLResponse(content="<h1>Text Chunk Visualizer</h1>")
 
     @validate_input
