@@ -1,0 +1,3604 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="One library to split them all: Sentence, Code, Docs— RAG-ready, token-aware, and multi-format.">
+      
+      
+      
+        <link rel="canonical" href="https://speedyk-005.github.io/chunklet-py/2.1.0/getting-started/programmatic/document_chunker/">
+      
+      
+        <link rel="prev" href="../plain_text_chunker/">
+      
+      
+        <link rel="next" href="../code_chunker/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Document Chunker - chunklet-py Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+  
+  
+  
+  
+  <style>:root{--md-annotation-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%2020c-4.41%200-8-3.59-8-8s3.59-8%208-8%208%203.59%208%208-3.59%208-8%208m0-18A10%2010%200%200%200%202%2012a10%2010%200%200%200%2010%2010%2010%2010%200%200%200%2010-10A10%2010%200%200%200%2012%202m1%205h-2v4H7v2h4v4h2v-4h4v-2h-4z%22/%3E%3C/svg%3E');}</style>
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#document-chunker" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+          <aside class="md-banner md-banner--warning">
+            <div class="md-banner__inner md-grid md-typeset">
+              
+  <div class="md-banner md-banner--warning">
+    You're not viewing the latest version.
+    <a href="../../../..">
+      <strong>Click here to go to latest.</strong>
+    </a>
+  </div>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),base=new URL("../../.."),outdated=__md_get("__outdated",sessionStorage,base);!0===outdated&&el&&(el.hidden=!1)</script>
+          </aside>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="chunklet-py Documentation" class="md-header__button md-logo" aria-label="chunklet-py Documentation" data-md-component="logo">
+      
+  <img src="../../../img/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            chunklet-py Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Document Chunker
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/speedyk-005/chunklet-py" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Welcome
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../installation/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../supported-languages/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Supported Languages
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../exceptions-and-warnings/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Exceptions and Warnings
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../whats-new/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  What's New
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../migration/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Migration Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../troubleshooting/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Troubleshooting
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../reference/chunklet/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="chunklet-py Documentation" class="md-nav__button md-logo" aria-label="chunklet-py Documentation" data-md-component="logo">
+      
+  <img src="../../../img/logo.svg" alt="logo">
+
+    </a>
+    chunklet-py Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/speedyk-005/chunklet-py" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Welcome
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metadata/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metadata
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_4" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Programmatic Usage
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Programmatic Usage
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sentence_splitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sentence Splitter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plain_text_chunker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plain Text Chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Document Chunker
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Document Chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Install
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#taming-your-documents-format-freedom-unleashed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Taming Your Documents: Format Freedom Unleashed! 📄
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Taming Your Documents: Format Freedom Unleashed! 📄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#whats-in-the-magic-bag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's in the Magic Bag?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-file-showdown-lets-process-one-document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single File Showdown: Let's Process One Document! 📄
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#batch-run-processing-multiple-documents-like-a-boss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch Run: Processing Multiple Documents Like a Boss! 📚
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Batch Run: Processing Multiple Documents Like a Boss! 📚">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#separator-keeping-your-document-batches-organized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Separator: Keeping Your Document Batches Organized! 📋
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-processors-build-your-own-document-wizards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Processors: Build Your Own Document Wizards! 🛠️🔮
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Custom Processors: Build Your Own Document Wizards! 🛠️🔮">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#customprocessorregistry-methods-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CustomProcessorRegistry Methods Summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../code_chunker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../visualizer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualizer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../supported-languages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported Languages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../exceptions-and-warnings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions and Warnings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whats-new/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What's New
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migration Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../reference/chunklet/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>chunklet
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1" id="__nav_8_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>chunklet
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/base_chunker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>base_chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>cli
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../reference/chunklet/code_chunker/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>code_chunker
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_4" id="__nav_8_1_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>code_chunker
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/code_chunker/_code_structure_extractor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>_code_structure_extractor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/code_chunker/code_chunker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>code_chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/code_chunker/helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/code_chunker/patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../reference/chunklet/common/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>common
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_5" id="__nav_8_1_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>common
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/common/batch_runner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>batch_runner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/common/path_utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>path_utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/common/token_utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>token_utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/common/validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../reference/chunklet/document_chunker/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>document_chunker
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_6" id="__nav_8_1_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_1_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>document_chunker
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_6_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../reference/chunklet/document_chunker/converters/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>converters
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_6_2" id="__nav_8_1_6_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_8_1_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>converters
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/document_chunker/converters/html_2_md/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>html_2_md
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/document_chunker/converters/latex_2_md/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>latex_2_md
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/document_chunker/converters/rst_2_md/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>rst_2_md
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/document_chunker/converters/table_2_md/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>table_2_md
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/document_chunker/document_chunker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>document_chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_6_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../reference/chunklet/document_chunker/processors/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>processors
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_6_4" id="__nav_8_1_6_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_8_1_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_6_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>processors
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/document_chunker/processors/base_processor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>base_processor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/document_chunker/processors/docx_processor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>docx_processor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/document_chunker/processors/epub_processor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>epub_processor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/document_chunker/processors/odt_processor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>odt_processor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/document_chunker/processors/pdf_processor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>pdf_processor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/document_chunker/registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/plain_text_chunker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>plain_text_chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../reference/chunklet/sentence_splitter/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>sentence_splitter
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_9" id="__nav_8_1_9_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_1_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>sentence_splitter
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/sentence_splitter/_fallback_splitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>_fallback_splitter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/sentence_splitter/languages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>languages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/sentence_splitter/registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/sentence_splitter/sentence_splitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>sentence_splitter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/sentence_splitter/terminators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>terminators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../reference/chunklet/visualizer/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>visualizer
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_10" id="__nav_8_1_10_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_1_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>visualizer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/chunklet/visualizer/visualizer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>visualizer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Install
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#taming-your-documents-format-freedom-unleashed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Taming Your Documents: Format Freedom Unleashed! 📄
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Taming Your Documents: Format Freedom Unleashed! 📄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#whats-in-the-magic-bag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's in the Magic Bag?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-file-showdown-lets-process-one-document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single File Showdown: Let's Process One Document! 📄
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#batch-run-processing-multiple-documents-like-a-boss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch Run: Processing Multiple Documents Like a Boss! 📚
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Batch Run: Processing Multiple Documents Like a Boss! 📚">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#separator-keeping-your-document-batches-organized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Separator: Keeping Your Document Batches Organized! 📋
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-processors-build-your-own-document-wizards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Processors: Build Your Own Document Wizards! 🛠️🔮
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Custom Processors: Build Your Own Document Wizards! 🛠️🔮">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#customprocessorregistry-methods-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CustomProcessorRegistry Methods Summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="document-chunker">Document Chunker</h1>
+<p align="center">
+  <img src="../../../img/document_chunker.jpeg" alt="Document Chunker" width="512"/>
+</p>
+
+<div class="admonition note">
+<p class="admonition-title">Psst... Read <code>PlainTextChunker</code> First!</p>
+<p>Think of <code>DocumentChunker</code> as <code>PlainTextChunker</code>'s upgrade that adds document processing superpowers! While <code>DocumentChunker</code> handles all sorts of fancy file formats, the core chunking intelligence (splitting by sentences, tokens, and sections) still lives in <code>PlainTextChunker</code>.</p>
+<p>Before diving in here, get cozy with the <a href="../plain_text_chunker/">PlainTextChunker documentation</a> first. It's the foundation for everything! We'll focus on the document-specific upgrades here.</p>
+</div>
+<h2 id="quick-install">Quick Install</h2>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>chunklet-py<span class="o">[</span>document<span class="o">]</span>
+</code></pre></div>
+<p>This installs all the document processing dependencies needed to handle PDFs, DOCX, EPUB, ODT, Excel, and more! 📚</p>
+<h2 id="taming-your-documents-format-freedom-unleashed">Taming Your Documents: Format Freedom Unleashed! 📄</h2>
+<p>Tired of juggling different tools for every file type you encounter? The <code>DocumentChunker</code> is your universal document wrangler that speaks every format under the sun. From corporate DOCX files to academic PDFs, from EPUB novels to everything in between - it handles the complexity of different file types so you can focus on building great applications without worrying about format compatibility.</p>
+<p>Think of <code>DocumentChunker</code> as the master conductor of your document orchestra! It smartly detects file types, calls in the right specialists to extract and convert text (often to clean Markdown), and then hands off the baton to <code>PlainTextChunker</code> for the final segmentation symphony.</p>
+<p>Ready to liberate your documents from format chaos? Let's make some magic happen!</p>
+<h3 id="whats-in-the-magic-bag">What's in the Magic Bag?</h3>
+<p>The <code>DocumentChunker</code> comes packed with superpowers that make document processing feel like child's play:</p>
+<ul>
+<li><strong>Multi-Format Maestro:</strong> From corporate DOCX boardrooms to academic PDF libraries, this chunker speaks every file language fluently! Handles <code>.pdf</code>, <code>.docx</code>, <code>.epub</code>, <code>.txt</code>, <code>.tex</code>, <code>.html</code>, <code>.hml</code>, <code>.md</code>, <code>.rst</code>, <code>.rtf</code>, <code>.odt</code>, <code>.csv</code>, and <code>.xlsx</code> files like a pro. 🌍</li>
+<li><strong>Metadata Magician:</strong> Not just text - it automatically enriches your chunks with valuable metadata like source file paths and PDF page numbers. Your chunks come with bonus context! 📊</li>
+<li><strong>Bulk Processing Beast:</strong> Got a mountain of documents to conquer? No problem! This beast efficiently processes multiple documents in parallel. 📚⚡</li>
+<li><strong>Pluggable Processor Power:</strong> Have a mysterious file format that's one-of-a-kind? Plug in your own custom processors - <code>DocumentChunker</code> is ready for any challenge you throw at it! 🔌🛠️</li>
+</ul>
+<p>The <code>DocumentChunker</code> has two main methods: <code>chunk</code> for single file adventures and <code>batch_chunk</code> for processing multiple files like a boss. <code>chunk</code> returns a list of handy <a href="https://pypi.org/project/python-box/#:~:text=Overview,strings%20or%20files."><code>Box</code></a> objects, while <code>batch_chunk</code> is a memory-friendly generator that yields chunks one by one. Each <code>Box</code> comes with <code>content</code> (the actual text) and <code>metadata</code> (all the juicy details about your document).</p>
+<div class="admonition note">
+<p class="admonition-title">Special Handling for Streaming Processors</p>
+<p>Some processors work differently due to their streaming nature - they yield content page by page or in blocks rather than all at once. This means they require special care:</p>
+<p><strong>Streaming processors</strong> (PDF, EPUB, DOCX, ODT): These beauties process content as they go, so they're designed for <code>batch_chunk</code> method. Using them with the regular <code>chunk</code> method will throw a <a href="../../../exceptions-and-warnings/#fileprocessingerror"><code>FileProcessingError</code></a> since <code>chunk</code> expects all content upfront.</p>
+<p><strong>Regular processors</strong> work fine with both <code>chunk</code> and <code>batch_chunk</code> methods.</p>
+<p>These processors also add extra metadata magic! Check the <a href="../../metadata/#documentchunker-metadata">Metadata guide</a> for details.</p>
+</div>
+<h2 id="single-file-showdown-lets-process-one-document">Single File Showdown: Let's Process One Document! 📄</h2>
+<p>The <code>DocumentChunker</code>'s <code>chunk</code> method shares most arguments with <code>PlainTextChunker.chunk</code>, but with a couple of key twists:</p>
+<ul>
+<li>First argument is <code>path</code> (file path string or <code>pathlib.Path</code> object) instead of raw <code>text</code></li>
+<li>No <code>base_metadata</code> parameter - document processors handle metadata automatically</li>
+</ul>
+<p>Just like its sibling, you must specify at least one limit (<code>max_sentences</code>, <code>max_tokens</code>, or <code>max_section_breaks</code>) or you'll get an <a href="../../../exceptions-and-warnings/#invalidinputerror"><code>InvalidInputError</code></a>. Rules are rules! 📏</p>
+<p>Let's grab some sample content to play with:</p>
+<div class="language-text highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>The quick brown fox jumps over the lazy dog. This is the first sentence, and it&#39;s a classic.
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Here is the second sentence, which is a bit longer and more descriptive. And this is the third one, short and sweet.
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>The fourth sentence concludes our initial example, but we need more text to demonstrate the chunking effectively.
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Let&#39;s add a fifth sentence to make the text a bit more substantial. The sixth sentence will provide even more content for our test.
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>This is the seventh sentence, and we are still going. The eighth sentence is here to make the text even longer.
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Finally, the ninth sentence will be the last one for this example, making sure we have enough content to create multiple chunks.
+</code></pre></div>
+<p>Pop this into a file called <code>sample_text.txt</code>. Now let's see <code>DocumentChunker</code> in action:</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-2-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-2-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-2-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-2-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-2-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-2-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-2-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-2-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-2-10">10</a></span>
+<span class="normal"><a href="#__codelineno-2-11">11</a></span>
+<span class="normal"><a href="#__codelineno-2-12">12</a></span>
+<span class="normal"><a href="#__codelineno-2-13">13</a></span>
+<span class="normal"><a href="#__codelineno-2-14">14</a></span>
+<span class="normal"><a href="#__codelineno-2-15">15</a></span>
+<span class="normal"><a href="#__codelineno-2-16">16</a></span>
+<span class="normal"><a href="#__codelineno-2-17">17</a></span>
+<span class="normal"><a href="#__codelineno-2-18">18</a></span>
+<span class="normal"><a href="#__codelineno-2-19">19</a></span>
+<span class="normal"><a href="#__codelineno-2-20">20</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">chunklet.document_chunker</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentChunker</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3"></a><span class="c1"># Assuming sample_text.txt is in the same directory as your script</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4"></a><span class="n">file_path</span> <span class="o">=</span> <span class="s2">&quot;sample_text.txt&quot;</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5"></a>
+<a id="__codelineno-2-6" name="__codelineno-2-6"></a><span class="n">chunker</span> <span class="o">=</span> <span class="n">DocumentChunker</span><span class="p">()</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7"></a>
+<a id="__codelineno-2-8" name="__codelineno-2-8"></a><span class="n">chunks</span> <span class="o">=</span> <span class="n">chunker</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9"></a>    <span class="n">path</span><span class="o">=</span><span class="n">file_path</span><span class="p">,</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10"></a>    <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>             <span class="c1"># (1)!</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11"></a>    <span class="n">max_sentences</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>         <span class="c1"># (2)!</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12"></a>    <span class="n">overlap_percent</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>       <span class="c1"># (3)!</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13"></a>    <span class="n">offset</span><span class="o">=</span><span class="mi">0</span>                 <span class="c1"># (4)!</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14"></a><span class="p">)</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15"></a>
+<a id="__codelineno-2-16" name="__codelineno-2-16"></a><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chunks</span><span class="p">):</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--- Chunk </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2"> ---&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metadata: </span><span class="si">{</span><span class="n">chunk</span><span class="o">.</span><span class="n">metadata</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Content: </span><span class="si">{</span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20"></a>    <span class="nb">print</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+<ol>
+<li><code>lang="auto"</code> lets us detect language automatically. Super handy, but specifying a known language like <code>lang="en"</code> can boost accuracy and speed.</li>
+<li><code>max_sentences=4</code> caps each chunk at 4 sentences max. Your content gets neatly portioned!</li>
+<li><code>overlap_percent=0</code> means zero overlap between chunks. By default, we add 20% overlap to keep context flowing smoothly.</li>
+<li><code>offset=0</code> starts us from the very beginning. (Zero-based indexing - because programmers love starting from zero!)</li>
+</ol>
+<details class="success">
+<summary>Click to show output</summary>
+<div class="language-text highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>--- Chunk 1 ---
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Metadata: {&#39;source&#39;: &#39;sample_text.txt&#39;, &#39;chunk_num&#39;: 1, &#39;span&#39;: (0, 209)}
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Content: The quick brown fox jumps over the lazy dog.
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>This is the first sentence, and it&#39;s a classic.
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>Here is the second sentence, which is a bit longer and more descriptive.
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>And this is the third one, short and sweet.
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>--- Chunk 2 ---
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>Metadata: {&#39;source&#39;: &#39;sample_text.txt&#39;, &#39;chunk_num&#39;: 2, &#39;span&#39;: (210, 509)}
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>Content: The fourth sentence concludes our initial example, but we need more text to demonstrate the chunking effectively.
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>Let&#39;s add a fifth sentence to make the text a bit more substantial.
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>The sixth sentence will provide even more content for our test.
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>This is the seventh sentence, and we are still going.
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>--- Chunk 3 ---
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>Metadata: {&#39;source&#39;: &#39;sample_text.txt&#39;, &#39;chunk_num&#39;: 3, &#39;span&#39;: (510, 696)}
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>Content: The eighth sentence is here to make the text even longer.
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>Finally, the ninth sentence will be the last one for this example, making sure we have enough content to create multiple chunks.
+</code></pre></div>
+</details>
+<div class="admonition tip">
+<p class="admonition-title">Enable Verbose Logging</p>
+<p>To see detailed logging during the chunking process, you can set the <code>verbose</code> parameter to <code>True</code> when initializing the <code>DocumentChunker</code>:
+<div class="language-py highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">chunker</span> <span class="o">=</span> <span class="n">DocumentChunker</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div></p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Customizing the Continuation Marker</p>
+<p>You can customize the continuation marker, which is prepended to clauses that don't fit in the previous chunk. To do this, pass the <code>continuation_marker</code> parameter to the chunker's constructor.</p>
+<div class="language-py highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">chunker</span> <span class="o">=</span> <span class="n">DocumentChunker</span><span class="p">(</span><span class="n">continuation_marker</span><span class="o">=</span><span class="s2">&quot;[...]&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>If you don't want any continuation marker, you can set it to an empty string:</p>
+<div class="language-py highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">chunker</span> <span class="o">=</span> <span class="n">DocumentChunker</span><span class="p">(</span><span class="n">continuation_marker</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</code></pre></div>
+</div>
+<h2 id="batch-run-processing-multiple-documents-like-a-boss">Batch Run: Processing Multiple Documents Like a Boss! 📚</h2>
+<p>While <code>chunk</code> is perfect for single documents, <code>batch_chunk</code> is your power tool for processing multiple documents in parallel. It returns a memory-friendly generator so you can handle massive document collections with ease.</p>
+<p>The <code>batch_chunk</code> method shares most arguments with <code>PlainTextChunker.batch_chunk</code> (like <code>lang</code>, <code>max_tokens</code>, <code>max_sentences</code>, etc.). The key differences:</p>
+<ul>
+<li>First argument is <code>paths</code> (list of file paths as strings or <code>pathlib.Path</code> objects) instead of raw <code>texts</code></li>
+<li>No <code>base_metadata</code> parameter - document processors handle metadata automatically</li>
+</ul>
+<p>For our example, we'll grab some sample files from the <a href="https://github.com/speedyk-005/chunklet-py/tree/main/samples">samples directory</a> in the repo.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-7-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-7-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-7-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-7-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-7-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-7-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-7-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-7-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-7-10">10</a></span>
+<span class="normal"><a href="#__codelineno-7-11">11</a></span>
+<span class="normal"><a href="#__codelineno-7-12">12</a></span>
+<span class="normal"><a href="#__codelineno-7-13">13</a></span>
+<span class="normal"><a href="#__codelineno-7-14">14</a></span>
+<span class="normal"><a href="#__codelineno-7-15">15</a></span>
+<span class="normal"><a href="#__codelineno-7-16">16</a></span>
+<span class="normal"><a href="#__codelineno-7-17">17</a></span>
+<span class="normal"><a href="#__codelineno-7-18">18</a></span>
+<span class="normal"><a href="#__codelineno-7-19">19</a></span>
+<span class="normal"><a href="#__codelineno-7-20">20</a></span>
+<span class="normal"><a href="#__codelineno-7-21">21</a></span>
+<span class="normal"><a href="#__codelineno-7-22">22</a></span>
+<span class="normal"><a href="#__codelineno-7-23">23</a></span>
+<span class="normal"><a href="#__codelineno-7-24">24</a></span>
+<span class="normal"><a href="#__codelineno-7-25">25</a></span>
+<span class="normal"><a href="#__codelineno-7-26">26</a></span>
+<span class="normal"><a href="#__codelineno-7-27">27</a></span>
+<span class="normal"><a href="#__codelineno-7-28">28</a></span>
+<span class="normal"><a href="#__codelineno-7-29">29</a></span>
+<span class="normal"><a href="#__codelineno-7-30">30</a></span>
+<span class="normal"><a href="#__codelineno-7-31">31</a></span>
+<span class="normal"><a href="#__codelineno-7-32">32</a></span>
+<span class="normal"><a href="#__codelineno-7-33">33</a></span>
+<span class="normal"><a href="#__codelineno-7-34">34</a></span>
+<span class="normal"><a href="#__codelineno-7-35">35</a></span>
+<span class="normal"><a href="#__codelineno-7-36">36</a></span>
+<span class="normal"><a href="#__codelineno-7-37">37</a></span>
+<span class="normal"><a href="#__codelineno-7-38">38</a></span>
+<span class="normal"><a href="#__codelineno-7-39">39</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">chunklet.document_chunker</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentChunker</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2"></a><span class="hll">
+</span><a id="__codelineno-7-3" name="__codelineno-7-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">word_counter</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4"></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6"></a><span class="n">paths</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7"></a>    <span class="s2">&quot;samples/Lorem Ipsum.docx&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8"></a>    <span class="s2">&quot;samples/What_is_rst.rst&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9"></a>    <span class="s2">&quot;samples/minimal.epub&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10"></a>    <span class="s2">&quot;samples/sample-pdf-a4-size.pdf&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11"></a><span class="p">]</span>                                     <span class="c1"># (1)!</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12"></a>
+<a id="__codelineno-7-13" name="__codelineno-7-13"></a><span class="n">chunker</span> <span class="o">=</span> <span class="n">DocumentChunker</span><span class="p">(</span><span class="n">token_counter</span><span class="o">=</span><span class="n">word_counter</span><span class="p">)</span> <span class="c1"># (2)!</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14"></a>
+<a id="__codelineno-7-15" name="__codelineno-7-15"></a><span class="hll"><span class="n">chunks_generator</span> <span class="o">=</span> <span class="n">chunker</span><span class="o">.</span><span class="n">batch_chunk</span><span class="p">(</span>
+</span><a id="__codelineno-7-16" name="__codelineno-7-16"></a><span class="hll">    <span class="n">paths</span><span class="o">=</span><span class="n">paths</span><span class="p">,</span>
+</span><a id="__codelineno-7-17" name="__codelineno-7-17"></a><span class="hll">    <span class="n">overlap_percent</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+</span><a id="__codelineno-7-18" name="__codelineno-7-18"></a><span class="hll">    <span class="n">max_sentences</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+</span><a id="__codelineno-7-19" name="__codelineno-7-19"></a><span class="hll">    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+</span><a id="__codelineno-7-20" name="__codelineno-7-20"></a><span class="hll">    <span class="n">max_section_breaks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><a id="__codelineno-7-21" name="__codelineno-7-21"></a><span class="hll">    <span class="n">n_jobs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>                    <span class="c1"># (3)!</span>
+</span><a id="__codelineno-7-22" name="__codelineno-7-22"></a><span class="hll">    <span class="n">on_errors</span><span class="o">=</span><span class="s2">&quot;raise&quot;</span><span class="p">,</span>           <span class="c1"># (4)!</span>
+</span><a id="__codelineno-7-23" name="__codelineno-7-23"></a><span class="hll">    <span class="n">show_progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>         <span class="c1"># (5)!</span>
+</span><a id="__codelineno-7-24" name="__codelineno-7-24"></a><span class="hll"><span class="p">)</span>
+</span><a id="__codelineno-7-25" name="__codelineno-7-25"></a>
+<a id="__codelineno-7-26" name="__codelineno-7-26"></a><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chunks_generator</span><span class="p">):</span>
+<a id="__codelineno-7-27" name="__codelineno-7-27"></a>    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">10</span><span class="p">:</span>                      <span class="c1"># (6)!</span>
+<a id="__codelineno-7-28" name="__codelineno-7-28"></a>        <span class="k">break</span>
+<a id="__codelineno-7-29" name="__codelineno-7-29"></a>
+<a id="__codelineno-7-30" name="__codelineno-7-30"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--- Chunk </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2"> ---&quot;</span><span class="p">)</span>
+<a id="__codelineno-7-31" name="__codelineno-7-31"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Content:</span><span class="se">\n</span><span class="si">{</span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-7-32" name="__codelineno-7-32"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metadata:&quot;</span><span class="p">)</span>
+<a id="__codelineno-7-33" name="__codelineno-7-33"></a>    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">chunk</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="__codelineno-7-34" name="__codelineno-7-34"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; | </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-7-35" name="__codelineno-7-35"></a>
+<a id="__codelineno-7-36" name="__codelineno-7-36"></a>    <span class="nb">print</span><span class="p">()</span>
+<a id="__codelineno-7-37" name="__codelineno-7-37"></a>
+<a id="__codelineno-7-38" name="__codelineno-7-38"></a><span class="n">chunks_generator</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>          <span class="c1"># (7)!</span>
+<a id="__codelineno-7-39" name="__codelineno-7-39"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">And so on...&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<ol>
+<li>If your files are saved elsewhere make sure to update that accoordingly.</li>
+<li>Initializes the <code>DocumentChunker</code> with a <code>token_counter</code> function. This is crucial when using <code>max_tokens</code> for chunking.</li>
+<li>Specifies the number of parallel processes to use for chunking. The default value is <code>None</code> (use all available CPU cores).</li>
+<li>Define how to handle errors during processing. Determines how errors during chunking are handled. If set to <code>"raise"</code> (default), an exception will be raised immediately. If set to <code>"break"</code>, the process will be halt and partial result will be returned.
+ If set to <code>"ignore"</code>, errors will be silently ignored.</li>
+<li>Display a progress bar during batch processing. The default value is <code>False</code>.</li>
+<li>We break the loop early to demonstrate the cleanup mechanism.</li>
+<li>Explicitly close the generator to ensure proper cleanup.</li>
+</ol>
+<details class="success">
+<summary>Click to show output</summary>
+<div class="language-text highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>--- Chunk 1 ---
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>Content:
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Quantum Aristoxeni ingenium consumptum videmus in musicis?
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>Quid nunc honeste dicit?
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>Tum Torquatus: Prorsus, inquit, assentior; Duo Reges: constructio interrete.
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>Iam in altera philosophiae parte.
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>Sed haec omittamus; Haec para/doca illi, nos admirabilia dicamus.
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>Nihil sane.
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>**Expressa vero in iis aetatibus, quae iam confirmatae sunt.**
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>Sit sane ista voluptas.
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>Non quam nostram quidem, inquit Pomponius iocans; An tu me de L.
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>Sed haec omittamus; Cave putes quicquam esse verius.
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>[Image - 1]
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>Metadata:
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a> chunk_num: 1
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a> span: (-1, -1)
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a> source: samples/Lorem Ipsum.docx
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a> author: train11
+<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a> last_modified_by: Microsoft Office User
+<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a> created: 2012-08-07 08:50:00+00:00
+<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a> modified: 2019-12-05 23:29:00+00:00
+<a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a> section_count: 1
+<a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a> curr_section: 1
+<a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>
+<a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>--- Chunk 2 ---
+<a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a>Content:
+<a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a>xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?
+<a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a>ReStructuredText (rst): plain text markup
+<a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a>ReStructuredText (rst): plain text markup=====
+<a id="__codelineno-8-32" name="__codelineno-8-32" href="#__codelineno-8-32"></a>[The tiny table of contents](#top)
+<a id="__codelineno-8-33" name="__codelineno-8-33" href="#__codelineno-8-33"></a>* [1   What is reStructuredText?](#what-is-restructuredtext)
+<a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a>* [2   What is it good for?](#what-is-it-good-for)
+<a id="__codelineno-8-35" name="__codelineno-8-35" href="#__codelineno-8-35"></a>* [3   Show me some formatting examples](#show-me-some-formatting-examples)
+<a id="__codelineno-8-36" name="__codelineno-8-36" href="#__codelineno-8-36"></a>* [4   Where can I learn more?](#where-can-i-learn-more)
+<a id="__codelineno-8-37" name="__codelineno-8-37" href="#__codelineno-8-37"></a>* [5   Show me some more stuff, please](#show-me-some-more-stuff-please)
+<a id="__codelineno-8-38" name="__codelineno-8-38" href="#__codelineno-8-38"></a>[1   What is reStructuredText?](#toc-entry-1)=====
+<a id="__codelineno-8-39" name="__codelineno-8-39" href="#__codelineno-8-39"></a>An easy-to-read, what-you-see-is-what-you-get plaintext markup syntax
+<a id="__codelineno-8-40" name="__codelineno-8-40" href="#__codelineno-8-40"></a>and parser system, abbreviated *rst*.
+<a id="__codelineno-8-41" name="__codelineno-8-41" href="#__codelineno-8-41"></a>
+<a id="__codelineno-8-42" name="__codelineno-8-42" href="#__codelineno-8-42"></a>Metadata:
+<a id="__codelineno-8-43" name="__codelineno-8-43" href="#__codelineno-8-43"></a> chunk_num: 1
+<a id="__codelineno-8-44" name="__codelineno-8-44" href="#__codelineno-8-44"></a> span: (-1, -1)
+<a id="__codelineno-8-45" name="__codelineno-8-45" href="#__codelineno-8-45"></a> source: samples/What_is_rst.rst
+<a id="__codelineno-8-46" name="__codelineno-8-46" href="#__codelineno-8-46"></a> section_count: 1
+<a id="__codelineno-8-47" name="__codelineno-8-47" href="#__codelineno-8-47"></a> curr_section: 1
+<a id="__codelineno-8-48" name="__codelineno-8-48" href="#__codelineno-8-48"></a>
+<a id="__codelineno-8-49" name="__codelineno-8-49" href="#__codelineno-8-49"></a>--- Chunk 3 ---
+<a id="__codelineno-8-50" name="__codelineno-8-50" href="#__codelineno-8-50"></a>Content:
+<a id="__codelineno-8-51" name="__codelineno-8-51" href="#__codelineno-8-51"></a>An easy-to-read,
+<a id="__codelineno-8-52" name="__codelineno-8-52" href="#__codelineno-8-52"></a>what-you-see-is-what-you-get plaintext markup syntax
+<a id="__codelineno-8-53" name="__codelineno-8-53" href="#__codelineno-8-53"></a>and parser system,
+<a id="__codelineno-8-54" name="__codelineno-8-54" href="#__codelineno-8-54"></a>abbreviated *rst*.
+<a id="__codelineno-8-55" name="__codelineno-8-55" href="#__codelineno-8-55"></a>In other words, using a simple
+<a id="__codelineno-8-56" name="__codelineno-8-56" href="#__codelineno-8-56"></a>text editor, documents can be created which
+<a id="__codelineno-8-57" name="__codelineno-8-57" href="#__codelineno-8-57"></a>* are easy to read in text editor and
+<a id="__codelineno-8-58" name="__codelineno-8-58" href="#__codelineno-8-58"></a>* can be *automatically* converted to
+<a id="__codelineno-8-59" name="__codelineno-8-59" href="#__codelineno-8-59"></a>+ html and
+<a id="__codelineno-8-60" name="__codelineno-8-60" href="#__codelineno-8-60"></a>+ latex (and therefore pdf)
+<a id="__codelineno-8-61" name="__codelineno-8-61" href="#__codelineno-8-61"></a>[2   What is it good for?](#toc-entry-2)=====
+<a id="__codelineno-8-62" name="__codelineno-8-62" href="#__codelineno-8-62"></a>reStructuredText can be used, for example, to
+<a id="__codelineno-8-63" name="__codelineno-8-63" href="#__codelineno-8-63"></a>
+<a id="__codelineno-8-64" name="__codelineno-8-64" href="#__codelineno-8-64"></a>Metadata:
+<a id="__codelineno-8-65" name="__codelineno-8-65" href="#__codelineno-8-65"></a> chunk_num: 2
+<a id="__codelineno-8-66" name="__codelineno-8-66" href="#__codelineno-8-66"></a> span: (-1, -1)
+<a id="__codelineno-8-67" name="__codelineno-8-67" href="#__codelineno-8-67"></a> source: samples/What_is_rst.rst
+<a id="__codelineno-8-68" name="__codelineno-8-68" href="#__codelineno-8-68"></a> section_count: 1
+<a id="__codelineno-8-69" name="__codelineno-8-69" href="#__codelineno-8-69"></a> curr_section: 2
+<a id="__codelineno-8-70" name="__codelineno-8-70" href="#__codelineno-8-70"></a>
+<a id="__codelineno-8-71" name="__codelineno-8-71" href="#__codelineno-8-71"></a>--- Chunk 4 ---
+<a id="__codelineno-8-72" name="__codelineno-8-72" href="#__codelineno-8-72"></a>Content:
+<a id="__codelineno-8-73" name="__codelineno-8-73" href="#__codelineno-8-73"></a>... + latex (and therefore pdf)
+<a id="__codelineno-8-74" name="__codelineno-8-74" href="#__codelineno-8-74"></a>[2   What is it good for?](#toc-entry-2)=====
+<a id="__codelineno-8-75" name="__codelineno-8-75" href="#__codelineno-8-75"></a>reStructuredText can be used,
+<a id="__codelineno-8-76" name="__codelineno-8-76" href="#__codelineno-8-76"></a>for example,
+<a id="__codelineno-8-77" name="__codelineno-8-77" href="#__codelineno-8-77"></a>to
+<a id="__codelineno-8-78" name="__codelineno-8-78" href="#__codelineno-8-78"></a>* write technical documentation (so that it can easily be offered as a
+<a id="__codelineno-8-79" name="__codelineno-8-79" href="#__codelineno-8-79"></a>pdf file or a web page)
+<a id="__codelineno-8-80" name="__codelineno-8-80" href="#__codelineno-8-80"></a>* create html webpages without knowing html
+<a id="__codelineno-8-81" name="__codelineno-8-81" href="#__codelineno-8-81"></a>* to document source code
+<a id="__codelineno-8-82" name="__codelineno-8-82" href="#__codelineno-8-82"></a>[3   Show me some formatting examples](#toc-entry-3)=====
+<a id="__codelineno-8-83" name="__codelineno-8-83" href="#__codelineno-8-83"></a>You can highlight text in *italics* or, to provide even more emphasis
+<a id="__codelineno-8-84" name="__codelineno-8-84" href="#__codelineno-8-84"></a>in **bold**.
+<a id="__codelineno-8-85" name="__codelineno-8-85" href="#__codelineno-8-85"></a>
+<a id="__codelineno-8-86" name="__codelineno-8-86" href="#__codelineno-8-86"></a>Metadata:
+<a id="__codelineno-8-87" name="__codelineno-8-87" href="#__codelineno-8-87"></a> chunk_num: 3
+<a id="__codelineno-8-88" name="__codelineno-8-88" href="#__codelineno-8-88"></a> span: (-1, -1)
+<a id="__codelineno-8-89" name="__codelineno-8-89" href="#__codelineno-8-89"></a> source: samples/What_is_rst.rst
+<a id="__codelineno-8-90" name="__codelineno-8-90" href="#__codelineno-8-90"></a> section_count: 1
+<a id="__codelineno-8-91" name="__codelineno-8-91" href="#__codelineno-8-91"></a> curr_section: 3
+<a id="__codelineno-8-92" name="__codelineno-8-92" href="#__codelineno-8-92"></a>
+<a id="__codelineno-8-93" name="__codelineno-8-93" href="#__codelineno-8-93"></a>--- Chunk 5 ---
+<a id="__codelineno-8-94" name="__codelineno-8-94" href="#__codelineno-8-94"></a>Content:
+<a id="__codelineno-8-95" name="__codelineno-8-95" href="#__codelineno-8-95"></a>... [3   Show me some formatting examples](#toc-entry-3)=====
+<a id="__codelineno-8-96" name="__codelineno-8-96" href="#__codelineno-8-96"></a>You can highlight text in *italics* or,
+<a id="__codelineno-8-97" name="__codelineno-8-97" href="#__codelineno-8-97"></a>to provide even more emphasis
+<a id="__codelineno-8-98" name="__codelineno-8-98" href="#__codelineno-8-98"></a>in **bold**.
+<a id="__codelineno-8-99" name="__codelineno-8-99" href="#__codelineno-8-99"></a>Often, when describing computer code, we like to use a
+<a id="__codelineno-8-100" name="__codelineno-8-100" href="#__codelineno-8-100"></a>fixed space font to quote code snippets.
+<a id="__codelineno-8-101" name="__codelineno-8-101" href="#__codelineno-8-101"></a>We can also include footnotes [[1]](#footnote-1).
+<a id="__codelineno-8-102" name="__codelineno-8-102" href="#__codelineno-8-102"></a>We could include source code files
+<a id="__codelineno-8-103" name="__codelineno-8-103" href="#__codelineno-8-103"></a>(by specifying their name) which is useful when documenting code.
+<a id="__codelineno-8-104" name="__codelineno-8-104" href="#__codelineno-8-104"></a>We
+<a id="__codelineno-8-105" name="__codelineno-8-105" href="#__codelineno-8-105"></a>can also copy source code verbatim (i.e. include it in the rst
+<a id="__codelineno-8-106" name="__codelineno-8-106" href="#__codelineno-8-106"></a>document) like this:```
+<a id="__codelineno-8-107" name="__codelineno-8-107" href="#__codelineno-8-107"></a>
+<a id="__codelineno-8-108" name="__codelineno-8-108" href="#__codelineno-8-108"></a>Metadata:
+<a id="__codelineno-8-109" name="__codelineno-8-109" href="#__codelineno-8-109"></a> chunk_num: 4
+<a id="__codelineno-8-110" name="__codelineno-8-110" href="#__codelineno-8-110"></a> span: (-1, -1)
+<a id="__codelineno-8-111" name="__codelineno-8-111" href="#__codelineno-8-111"></a> source: samples/What_is_rst.rst
+<a id="__codelineno-8-112" name="__codelineno-8-112" href="#__codelineno-8-112"></a> section_count: 1
+<a id="__codelineno-8-113" name="__codelineno-8-113" href="#__codelineno-8-113"></a> curr_section: 4
+<a id="__codelineno-8-114" name="__codelineno-8-114" href="#__codelineno-8-114"></a>
+<a id="__codelineno-8-115" name="__codelineno-8-115" href="#__codelineno-8-115"></a>--- Chunk 6 ---
+<a id="__codelineno-8-116" name="__codelineno-8-116" href="#__codelineno-8-116"></a>Content:
+<a id="__codelineno-8-117" name="__codelineno-8-117" href="#__codelineno-8-117"></a>... which is useful when documenting code.
+<a id="__codelineno-8-118" name="__codelineno-8-118" href="#__codelineno-8-118"></a>We
+<a id="__codelineno-8-119" name="__codelineno-8-119" href="#__codelineno-8-119"></a>can also copy source code verbatim (i.e. include it in the rst
+<a id="__codelineno-8-120" name="__codelineno-8-120" href="#__codelineno-8-120"></a>document)
+<a id="__codelineno-8-121" name="__codelineno-8-121" href="#__codelineno-8-121"></a>like this:```
+<a id="__codelineno-8-122" name="__codelineno-8-122" href="#__codelineno-8-122"></a>int main ( int argc, char *argv[] ) {
+<a id="__codelineno-8-123" name="__codelineno-8-123" href="#__codelineno-8-123"></a>printf(&quot;Hello World\n&quot;);
+<a id="__codelineno-8-124" name="__codelineno-8-124" href="#__codelineno-8-124"></a>return 0;}```
+<a id="__codelineno-8-125" name="__codelineno-8-125" href="#__codelineno-8-125"></a>We have already seen at itemised list in section [What is it good
+<a id="__codelineno-8-126" name="__codelineno-8-126" href="#__codelineno-8-126"></a>for?
+<a id="__codelineno-8-127" name="__codelineno-8-127" href="#__codelineno-8-127"></a>](#what-is-it-good-for).
+<a id="__codelineno-8-128" name="__codelineno-8-128" href="#__codelineno-8-128"></a>Enumerated list and descriptive lists are supported as
+<a id="__codelineno-8-129" name="__codelineno-8-129" href="#__codelineno-8-129"></a>
+<a id="__codelineno-8-130" name="__codelineno-8-130" href="#__codelineno-8-130"></a>Metadata:
+<a id="__codelineno-8-131" name="__codelineno-8-131" href="#__codelineno-8-131"></a> chunk_num: 5
+<a id="__codelineno-8-132" name="__codelineno-8-132" href="#__codelineno-8-132"></a> span: (-1, -1)
+<a id="__codelineno-8-133" name="__codelineno-8-133" href="#__codelineno-8-133"></a> source: samples/What_is_rst.rst
+<a id="__codelineno-8-134" name="__codelineno-8-134" href="#__codelineno-8-134"></a> section_count: 1
+<a id="__codelineno-8-135" name="__codelineno-8-135" href="#__codelineno-8-135"></a> curr_section: 5
+<a id="__codelineno-8-136" name="__codelineno-8-136" href="#__codelineno-8-136"></a>
+<a id="__codelineno-8-137" name="__codelineno-8-137" href="#__codelineno-8-137"></a>--- Chunk 7 ---
+<a id="__codelineno-8-138" name="__codelineno-8-138" href="#__codelineno-8-138"></a>Content:
+<a id="__codelineno-8-139" name="__codelineno-8-139" href="#__codelineno-8-139"></a>We have already seen at itemised list in section [What is it good
+<a id="__codelineno-8-140" name="__codelineno-8-140" href="#__codelineno-8-140"></a>for?
+<a id="__codelineno-8-141" name="__codelineno-8-141" href="#__codelineno-8-141"></a>](#what-is-it-good-for).
+<a id="__codelineno-8-142" name="__codelineno-8-142" href="#__codelineno-8-142"></a>Enumerated list and descriptive lists are supported as
+<a id="__codelineno-8-143" name="__codelineno-8-143" href="#__codelineno-8-143"></a>well.
+<a id="__codelineno-8-144" name="__codelineno-8-144" href="#__codelineno-8-144"></a>It provides very good support for including html-links in a
+<a id="__codelineno-8-145" name="__codelineno-8-145" href="#__codelineno-8-145"></a>variety of ways.
+<a id="__codelineno-8-146" name="__codelineno-8-146" href="#__codelineno-8-146"></a>Any section and subsections defined can be linked to,
+<a id="__codelineno-8-147" name="__codelineno-8-147" href="#__codelineno-8-147"></a>as well.
+<a id="__codelineno-8-148" name="__codelineno-8-148" href="#__codelineno-8-148"></a>[4   Where can I learn more?](#toc-entry-4)=====
+<a id="__codelineno-8-149" name="__codelineno-8-149" href="#__codelineno-8-149"></a>reStructuredText is described at
+<a id="__codelineno-8-150" name="__codelineno-8-150" href="#__codelineno-8-150"></a>&lt;http://docutils.sourceforge.net/rst.html&gt;.
+<a id="__codelineno-8-151" name="__codelineno-8-151" href="#__codelineno-8-151"></a>
+<a id="__codelineno-8-152" name="__codelineno-8-152" href="#__codelineno-8-152"></a>Metadata:
+<a id="__codelineno-8-153" name="__codelineno-8-153" href="#__codelineno-8-153"></a> chunk_num: 6
+<a id="__codelineno-8-154" name="__codelineno-8-154" href="#__codelineno-8-154"></a> span: (-1, -1)
+<a id="__codelineno-8-155" name="__codelineno-8-155" href="#__codelineno-8-155"></a> source: samples/What_is_rst.rst
+<a id="__codelineno-8-156" name="__codelineno-8-156" href="#__codelineno-8-156"></a> section_count: 1
+<a id="__codelineno-8-157" name="__codelineno-8-157" href="#__codelineno-8-157"></a> curr_section: 6
+<a id="__codelineno-8-158" name="__codelineno-8-158" href="#__codelineno-8-158"></a>
+<a id="__codelineno-8-159" name="__codelineno-8-159" href="#__codelineno-8-159"></a>--- Chunk 8 ---
+<a id="__codelineno-8-160" name="__codelineno-8-160" href="#__codelineno-8-160"></a>Content:
+<a id="__codelineno-8-161" name="__codelineno-8-161" href="#__codelineno-8-161"></a>... as well.
+<a id="__codelineno-8-162" name="__codelineno-8-162" href="#__codelineno-8-162"></a>[4   Where can I learn more?](#toc-entry-4)=====
+<a id="__codelineno-8-163" name="__codelineno-8-163" href="#__codelineno-8-163"></a>reStructuredText is described at
+<a id="__codelineno-8-164" name="__codelineno-8-164" href="#__codelineno-8-164"></a>&lt;http://docutils.sourceforge.net/rst.html&gt;.
+<a id="__codelineno-8-165" name="__codelineno-8-165" href="#__codelineno-8-165"></a>We provide some geeky small
+<a id="__codelineno-8-166" name="__codelineno-8-166" href="#__codelineno-8-166"></a>print in this footnote [[2]](#footnote-2).
+<a id="__codelineno-8-167" name="__codelineno-8-167" href="#__codelineno-8-167"></a>[5   Show me some more stuff, please](#toc-entry-5)=====
+<a id="__codelineno-8-168" name="__codelineno-8-168" href="#__codelineno-8-168"></a>We can also include figures:
+<a id="__codelineno-8-169" name="__codelineno-8-169" href="#__codelineno-8-169"></a>![image.png](image.png)
+<a id="__codelineno-8-170" name="__codelineno-8-170" href="#__codelineno-8-170"></a>The magnetisation in a small ferromagnetic disk.
+<a id="__codelineno-8-171" name="__codelineno-8-171" href="#__codelineno-8-171"></a>The diametre is of the order of 120 nanometers and the material is Ni20Fe
+<a id="__codelineno-8-172" name="__codelineno-8-172" href="#__codelineno-8-172"></a>80.
+<a id="__codelineno-8-173" name="__codelineno-8-173" href="#__codelineno-8-173"></a>Png is a file format that is both acceptable for html pages as well as fo
+<a id="__codelineno-8-174" name="__codelineno-8-174" href="#__codelineno-8-174"></a>r (pdf)latex.
+<a id="__codelineno-8-175" name="__codelineno-8-175" href="#__codelineno-8-175"></a>
+<a id="__codelineno-8-176" name="__codelineno-8-176" href="#__codelineno-8-176"></a>Metadata:
+<a id="__codelineno-8-177" name="__codelineno-8-177" href="#__codelineno-8-177"></a> chunk_num: 7
+<a id="__codelineno-8-178" name="__codelineno-8-178" href="#__codelineno-8-178"></a> span: (-1, -1)
+<a id="__codelineno-8-179" name="__codelineno-8-179" href="#__codelineno-8-179"></a> source: samples/What_is_rst.rst
+<a id="__codelineno-8-180" name="__codelineno-8-180" href="#__codelineno-8-180"></a> section_count: 1
+<a id="__codelineno-8-181" name="__codelineno-8-181" href="#__codelineno-8-181"></a> curr_section: 7
+<a id="__codelineno-8-182" name="__codelineno-8-182" href="#__codelineno-8-182"></a>
+<a id="__codelineno-8-183" name="__codelineno-8-183" href="#__codelineno-8-183"></a>--- Chunk 9 ---
+<a id="__codelineno-8-184" name="__codelineno-8-184" href="#__codelineno-8-184"></a>Content:
+<a id="__codelineno-8-185" name="__codelineno-8-185" href="#__codelineno-8-185"></a>... ![image.png](image.png)
+<a id="__codelineno-8-186" name="__codelineno-8-186" href="#__codelineno-8-186"></a>The magnetisation in a small ferromagnetic disk.
+<a id="__codelineno-8-187" name="__codelineno-8-187" href="#__codelineno-8-187"></a>The diametre is of the order of 120 nanometers and the material is Ni20Fe
+<a id="__codelineno-8-188" name="__codelineno-8-188" href="#__codelineno-8-188"></a>80.
+<a id="__codelineno-8-189" name="__codelineno-8-189" href="#__codelineno-8-189"></a>Png is a file format that is both acceptable for html pages as well as fo
+<a id="__codelineno-8-190" name="__codelineno-8-190" href="#__codelineno-8-190"></a>r (pdf)latex.
+<a id="__codelineno-8-191" name="__codelineno-8-191" href="#__codelineno-8-191"></a>
+<a id="__codelineno-8-192" name="__codelineno-8-192" href="#__codelineno-8-192"></a>---
+<a id="__codelineno-8-193" name="__codelineno-8-193" href="#__codelineno-8-193"></a>|  |  |
+<a id="__codelineno-8-194" name="__codelineno-8-194" href="#__codelineno-8-194"></a>| --- | --- |
+<a id="__codelineno-8-195" name="__codelineno-8-195" href="#__codelineno-8-195"></a>| [[1]](#footnote-reference-1) | although there isn&#39;t much point of using
+<a id="__codelineno-8-196" name="__codelineno-8-196" href="#__codelineno-8-196"></a> a footnote here.|
+<a id="__codelineno-8-197" name="__codelineno-8-197" href="#__codelineno-8-197"></a>|  |  |
+<a id="__codelineno-8-198" name="__codelineno-8-198" href="#__codelineno-8-198"></a>| --- | --- |
+<a id="__codelineno-8-199" name="__codelineno-8-199" href="#__codelineno-8-199"></a>| [[2]](#footnote-reference-2) | Random facts:   * Emacs provides an rst
+<a id="__codelineno-8-200" name="__codelineno-8-200" href="#__codelineno-8-200"></a> mode * when converting rst to html, a style sheet can be provided (there
+<a id="__codelineno-8-201" name="__codelineno-8-201" href="#__codelineno-8-201"></a> is a similar feature for latex) * rst can also be converted into XML * th
+<a id="__codelineno-8-202" name="__codelineno-8-202" href="#__codelineno-8-202"></a>e recommended file extension for rst is .txt |
+<a id="__codelineno-8-203" name="__codelineno-8-203" href="#__codelineno-8-203"></a>
+<a id="__codelineno-8-204" name="__codelineno-8-204" href="#__codelineno-8-204"></a>Metadata:
+<a id="__codelineno-8-205" name="__codelineno-8-205" href="#__codelineno-8-205"></a> chunk_num: 8
+<a id="__codelineno-8-206" name="__codelineno-8-206" href="#__codelineno-8-206"></a> span: (2499, 3150)
+<a id="__codelineno-8-207" name="__codelineno-8-207" href="#__codelineno-8-207"></a> source: samples/What_is_rst.rst
+<a id="__codelineno-8-208" name="__codelineno-8-208" href="#__codelineno-8-208"></a> section_count: 1
+<a id="__codelineno-8-209" name="__codelineno-8-209" href="#__codelineno-8-209"></a> curr_section: 8
+<a id="__codelineno-8-210" name="__codelineno-8-210" href="#__codelineno-8-210"></a>
+<a id="__codelineno-8-211" name="__codelineno-8-211" href="#__codelineno-8-211"></a>--- Chunk 10 ---
+<a id="__codelineno-8-212" name="__codelineno-8-212" href="#__codelineno-8-212"></a>Content:
+<a id="__codelineno-8-213" name="__codelineno-8-213" href="#__codelineno-8-213"></a>Table of Contents=====
+<a id="__codelineno-8-214" name="__codelineno-8-214" href="#__codelineno-8-214"></a>1. [Chapter 1](chapter_1.xhtml)
+<a id="__codelineno-8-215" name="__codelineno-8-215" href="#__codelineno-8-215"></a>2. [Chapter 2](chapter_2.xhtml)
+<a id="__codelineno-8-216" name="__codelineno-8-216" href="#__codelineno-8-216"></a>3. [Copyright](copyright.xhtml)
+<a id="__codelineno-8-217" name="__codelineno-8-217" href="#__codelineno-8-217"></a>
+<a id="__codelineno-8-218" name="__codelineno-8-218" href="#__codelineno-8-218"></a>Metadata:
+<a id="__codelineno-8-219" name="__codelineno-8-219" href="#__codelineno-8-219"></a> chunk_num: 1
+<a id="__codelineno-8-220" name="__codelineno-8-220" href="#__codelineno-8-220"></a> span: (-1, -1)
+<a id="__codelineno-8-221" name="__codelineno-8-221" href="#__codelineno-8-221"></a> source: samples/minimal.epub
+<a id="__codelineno-8-222" name="__codelineno-8-222" href="#__codelineno-8-222"></a> title: Sample .epub Book
+<a id="__codelineno-8-223" name="__codelineno-8-223" href="#__codelineno-8-223"></a> creator: Thomas Hansen
+<a id="__codelineno-8-224" name="__codelineno-8-224" href="#__codelineno-8-224"></a> section_count: 4
+<a id="__codelineno-8-225" name="__codelineno-8-225" href="#__codelineno-8-225"></a> curr_section: 1
+<a id="__codelineno-8-226" name="__codelineno-8-226" href="#__codelineno-8-226"></a>
+<a id="__codelineno-8-227" name="__codelineno-8-227" href="#__codelineno-8-227"></a>And so on...
+</code></pre></div>
+</details>
+<div class="admonition warning">
+<p class="admonition-title">Generator Cleanup</p>
+<p>When using <code>batch_chunk</code>, it's crucial to ensure the generator is properly closed, especially if you don't iterate through all the chunks. This is necessary to release the underlying multiprocessing resources. The recommended way is to use a <code>try...finally</code> block to call <code>close()</code> on the generator. For more details, see the <a href="../../../troubleshooting/">Troubleshooting</a> guide.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Token Counter Requirement</p>
+<p>When using the <code>max_tokens</code> constraint, a <code>token_counter</code> function is essential. This function, which you provide, should accept a string and return an integer representing its token count. Failing to provide a <code>token_counter</code> will result in a <a href="../../../exceptions-and-warnings/#missingtokencountererror"><code>MissingTokenCounterError</code></a>.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Overrides token_counter</p>
+<p>You can also provide the <code>token_counter</code> directly to the <code>chunk</code> method. within the <code>chunk</code> method call (e.g., <code>chunker.chunk(..., token_counter=my_tokenizer_function)</code>). If a <code>token_counter</code> is provided in both the constructor and the <code>chunk</code> method, the one in the <code>chunk</code> method will be used.</p>
+</div>
+<h3 id="separator-keeping-your-document-batches-organized">Separator: Keeping Your Document Batches Organized! 📋</h3>
+<p>The <code>separator</code> parameter works the same way here as in <code>PlainTextChunker</code> - it yields a custom value after each document's chunks, perfect for keeping your batch processing tidy.</p>
+<p>For detailed examples and code, check out the <a href="../plain_text_chunker/#separator">PlainTextChunker separator docs</a> - it's all the same functionality!</p>
+<h2 id="custom-processors-build-your-own-document-wizards">Custom Processors: Build Your Own Document Wizards! 🛠️🔮</h2>
+<p>Want to handle exotic file formats that <code>DocumentChunker</code> doesn't know about? Create your own custom processors! This lets you add specialized processing for any file type and prioritize your custom processors over the built-in ones.</p>
+<div class="admonition warning">
+<p class="admonition-title">Global Registry Alert!</p>
+<p>Custom processors get registered globally - once you add one, it's available everywhere in your app. Watch out for side effects if you're registering processors across different parts of your codebase, especially in multi-threaded or long-running applications!</p>
+</div>
+<p>To use a custom processor, you leverage the <a href="../../../reference/chunklet/document_chunker/registry/"><code>@registry.register</code></a> decorator. This decorator allows you to register your function for one or more file extensions directly. Your custom processor function must accept a single <code>file_path</code> parameter (str) and return a <code>tuple[str | list[str], dict]</code> containing extracted text (or list of texts for multi-section documents) and a metadata dictionary.</p>
+<div class="admonition important">
+<p class="admonition-title">Custom Processor Rules</p>
+<ul>
+<li>Your function must accept exactly one required parameter (the file path)</li>
+<li>Optional parameters with defaults are totally fine</li>
+<li>File extensions must start with a dot (like <code>.json</code>, <code>.custom</code>)</li>
+<li>Lambda functions are not supported unless you provide a <code>name</code> parameter</li>
+<li>The metadata dictionary will be merged with common metadata (chunk_num, span, source)</li>
+<li>For multi-section documents, return a list of strings - each will be processed as a separate section</li>
+<li>If an error occurs during the document processing (e.g., an issue with the custom processor function), a <a href="../../../exceptions-and-warnings/#callbackerror"><code>CallbackError</code></a> will be raised</li>
+</ul>
+</div>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-9-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-9-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-9-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-9-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-9-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-9-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-9-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-9-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-9-10">10</a></span>
+<span class="normal"><a href="#__codelineno-9-11">11</a></span>
+<span class="normal"><a href="#__codelineno-9-12">12</a></span>
+<span class="normal"><a href="#__codelineno-9-13">13</a></span>
+<span class="normal"><a href="#__codelineno-9-14">14</a></span>
+<span class="normal"><a href="#__codelineno-9-15">15</a></span>
+<span class="normal"><a href="#__codelineno-9-16">16</a></span>
+<span class="normal"><a href="#__codelineno-9-17">17</a></span>
+<span class="normal"><a href="#__codelineno-9-18">18</a></span>
+<span class="normal"><a href="#__codelineno-9-19">19</a></span>
+<span class="normal"><a href="#__codelineno-9-20">20</a></span>
+<span class="normal"><a href="#__codelineno-9-21">21</a></span>
+<span class="normal"><a href="#__codelineno-9-22">22</a></span>
+<span class="normal"><a href="#__codelineno-9-23">23</a></span>
+<span class="normal"><a href="#__codelineno-9-24">24</a></span>
+<span class="normal"><a href="#__codelineno-9-25">25</a></span>
+<span class="normal"><a href="#__codelineno-9-26">26</a></span>
+<span class="normal"><a href="#__codelineno-9-27">27</a></span>
+<span class="normal"><a href="#__codelineno-9-28">28</a></span>
+<span class="normal"><a href="#__codelineno-9-29">29</a></span>
+<span class="normal"><a href="#__codelineno-9-30">30</a></span>
+<span class="normal"><a href="#__codelineno-9-31">31</a></span>
+<span class="normal"><a href="#__codelineno-9-32">32</a></span>
+<span class="normal"><a href="#__codelineno-9-33">33</a></span>
+<span class="normal"><a href="#__codelineno-9-34">34</a></span>
+<span class="normal"><a href="#__codelineno-9-35">35</a></span>
+<span class="normal"><a href="#__codelineno-9-36">36</a></span>
+<span class="normal"><a href="#__codelineno-9-37">37</a></span>
+<span class="normal"><a href="#__codelineno-9-38">38</a></span>
+<span class="normal"><a href="#__codelineno-9-39">39</a></span>
+<span class="normal"><a href="#__codelineno-9-40">40</a></span>
+<span class="normal"><a href="#__codelineno-9-41">41</a></span>
+<span class="normal"><a href="#__codelineno-9-42">42</a></span>
+<span class="normal"><a href="#__codelineno-9-43">43</a></span>
+<span class="normal"><a href="#__codelineno-9-44">44</a></span>
+<span class="normal"><a href="#__codelineno-9-45">45</a></span>
+<span class="normal"><a href="#__codelineno-9-46">46</a></span>
+<span class="normal"><a href="#__codelineno-9-47">47</a></span>
+<span class="normal"><a href="#__codelineno-9-48">48</a></span>
+<span class="normal"><a href="#__codelineno-9-49">49</a></span>
+<span class="normal"><a href="#__codelineno-9-50">50</a></span>
+<span class="normal"><a href="#__codelineno-9-51">51</a></span>
+<span class="normal"><a href="#__codelineno-9-52">52</a></span>
+<span class="normal"><a href="#__codelineno-9-53">53</a></span>
+<span class="normal"><a href="#__codelineno-9-54">54</a></span>
+<span class="normal"><a href="#__codelineno-9-55">55</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4"></a><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5"></a><span class="hll"><span class="kn">from</span><span class="w"> </span><span class="nn">chunklet.document_chunker</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentChunker</span><span class="p">,</span> <span class="n">CustomProcessorRegistry</span>
+</span><a id="__codelineno-9-6" name="__codelineno-9-6"></a>
+<a id="__codelineno-9-7" name="__codelineno-9-7"></a>
+<a id="__codelineno-9-8" name="__codelineno-9-8"></a><span class="hll"><span class="n">registry</span> <span class="o">=</span> <span class="n">CustomProcessorRegistry</span><span class="p">()</span>
+</span><a id="__codelineno-9-9" name="__codelineno-9-9"></a>
+<a id="__codelineno-9-10" name="__codelineno-9-10"></a><span class="hll"><span class="c1"># Define a simple custom processor for .json files</span>
+</span><a id="__codelineno-9-11" name="__codelineno-9-11"></a><span class="hll"><span class="nd">@registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;MyJSONProcessor&quot;</span><span class="p">)</span>
+</span><a id="__codelineno-9-12" name="__codelineno-9-12"></a><span class="hll"><span class="k">def</span><span class="w"> </span><span class="nf">my_json_processor</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+</span><a id="__codelineno-9-13" name="__codelineno-9-13"></a><span class="hll">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><a id="__codelineno-9-14" name="__codelineno-9-14"></a><span class="hll">        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span><a id="__codelineno-9-15" name="__codelineno-9-15"></a><span class="hll">
+</span><a id="__codelineno-9-16" name="__codelineno-9-16"></a><span class="hll">    <span class="c1"># Assuming the json has a &quot;text&quot; field with paragraphs</span>
+</span><a id="__codelineno-9-17" name="__codelineno-9-17"></a><span class="hll">    <span class="n">text_content</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+</span><a id="__codelineno-9-18" name="__codelineno-9-18"></a><span class="hll">    <span class="n">metadata</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;metadata&quot;</span><span class="p">,</span> <span class="p">{})</span>
+</span><a id="__codelineno-9-19" name="__codelineno-9-19"></a><span class="hll">    <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;source&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_path</span>
+</span><a id="__codelineno-9-20" name="__codelineno-9-20"></a><span class="hll">    <span class="k">return</span> <span class="n">text_content</span><span class="p">,</span> <span class="n">metadata</span>
+</span><a id="__codelineno-9-21" name="__codelineno-9-21"></a>
+<a id="__codelineno-9-22" name="__codelineno-9-22"></a><span class="c1"># A longer and more complex JSON sample</span>
+<a id="__codelineno-9-23" name="__codelineno-9-23"></a><span class="n">json_data</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-9-24" name="__codelineno-9-24"></a>    <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-9-25" name="__codelineno-9-25"></a>        <span class="s2">&quot;document_id&quot;</span><span class="p">:</span> <span class="s2">&quot;doc-12345&quot;</span><span class="p">,</span>
+<a id="__codelineno-9-26" name="__codelineno-9-26"></a>        <span class="s2">&quot;created_at&quot;</span><span class="p">:</span> <span class="s2">&quot;2025-11-05&quot;</span>
+<a id="__codelineno-9-27" name="__codelineno-9-27"></a>    <span class="p">},</span>
+<a id="__codelineno-9-28" name="__codelineno-9-28"></a>    <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">[</span>
+<a id="__codelineno-9-29" name="__codelineno-9-29"></a>        <span class="s2">&quot;This is the first paragraph of our longer JSON sample. It contains multiple sentences to test the chunking process.&quot;</span><span class="p">,</span>
+<a id="__codelineno-9-30" name="__codelineno-9-30"></a>        <span class="s2">&quot;The second paragraph introduces a new topic. We are exploring the capabilities of custom processors in the chunklet library.&quot;</span><span class="p">,</span>
+<a id="__codelineno-9-31" name="__codelineno-9-31"></a>        <span class="s2">&quot;Finally, the third paragraph concludes our sample. We hope this demonstrates the flexibility of the system in handling various data formats.&quot;</span>
+<a id="__codelineno-9-32" name="__codelineno-9-32"></a>    <span class="p">]</span>
+<a id="__codelineno-9-33" name="__codelineno-9-33"></a><span class="p">}</span>
+<a id="__codelineno-9-34" name="__codelineno-9-34"></a>
+<a id="__codelineno-9-35" name="__codelineno-9-35"></a><span class="n">chunker</span> <span class="o">=</span> <span class="n">DocumentChunker</span><span class="p">()</span>
+<a id="__codelineno-9-36" name="__codelineno-9-36"></a>
+<a id="__codelineno-9-37" name="__codelineno-9-37"></a><span class="c1"># Use a temporary file</span>
+<a id="__codelineno-9-38" name="__codelineno-9-38"></a><span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w+&#39;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+<a id="__codelineno-9-39" name="__codelineno-9-39"></a>    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
+<a id="__codelineno-9-40" name="__codelineno-9-40"></a>    <span class="n">tmp</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-9-41" name="__codelineno-9-41"></a>    <span class="n">tmp_path</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">name</span>
+<a id="__codelineno-9-42" name="__codelineno-9-42"></a>
+<a id="__codelineno-9-43" name="__codelineno-9-43"></a>    <span class="n">chunks</span> <span class="o">=</span> <span class="n">chunker</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span>
+<a id="__codelineno-9-44" name="__codelineno-9-44"></a>        <span class="n">path</span><span class="o">=</span><span class="n">tmp_path</span><span class="p">,</span>
+<a id="__codelineno-9-45" name="__codelineno-9-45"></a>        <span class="n">max_sentences</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-9-46" name="__codelineno-9-46"></a>    <span class="p">)</span>
+<a id="__codelineno-9-47" name="__codelineno-9-47"></a>
+<a id="__codelineno-9-48" name="__codelineno-9-48"></a>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chunks</span><span class="p">):</span>
+<a id="__codelineno-9-49" name="__codelineno-9-49"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--- Chunk </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2"> ---&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-50" name="__codelineno-9-50"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Content:</span><span class="se">\n</span><span class="si">{</span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-51" name="__codelineno-9-51"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metadata:</span><span class="se">\n</span><span class="si">{</span><span class="n">chunk</span><span class="o">.</span><span class="n">metadata</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-52" name="__codelineno-9-52"></a>        <span class="nb">print</span><span class="p">()</span>
+<a id="__codelineno-9-53" name="__codelineno-9-53"></a>
+<a id="__codelineno-9-54" name="__codelineno-9-54"></a><span class="c1"># Optionally unregister</span>
+<a id="__codelineno-9-55" name="__codelineno-9-55"></a><span class="hll"><span class="n">registry</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<details class="success">
+<summary>Click to show output</summary>
+<div class="language-text highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>--- Chunk 1 ---
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>Content:
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>This is the first paragraph of our longer JSON sample.
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>It contains multiple sentences to test the chunking process.
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>The second paragraph introduces a new topic.
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>We are exploring the capabilities of custom processors in the chunklet library.
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>Finally, the third paragraph concludes our sample.
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>Metadata:
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>{&#39;document_id&#39;: &#39;doc-12345&#39;, &#39;created_at&#39;: &#39;2025-11-05&#39;, &#39;source&#39;: &#39;/tmp/tmpdt6xa5rh.json&#39;, &#39;chunk_num&#39;: 1, &#39;span&#39;: (0, 292)}
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>--- Chunk 2 ---
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>Content:
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>... the third paragraph concludes our sample.
+<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>
+<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>Metadata:
+<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a>{&#39;document_id&#39;: &#39;doc-12345&#39;, &#39;created_at&#39;: &#39;2025-11-05&#39;, &#39;source&#39;: &#39;/tmp/tmpdt6xa5rh.json&#39;, &#39;chunk_num&#39;: 2, &#39;span&#39;: (250, 292)}
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Registering Without the Decorator</p>
+<p>If you prefer not to use decorators, you can directly use the <code>registry.register()</code> method. This is particularly useful when registering processors dynamically.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1">1</a></span>
+<span class="normal"><a href="#__codelineno-11-2">2</a></span>
+<span class="normal"><a href="#__codelineno-11-3">3</a></span>
+<span class="normal"><a href="#__codelineno-11-4">4</a></span>
+<span class="normal"><a href="#__codelineno-11-5">5</a></span>
+<span class="normal"><a href="#__codelineno-11-6">6</a></span>
+<span class="normal"><a href="#__codelineno-11-7">7</a></span>
+<span class="normal"><a href="#__codelineno-11-8">8</a></span>
+<span class="normal"><a href="#__codelineno-11-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">chunklet.document_chunker</span><span class="w"> </span><span class="kn">import</span> <span class="n">CustomProcessorRegistry</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2"></a>
+<a id="__codelineno-11-3" name="__codelineno-11-3"></a><span class="n">registry</span> <span class="o">=</span> <span class="n">CustomProcessorRegistry</span><span class="p">()</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4"></a>
+<a id="__codelineno-11-5" name="__codelineno-11-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">my_other_processor</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6"></a>    <span class="c1"># ... your logic ...</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7"></a>    <span class="k">return</span> <span class="s2">&quot;some text&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="n">file_path</span><span class="p">}</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8"></a>
+<a id="__codelineno-11-9" name="__codelineno-11-9"></a><span class="n">registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">my_other_processor</span><span class="p">,</span> <span class="s2">&quot;.custom&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;MyOtherProcessor&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+</div>
+<h3 id="customprocessorregistry-methods-summary"><a href="../../../reference/chunklet/document_chunker/registry/"><code>CustomProcessorRegistry</code></a> Methods Summary</h3>
+<ul>
+<li><code>processors</code>: Returns a shallow copy of the dictionary of registered processors.</li>
+<li><code>is_registered(ext: str)</code>: Checks if a processor is registered for the given file extension, returning <code>True</code> or <code>False</code>.</li>
+<li><code>register(callback: Callable[[str], ReturnType] | None = None, *exts: str, name: str | None = None)</code>: Registers a processor callback for one or more file extensions.</li>
+<li><code>unregister(*exts: str)</code>: Removes processor(s) from the registry.</li>
+<li><code>clear()</code>: Clears all registered processors from the registry.</li>
+<li><code>extract_data(file_path: str, ext: str)</code>: Processes a file using a registered processor, returning the extracted data and the name of the processor used.</li>
+</ul>
+<details class="info">
+<summary>API Reference</summary>
+<p>For complete technical details on the <code>DocumentChunker</code> class, check out the <a href="../../../reference/chunklet/document_chunker/document_chunker/">API documentation</a>.</p>
+</details>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../plain_text_chunker/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Plain Text Chunker">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Plain Text Chunker
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../code_chunker/" class="md-footer__link md-footer__link--next" aria-label="Next: Code Chunker">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Code Chunker
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "navigation.tabs", "navigation.indexes", "navigation.instant", "navigation.footer", "header.autohide"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

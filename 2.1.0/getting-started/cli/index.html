@@ -1,0 +1,4122 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="One library to split them all: Sentence, Code, Docs— RAG-ready, token-aware, and multi-format.">
+      
+      
+      
+        <link rel="canonical" href="https://speedyk-005.github.io/chunklet-py/2.1.0/getting-started/cli/">
+      
+      
+        <link rel="prev" href="../installation/">
+      
+      
+        <link rel="next" href="../metadata/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>CLI - chunklet-py Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+  
+  
+  
+  
+  <style>:root{--md-annotation-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%2020c-4.41%200-8-3.59-8-8s3.59-8%208-8%208%203.59%208%208-3.59%208-8%208m0-18A10%2010%200%200%200%202%2012a10%2010%200%200%200%2010%2010%2010%2010%200%200%200%2010-10A10%2010%200%200%200%2012%202m1%205h-2v4H7v2h4v4h2v-4h4v-2h-4z%22/%3E%3C/svg%3E');}</style>
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chunklet-command-line-interface-cli-your-chunking-powerhouse" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+          <aside class="md-banner md-banner--warning">
+            <div class="md-banner__inner md-grid md-typeset">
+              
+  <div class="md-banner md-banner--warning">
+    You're not viewing the latest version.
+    <a href="../../..">
+      <strong>Click here to go to latest.</strong>
+    </a>
+  </div>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),base=new URL("../.."),outdated=__md_get("__outdated",sessionStorage,base);!0===outdated&&el&&(el.hidden=!1)</script>
+          </aside>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="chunklet-py Documentation" class="md-header__button md-logo" aria-label="chunklet-py Documentation" data-md-component="logo">
+      
+  <img src="../../img/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            chunklet-py Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              CLI
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/speedyk-005/chunklet-py" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Welcome
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../installation/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../supported-languages/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Supported Languages
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../exceptions-and-warnings/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Exceptions and Warnings
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../whats-new/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  What's New
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../migration/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Migration Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../troubleshooting/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Troubleshooting
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/chunklet/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="chunklet-py Documentation" class="md-nav__button md-logo" aria-label="chunklet-py Documentation" data-md-component="logo">
+      
+  <img src="../../img/logo.svg" alt="logo">
+
+    </a>
+    chunklet-py Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/speedyk-005/chunklet-py" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Welcome
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-split-command-precision-sentence-segmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The split Command: Precision Sentence Segmentation ✂️
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The split Command: Precision Sentence Segmentation ✂️">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quick-facts-for-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Facts for split
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenarios-splitting-like-a-pro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenarios: Splitting Like a Pro!
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scenarios: Splitting Like a Pro!">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-1-splitting-text-directly-and-multilingually" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 1: Splitting Text Directly (and Multilingually!)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-2-splitting-a-file-and-saving-the-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 2: Splitting a File and Saving the Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-chunk-command-your-intelligent-chunking-workhorse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The chunk Command: Your Intelligent Chunking Workhorse!
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The chunk Command: Your Intelligent Chunking Workhorse!">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-flags-for-chunk-the-essentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Flags for chunk (The Essentials!)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-text-document-chunking-default-or-with-doc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        General Text &amp; Document Chunking (Default or with --doc) 📄
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="General Text &amp; Document Chunking (Default or with --doc) 📄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-flags-for-document-power-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Flags for Document Power-Up
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenarios-text-document-chunking-in-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenarios: Text &amp; Document Chunking in Action!
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scenarios: Text &amp; Document Chunking in Action!">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-1-basic-text-chunking-with-token-limits-and-overlap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 1: Basic Text Chunking with Token Limits and Overlap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-2-chunking-a-pdf-document-with-sentence-and-section-break-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 2: Chunking a PDF Document with Sentence and Section Break Limits
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-3-batch-processing-a-directory-of-documents-with-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 3: Batch Processing a Directory of Documents (with Error Handling!)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-4-chunking-a-text-file-with-a-specific-language-and-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 4: Chunking a Text File with a Specific Language and Metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-chunking-with-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Chunking (with --code) 🧑‍💻
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Code Chunking (with --code) 🧑‍💻">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-flags-for-code-chunking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Flags for Code Chunking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenarios-code-chunking-in-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenarios: Code Chunking in Action!
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scenarios: Code Chunking in Action!">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-1-chunking-a-single-python-file-excluding-comments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 1: Chunking a Single Python File, Excluding Comments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-2-batch-chunking-a-codebase-allowing-oversized-blocks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 2: Batch Chunking a Codebase, Allowing Oversized Blocks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-3-extracting-function-summaries-docstring-mode-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 3: Extracting Function Summaries (Docstring Mode: Summary)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-4-chunking-by-lines-and-functions-for-granular-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 4: Chunking by Lines and Functions for Granular Control
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-system-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛠️ Advanced System Hooks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛠️ Advanced System Hooks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#system-hook-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Hook Flags
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenarios-unleashing-advanced-power" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenarios: Unleashing Advanced Power!
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scenarios: Unleashing Advanced Power!">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-1-verbose-debugging-for-a-single-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 1: Verbose Debugging for a Single File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-2-batch-processing-with-parallelism-and-error-skipping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 2: Batch Processing with Parallelism and Error Skipping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-3-processing-multiple-specific-files-with-advanced-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 3: Processing Multiple Specific Files with Advanced Hooks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-4-custom-token-counting-with-an-external-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 4: Custom Token Counting with an External Script
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scenario 4: Custom Token Counting with an External Script">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-5-saving-chunks-as-json-with-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 5: Saving Chunks as JSON with Metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diving-deeper-into-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diving Deeper into Metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-visualize-command-your-interactive-chunk-playground" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The visualize Command: Your Interactive Chunk Playground! 🎮
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The visualize Command: Your Interactive Chunk Playground! 🎮">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-flags-for-visualize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Flags for visualize
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getting-started-with-visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting Started with Visualization! 🖥
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Getting Started with Visualization! 🖥">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-1-basic-visualizer-launch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 1: Basic Visualizer Launch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-2-custom-port-and-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 2: Custom Port and Host
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#headless-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 3: Headless Mode with Custom Tokenizer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metadata/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metadata
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../programmatic/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Programmatic Usage
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Programmatic Usage
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../programmatic/sentence_splitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sentence Splitter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../programmatic/plain_text_chunker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plain Text Chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../programmatic/document_chunker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Document Chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../programmatic/code_chunker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../programmatic/visualizer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualizer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../supported-languages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported Languages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exceptions-and-warnings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions and Warnings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../whats-new/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What's New
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migration Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/chunklet/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>chunklet
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1" id="__nav_8_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>chunklet
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/base_chunker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>base_chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>cli
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/chunklet/code_chunker/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>code_chunker
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_4" id="__nav_8_1_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>code_chunker
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/code_chunker/_code_structure_extractor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>_code_structure_extractor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/code_chunker/code_chunker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>code_chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/code_chunker/helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/code_chunker/patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/chunklet/common/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>common
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_5" id="__nav_8_1_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>common
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/common/batch_runner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>batch_runner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/common/path_utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>path_utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/common/token_utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>token_utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/common/validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/chunklet/document_chunker/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>document_chunker
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_6" id="__nav_8_1_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_1_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>document_chunker
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_6_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/chunklet/document_chunker/converters/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>converters
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_6_2" id="__nav_8_1_6_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_8_1_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>converters
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/document_chunker/converters/html_2_md/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>html_2_md
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/document_chunker/converters/latex_2_md/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>latex_2_md
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/document_chunker/converters/rst_2_md/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>rst_2_md
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/document_chunker/converters/table_2_md/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>table_2_md
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/document_chunker/document_chunker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>document_chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_6_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/chunklet/document_chunker/processors/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>processors
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_6_4" id="__nav_8_1_6_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_8_1_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_6_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>processors
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/document_chunker/processors/base_processor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>base_processor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/document_chunker/processors/docx_processor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>docx_processor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/document_chunker/processors/epub_processor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>epub_processor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/document_chunker/processors/odt_processor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>odt_processor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/document_chunker/processors/pdf_processor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>pdf_processor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/document_chunker/registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/plain_text_chunker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>plain_text_chunker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/chunklet/sentence_splitter/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>sentence_splitter
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_9" id="__nav_8_1_9_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_1_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>sentence_splitter
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/sentence_splitter/_fallback_splitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>_fallback_splitter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/sentence_splitter/languages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>languages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/sentence_splitter/registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/sentence_splitter/sentence_splitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>sentence_splitter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/sentence_splitter/terminators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>terminators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/chunklet/visualizer/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>visualizer
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_10" id="__nav_8_1_10_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_1_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>visualizer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/chunklet/visualizer/visualizer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    <code class="doc-symbol doc-symbol-nav doc-symbol-module"></code>visualizer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-split-command-precision-sentence-segmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The split Command: Precision Sentence Segmentation ✂️
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The split Command: Precision Sentence Segmentation ✂️">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quick-facts-for-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Facts for split
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenarios-splitting-like-a-pro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenarios: Splitting Like a Pro!
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scenarios: Splitting Like a Pro!">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-1-splitting-text-directly-and-multilingually" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 1: Splitting Text Directly (and Multilingually!)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-2-splitting-a-file-and-saving-the-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 2: Splitting a File and Saving the Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-chunk-command-your-intelligent-chunking-workhorse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The chunk Command: Your Intelligent Chunking Workhorse!
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The chunk Command: Your Intelligent Chunking Workhorse!">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-flags-for-chunk-the-essentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Flags for chunk (The Essentials!)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-text-document-chunking-default-or-with-doc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        General Text &amp; Document Chunking (Default or with --doc) 📄
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="General Text &amp; Document Chunking (Default or with --doc) 📄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-flags-for-document-power-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Flags for Document Power-Up
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenarios-text-document-chunking-in-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenarios: Text &amp; Document Chunking in Action!
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scenarios: Text &amp; Document Chunking in Action!">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-1-basic-text-chunking-with-token-limits-and-overlap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 1: Basic Text Chunking with Token Limits and Overlap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-2-chunking-a-pdf-document-with-sentence-and-section-break-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 2: Chunking a PDF Document with Sentence and Section Break Limits
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-3-batch-processing-a-directory-of-documents-with-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 3: Batch Processing a Directory of Documents (with Error Handling!)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-4-chunking-a-text-file-with-a-specific-language-and-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 4: Chunking a Text File with a Specific Language and Metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-chunking-with-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Chunking (with --code) 🧑‍💻
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Code Chunking (with --code) 🧑‍💻">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-flags-for-code-chunking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Flags for Code Chunking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenarios-code-chunking-in-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenarios: Code Chunking in Action!
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scenarios: Code Chunking in Action!">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-1-chunking-a-single-python-file-excluding-comments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 1: Chunking a Single Python File, Excluding Comments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-2-batch-chunking-a-codebase-allowing-oversized-blocks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 2: Batch Chunking a Codebase, Allowing Oversized Blocks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-3-extracting-function-summaries-docstring-mode-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 3: Extracting Function Summaries (Docstring Mode: Summary)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-4-chunking-by-lines-and-functions-for-granular-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 4: Chunking by Lines and Functions for Granular Control
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-system-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛠️ Advanced System Hooks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛠️ Advanced System Hooks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#system-hook-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Hook Flags
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenarios-unleashing-advanced-power" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenarios: Unleashing Advanced Power!
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scenarios: Unleashing Advanced Power!">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-1-verbose-debugging-for-a-single-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 1: Verbose Debugging for a Single File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-2-batch-processing-with-parallelism-and-error-skipping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 2: Batch Processing with Parallelism and Error Skipping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-3-processing-multiple-specific-files-with-advanced-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 3: Processing Multiple Specific Files with Advanced Hooks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-4-custom-token-counting-with-an-external-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 4: Custom Token Counting with an External Script
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scenario 4: Custom Token Counting with an External Script">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-5-saving-chunks-as-json-with-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 5: Saving Chunks as JSON with Metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diving-deeper-into-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diving Deeper into Metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-visualize-command-your-interactive-chunk-playground" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The visualize Command: Your Interactive Chunk Playground! 🎮
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The visualize Command: Your Interactive Chunk Playground! 🎮">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-flags-for-visualize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Flags for visualize
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getting-started-with-visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting Started with Visualization! 🖥
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Getting Started with Visualization! 🖥">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-1-basic-visualizer-launch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 1: Basic Visualizer Launch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-2-custom-port-and-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 2: Custom Port and Host
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#headless-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 3: Headless Mode with Custom Tokenizer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="chunklet-command-line-interface-cli-your-chunking-powerhouse">Chunklet Command Line Interface (CLI): Your Chunking Powerhouse! 🚀</h1>
+<p>Meet <code>chunklet</code>, your versatile CLI companion for all things text processing! From precise sentence splitting and smart chunking of any content to interactive visualization in your browser - we've got the tools to make your LLM workflows flow effortlessly. Whether you're processing documents, code, or plain text, chunklet adapts to your needs with RAG-ready precision.</p>
+<div class="admonition info">
+<p class="admonition-title"><code>chunklet</code> vs <code>chunklet-py</code></p>
+<p>The CLI command is <code>chunklet</code> (kept for backward compatibility), while the Python package is named <code>chunklet-py</code> to avoid naming conflicts with other packages.</p>
+</div>
+<p>Before we dive into the fun stuff, you can always check your <code>chunklet</code> version or get a quick help guide.:</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>chunklet<span class="w"> </span>--version
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>chunklet<span class="w"> </span>--help
+</code></pre></div>
+<p>You can also get specific help for each command</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>chunklet<span class="w"> </span>split<span class="w"> </span>--help
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span>--help
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>chunklet<span class="w"> </span>visualize<span class="w"> </span>--help
+</code></pre></div>
+<hr />
+<h2 id="the-split-command-precision-sentence-segmentation">The <code>split</code> Command: Precision Sentence Segmentation ✂️</h2>
+<p>Need to break down text into individual sentences with surgical precision? The <code>split</code> command is your go-to! It leverages <code>chunklet</code>'s powerful <a href="../programmatic/sentence_splitter/"><code>SentenceSplitter</code></a> to give you clean, segmented sentences.</p>
+<h3 id="quick-facts-for-split">Quick Facts for <code>split</code></h3>
+<ul>
+<li>Operates on a raw text string or a single file (<code>--source</code>).</li>
+<li>Outputs sentences separated by newline characters.</li>
+<li>Perfect for preprocessing text before more complex chunking.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;TEXT&gt;</code></td>
+<td>The input text to split. If not provided, <code>--source</code> must be used.</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>--source, -s &lt;PATH&gt;</code></td>
+<td>Path to a single file to read input from. Cannot be a directory.</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>--destination, -d &lt;PATH&gt;</code></td>
+<td>Path to a single file to write the segmented sentences. If not provided, output goes to STDOUT.</td>
+<td>STDOUT</td>
+</tr>
+<tr>
+<td><code>--lang</code></td>
+<td>Language of the text (e.g., 'en', 'fr', 'auto'). Use 'auto' for automatic detection.</td>
+<td>auto</td>
+</tr>
+<tr>
+<td><code>--verbose, -v</code></td>
+<td>Enable verbose logging for extra insights.</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+<h3 id="scenarios-splitting-like-a-pro">Scenarios: Splitting Like a Pro!</h3>
+<h4 id="scenario-1-splitting-text-directly-and-multilingually">Scenario 1: Splitting Text Directly (and Multilingually!)</h4>
+<p>Segment a direct text input containing multiple languages into individual sentences, leveraging automatic language detection.</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>chunklet<span class="w"> </span>split<span class="w"> </span><span class="s2">&quot;This is the first sentence. Here is the second sentence, in French. C&#39;est la vie! ¿Cómo estás?&quot;</span><span class="w"> </span>--lang<span class="w"> </span>auto
+</code></pre></div>
+<h4 id="scenario-2-splitting-a-file-and-saving-the-output">Scenario 2: Splitting a File and Saving the Output</h4>
+<p>Process a document and save its segmented sentences to a new file. Easy peasy!</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>chunklet<span class="w"> </span>split<span class="w"> </span>--source<span class="w"> </span>my_novel_chapter.txt<span class="w"> </span>--destination<span class="w"> </span>sentences.txt<span class="w"> </span>--lang<span class="w"> </span>en
+</code></pre></div>
+<hr />
+<h2 id="the-chunk-command-your-intelligent-chunking-workhorse">The <code>chunk</code> Command: Your Intelligent Chunking Workhorse!</h2>
+<p>The <code>chunk</code> command is where the real magic happens! It's your versatile tool for breaking down text, documents, and even code into RAG-ready chunks. The "flavor" of chunking (plain text, document, or code) is determined by the flags you provide.</p>
+<h3 id="key-flags-for-chunk-the-essentials">Key Flags for <code>chunk</code> (The Essentials!)</h3>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;TEXT&gt;</code></td>
+<td>The input text to chunk. If not provided, <code>--source</code> must be used.</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>--source, -s &lt;PATH&gt;</code></td>
+<td>Path(s) to one or more files or directories to read input from. Repeat for multiple sources (e.g., <code>-s file1.txt -s dir/</code>).</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>--destination, -d &lt;PATH&gt;</code></td>
+<td>Path to a file (writes JSON for <code>.json</code> extensions or existing files) or directory (writes separate files) to write the chunks. If a non-JSON file exists, a warning is shown and JSON is written. If not provided, output goes to STDOUT.</td>
+<td>STDOUT</td>
+</tr>
+<tr>
+<td><code>--max-tokens</code></td>
+<td>Maximum number of tokens per chunk. Applies to all chunking strategies. (Must be &gt;= 12)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>--max-sentences</code></td>
+<td>Maximum number of sentences per chunk. Applies to PlainTextChunker and DocumentChunker. (Must be &gt;= 1)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>--max-section-breaks</code></td>
+<td>Maximum number of section breaks per chunk. Applies to PlainTextChunker and DocumentChunker. (Must be &gt;= 1)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>--overlap-percent</code></td>
+<td>Percentage of overlap between chunks (0-85). Applies to PlainTextChunker and DocumentChunker.</td>
+<td>20.0</td>
+</tr>
+<tr>
+<td><code>--offset</code></td>
+<td>Starting sentence offset for chunking. Applies to PlainTextChunker and DocumentChunker.</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>--lang</code></td>
+<td>Language of the text (e.g., 'en', 'fr', 'auto'). (default: auto)</td>
+<td>auto</td>
+</tr>
+<tr>
+<td><code>--metadata</code></td>
+<td>Include rich metadata (source, span, chunk num, etc.) in the output. If <code>--destination</code> is a directory, metadata is saved as separate <code>.json</code> files; otherwise, it's included inline in the output.</td>
+<td>False</td>
+</tr>
+<tr>
+<td><code>--verbose, -v</code></td>
+<td>Enable verbose logging for extra insights.</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="general-text-document-chunking-default-or-with-doc">General Text &amp; Document Chunking (Default or with <code>--doc</code>) 📄</h3>
+<p>This is your bread-and-butter chunking for everyday text and diverse document types.</p>
+<ul>
+<li><strong>Default Behavior:</strong> If neither <code>--doc</code> nor <code>--code</code> is specified, <code>chunklet</code> uses the <a href="../programmatic/plain_text_chunker/">PlainTextChunker</a> for direct text input. The <code>PlainTextChunker</code> is designed to transform unruly text into perfectly sized, context-aware chunks.</li>
+<li><strong>Document Power-Up:</strong> Activate the <a href="../programmatic/document_chunker/">DocumentChunker</a> with the <code>--doc</code> flag to process <code>.pdf</code>, <code>.docx</code>, <code>.epub</code>, <code>.txt</code>, <code>.tex</code>, <code>.html</code>, <code>.hml</code>, <code>.md</code>, <code>.rst</code>, and <code>.rtf</code> files! It intelligently extracts text and then applies the same robust chunking logic.</li>
+</ul>
+<h4 id="key-flags-for-document-power-up">Key Flags for Document Power-Up</h4>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--doc</code></td>
+<td>Activate the <code>DocumentChunker</code> for multi-format file processing.</td>
+<td>False</td>
+</tr>
+<tr>
+<td><code>--n-jobs</code></td>
+<td>Number of parallel jobs for batch processing. (None uses all available cores)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>--on-errors</code></td>
+<td>How to handle errors during batch processing: <code>raise</code> (stop), <code>skip</code> (ignore file, continue), or <code>break</code> (halt, return partial result).</td>
+<td>raise</td>
+</tr>
+</tbody>
+</table>
+<h4 id="scenarios-text-document-chunking-in-action">Scenarios: Text &amp; Document Chunking in Action!</h4>
+<h5 id="scenario-1-basic-text-chunking-with-token-limits-and-overlap">Scenario 1: Basic Text Chunking with Token Limits and Overlap</h5>
+<p>Chunk a long text string into segments, ensuring no chunk exceeds 200 tokens, with a healthy 15% overlap for context.</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span><span class="s2">&quot;The quick brown fox jumps over the lazy dog. This is the first sentence. The second sentence is a bit longer. And this is the third one. Finally, the fourth sentence concludes our example. The last sentence is here to finish the text.&quot;</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--max-tokens<span class="w"> </span><span class="m">200</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--overlap-percent<span class="w"> </span><span class="m">15</span>
+</code></pre></div>
+<h5 id="scenario-2-chunking-a-pdf-document-with-sentence-and-section-break-limits">Scenario 2: Chunking a PDF Document with Sentence and Section Break Limits</h5>
+<p>Process a PDF document, ensuring chunks are no more than 10 sentences or 2 section breaks, and save the output to a file.</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span>--doc<span class="w"> </span>--source<span class="w"> </span>my_report.pdf<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--max-sentences<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--max-section-breaks<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>--destination<span class="w"> </span>processed_report_chunks.txt
+</code></pre></div>
+<h5 id="scenario-3-batch-processing-a-directory-of-documents-with-error-handling">Scenario 3: Batch Processing a Directory of Documents (with Error Handling!)</h5>
+<p>Process all supported documents within a directory, saving the chunks to a new folder. If any file causes an error, <code>chunklet</code> will gracefully skip it and continue!</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span>--doc<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--source<span class="w"> </span>/path/to/my/project_docs<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--destination<span class="w"> </span>./processed_chunks<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span>--n-jobs<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span>--on-errors<span class="w"> </span>skip<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span>--max-tokens<span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span>--metadata<span class="w"> </span><span class="c1"># Don&#39;t forget your metadata!</span>
+</code></pre></div>
+<h5 id="scenario-4-chunking-a-text-file-with-a-specific-language-and-metadata">Scenario 4: Chunking a Text File with a Specific Language and Metadata</h5>
+<p>Chunk a French text file, limiting by tokens, and include all the juicy metadata for later analysis.</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span>--source<span class="w"> </span>french_article.txt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--lang<span class="w"> </span>fr<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>--max-tokens<span class="w"> </span><span class="m">300</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span>--metadata
+</code></pre></div>
+<hr />
+<h3 id="code-chunking-with-code">Code Chunking (with <code>--code</code>) 🧑‍💻</h3>
+<p>For the developers, by the developers! The <a href="../programmatic/code_chunker/">CodeChunker</a> is a language-agnostic wizard that breaks your source code into semantically meaningful blocks (functions, classes, etc.). Activate it with the <code>--code</code> flag.</p>
+<ul>
+<li><strong>Heads Up!</strong> This mode is primarily token-based. <code>--max-sentences</code>, <code>--max-section-breaks</code>, and <code>--overlap-percent</code> are generally ignored here, as code structure takes precedence.</li>
+</ul>
+<h4 id="key-flags-for-code-chunking">Key Flags for Code Chunking</h4>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--code</code></td>
+<td>Activate the <code>CodeChunker</code> for structurally-aware code segmentation.</td>
+<td>False</td>
+</tr>
+<tr>
+<td><code>--max-lines</code></td>
+<td>Maximum number of lines per chunk. (Must be &gt;= 5)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>--max-functions</code></td>
+<td>Maximum number of functions per chunk. (Must be &gt;= 1)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>--docstring-mode</code></td>
+<td>Docstring processing strategy: <code>summary</code> (first line), <code>all</code>, or <code>excluded</code>.</td>
+<td>all</td>
+</tr>
+<tr>
+<td><code>--strict</code></td>
+<td>If <code>True</code>, raise an error when structural blocks exceed <code>--max-tokens</code>. If <code>False</code>, split oversized blocks.</td>
+<td>True</td>
+</tr>
+<tr>
+<td><code>--include-comments</code></td>
+<td>Include comments in output chunks.</td>
+<td>True</td>
+</tr>
+</tbody>
+</table>
+<h4 id="scenarios-code-chunking-in-action">Scenarios: Code Chunking in Action!</h4>
+<h5 id="scenario-1-chunking-a-single-python-file-excluding-comments">Scenario 1: Chunking a Single Python File, Excluding Comments</h5>
+<p>Get a clean, comment-free view of your code's structure. Perfect for quick reviews!</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span>--code<span class="w"> </span>--source<span class="w"> </span>my_script.py<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span>--max-tokens<span class="w"> </span><span class="m">512</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span>--include-comments<span class="w"> </span>False
+</code></pre></div>
+<h5 id="scenario-2-batch-chunking-a-codebase-allowing-oversized-blocks">Scenario 2: Batch Chunking a Codebase, Allowing Oversized Blocks</h5>
+<p>Process an entire code repository, letting <code>chunklet</code> split any functions or classes that are just <em>too</em> long, and save everything to a dedicated folder.</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span>--code<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span>--source<span class="w"> </span>./my_awesome_repo<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span>--destination<span class="w"> </span>./code_chunks<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span>--max-tokens<span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span>--strict<span class="w"> </span>False<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">  </span>--n-jobs<span class="w"> </span><span class="m">8</span><span class="w"> </span><span class="se">\</span>
+</code></pre></div>
+<h5 id="scenario-3-extracting-function-summaries-docstring-mode-summary">Scenario 3: Extracting Function Summaries (Docstring Mode: Summary)</h5>
+<p>Focus on the "what" of your functions by only including the first line of their docstrings.</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span>--code<span class="w"> </span>--source<span class="w"> </span>utils.py<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span>--docstring-mode<span class="w"> </span>summary<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span>--max-functions<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+</code></pre></div>
+<h5 id="scenario-4-chunking-by-lines-and-functions-for-granular-control">Scenario 4: Chunking by Lines and Functions for Granular Control</h5>
+<p>For super-fine-grained control, chunk a file by both maximum lines and maximum functions per chunk.</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span>--code<span class="w"> </span>--source<span class="w"> </span>main.go<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span>--max-lines<span class="w"> </span><span class="m">100</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span>--max-functions<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span>--max-tokens<span class="w"> </span><span class="m">700</span>
+</code></pre></div>
+<hr />
+<h2 id="advanced-system-hooks">🛠️ Advanced System Hooks</h2>
+<p>These flags are your secret weapons for scaling up operations, integrating with external tools, and getting the most out of your chunked data. They apply to the <code>chunk</code> command.</p>
+<h3 id="system-hook-flags">System Hook Flags</h3>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--tokenizer-command</code></td>
+<td>A shell command string for token counting. It must take text via STDIN and output the integer count via STDOUT.</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>--n-jobs</code></td>
+<td>Number of parallel processes to use during batch operations. (None uses all available CPU cores)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>--on-errors</code></td>
+<td>Defines batch error handling: <code>raise</code> (stop), <code>skip</code> (ignore file, continue), or <code>break</code> (halt, return partial result).</td>
+<td>raise</td>
+</tr>
+<tr>
+<td><code>--metadata</code></td>
+<td>Include rich <a href="../metadata/">metadata</a> (source, span, chunk num, etc.) in the output. If <code>--destination</code> is a directory, metadata is saved as separate <code>.json</code> files; otherwise, it's included inline in the output.</td>
+<td>False</td>
+</tr>
+<tr>
+<td><code>--verbose, -v</code></td>
+<td>Enable verbose logging for debugging or process detail.</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+<h3 id="scenarios-unleashing-advanced-power">Scenarios: Unleashing Advanced Power!</h3>
+<h4 id="scenario-1-verbose-debugging-for-a-single-file">Scenario 1: Verbose Debugging for a Single File</h4>
+<p>When things get tricky, crank up the verbosity to see exactly what <code>chunklet</code> is doing under the hood while chunking a specific file.</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span>--source<span class="w"> </span>problematic_file.txt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span>--max-tokens<span class="w"> </span><span class="m">100</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span>--verbose
+</code></pre></div>
+<h4 id="scenario-2-batch-processing-with-parallelism-and-error-skipping">Scenario 2: Batch Processing with Parallelism and Error Skipping</h4>
+<p>Process a large collection of diverse documents, leveraging all your CPU cores, and gracefully skip any problematic files without halting the entire operation. Plus, get all the metadata!</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span>--doc<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span>--source<span class="w"> </span>/path/to/massive_document_archive<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>--destination<span class="w"> </span>./final_chunks<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span>--n-jobs<span class="w"> </span>-1<span class="w"> </span><span class="c1"># Use all available cores!</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span>--on-errors<span class="w"> </span>skip<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span>--max-tokens<span class="w"> </span><span class="m">512</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">  </span>--metadata
+</code></pre></div>
+<h4 id="scenario-3-processing-multiple-specific-files-with-advanced-hooks">Scenario 3: Processing Multiple Specific Files with Advanced Hooks</h4>
+<p>Process a selection of individual files, explicitly listing each one, and apply advanced chunking parameters. This demonstrates how to handle a non-directory batch of files, ensuring each is processed with metadata and error handling.</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span>--doc<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span>--source<span class="w"> </span>my_document.pdf<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>--source<span class="w"> </span>another_report.docx<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span>--source<span class="w"> </span>plain_text_notes.txt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">  </span>--destination<span class="w"> </span>./processed_specific_files<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">  </span>--max-tokens<span class="w"> </span><span class="m">700</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">  </span>--metadata<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">  </span>--on-errors<span class="w"> </span>skip
+</code></pre></div>
+<h4 id="scenario-4-custom-token-counting-with-an-external-script">Scenario 4: Custom Token Counting with an External Script</h4>
+<p>Align <code>chunklet</code>'s chunk sizes perfectly with your LLM's token limits using <em>any</em> external tokenizer you can imagine!</p>
+<p>Create your external script (e.g., <code>my_llm_tokenizer.py</code>):</p>
+<div class="language-py highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># my_llm_tokenizer.py</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">tiktoken</span> <span class="c1"># Or your LLM&#39;s specific tokenizer library</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="c1"># Read text from stdin</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="n">text</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="c1"># Replace with your actual token counting logic (e.g., for OpenAI&#39;s GPT models)</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="n">encoding</span> <span class="o">=</span> <span class="n">tiktoken</span><span class="o">.</span><span class="n">encoding_for_model</span><span class="p">(</span><span class="s2">&quot;gpt-4&quot;</span><span class="p">)</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="n">token_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">encoding</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="nb">print</span><span class="p">(</span><span class="n">token_count</span><span class="p">)</span> <span class="c1"># Must print only the integer count</span>
+</code></pre></div>
+<p>Now, run <code>chunklet</code> with your custom tokenizer:</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span>--text<span class="w"> </span><span class="s2">&quot;This is a super important piece of text that needs precise token counting for my large language model.&quot;</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span>--max-tokens<span class="w"> </span><span class="m">50</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">  </span>--tokenizer-command<span class="w"> </span><span class="s2">&quot;python ./my_llm_tokenizer.py&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">  </span>--metadata
+</code></pre></div>
+<h5 id="scenario-5-saving-chunks-as-json-with-metadata">Scenario 5: Saving Chunks as JSON with Metadata</h5>
+<p>Save processed chunks directly as a JSON file for easy parsing and integration:</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>chunklet<span class="w"> </span>chunk<span class="w"> </span>--source<span class="w"> </span>document.pdf<span class="w"> </span>--doc<span class="w"> </span>--destination<span class="w"> </span>chunks.json<span class="w"> </span>--metadata
+</code></pre></div>
+<hr />
+<h2 id="diving-deeper-into-metadata">Diving Deeper into Metadata</h2>
+<p>Want to know <em>exactly</em> what kind of rich context <code>chunklet</code> attaches to your chunks? From source paths and character spans to document-specific properties and code AST details.</p>
+<p>👉 Head over to the <a href="../metadata/">Metadata in Chunklet-py guide</a> to unlock all its secrets!</p>
+<hr />
+<h2 id="the-visualize-command-your-interactive-chunk-playground">The <code>visualize</code> Command: Your Interactive Chunk Playground! 🎮</h2>
+<p>Ready to see your chunking in action with a beautiful web interface? The <code>visualize</code> command launches Chunklet's interactive web visualizer - perfect for experimenting with parameters, seeing real-time results, and fine-tuning your chunking strategies!</p>
+<div class="admonition tip">
+<p class="admonition-title">Want programmatic control?</p>
+<p>For code-based usage and detailed technical information, check out the <a href="../programmatic/visualizer/">Text Chunk Visualizer documentation</a>.</p>
+</div>
+<p>This command starts a local web server that gives you:
+- <strong>Live parameter tuning</strong> - Adjust chunking settings and see results instantly
+- <strong>Visual chunk exploration</strong> - See exactly how your text gets divided
+- <strong>Multiple chunking modes</strong> - Try plain text, document, and code chunking all in one place
+- <strong>Custom tokenizers</strong> - Plug in your own token counting for precise control</p>
+<h3 id="key-flags-for-visualize">Key Flags for <code>visualize</code></h3>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--host</code></td>
+<td>Host IP to bind the server (use <code>0.0.0.0</code> for network access)</td>
+<td>127.0.0.1</td>
+</tr>
+<tr>
+<td><code>--port, -p</code></td>
+<td>Port number for the server</td>
+<td>8000</td>
+</tr>
+<tr>
+<td><code>--tokenizer-command</code></td>
+<td>Shell command for custom token counting</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>--headless</code></td>
+<td>Run without opening browser automatically</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+<h3 id="getting-started-with-visualization">Getting Started with Visualization! 🖥</h3>
+<h4 id="scenario-1-basic-visualizer-launch">Scenario 1: Basic Visualizer Launch</h4>
+<p>Fire up the visualizer on the default port and let it open your browser automatically:</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>chunklet<span class="w"> </span>visualize
+</code></pre></div>
+<h4 id="scenario-2-custom-port-and-host">Scenario 2: Custom Port and Host</h4>
+<p>Run on a specific port and host (great for accessing from other devices):</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>chunklet<span class="w"> </span>visualize<span class="w"> </span>--host<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>--port<span class="w"> </span><span class="m">8080</span>
+</code></pre></div>
+<h4 id="headless-cli">Scenario 3: Headless Mode with Custom Tokenizer</h4>
+<p>Run in the background with your own token counting script:</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>chunklet<span class="w"> </span>visualize<span class="w"> </span>--headless<span class="w"> </span>--tokenizer-command<span class="w"> </span><span class="s2">&quot;python my_tokenizer.py&quot;</span>
+</code></pre></div>
+<p>The visualizer will show you the URL to access it in your browser. Press <code>Ctrl+C</code> to stop the server when you're done!</p>
+<div class="admonition info">
+<p class="admonition-title">REST API for Headless Automation! 🤖</p>
+<p>When running in headless mode, you can use the visualizer's REST API to programmatically upload files, chunk content, and retrieve results without any web interface! Perfect for automation scripts, CI/CD pipelines, or integrating chunking into your applications.</p>
+<p>See the <a href="../programmatic/visualizer/#headlessrest-api-usage">Headless/REST API Usage</a> section for complete examples of programmatic file processing.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Pro Visualization Tips</p>
+<ul>
+<li>Use <code>--headless false</code> (or just omit it) to auto-open your browser</li>
+<li>Try different ports if 8000 is already in use</li>
+<li>Experiment with different chunking modes - text, document, and code all in one interface!</li>
+</ul>
+</div>
+<hr />
+<details class="info">
+<summary>API Reference</summary>
+<p>For a deep dive into the <code>chunklet</code> CLI, its commands, and all the nitty-gritty details, check out the full <a href="../../reference/chunklet/cli/">API documentation</a></p>
+</details>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../installation/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Installation">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Installation
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../metadata/" class="md-footer__link md-footer__link--next" aria-label="Next: Metadata">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Metadata
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "navigation.tabs", "navigation.indexes", "navigation.instant", "navigation.footer", "header.autohide"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
