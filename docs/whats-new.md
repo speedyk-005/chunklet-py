@@ -8,7 +8,6 @@
 *   **Interactive Chunk Visualizer:** 🌐 Launch a web-based interface for real-time chunk visualization, parameter tuning, and exploring your chunking results interactively!
 *   **CLI Visualize Command:** 💻 Use `chunklet visualize` to start the web interface with customizable host, port, and tokenizer options.
 *   **Expanded File Format Support:** 📁 Added support for ODT files (.odt) and tabular files (.csv and .xlsx) to handle even more document types.
-*   **Python 3.9 Support Restored:** 🐍 Extended compatibility back to Python 3.9 through 3.14 for broader reach.
 
 ### 🐛 Bug Fixes in v2.1.0
 
