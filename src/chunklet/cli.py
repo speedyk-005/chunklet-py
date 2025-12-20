@@ -154,51 +154,40 @@ def _write_chunks(chunks, destination: Path, metadata: bool):
         typer.echo(
             f"Successfully wrote {len(all_chunks)} chunks to {destination} as JSON"
         )
+        return
 
-    else:
-        # Write to directory
-        destination.mkdir(parents=True, exist_ok=True)
-        total_chunks_written = 0
-        processed_sources = set()
+    # Write to directory
+    destination.mkdir(parents=True, exist_ok=True)
+    total_chunks_written = 0
+    processed_sources = set()
 
-        for chunk_box in chunks:
-            source_name = chunk_box.metadata["source"]
-            base_name = Path(source_name).stem
+    for chunk_box in chunks:
+        source_name = chunk_box.metadata["source"]
+        base_name = Path(source_name).stem
 
-            base_output_filename = (
-                f"{base_name}_chunk_{chunk_box.metadata['chunk_num']}"
-            )
+        base_output_filename = f"{base_name}_chunk_{chunk_box.metadata['chunk_num']}"
 
-            # Write content file
-            output_txt_path = destination / f"{base_output_filename}.txt"
-            with open(output_txt_path, "w", encoding="utf-8") as f:
-                f.write(chunk_box.content + "\n")
+        # Write content file
+        output_txt_path = destination / f"{base_output_filename}.txt"
+        with open(output_txt_path, "w", encoding="utf-8") as f:
+            f.write(chunk_box.content + "\n")
 
-            total_chunks_written += 1
+        total_chunks_written += 1
 
-            # Write metadata file if requested
-            if metadata:
-                output_json_path = destination / f"{base_output_filename}.json"
-                with open(output_json_path, "w", encoding="utf-8") as f:
-                    # Ensures metadata is a standard dict before dumping
-                    data_to_dump = (
-                        chunk_box.metadata.to_dict()
-                        if hasattr(chunk_box.metadata, "to_dict")
-                        else dict(chunk_box.metadata)
-                    )
-                    json.dump(data_to_dump, f, indent=4)
-
-            processed_sources.add(source_name)
-
-        message = (
-            f"Successfully processed {len(processed_sources)} input(s)"
-            f"and wrote {total_chunks_written} chunk file(s) to {destination}"
-        )
+        # Write metadata file if requested
         if metadata:
-            message += " (with .json metadata files)."
-        else:
-            message += "."
-        typer.echo(message)
+            output_json_path = destination / f"{base_output_filename}.json"
+            with open(output_json_path, "w", encoding="utf-8") as f:
+                json.dump(chunk_box.metadata.to_dict(), f, indent=4)
+
+        processed_sources.add(source_name)
+
+    message = (
+        f"Successfully processed {len(processed_sources)} input(s)"
+        f"and wrote {total_chunks_written} chunk file(s) to {destination}"
+    )
+    message += " (with .json metadata files)." if metadata else "."
+    typer.echo(message)
 
 
 def _print_chunks(chunks, destination: Optional[Path], metadata: bool):
@@ -539,8 +528,7 @@ def chunk_command(
             text=text,
             **chunk_kwargs,
         )
-
-    elif source:
+    else:
         file_paths = _extract_files(source)
 
         if len(file_paths) == 1 and file_paths[0].suffix not in {

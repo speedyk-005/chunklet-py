@@ -165,15 +165,7 @@ class CodeChunker(BaseChunker):
         if max_functions != sys.maxsize:
             limits.append(f"functions: {function_count} > {max_functions}")
 
-        limits_str = ", ".join(limits)
-
-        return (
-            f"Structural block exceeds maximum limit ({limits_str}).\n"
-            f"Content starting with: \n```\n{content_preview}...\n```\n"
-            "Reason: Prevent splitting inside interest points (function, class, region, ...)\n"
-            "💡Hint: Consider increasing 'max_tokens', 'max_lines', or 'max_functions', "
-            "refactoring the oversized block, or setting 'strict=False' to allow automatic splitting of oversized blocks."
-        )
+        return ", ".join(limits)
 
     def _split_oversized(
         self,
@@ -220,10 +212,8 @@ class CodeChunker(BaseChunker):
             if (token_count + line_tokens > max_tokens) or (line_count + 1 > max_lines):
                 start_line = line_no - len(curr_chunk)
                 end_line = line_no - 1
-                start_span = (
-                    0 if start_line == 1 else cumulative_lengths[start_line - 2]
-                )
-                end_span = cumulative_lengths[end_line - 1]
+                start_span = cumulative_lengths[start_line - 1]
+                end_span = cumulative_lengths[end_line]
                 tree = Node.from_relations(snippet_dict["relations"]).to_string()
                 sub_boxes.append(
                     Box(
@@ -258,8 +248,8 @@ class CodeChunker(BaseChunker):
         if curr_chunk:
             start_line = snippet_dict["end_line"] - len(curr_chunk) + 1
             end_line = snippet_dict["end_line"]
-            start_span = 0 if start_line == 1 else cumulative_lengths[start_line - 2]
-            end_span = cumulative_lengths[end_line - 1]
+            start_span = cumulative_lengths[start_line - 1]
+            end_span = cumulative_lengths[end_line]
             tree = Node.from_relations(snippet_dict["relations"]).to_string()
             sub_boxes.append(
                 Box(
@@ -312,6 +302,10 @@ class CodeChunker(BaseChunker):
         Returns:
             list[Box]: List of chunk boxes with content and metadata.
         """
+        source = (
+            str(source) if (isinstance(source, Path) or is_path_like(source)) else "N/A"
+        )
+
         merged_content = []
         relations_list = []
         start_line = None
@@ -329,8 +323,8 @@ class CodeChunker(BaseChunker):
                 if max_tokens != sys.maxsize
                 else 0
             )
-            box_lines = snippet_dict["content"].count("\n") + (
-                1 if snippet_dict["content"] else 0
+            box_lines = snippet_dict["content"].count("\n") + bool(
+                snippet_dict["content"]
             )
             is_function = bool(snippet_dict.get("func_partial_signature"))
 
@@ -359,23 +353,28 @@ class CodeChunker(BaseChunker):
 
             elif not merged_content:
                 # Too big and nothing merged yet: handle oversize
+                limit_msg = self._format_limit_msg(
+                    box_tokens,
+                    max_tokens,
+                    box_lines,
+                    max_lines,
+                    function_count,
+                    max_functions,
+                    snippet_dict["content"][:100],
+                )
                 if strict:
                     raise TokenLimitError(
-                        self._format_limit_msg(
-                            box_tokens,
-                            max_tokens,
-                            box_lines,
-                            max_lines,
-                            function_count,
-                            max_functions,
-                            snippet_dict["content"][:100],
-                        )
+                        f"Structural block exceeds maximum limit.\n"
+                        f"Limits: {limit_msg}\n"
+                        f"Content starting with: \n```\n{snippet_dict['content'][:100]}...\n```\n"
+                        "Reason: Prevent splitting inside interest points (function, class, region, ...)\n"
+                        "💡Hint: Consider increasing 'max_tokens', 'max_lines', or 'max_functions', "
+                        "refactoring the oversized block, or setting 'strict=False' to allow automatic splitting of oversized blocks."
                     )
                 else:  # Else split further
                     logger.warning(
-                        "Splitting oversized block (tokens: {} lines: {}) into sub-chunks",
-                        box_tokens,
-                        box_lines,
+                        "Splitting oversized block (%s) into sub-chunks",
+                        limit_msg,
                     )
 
                     sub_chunks = self._split_oversized(
@@ -393,10 +392,8 @@ class CodeChunker(BaseChunker):
                     index += 1
             else:
                 # Flush current merged content as a chunk
-                start_span = (
-                    0 if start_line == 1 else cumulative_lengths[start_line - 2]
-                )
-                end_span = cumulative_lengths[end_line - 1]
+                start_span = cumulative_lengths[start_line - 1]
+                end_span = cumulative_lengths[end_line]
                 merged_chunk = Box(
                     {
                         "content": "\n".join(merged_content),
@@ -406,11 +403,7 @@ class CodeChunker(BaseChunker):
                             "start_line": start_line,
                             "end_line": end_line,
                             "span": (start_span, end_span),
-                            "source": (
-                                str(source)
-                                if (isinstance(source, Path) or is_path_like(source))
-                                else "N/A"
-                            ),
+                            "source": source,
                         },
                     }
                 )
@@ -427,8 +420,8 @@ class CodeChunker(BaseChunker):
 
         # Flush remaining content
         if merged_content:
-            start_span = 0 if start_line == 1 else cumulative_lengths[start_line - 2]
-            end_span = cumulative_lengths[end_line - 1]
+            start_span = cumulative_lengths[start_line - 1]
+            end_span = cumulative_lengths[end_line]
             merged_chunk = Box(
                 {
                     "content": "\n".join(merged_content),
@@ -438,12 +431,7 @@ class CodeChunker(BaseChunker):
                         "start_line": start_line,
                         "end_line": end_line,
                         "span": (start_span, end_span),
-                        "source": (
-                            str(source)
-                            if isinstance(source, Path)
-                            or (isinstance(source, str) and is_path_like(source))
-                            else "N/A"
-                        ),
+                        "source": source,
                     },
                 }
             )

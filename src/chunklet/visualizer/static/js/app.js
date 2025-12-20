@@ -62,9 +62,6 @@ const elements = {
  * Sets up initial UI states, event listeners, and fetches server configuration.
  */
 function init() {
-    const now = new Date();
-    const formattedDate = formatDate(now);
-    
     setElementText(elements.generatedDate, ''); // Clear content initially
     setElementStyle(elements.generatedInfo, 'display', 'none'); // Hide generated info initially
     
@@ -146,14 +143,13 @@ function setupEventListeners() {
     }
     
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && elements.metadataModal && 
-            elements.metadataModal.classList.contains('active')) {
+        if (e.key === 'Escape' && elements.metadataModal?.classList.contains('active')) {
             closeMetadataModal();
         }
     });
     
-    addElementListener(elements.downloadChunksBtn, 'click', downloadChunksAsJson);
-    addElementListener(elements.clearUploadBtn, 'click', resetUploadArea);
+    elements.downloadChunksBtn?.addEventListener('click', downloadChunksAsJson);
+    elements.clearUploadBtn?.addEventListener('click', resetUploadArea);
     
     // Setup go-to-top button
     setupGoToTopButton();
@@ -422,21 +418,41 @@ async function processUploadedFile() {
 
 function getCurrentParameters() {
     const params = {};
-    
-    if (state.currentMode === 'document') {
-        if (elements.language?.value) params.lang = elements.language.value;
-        if (elements.max_sentences?.value) params.max_sentences = elements.max_sentences.value;
-        if (elements.max_tokens?.value) params.max_tokens = elements.max_tokens.value;
-        if (elements.max_section_breaks?.value) params.max_section_breaks = elements.max_section_breaks.value;
-        if (elements.overlap_percent?.value) params.overlap_percent = elements.overlap_percent.value;
-        if (elements.offset?.value) params.offset = elements.offset.value;
-    } else {
-        if (elements.max_tokens_code?.value) params.max_tokens = elements.max_tokens_code.value;
-        if (elements.max_lines?.value) params.max_lines = elements.max_lines.value;
-        if (elements.max_functions?.value) params.max_functions = elements.max_functions.value;
-        if (elements.strict) params.strict = elements.strict.checked;
-    }
-    
+
+    // Helper to safely get element value
+    const getValue = (element) => element?.value || null;
+    const getChecked = (element) => element?.checked || false;
+
+    // Define parameter mappings for each mode
+    const paramMappings = {
+        document: {
+            language: 'lang',
+            max_sentences: 'max_sentences',
+            max_tokens: 'max_tokens',
+            max_section_breaks: 'max_section_breaks',
+            overlap_percent: 'overlap_percent',
+            offset: 'offset'
+        },
+        code: {
+            max_tokens_code: 'max_tokens',
+            max_lines: 'max_lines',
+            max_functions: 'max_functions',
+            strict: 'strict' // special case for checkbox
+        }
+    };
+
+    const currentMappings = paramMappings[state.currentMode] || {};
+
+    Object.entries(currentMappings).forEach(([elementKey, paramKey]) => {
+        const element = elements[elementKey];
+        if (!element) return;
+
+        const value = paramKey === 'strict' ? getChecked(element) : getValue(element);
+        if (paramKey === 'strict' || (value !== null && value !== false && value !== '')) {
+            params[paramKey] = value;
+        }
+    });
+
     return params;
 }
 
@@ -511,7 +527,7 @@ function handleChunkClick(event) {
     const span = event.target.closest('.chunk-span');
     if (!span) return;
     
-    const chunkIds = span.dataset.chunkIds.split(',').map(id => parseInt(id));
+    const chunkIds = span.dataset.chunkIds.split(',').map(id => Number.parseInt(id));
     if (chunkIds.length > 0) {
         state.highlightedChunks.clear();
         toggleChunkHighlight(chunkIds[0]);
@@ -522,7 +538,7 @@ function handleChunkDoubleClick(event) {
     const span = event.target.closest('.chunk-span');
     if (!span) return;
     
-    const chunkIds = span.dataset.chunkIds.split(',').map(id => parseInt(id));
+    const chunkIds = span.dataset.chunkIds.split(',').map(id => Number.parseInt(id));
     if (chunkIds.length > 0) {
         showMetadata(chunkIds[0]);
     }
@@ -553,7 +569,7 @@ function updateAllHighlights() {
     
     const spans = elements.textDisplay.querySelectorAll('.chunk-span');
     spans.forEach(span => {
-        const chunkIds = span.dataset.chunkIds.split(',').map(id => parseInt(id));
+        const chunkIds = span.dataset.chunkIds.split(',').map(id => Number.parseInt(id));
         span.classList.remove('highlighted', 'selected', 'overlap');
         
         const hasHighlighted = chunkIds.some(id => state.highlightedChunks.has(id));
@@ -564,7 +580,7 @@ function updateAllHighlights() {
         
         if (state.activeChunkId !== null && state.showOverlaps) {
             const chunkOverlaps = getOverlapsForChunk(state.activeChunkId);
-            const spanStart = parseInt(span.dataset.start);
+            const spanStart = Number.parseInt(span.dataset.start);
             const spanEnd = spanStart + span.textContent.length;
             
             chunkOverlaps.forEach(overlap => {
@@ -647,7 +663,6 @@ function showMetadata(chunkId) {
         html += `<div><strong>Overlaps:</strong></div>`;
         chunkOverlaps.forEach(overlap => {
             const otherChunkId = overlap.leftChunk === chunkId ? overlap.rightChunk : overlap.leftChunk;
-            const otherChunk = state.chunksData[otherChunkId];
             const overlapText = state.originalText.substring(overlap.start, overlap.end);
             html += `
             <div style="margin-top: 5px; padding: 8px; background: var(--overlap-color); border-radius: 4px;">
@@ -679,15 +694,16 @@ function closeMetadataModal() {
 // Handle scroll hint visibility
 function setupScrollHint() {
     if (elements.modalBody) {
-        elements.modalBody.addEventListener('scroll', function() {
+        const handleScroll = function() {
             const scrollHint = document.querySelector('.scroll-hint');
             if (scrollHint && this.scrollTop > 10) {
                 scrollHint.style.opacity = '0';
                 scrollHint.style.pointerEvents = 'none';
                 // Remove the event listener after first scroll to avoid unnecessary calls
-                this.removeEventListener('scroll', arguments.callee);
+                this.removeEventListener('scroll', handleScroll);
             }
-        });
+        };
+        elements.modalBody.addEventListener('scroll', handleScroll);
     }
 }
 
@@ -725,7 +741,7 @@ function downloadChunksAsJson() {
     a.download = `chunks_${state.currentMode}_${Date.now()}.json`;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
     URL.revokeObjectURL(url);
     
     showToast('Chunks downloaded as JSON', 'success');
@@ -761,7 +777,7 @@ function showToast(message, type = 'info') {
 function renderMetadataTable(metadataObject) {
     let tableHtml = '<table class="metadata-table">';
     for (const key in metadataObject) {
-        if (Object.hasOwnProperty.call(metadataObject, key)) {
+        if (Object.hasOwn(metadataObject, key)) {
             let value = metadataObject[key];
             
             // Handle arrays and objects for better display

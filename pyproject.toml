@@ -78,6 +78,8 @@ visualization = [
   "uvicorn>=0.34.0",
   "fastapi>=0.115.12",
   "python-multipart>=0.0.20",
+  "aiofiles>=24.1.0",
+  "charset-normalizer>=3.4.0",
 ]
 
 all = ["chunklet-py[document,code,visualization]"]

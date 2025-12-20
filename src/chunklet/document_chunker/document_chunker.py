@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Literal, Any, Generator, Annotated
+from typing import Callable, Literal, Any, Generator, Annotated, Iterable
 from pydantic import Field
 from box import Box
 from loguru import logger
@@ -254,20 +254,18 @@ class DocumentChunker(BaseChunker):
 
         return text_content, {"source": str(path)}
 
-    def _gather_all_data(self, validated_paths, on_errors):
+    def _gather_all_data(self, paths: Iterable[str | Path], on_errors: str) -> dict:
         """
-        Gathers and prepares data from validated paths for batch processing.
+        Gathers and prepares data from paths for batch processing.
 
-        This method iterates through a list of pre-validated file paths,
-        handles any validation or processing errors, and extracts the content
-        and metadata from each valid file. It uses a memory-efficient approach
+        This method iterates through a list of file paths,
+        validates each path, handles any validation or processing errors,
+        and extracts the content and metadata from each valid file. It uses a memory-efficient approach
         by creating a master generator for all text content rather than loading
         it all into memory.
 
         Args:
-            validated_paths (Iterable[tuple]): An iterable of tuples, where
-                each tuple contains a Path object, its extension, and an
-                optional error from the validation stage.
+            paths (Iterable[str | Path]): An iterable of file paths to process.
             on_errors (Literal["raise", "skip", "break"]): Defines the error
                 handling strategy for validation or processing failures.
 
@@ -285,10 +283,10 @@ class DocumentChunker(BaseChunker):
         all_metadata = []
         text_gens_to_chain = []
 
-        for i, (path, ext, error) in enumerate(validated_paths):
+        for i, path in enumerate(paths):
             try:
-                if error is not None:
-                    raise error
+                path = Path(path)
+                ext = self._validate_and_get_extension(path)
 
                 text_content_or_generator, document_metadata = self._extract_data(
                     path, ext
@@ -307,9 +305,8 @@ class DocumentChunker(BaseChunker):
             except Exception as e:
                 if on_errors == "raise":
                     logger.error(
-                        "Document validation failed for '{}' at paths[{}].\nReason: {}.",
+                        "Document processing failed for '{}'.\nReason: {}.",
                         path,
-                        i,
                         e,
                     )
                     raise
@@ -323,10 +320,10 @@ class DocumentChunker(BaseChunker):
                     break
                 else:  # skip
                     logger.warning(
-                        "Skipping document '{}' at paths[{}] due to validation failure.\nReason: {}",
+                        "Skipping document '{}' at paths[{}] due to validation failure.\nReason: {}.",
                         path,
                         i,
-                        error,
+                        e,
                     )
                     continue
 
@@ -468,17 +465,7 @@ class DocumentChunker(BaseChunker):
         """
         sentinel = object()
 
-        # Validate all paths upfront
-        validated_paths = []
-        for i, path in enumerate(paths):
-            path = Path(path)
-            try:
-                ext = self._validate_and_get_extension(path)
-                validated_paths.append((path, ext, None))
-            except Exception as e:
-                validated_paths.append((path, None, e))
-
-        gathered_data = self._gather_all_data(validated_paths, on_errors)
+        gathered_data = self._gather_all_data(paths, on_errors)
 
         all_chunks_gen = self.plain_text_chunker.batch_chunk(
             texts=gathered_data["all_texts_gen"],

@@ -96,40 +96,28 @@ class DOCXProcessor(BaseProcessor):
             result = mammoth.convert_to_html(
                 docx_file, convert_image=placeholder_images
             )
-            html_content = result.value
-
-        # Now we can convert it to markdown
-        markdown_content = html_to_md(raw_text=html_content)
+            markdown_content = html_to_md(raw_text=result.value)
 
         # Split into paragraphs and accumulate by character count (~4000 chars per chunk)
-        paragraphs = markdown_content.split("\n\n")
-        current_chunk = []
-        char_count = 0
-        max_chunk_size = 4000
+        curr_chunk = []
+        curr_size = 0
+        max_size = 4000
 
-        for paragraph in paragraphs:
-            para_length = len(paragraph)
+        for paragraph in markdown_content.split("\n\n"):
+            para_len = len(paragraph)
 
             # If adding this paragraph would exceed the limit, yield current chunk
-            if char_count + para_length > max_chunk_size and current_chunk:
-                yield "\n\n".join(current_chunk)
-                current_chunk = []
-                char_count = 0
+            if curr_size + para_len > max_size and curr_chunk:
+                yield "\n\n".join(curr_chunk)
+                curr_chunk = []
+                curr_size = 0
 
-            # If a single paragraph is longer than max_chunk_size, yield it as its own chunk
-            if para_length > max_chunk_size:
-                if current_chunk:
-                    yield "\n\n".join(current_chunk)
-                    current_chunk = []
-                    char_count = 0
-                yield paragraph
-            else:
-                current_chunk.append(paragraph)
-                char_count += para_length
+            curr_chunk.append(paragraph)
+            curr_size += para_len
 
         # Yield any remaining content
-        if current_chunk:
-            yield "\n\n".join(current_chunk)
+        if curr_chunk:
+            yield "\n\n".join(curr_chunk)
 
 
 if __name__ == "__main__":  # pragma: no cover

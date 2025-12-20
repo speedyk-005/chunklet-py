@@ -178,14 +178,14 @@ def test_chunking_with_different_constraints(
     if max_functions is not None:
         for chunk in chunks:
             # Check for decorator and function patterns in the same chunk
-            decorator_match = re.search(r"\s*@\w+", chunk.content, re.M)
-            function_match = re.search(r"\s*def\b", chunk.content, re.M)
+            decorator_pos = chunk.content.find("@")
+            function_pos = chunk.content.find("def")
 
-            if decorator_match and function_match:
+            if decorator_pos != -1 and function_pos != -1:
                 # If both decorator and function are in the same chunk,
                 # decorator must come before the function definition
                 assert (
-                    decorator_match.start() < function_match.start()
+                    decorator_pos < function_pos
                 ), f"Decorator found after function in chunk: {chunk.content[:100]}..."
 
 

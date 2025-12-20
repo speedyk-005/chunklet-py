@@ -574,8 +574,8 @@ class PlainTextChunker(BaseChunker):
             overlap_percent=overlap_percent,
         )
 
-        if base_metadata is None:
-            base_metadata = {}
+        # Leave the user's original dict untouched
+        base_metadata = (base_metadata or {}).copy()
 
         return self._create_chunk_boxes(chunks, base_metadata, text)
 
