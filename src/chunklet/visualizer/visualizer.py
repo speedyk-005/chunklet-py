@@ -140,8 +140,6 @@ class Visualizer:
         except (json.JSONDecodeError, TypeError):
             raise HTTPException(400, f"Invalid chunking parameters JSON: {params}")
 
-        print(f"Processing: {file.filename} in {mode} mode")
-
         # Use Python mimetypes instead of browser content_type
         mimetype, _ = mimetypes.guess_type(file.filename or "")
         if not mimetype or not mimetype.startswith("text/"):
@@ -155,9 +153,9 @@ class Visualizer:
             )
 
         # Saved as txt file since they are all plaintext anyway
-        with tempfile.NamedTemporaryFile(mode="wb", suffix=".txt", delete=False) as tmp:
+        async with aiofiles.tempfile.NamedTemporaryFile(mode="wb", suffix=".txt", delete=False) as tmp:
             content = await file.read()
-            tmp.write(content)
+            await tmp.write(content)
             tmp_path = tmp.name
 
         encoding = detect(content).get("encoding", "utf-8")
