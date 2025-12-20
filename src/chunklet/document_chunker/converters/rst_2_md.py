@@ -39,6 +39,6 @@ def rst_to_md(file_path: str | Path) -> str:
 
 
 # Example usage
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     markdown_result = rst_to_md("samples/What_is_rst.rst")
     print(markdown_result)

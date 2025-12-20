@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Literal, Any, Generator, Annotated
+from typing import Callable, Literal, Any, Generator, Annotated, Iterable
 from pydantic import Field
 from box import Box
 from loguru import logger
@@ -11,24 +11,32 @@ try:
 except ImportError:
     rtf_to_text = None
 
+try:
+    from charset_normalizer import from_path
+except ImportError:
+    from_path = None
+
+from chunklet.base_chunker import BaseChunker
 from chunklet.sentence_splitter import BaseSplitter
 from chunklet.plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker.processors import (
     pdf_processor,
     epub_processor,
     docx_processor,
+    odt_processor,
 )
 from chunklet.document_chunker.converters import (
     html_2_md,
     rst_2_md,
     latex_2_md,
+    table_2_md,
 )
 from chunklet.document_chunker.registry import CustomProcessorRegistry
 from chunklet.common.validation import validate_input, restricted_iterable
 from chunklet.exceptions import InvalidInputError, UnsupportedFileTypeError
 
 
-class DocumentChunker:
+class DocumentChunker(BaseChunker):
     """
     A comprehensive document chunker that handles various file formats.
 
@@ -47,16 +55,19 @@ class DocumentChunker:
     """
 
     BUILTIN_SUPPORTED_EXTENSIONS = {
-        ".pdf",
+        ".csv",
         ".docx",
         ".epub",
-        ".txt",
-        ".tex",
-        ".html",
         ".hml",
+        ".html",
         ".md",
+        ".odt",
+        ".pdf",
         ".rst",
         ".rtf",
+        ".tex",
+        ".txt",
+        ".xlsx",
     }
 
     def __init__(
@@ -102,14 +113,17 @@ class DocumentChunker:
 
         self.processors = {
             ".pdf": pdf_processor.PDFProcessor,
-            ".epub": epub_processor.EpubProcessor,
-            ".docx": docx_processor.DocxProcessor,
+            ".epub": epub_processor.EPUBProcessor,
+            ".docx": docx_processor.DOCXProcessor,
+            ".odt": odt_processor.ODTProcessor,
         }
         self.converters = {
             ".html": html_2_md.html_to_md,
             ".hml": html_2_md.html_to_md,
             ".rst": rst_2_md.rst_to_md,
             ".tex": latex_2_md.latex_to_md,
+            ".csv": table_2_md.table_to_md,
+            ".xlsx": table_2_md.table_to_md,
         }
         self.processor_registry = CustomProcessorRegistry()
 
@@ -170,6 +184,36 @@ class DocumentChunker:
 
         return extension
 
+    def _read(self, path: str | Path, ext: str) -> str:
+        """
+        Read text content from a file using charset detection, handling special formats like RTF.
+
+        Args:
+            path (str | Path): Path to the file
+            ext (str): File extension
+
+        Returns:
+            str: The text content of the file
+        """
+        if from_path is None:
+            raise ImportError(
+                "The 'charset-normalizer' library is not installed. "
+                "Please install it with 'pip install charset-normalizer>=3.4.0' "
+                "or install the document processing extras with 'pip install chunklet-py[document]'"
+            )
+
+        match = from_path(str(path)).best()
+        raw_content = str(match) if match else ""
+
+        if ext == ".rtf":
+            if rtf_to_text is None:
+                raise ImportError(
+                    "The 'striprtf' library is not installed. Please install it with 'pip install 'striprtf>=0.0.29'' or install the document processing extras with 'pip install chunklet-py[document]'"
+                )
+            return rtf_to_text(raw_content)
+        else:  # For .txt, .md, and others handled by simple read
+            return raw_content
+
     def _extract_data(
         self, path: str | Path, ext: str
     ) -> tuple[str | Generator[str, None, None], dict[str, Any]]:
@@ -185,16 +229,14 @@ class DocumentChunker:
             either a string (for simple text files) or a generator of strings (for processed documents)
             and a dictionary of metadata.
         """
-        if self.verbose:
-            logger.info("Extracting text from file {}", path)
+        self.log_info("Extracting text from file {}", path)
 
         # Prioritize custom processors from registry
         if self.processor_registry.is_registered(ext):
             texts_and_metadata, processor_name = self.processor_registry.extract_data(
                 str(path), ext
             )
-            if self.verbose:
-                logger.info("Used registered processor: {}", processor_name)
+            self.log_info("Used registered processor: {}", processor_name)
             text_or_gen, metadata = texts_and_metadata
             metadata["source"] = metadata.get("source", str(path))
             return text_or_gen, metadata
@@ -208,33 +250,22 @@ class DocumentChunker:
             text_content = self.converters[ext](path)
 
         else:
-            with open(path, "r", encoding="utf-8", errors="ignore") as f:
-                raw_content = f.read()
-                if ext == ".rtf":
-                    if rtf_to_text is None:
-                        raise ImportError(
-                            "The 'striprtf' library is not installed. Please install it with 'pip install 'striprtf>=0.0.29'' or install the document processing extras with 'pip install chunklet-py[document]'"
-                        )
-                    text_content = rtf_to_text(raw_content)
-                else:  # For .txt, .md, and others handled by simple read
-                    text_content = raw_content
+            text_content = self._read(path, ext)
 
         return text_content, {"source": str(path)}
 
-    def _gather_all_data(self, validated_paths, on_errors):
+    def _gather_all_data(self, paths: Iterable[str | Path], on_errors: str) -> dict:
         """
-        Gathers and prepares data from validated paths for batch processing.
+        Gathers and prepares data from paths for batch processing.
 
-        This method iterates through a list of pre-validated file paths,
-        handles any validation or processing errors, and extracts the content
-        and metadata from each valid file. It uses a memory-efficient approach
+        This method iterates through a list of file paths,
+        validates each path, handles any validation or processing errors,
+        and extracts the content and metadata from each valid file. It uses a memory-efficient approach
         by creating a master generator for all text content rather than loading
         it all into memory.
 
         Args:
-            validated_paths (Iterable[tuple]): An iterable of tuples, where
-                each tuple contains a Path object, its extension, and an
-                optional error from the validation stage.
+            paths (Iterable[str | Path]): An iterable of file paths to process.
             on_errors (Literal["raise", "skip", "break"]): Defines the error
                 handling strategy for validation or processing failures.
 
@@ -252,10 +283,10 @@ class DocumentChunker:
         all_metadata = []
         text_gens_to_chain = []
 
-        for i, (path, ext, error) in enumerate(validated_paths):
+        for i, path in enumerate(paths):
             try:
-                if error is not None:
-                    raise error
+                path = Path(path)
+                ext = self._validate_and_get_extension(path)
 
                 text_content_or_generator, document_metadata = self._extract_data(
                     path, ext
@@ -274,22 +305,25 @@ class DocumentChunker:
             except Exception as e:
                 if on_errors == "raise":
                     logger.error(
-                        "Document validation failed for '{}' at paths[{}].\nReason: {}.",
-                        path, i, e,
+                        "Document processing failed for '{}'.\nReason: {}.",
+                        path,
+                        e,
                     )
-                    raise error
+                    raise
                 elif on_errors == "break":
                     logger.error(
-                        "Stopping due to validation error on '{path}' at paths[{}].\nReason: {error}.",
-                        path, i, e,
+                        "Stopping due to validation error on '{}' at paths[{}].\nReason: {}.",
+                        path,
+                        i,
+                        e,
                     )
                     break
                 else:  # skip
                     logger.warning(
-                        "Skipping document '{}' at paths[{}] due to validation failure.\nReason: {}",
+                        "Skipping document '{}' at paths[{}] due to validation failure.\nReason: {}.",
                         path,
                         i,
-                        error,
+                        e,
                     )
                     continue
 
@@ -353,11 +387,10 @@ class DocumentChunker:
                 f"File type '{ext}' is not supported by the general chunk method.\n"
                 "Reason: The processor for this file returns iterable, "
                 "so it must be processed in parallel for efficiency.\n"
-                "💡 Hint: use `chunker.batch_chunk()` for this file type."
+                "💡 Hint: use `chunker.batch_chunk([file.ext])` for this file type."
             )
 
-        if self.verbose:
-            logger.info("Starting chunk processing for path: {}.", path)
+        self.log_info("Starting chunk processing for path: {}.", path)
 
         text_content = text_content_or_generator
 
@@ -374,8 +407,7 @@ class DocumentChunker:
             base_metadata=document_metadata,
         )
 
-        if self.verbose:
-            logger.info("Generated {} chunks for {}.", len(chunk_boxes), path)
+        self.log_info("Generated {} chunks for {}.", len(chunk_boxes), path)
 
         return chunk_boxes
 
@@ -433,19 +465,7 @@ class DocumentChunker:
         """
         sentinel = object()
 
-        # Validate all paths upfront
-        sucess_count = 0
-        validated_paths = []
-        for i, path in enumerate(paths):
-            path = Path(path)
-            try:
-                ext = self._validate_and_get_extension(path)
-                validated_paths.append((path, ext, None))
-                sucess_count += 1
-            except Exception as e:
-                validated_paths.append((path, None, e))
-
-        gathered_data = self._gather_all_data(validated_paths, on_errors)
+        gathered_data = self._gather_all_data(paths, on_errors)
 
         all_chunks_gen = self.plain_text_chunker.batch_chunk(
             texts=gathered_data["all_texts_gen"],
@@ -471,10 +491,14 @@ class DocumentChunker:
         # The only work-around to add a sentinel at paths
         paths = list(path_section_counts.keys()) + [None]
 
+        # If no files were successfully processed, return empty
+        if not path_section_counts:
+            return
+
         doc_count = 0
         curr_path = paths[0]
         for chunks in all_chunk_groups:
-            if path_section_counts[curr_path] == 0:
+            if path_section_counts.get(curr_path, 0) == 0:
                 if separator is not None:
                     yield separator
 

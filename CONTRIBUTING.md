@@ -4,22 +4,25 @@ First and foremost, thank you for considering contributing to Chunklet! We appre
 
 ## Getting Started
 
-1.  **Fork the repository:** Click the "Fork" button at the top right of the [repository page](https://github.com/speedyk-005/chunklet).
-
-2.  **Clone your fork:**
+1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/YOUR_USERNAME/chunklet.git
-    cd chunklet
+    git clone https://github.com/speedyk-005/chunklet-py.git
+    cd chunklet-py
     ```
 
-3.  **Install dependencies:** It is recommended to use a virtual environment.
+2.  **Install dependencies:** It is recommended to use a virtual environment.
 
     ```bash
     python -m venv .venv
     source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
+    # For basic development (testing, linting)
     pip install -e ".[dev]"
+    # For comprehensive development (including all optional features)
+    pip install -e ".[dev-all]"
     ```
+
+    These commands install the package in development mode with all development dependencies (pytest, black, flake8, etc.).
 
 ## Making Changes
 
@@ -49,6 +52,54 @@ First and foremost, thank you for considering contributing to Chunklet! We appre
     flake8 src/ tests/
     ```
 
+6.  **Build documentation (if you've made docs changes):** This project uses MkDocs for documentation. Test your changes by building the docs.
+
+    ```bash
+    pip install -e ".[docs]"
+    ./build_docs.sh
+    ```
+
+## Coding Style Guidelines
+
+### Method Ordering
+
+Chunklet follows a **logical, hierarchical method ordering style** to maintain code readability and consistency:
+
+1. **Class Docstring** - Comprehensive documentation at the top
+2. **Class Constants/Attributes** - Static configuration (e.g., `BUILTIN_SUPPORTED_EXTENSIONS`)
+3. **`__init__` Method** - Constructor always first after constants
+4. **Properties** - `@property` decorators and setters (if any)
+5. **Private Methods** (`def _method`) - Helper/internal methods in logical execution order
+6. **Public Methods** (`def method`) - Main API methods at the end
+
+**Example Structure:**
+```python
+class ExampleClass:
+    """Class docstring."""
+
+    # Class constants
+    CONSTANT = "value"
+
+    def __init__(self):
+        """Initialize the class."""
+        pass
+
+    @property
+    def some_property(self):
+        """Property getter."""
+        return self._value
+
+    def _helper_method(self):
+        """Private helper method."""
+        pass
+
+    def public_method(self):
+        """Main public API method."""
+        pass
+```
+
+**Rationale:** This ordering follows the object lifecycle (init → helpers → public API) and makes the public interface easily discoverable while keeping implementation details organized.
+
 ## Submitting a Pull Request
 
 When you are ready to submit your pull request, please ensure you have done the following:
@@ -60,4 +111,4 @@ When you are ready to submit your pull request, please ensure you have done the 
 
 ## Code of Conduct
 
-To ensure a welcoming and inclusive environment, we expect all contributors to adhere to our [Code of Conduct](#code-of-conduct).
+Look, we're all adults here trying to build cool software together. Be nice, don't be a jerk, respect different opinions, and remember that behind every GitHub profile is a human being who probably has better things to do than deal with your nonsense. If you can't contribute without making the experience miserable for others, maybe try contributing to a different project instead. We're here to code, not to psychoanalyze each other's life choices. Keep it professional, keep it civil, and we'll all get along just fine.

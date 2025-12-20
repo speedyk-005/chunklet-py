@@ -1,6 +1,5 @@
 import re
 import pytest
-from loguru import logger
 from chunklet.sentence_splitter import SentenceSplitter, CustomSplitterRegistry
 from chunklet import CallbackError
 
@@ -67,16 +66,6 @@ def test_unsupported_language_fallback(splitter, text, expected_sentences):
     """Test fallback to universal regex splitter for unsupported languages."""
     sentences = splitter.split(text, "auto")
     assert sentences == expected_sentences
-
-    def test_low_confidence_detection_fallback(splitter, mocker, caplog):
-        """Test fallback to universal regex splitter on low confidence language detection."""
-        mocker.patch(
-            "chunklet.utils.detect_text_language.detect_text_language",
-            return_value=("en", 0.5),
-        )
-        with caplog.at_level(logger.DEBUG):
-            splitter.split("This is a test.", "auto")
-        assert "Low confidence in language detected" in caplog.text
 
 
 # --- Custom Splitter Tests ---

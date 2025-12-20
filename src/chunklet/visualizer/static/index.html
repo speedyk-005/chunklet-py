@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Chunk Visualizer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <h1>Text Chunk Visualizer</h1>
+    
+    <div class="main-layout-container">
+    
+    
+        <div class="instructions">
+            <h2>How to Use</h2>
+            <ul>
+                <li>Upload a text file to visualize chunk boundaries</li>
+                <li>Hover over text to discover chunk boundaries (appears with light blue background)</li>
+                <li>Click on text to select that chunk (appears with bright yellow highlight in light mode / blue in dark mode)</li>
+                <li>Use the <strong>Reveal/Hide overlaps</strong> button to toggle overlap display</li>
+                <li>Double-click on text to open chunk details and <strong>metadata</strong></li>
+            </ul>
+        </div>
+        
+        <div class="left-column">
+            <!-- File Upload Section -->
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="fileInput" style="display: none;">
+                    <div id="uploadContent">
+                        <div class="upload-icon">📁</div>
+                        <h3>Upload Text File</h3>
+                        <p>Drag & drop a text file here or click to browse</p>
+                        <p class="upload-hint">Any plain text file is supported.</p>
+                        <button class="control-btn" id="browseBtn">Browse Files</button>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <!-- Mode Selection & Parameters Panel -->
+            <div class="control-panel" id="controlPanel">
+                <!-- Mode Selection -->
+                <div class="mode-selector">
+                    <label for="modeSelect">Chunking Mode:</label>
+                    <select id="modeSelect">
+                        <option value="document">📄 Document</option>
+                        <option value="code">💻 Code</option>
+                    </select>
+                </div>
+                
+                <!-- Document Mode Parameters (initially visible) -->
+                <div class="params-panel active" id="documentParams">
+                    <h3>Document Chunking Parameters</h3>
+                    <p class="param-hint">Select at least one constraint:</p>
+                    
+                    <div class="param-grid">
+                        <!-- Language Parameter -->
+                        <div class="param-group">
+                            <label class="param-label" for="language">Language</label>
+                            <div class="param-input-group">
+                                <input type="text" id="language" placeholder="auto" maxlength="2" style="text-transform: uppercase;">
+                                <small>ISO 639-1 language code (auto-detect if empty) - e.g., 'en', 'es', 'fr'</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Required Constraints -->
+                        <div class="param-group">
+                            <label class="param-label" for="max_sentences">Max Sentences</label>
+                            <div class="param-input-group">
+                                <input type="number" id="max_sentences" min="1" placeholder="e.g., 10">
+                                <small>Chunk by sentence count</small>
+                            </div>
+                        </div>
+                        
+                        <div class="param-group">
+                            <label class="param-label" for="max_tokens">Max Tokens</label>
+                            <div class="param-input-group">
+                                <input type="number" id="max_tokens" min="12" placeholder="e.g., 1000">
+                            <small>Chunk by token count (requires token counter)</small>
+                            </div>
+                        </div>
+                        
+                        <div class="param-group">
+                            <label class="param-label" for="max_section_breaks">Max Sections</label>
+                            <div class="param-input-group">
+                                <input type="number" id="max_section_breaks" min="1" placeholder="e.g., 3">
+                                <small>Chunk by document sections</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Optional Parameters -->
+                        <div class="param-group">
+                            <label class="param-label" for="overlap_percent">Overlap</label>
+                            <div class="param-input-group">
+                                <div class="range-group">
+                                   <input type="range" id="overlap_percent" min="0" max="75" value="20">
+                                   <span class="range-value" id="overlapValue">20%</span>
+                                </div>
+                                <small>Percentage overlap between chunks</small>
+                            </div>
+                        </div>
+                        
+                        <div class="param-group">
+                            <label class="param-label" for="offset">Offset</label>
+                            <div class="param-input-group">
+                                <input type="number" id="offset" min="0" value="0">
+                                <small>Overlap starting position</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Code Mode Parameters (initially hidden) -->
+                <div class="params-panel" id="codeParams">
+                    <h3>Code Chunking Parameters</h3>
+                    <p class="param-hint">Select at least one constraint:</p>
+                    <p class="param-hint">Overlap is not applicable in Code Mode.</p>
+                    
+                    <div class="param-grid">
+                        <!-- Required Constraints -->
+                        <div class="param-group">
+                            <label class="param-label" for="max_tokens_code">Max Tokens</label>
+                            <div class="param-input-group">
+                                <input type="number" id="max_tokens_code" min="12" placeholder="e.g., 1000">
+                                <small>Chunk by token count (requires token counter)</small>
+                            </div>
+                        </div>
+                        
+                        <div class="param-group">
+                            <label class="param-label" for="max_lines">Max Lines</label>
+                            <div class="param-input-group">
+                                <input type="number" id="max_lines" min="5" placeholder="e.g., 50">
+                                <small>Chunk by line count</small>
+                            </div>
+                        </div>
+                        
+                        <div class="param-group">
+                            <label class="param-label" for="max_functions">Max Functions</label>
+                            <div class="param-input-group">
+                                <input type="number" id="max_functions" min="1" placeholder="e.g., 5">
+                                <small>Chunk by function count</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Optional Parameters -->
+                        <div class="param-group checkbox-group">
+                            <label class="param-label" for="strict">Strict Mode</label>
+                            <div class="param-input-group">
+                                <input type="checkbox" id="strict" checked>
+                                <small>Prevent splitting code blocks</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Process Button -->
+                <div class="process-controls">
+                    <button class="control-btn primary" id="processBtn" disabled>Process Text</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <div class="controls">
+                <div class="stats">
+                    <div class="stat" id="totalChunks">Chunks: 0</div>
+                <div class="stat" id="textLength">Text Length: 0 chars</div>
+                </div>
+                <div class="button-label" id="buttonLabel">
+                <div class="button-subtitle">Click button below to toggle</div>
+                <div class="button-row">
+                    <button class="control-btn" id="toggleOverlapsBtn" disabled>Reveal Overlaps</button>
+                    <button class="control-btn secondary" id="downloadChunksBtn" disabled>
+                        📥 Download Chunks as JSON
+                    </button>
+                </div>
+            </div>
+            </div>
+            
+            <div class="text-container" id="textDisplay">
+                <!-- Text with spans will be inserted here -->
+                <div class="placeholder-text">
+                    <p>Upload a text file and click "Process Text" to see the visualization here.</p>
+                    <p>Interactive chunk highlighting and metadata will appear.</p>
+                </div>
+            </div>
+            
+            <div class="generated-info" id="generatedInfo">
+                Generated with <a href="https://speedyk-005.github.io/chunklet-py/latest" class="footer-link" target="_blank">Chunklet-py</a> on <span id="generatedDate"></span>
+            </div>
+        </div>
+    
+
+    <div class="toast" id="toastNotification">
+        <span id="toastMessage">Chunk highlighted</span>
+    </div>
+    
+    <!-- Metadata Modal -->
+    <div class="modal" id="metadataModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Chunk Metadata</h2>
+                <div class="scroll-hint">Scroll for more details</div>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Metadata will be inserted here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Go to Top Button (Mobile) -->
+    <button class="go-to-top-btn" id="goToTopBtn" title="Go to top">↑</button>
+    
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

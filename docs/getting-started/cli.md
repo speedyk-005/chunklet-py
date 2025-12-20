@@ -1,6 +1,9 @@
 # Chunklet Command Line Interface (CLI): Your Chunking Powerhouse! 🚀
 
-Welcome to the `chunklet` CLI, your one-stop shop for all things text splitting and intelligent chunking. Whether you're segmenting sentences, dicing up documents, or carving code into semantic blocks, `chunklet` has your back. It's designed to be super flexible and RAG-ready, making your LLM workflows smoother than ever.
+Meet `chunklet`, your versatile CLI companion for all things text processing! From precise sentence splitting and smart chunking of any content to interactive visualization in your browser - we've got the tools to make your LLM workflows flow effortlessly. Whether you're processing documents, code, or plain text, chunklet adapts to your needs with RAG-ready precision.
+
+!!! info "`chunklet` vs `chunklet-py`"
+    The CLI command is `chunklet` (kept for backward compatibility), while the Python package is named `chunklet-py` to avoid naming conflicts with other packages.
 
 Before we dive into the fun stuff, you can always check your `chunklet` version or get a quick help guide.:
 
@@ -14,13 +17,14 @@ You can also get specific help for each command
 ```bash
 chunklet split --help
 chunklet chunk --help
+chunklet visualize --help
 ```
 
 ---
 
 ## The `split` Command: Precision Sentence Segmentation ✂️
 
-Need to break down text into individual sentences with surgical precision? The `split` command is your go-to! It leverages `chunklet`'s powerful `SentenceSplitter` to give you clean, segmented sentences.
+Need to break down text into individual sentences with surgical precision? The `split` command is your go-to! It leverages `chunklet`'s powerful [`SentenceSplitter`](programmatic/sentence_splitter.md) to give you clean, segmented sentences.
 
 ### Quick Facts for `split`
 
@@ -66,7 +70,7 @@ The `chunk` command is where the real magic happens! It's your versatile tool fo
 |---|---|---|
 | `<TEXT>` | The input text to chunk. If not provided, `--source` must be used. | None |
 | `--source, -s <PATH>` | Path(s) to one or more files or directories to read input from. Repeat for multiple sources (e.g., `-s file1.txt -s dir/`). | None |
-| `--destination, -d <PATH>` | Path to a file (for single output) or a directory (for batch output) to write the chunks. If not provided, output goes to STDOUT. | STDOUT |
+| `--destination, -d <PATH>` | Path to a file (writes JSON for `.json` extensions or existing files) or directory (writes separate files) to write the chunks. If a non-JSON file exists, a warning is shown and JSON is written. If not provided, output goes to STDOUT. | STDOUT |
 | `--max-tokens` | Maximum number of tokens per chunk. Applies to all chunking strategies. (Must be >= 12) | None |
 | `--max-sentences` | Maximum number of sentences per chunk. Applies to PlainTextChunker and DocumentChunker. (Must be >= 1) | None |
 | `--max-section-breaks` | Maximum number of section breaks per chunk. Applies to PlainTextChunker and DocumentChunker. (Must be >= 1) | None |
@@ -219,7 +223,7 @@ These flags are your secret weapons for scaling up operations, integrating with 
 | `--tokenizer-command` | A shell command string for token counting. It must take text via STDIN and output the integer count via STDOUT. | None |
 | `--n-jobs` | Number of parallel processes to use during batch operations. (None uses all available CPU cores) | None |
 | `--on-errors` | Defines batch error handling: `raise` (stop), `skip` (ignore file, continue), or `break` (halt, return partial result). | raise |
-| `--metadata` | Include rich metadata (source, span, chunk num, etc.) in the output. If `--destination` is a directory, metadata is saved as separate `.json` files; otherwise, it's included inline in the output. | False |
+| `--metadata` | Include rich [metadata](metadata.md) (source, span, chunk num, etc.) in the output. If `--destination` is a directory, metadata is saved as separate `.json` files; otherwise, it's included inline in the output. | False |
 | `--verbose, -v` | Enable verbose logging for debugging or process detail. | False |
 
 ### Scenarios: Unleashing Advanced Power!
@@ -294,6 +298,14 @@ chunklet chunk \
   --metadata
 ```
 
+##### Scenario 5: Saving Chunks as JSON with Metadata
+
+Save processed chunks directly as a JSON file for easy parsing and integration:
+
+```bash
+chunklet chunk --source document.pdf --doc --destination chunks.json --metadata
+```
+
 ---
 
 ## Diving Deeper into Metadata
@@ -301,6 +313,68 @@ chunklet chunk \
 Want to know *exactly* what kind of rich context `chunklet` attaches to your chunks? From source paths and character spans to document-specific properties and code AST details.
 
 👉 Head over to the [Metadata in Chunklet-py guide](../getting-started/metadata.md) to unlock all its secrets!
+
+---
+
+## The `visualize` Command: Your Interactive Chunk Playground! 🎮
+
+Ready to see your chunking in action with a beautiful web interface? The `visualize` command launches Chunklet's interactive web visualizer - perfect for experimenting with parameters, seeing real-time results, and fine-tuning your chunking strategies!
+
+!!! tip "Want programmatic control?"
+    For code-based usage and detailed technical information, check out the [Text Chunk Visualizer documentation](programmatic/visualizer.md).
+
+This command starts a local web server that gives you:
+- **Live parameter tuning** - Adjust chunking settings and see results instantly
+- **Visual chunk exploration** - See exactly how your text gets divided
+- **Multiple chunking modes** - Try plain text, document, and code chunking all in one place
+- **Custom tokenizers** - Plug in your own token counting for precise control
+
+### Key Flags for `visualize`
+
+| Flag | Description | Default |
+|---|---|---|
+| `--host` | Host IP to bind the server (use `0.0.0.0` for network access) | 127.0.0.1 |
+| `--port, -p` | Port number for the server | 8000 |
+| `--tokenizer-command` | Shell command for custom token counting | None |
+| `--headless` | Run without opening browser automatically | False |
+
+### Getting Started with Visualization! 🖥
+
+#### Scenario 1: Basic Visualizer Launch
+
+Fire up the visualizer on the default port and let it open your browser automatically:
+
+```bash
+chunklet visualize
+```
+
+#### Scenario 2: Custom Port and Host
+
+Run on a specific port and host (great for accessing from other devices):
+
+```bash
+chunklet visualize --host 0.0.0.0 --port 8080
+```
+
+#### Scenario 3: Headless Mode with Custom Tokenizer {#headless-cli}
+
+Run in the background with your own token counting script:
+
+```bash
+chunklet visualize --headless --tokenizer-command "python my_tokenizer.py"
+```
+
+The visualizer will show you the URL to access it in your browser. Press `Ctrl+C` to stop the server when you're done!
+
+!!! info "REST API for Headless Automation! 🤖"
+    When running in headless mode, you can use the visualizer's REST API to programmatically upload files, chunk content, and retrieve results without any web interface! Perfect for automation scripts, CI/CD pipelines, or integrating chunking into your applications.
+
+    See the [Headless/REST API Usage](programmatic/visualizer.md#headlessrest-api-usage) section for complete examples of programmatic file processing.
+
+!!! tip "Pro Visualization Tips"
+    - Use `--headless false` (or just omit it) to auto-open your browser
+    - Try different ports if 8000 is already in use
+    - Experiment with different chunking modes - text, document, and code all in one interface!
 
 ---
 

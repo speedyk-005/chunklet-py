@@ -1,5 +1,4 @@
 from typing import Any, Generator
-from more_itertools import chunked
 
 # mammoth and docx are lazily imported
 
@@ -7,7 +6,7 @@ from chunklet.document_chunker.processors.base_processor import BaseProcessor
 from chunklet.document_chunker.converters.html_2_md import html_to_md
 
 
-class DocxProcessor(BaseProcessor):
+class DOCXProcessor(BaseProcessor):
     """
     Processor class for extracting text and metadata from DOCX files.
 
@@ -67,13 +66,13 @@ class DocxProcessor(BaseProcessor):
         return metadata
 
     def extract_text(self) -> Generator[str, None, None]:
-        """Extracts the text content from the DOCX file in Markdown format.
+        """Extracts text content from DOCX file in Markdown format, yielding chunks for efficient processing.
 
         Images are replaced with a placeholder "[Image - num]".
-        Text is yielded in blocks of approximately 10 paragraphs each.
+        Text is yielded in chunks of approximately 4000 characters each to simulate pages and enhance parallel execution.
 
         Yields:
-            str: A block of Markdown text, approximately 10 paragraphs each.
+            str: A chunk of text, approximately 4000 characters each.
         """
         try:  # Lazy import
             import mammoth
@@ -97,20 +96,33 @@ class DocxProcessor(BaseProcessor):
             result = mammoth.convert_to_html(
                 docx_file, convert_image=placeholder_images
             )
-            html_content = result.value
+            markdown_content = html_to_md(raw_text=result.value)
 
-        # Now we can convert it to markdown
-        markdown_content = html_to_md(raw_text=html_content)
+        # Split into paragraphs and accumulate by character count (~4000 chars per chunk)
+        curr_chunk = []
+        curr_size = 0
+        max_size = 4000
 
-        # Chunk its paragraphs into groups of 8 for faster processing.
-        paragraphs = markdown_content.split("\n\n")
-        for paragraph_chunk in chunked(paragraphs, 8):
-            yield "\n\n".join(paragraph_chunk)
+        for paragraph in markdown_content.split("\n\n"):
+            para_len = len(paragraph)
+
+            # If adding this paragraph would exceed the limit, yield current chunk
+            if curr_size + para_len > max_size and curr_chunk:
+                yield "\n\n".join(curr_chunk)
+                curr_chunk = []
+                curr_size = 0
+
+            curr_chunk.append(paragraph)
+            curr_size += para_len
+
+        # Yield any remaining content
+        if curr_chunk:
+            yield "\n\n".join(curr_chunk)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     file_path = "samples/Lorem Ipsum.docx"
-    processor = DocxProcessor(file_path)
+    processor = DOCXProcessor(file_path)
 
     # Extract metadata
     metadata = processor.extract_metadata()

@@ -7,14 +7,16 @@
 “One library to split them all: Sentence, Code, Docs”
 
 > [!WARNING]
-> **Heads Up!** Version 2.0.0 introduces **breaking changes**. For a smooth transition and detailed information, please consult our [Migration Guide](https://speedyk-005.github.io/chunklet-py/latest/migration/).
+> **Quick heads up!** Version 2 has some breaking changes. No worries though - check our [Migration Guide](https://speedyk-005.github.io/chunklet-py/latest/migration/) for a smooth upgrade!
 
 [![Python Version](https://img.shields.io/badge/Python-3.10%20--%203.14-blue)](https://www.python.org/downloads/)
 [![PyPI](https://img.shields.io/pypi/v/chunklet-py)](https://pypi.org/project/chunklet-py)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/chunklet-py?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=BLUE&left_text=downloads)](https://pepy.tech/projects/chunklet-py)
 [![Coverage Status](https://coveralls.io/repos/github/speedyk-005/chunklet-py/badge.svg?branch=main)](https://coveralls.io/github/speedyk-005/chunklet-py?branch=main)
 [![Stability](https://img.shields.io/badge/stability-stable-brightgreen)](https://github.com/speedyk-005/chunklet-py)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/speedyk-005/chunklet-py/actions)
+[![CodeFactor](https://www.codefactor.io/repository/github/speedyk-005/chunklet-py/badge)](https://www.codefactor.io/repository/github/speedyk-005/chunklet-py)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/speedyk-005/chunklet-py)
 
 <p align="center">
@@ -23,28 +25,31 @@
   </a>
 </p>
 
-## Why Bother with Smart Chunking?
+## Why Smart Chunking? (Or: Why Not Just Split on Character Count?)
 
-You might be thinking, 'Can't I just split my text or code with a simple character count or by arbitrary lines?' Well, you certainly *could*, but let's be frank – that's a bit like trying to perform delicate surgery with a butter knife! Standard splitting methods often lead to:
+You might be wondering: "Can't I just split my text by character count or random line breaks?" Well, sure you could... but that's like trying to cut a wedding cake with a chainsaw! 🎂 Standard methods often give you:
 
--   **Literary Butchery:** Sentences chopped mid-thought or code blocks broken mid-function, leading to a loss of crucial meaning.
--   **Monolingual Approach:** A disregard for the unique rules of non-English languages or the specific structures of programming languages.
--   **A Goldfish's Memory:** Forgetting the context of the previous chunk, resulting in disconnected ideas and a less coherent flow.
+-   **Mid-sentence surprises:** Your carefully crafted thoughts get chopped right in the middle, losing all meaning
+-   **Language confusion:** Non-English text and code structures get treated like they're all the same
+-   **Lost context:** Each chunk forgets what came before, like a conversation where everyone has amnesia
 
-## 🤔 Why Chunklet-py? What is it, Anyway? (And Why Should You Care?)
+Smart chunking keeps your content's meaning and structure intact!
 
-**Chunklet-py** is a versatile and powerful library designed to intelligently segment various forms of content—from raw text to complex documents and source code—into perfectly sized, context-aware chunks. It goes beyond simple splitting, offering specialized tools:
+## 🤔 So What's Chunklet-py Anyway? (And Why Should You Care?)
+
+**Chunklet-py** is your friendly neighborhood text splitter that takes all kinds of content - from plain text to PDFs to source code - and breaks them into smart, context-aware chunks. Instead of dumb splitting, we give you specialized tools:
 
 *   `Sentence Splitter`
 *   `Plain Text Chunker`
 *   `Document Chunker`
 *   `Code Chunker`
+*   `Chunk Visualizer` (Interactive web interface)
 
-Each of these is tailored to preserve the original meaning and structure of your data.
+Each tool keeps your content's meaning and structure intact.
 
-Whether you're preparing data for Large Language Models (LLMs), developing Retrieval-Augmented Generation (RAG) pipelines, or enhancing AI-driven document search, Chunklet-py (version 2.0) provides the precision and flexibility needed for efficient indexing, embedding, and inference across multiple formats and languages.
+Perfect for prepping data for LLMs, building RAG systems, or powering AI search - Chunklet-py gives you the precision and flexibility you need across tons of formats and languages.
 
-| Feature | Why it’s great ? |
+| Feature | Why it's awesome |
 | :--- | :--- |
 | 🚀 **Blazingly Fast** | Leverages efficient parallel processing to chunk large volumes of content with remarkable speed. |
 | 🪶 **Featherlight Footprint** | Designed to be lightweight and memory-efficient, ensuring optimal performance without unnecessary overhead. |
@@ -53,36 +58,39 @@ Whether you're preparing data for Large Language Models (LLMs), developing Retri
 | 🌐 **Multilingual Mastery** | Supports over 50 natural languages for text and document chunking with intelligent detection and language-specific algorithms. |
 | 🧑‍💻 **Code-Aware Intelligence** | Language-agnostic code chunking that understands and preserves the structural integrity of your source code. |
 | 🎯 **Precision Chunking** | Flexible constraint-based chunking allows you to combine limits based on sentences, tokens, sections, lines, and functions. |
-| 📄 **Document Format Mastery** | Processes a wide array of document formats including `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, and `.rtf`. |
-| 💻 **Dual Interface: CLI & Library** | Use it as a powerful command-line tool for fast, terminal-based chunking or import it as a library for deep integration into your Python applications. |
+| 📄 **Document Format Mastery** | Processes a wide array of document formats including `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`. |
+| 💻 **Triple Interface: CLI, Library & Web** | Use it as a command-line tool, import as a library for deep integration, or launch the interactive web visualizer for real-time chunk exploration and parameter tuning. |
 
 
-And there's even more to discover!
+And that's just the start - there's plenty more to explore!
 
 > [!NOTE]
-> For the documentation, visit our [documentation site](https://speedyk-005.github.io/chunklet-py/latest).
+> For the full documentation experience, check out our [documentation site](https://speedyk-005.github.io/chunklet-py/latest).
 
 ---
 
 ## 📦 Installation
 
-Ready to get Chunklet-py up and running? Fantastic! This guide will walk you through the installation process, making it as smooth as possible.
+Ready to get Chunklet-py running? Awesome! Let's get you set up quickly and painlessly.
 
-### The Easy Way
+!!! note "Package Name Change"
+    Chunklet-py was previously named `chunklet`. The old `chunklet` package is no longer maintained. When installing, make sure to use `chunklet-py` (with the hyphen) to get the latest version.
+    
+### The Quick & Easy Way
 
-The most straightforward method to install Chunklet-py is by using `pip`:
+The simplest way to get started is with pip:
 
 ```bash
-# Install and verify version
+# Install and check it's working
 pip install chunklet-py
 chunklet --version
 ```
 
-And that's all there is to it! You're now ready to start using Chunklet-py.
+That's it! You're all set to start chunking.
 
-### Optional Dependencies
+### Extra Features (Optional)
 
-Chunklet-py offers optional dependencies to unlock additional functionalities, such as document processing or code chunking. You can install these extras using the following syntax:
+Want to unlock more Chunklet-py superpowers? Add these optional dependencies based on what you need:
 
 *   **Document Processing:** For handling `.pdf`, `.docx`, `.epub`, and other document formats:
     ```bash
@@ -92,14 +100,18 @@ Chunklet-py offers optional dependencies to unlock additional functionalities, s
     ```bash
     pip install "chunklet-py[code]"
     ```
+*   **Visualization:** For the interactive web-based chunk visualizer:
+    ```bash
+    pip install "chunklet-py[visualization]"
+    ```
 *   **All Extras:** To install all optional dependencies:
     ```bash
     pip install "chunklet-py[all]"
     ```
 
-### The Alternative Way
+### The From-Source Way
 
-For those who prefer to build from source, you can clone the repository and install it manually. This method allows for direct modification of the source code and installation of all optional features:
+Prefer building from source? You can clone and install manually for full control:
 
 ```bash
 git clone https://github.com/speedyk-005/chunklet-py.git
@@ -107,11 +119,11 @@ cd chunklet-py
 pip install .[all]
 ```
 
-But why would you want to do that? The easy way is so much easier.
+(But honestly, the pip way is usually way easier!)
 
-### Contributing to Chunklet-py
+### Want to Help Make Chunklet-py Even Better?
 
-Interested in helping make Chunklet-py even better? That's fantastic! Before you dive in, please take a moment to review our [**Contributing Guide**](https://github.com/speedyk-005/chunklet-py/blob/main/CONTRIBUTING.md). Here's how you can set up your development environment:
+That's awesome! We'd love to have you contribute. Check out our [**Contributing Guide**](https://github.com/speedyk-005/chunklet-py/blob/main/CONTRIBUTING.md) first, then set up your development environment:
 
 ```bash
 git clone https://github.com/speedyk-005/chunklet-py.git
@@ -124,21 +136,24 @@ pip install -e ".[docs]"
 pip install -e ".[dev-all]"
 ```
 
-These commands install Chunklet-py in "editable" mode, ensuring that any changes you make to the source code are immediately reflected. The `[dev]`, `[docs]`, and `[dev-all]` options include the necessary dependencies for specific development tasks.
+These install Chunklet-py in "editable" mode so your code changes take effect immediately. The different options give you just the dependencies you need.
 
-Now, go forth and code! And remember, good developers always write tests. (Even in a Python project, we appreciate all forms of excellent code examples!)
+Go forth and code! (And remember, good developers write tests. We appreciate excellent code examples!)
 
 ---
 
-## 🧪 Planned Features
+## 🗺 Features & Roadmap
 
 - [x] CLI interface
-- [x] Documents chunking with metadata.
-- [x] Code chunking based on interest point.
-- [ ] Visualization for chunks (e.g., highlighting spans in original documents)
-- Extend the file supported:
-  - [ ] Support for odt and eml files
-  - [ ] Support for tabular: csv, excel, ...
+- [x] Documents chunking with metadata
+- [x] Code chunking based on interest point
+- [x] Interactive chunk visualizer (web interface)
+- [x] Extended file format support:
+  - [x] ODT files
+  - [x] CSV and Excel files
+- Future enhancements:
+  - [ ] Additional document formats
+
 ---
 
 ## How Chunklet-py Compares
@@ -159,14 +174,15 @@ Chunklet-py's rule-based, language-agnostic approach to code chunking avoids the
 
 ## 🙌 Contributors & Thanks
 
-Big thanks to the people who helped shape **Chunklet**:
+A huge thank you to the awesome people who helped shape Chunklet-py:
 
 - [@jmbernabotto](https://github.com/jmbernabotto) — for helping mostly on the CLI part, suggesting fixes, features, and design improvements.
+- [@arnoldfranz](https://github.com/arnoldfranz) — for reporting the CLI Path Validation Bug (#6) that helped improve error handling.
 
 ---
 
 📜 License
 
-See the [LICENSE](https://github.com/speedyk-005/chunklet-py/blob/main/LICENSE) file for full details.
+Check out the [LICENSE](https://github.com/speedyk-005/chunklet-py/blob/main/LICENSE) file for all the details.
 
-> MIT License. Use freely, modify boldly, and credit the legend (me. Just kidding!)
+> MIT License. Use freely, modify boldly, and credit appropriately! (We're not that legendary... yet 😉)

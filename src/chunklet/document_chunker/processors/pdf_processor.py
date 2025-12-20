@@ -99,13 +99,30 @@ class PDFProcessor(BaseProcessor):
         text = PAGE_PATTERN.sub("", text)
         return text
 
+    def _safe_decode(self, value: str | bytes):
+        """Utility to decode bytes to str, ignoring errors, otherwise return as-is.
+
+        Args:
+            value (str | bytes): The input value, which may be a string or a byte sequence.
+
+        Returns:
+            str: The decoded string if the input was bytes, or the original string
+                 if the input was already a string.
+        """
+        if isinstance(value, bytes):
+            return value.decode("utf-8", "ignore")
+        return value
+
     def extract_text(self) -> Generator[str, None, None]:
         """Yield cleaned text from each PDF page.
 
-        Uses pdfminer.high_level.extract_text for efficient page-by-page extraction.
+        Extracts text content page by page using pdfminer.high_level.extract_text
+        for efficient processing. Each page is processed individually to avoid
+        memory issues with large PDF files. The extracted text is cleaned using
+        the _cleanup_text method to remove artifacts and normalize formatting.
 
         Yields:
-            str: Markdown-formatted text of each page.
+            str: Cleaned text content from each PDF page.
         """
         from pdfminer.high_level import extract_text
         from pdfminer.pdfpage import PDFPage
@@ -160,22 +177,20 @@ class PDFProcessor(BaseProcessor):
             if hasattr(doc, "info") and doc.info:
                 for info in doc.info:
                     for k, v in info.items():
+                        k = self._safe_decode(k)
+                        v = self._safe_decode(v)
 
-                        # To keep metadata uniform
+                        # To keep metadata uniform with the other processorss
                         k = "created" if k == "CreationDate" else k
                         k = "modified" if k == "ModDate" else k
 
                         if k.lower() in self.METADATA_FIELDS:
-                            if isinstance(k, bytes):
-                                k = k.decode("utf-8", "ignore")
-                            if isinstance(v, bytes):
-                                v = v.decode("utf-8", "ignore")
                             metadata[k.lower()] = v
         return metadata
 
 
 # --- Example usage ---
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     pdf_file = "samples/sample-pdf-a4-size.pdf"
 
     processor = PDFProcessor(pdf_file)

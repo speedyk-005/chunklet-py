@@ -1,16 +1,17 @@
 """
-Chunklet: The v2.0.0 Evolution - Multi-strategy, Context-aware, Multilingual Text & Code Chunker
+Chunklet: Advanced Text, Code, and Document Chunking for LLM Applications
 
-This package provides a robust and flexible solution for splitting large texts
-and code into smaller, manageable chunks. Designed for applications like Large
-Language Models (LLMs), Retrieval-Augmented Generation (RAG) pipelines, and
-other context-aware Natural Language Processing (NLP) tasks.
+A comprehensive library for semantic text segmentation, interactive chunk visualization,
+and multi-format document processing. Split content intelligently across 50+ languages,
+visualize chunks in real-time, and handle various file types with flexible,
+context-aware chunking strategies.
 
-Version 2.0.0 introduces a revamped architecture with:
-- Dedicated chunkers: `PlainTextChunker` (formerly `Chunklet`), `DocumentChunker`, and `CodeChunker`.
-- Expanded language support (50+ languages) and improved error handling.
-- Flexible batch processing with `on_errors` parameter and memory-optimized generators.
-- Enhanced modularity, extensibility, and performance.
+Key Features:
+- Sentence splitting: Multilingual text segmentation across 50+ languages
+- Semantic chunking: PlainTextChunker, DocumentChunker, and CodeChunker
+- Interactive visualization: Web-based chunk exploration and parameter tuning
+- Multi-format support: Text, code, PDF, DOCX, EPUB, and more
+- Batch processing: Memory-optimized generators with flexible error handling
 """
 
 from .exceptions import (
@@ -23,7 +24,7 @@ from .exceptions import (
     CallbackError,
 )
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 
 __all__ = [
     "ChunkletError",

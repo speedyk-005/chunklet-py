@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.0] - 2025-12-19
+
+### Added
+- **ODF Support:** Added full support for OpenDocument Text (.odt) files with a new `ODTProcessor` class using the `odfpy` library.
+- **Table Processing:** Added support for CSV and Excel (.xlsx) files with automatic Markdown table conversion using the `tabulate2` library.
+- **Character-Based Chunking:** Implemented 4k character chunking for DOCX and ODT processors to simulate page-sized segments and enhance parallel execution capabilities.
+- **Automatic Encoding Detection:** Integrated charset-normalizer for intelligent text encoding detection in code and document processing, improving reliability by correctly reading files regardless of their encoding instead of assuming UTF-8.
+- **Chunk Visualizer:** Added a comprehensive web-based visualizer interface for interactive text and code chunking with real-time visualization, parameter controls, and file upload capabilities.
+- **CLI Visualize Command:** Added `chunklet visualize` command with options for host, port, tokenizer integration, and headless operation.
+
+### Changed
+- **Default `include_comments`:** Changed the default value of the `include_comments` parameter to `True` in the `CodeChunker.chunk()` method to align with most developer expectations for comprehensive code processing.
+- **Base Chunker Inheritance:** Introduced a new `BaseChunker` abstract base class in `base_chunker.py` to standardize the interface for all chunkers.
+- **PDF Processor Modularity:** Refactored `PDFProcessor.extract_text()` method for better modularity with improved text cleaning utilities.
+- **Refactoring for Readability and Modularity:** Split functions into helpers across PlainTextChunker, CodeChunker, and CLI to reduce cognitive load. Improved variable names, added docstrings, and simplified conditionals for better codebase readability.
+- **Documentation Updates:** Modified `cli.md` and `code_chunker.md` to clarify destination behavior, JSON output, and add new scenarios for better user guidance.
+- **CLI Conditional Imports:** Improved CLI error handling with conditional imports for optional dependencies (document chunkers, code chunkers, visualizer) providing clear installation instructions when features are unavailable.
+
+### Fixed
+- **Code Chunker Issues:**
+  - Fixed a classic Python closure bug in the code annotation loop. The original `pattern.sub(lambda match: self._annotate_block(tag, match), code)` caused the lambda to reference the final value of `tag` after the loop completed. Resolved by using the default argument trick to capture the current `tag` value at definition time.
+  - Removed redundant string slicing logic where line de-annotation was called twice, creating ambiguity and potential "ghost slicing" issues.
+  - Fixed bug in `_split_oversized()` where lines exceeding limits were skipped during chunk creation. Overflow lines were flushed but never added to any chunk, causing missing content in output.
+  - Fixed issue where decorators (e.g., `@property`) were incorrectly separated from their associated functions into different chunks. Added proper flush conditions to ensure decorators group with their functions.
+  - Fixed critical bug where path detection logic incorrectly called `is_path_like()` on Path objects instead of strings, causing validation errors when PosixPath objects were passed. Corrected the logic to properly check `isinstance(source, Path)` first, then only call `is_path_like()` on string inputs.
+- **CLI Destination Logic:** Fixed out-of-design destination handling by removing input count restrictions, ensuring consistent JSON file output and directory handling.
+- **CLI Path Validation Bug (#6):** Resolved TypeError where len(destination) was called on a PosixPath object. Thanks to [@arnoldfranz](https://github.com/arnoldfranz) for reporting this issue.
+- **Document Chunker Batch Error Handling Bugs:** Fixed multiple bugs in `DocumentChunker._gather_all_data()` that were hidden due to missing test coverage. Issues included incorrect exception raising (`raise error` instead of `raise`), malformed logging format strings, KeyError when accessing path_section_counts for failed files, and missing early return when no files are successfully processed. These bugs were discovered and fixed while adding comprehensive test coverage for batch processing error handling.
+
+---
+
 ## [2.0.3] - 2025-11-21
 
 ### Fixed
@@ -22,17 +53,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Dependencies:** Removed fuzzysearch dependency.
 
+---
+
 ## [2.0.2] - 2025-11-20
 
 ### Fixed
 
 - **Internal:** Removed debug print statements from the `_filter_sentences` method in `SentenceSplitter`.
 
+---
+
 ## [2.0.1] - 2025-11-20
 
 ### Fixed
 
 - **CLI Bug:** Fixed a critical unpacking bug in the `split` command. The line intended to extract sentences and confidence from `splitter.split` (e.g., `sentences, confidence = splitter.split(...)`) caused either a `ValueError` (if `splitter.split` returned a number of sentences other than exactly two) or silent, incorrect unpacking (if exactly two sentences were returned, assigning the first sentence string to `sentences` and the second to `confidence`, leading to character-level iteration). The fix now correctly separates language detection and confidence retrieval from sentence splitting, resolving both issues and ensuring accurate output.
+
+---
 
 ## [2.0.0] - 2025-11-17
 

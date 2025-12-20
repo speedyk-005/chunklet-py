@@ -1,31 +1,69 @@
+!!! info "What's on This Page"
+    This page highlights the **big features and major changes** for each version. For all the nitty-gritty details, bug fixes, and technical improvements, check out our [full changelog](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md).
+
+## What's New in Chunklet v2.1.0! 🎉
+
+### ✨ Major Features in v2.1.0
+
+*   **Interactive Chunk Visualizer:** 🌐 Launch a web-based interface for real-time chunk visualization, parameter tuning, and exploring your chunking results interactively!
+*   **CLI Visualize Command:** 💻 Use `chunklet visualize` to start the web interface with customizable host, port, and tokenizer options.
+*   **Expanded File Format Support:** 📁 Added support for ODT files (.odt) and tabular files (.csv and .xlsx) to handle even more document types.
+*   **Python 3.9 Support Restored:** 🐍 Extended compatibility back to Python 3.9 through 3.14 for broader reach.
+
+### 🐛 Bug Fixes in v2.1.0
+
+*   **Code Chunker Issues:** 🔧 Fixed multiple bugs in CodeChunker including line skipping in oversized blocks, decorator separation, path detection errors, and redundant processing logic.
+*   **CLI Path Validation Bug:** Resolved TypeError where len() was called on PosixPath object. Thanks to [@arnoldfranz](https://github.com/arnoldfranz) for reporting this issue.
+*   **Hidden Bugs Uncovered:** 🕵️‍♂️ Adding comprehensive test coverage revealed and fixed multiple hidden bugs in document chunker batch processing error handling that were previously undetected.
+
+---
+
 # What's New in Chunklet v2.0.1! 🎉
 
-## ✨ Patch Fixes in v2.0.1
+### ✨ Patch Fixes in v2.0.1
 
-- **CLI Bug:** Fixed a critical unpacking bug in the `split` command. The line intended to extract sentences and confidence from `splitter.split` (e.g., `sentences, confidence = splitter.split(...)`) caused either a `ValueError` (if `splitter.split` returned a number of sentences other than exactly two) or silent, incorrect unpacking (if exactly two sentences were returned, assigning the first sentence string to `sentences` and the second to `confidence`, leading to character-level iteration). The fix now correctly separates language detection and confidence retrieval from sentence splitting, resolving both issues and ensuring accurate output.
+- **CLI Bug Fix:** Fixed a tricky unpacking bug in the `split` command that was causing incorrect results. The fix properly separates language detection from sentence splitting for accurate output.
+
+---
+
+# What's New in Chunklet v2.0.3! 🎉
+
+### ✨ Improvements in v2.0.3
+
+*   **Enhanced Span Detection:** 🧭 Fixed some hardcoded limits and added adaptive calculations for better span detection across different text lengths.
+*   **Improved Regex Performance:** ⚡ Switched from fuzzysearch to optimized regex for faster and more precise span finding.
+*   **Dependency Cleanup:** 🧹 Removed the fuzzysearch dependency to keep things lighter and simpler.
+
+---
+
+# What's New in Chunklet v2.0.2! 🎉
+
+### ✨ Refinements in v2.0.2
+
+*   **Code Cleanup:** 🧹 Removed some debug print statements from the `SentenceSplitter` for cleaner production code.
+
+---
 
 # What's New in Chunklet v2.0.0! 🎉
 
-Welcome to Chunklet v2.0.0, where we've taken a giant leap forward in text and code chunking! Our team has been hard at work refining the core architecture, enhancing language support, and making the library even more robust and user-friendly. Get ready for a quick tour of the exciting new features and significant improvements:
+### ✨ Highlights of v2.0.0
 
-## ✨ Highlights of v2.0.0
-
-*   **Class Renaming:** The `Chunklet` class has been thoughtfully renamed to `PlainTextChunker`! This change provides clearer semantics and sets the stage for other specialized chunkers. And don't worry about adapting your code – our [Migration Guide](migration.md) is here to help you every step of the way!
-*   **Continuation marker:** 📑 Improved the continuation marker logic and exposed it's value so users can define thier own or set it to an empty str to disabled it.
-*   **Code Chunker Introduction:** We're excited to introduce `CodeChunker`! 🧑‍💻 This new, rule-based, language-agnostic chunker offers a significant advancement for syntax-aware code splitting. It's designed to be highly effective for your code-related RAG needs!
-*   **Document Chunker Introduction:** We're pleased to introduce `DocumentChunker`! 📄 This robust tool is designed to efficiently process a wide variety of file formats, including `.pdf`, `.docx`, `.txt`, `.md`, `.rst`, `.rtf`, `.tex`, `.html/hml`, and `.epub`. It's ready to help you manage your diverse document processing needs!
-*   **Expanded Language Support:** ¡Hola! Bonjour! Namaste! 🗣️ We've gone from 36+ to a staggering 50+ languages! This linguistic leap is thanks to our integrated library dream team (`sentsplit`, `sentencex`, `indic-nlp-library`) and some seriously clever fallback mechanisms. Prepare for global domination!
-*   **New Constraint Flags:** We've introduced `max_section_breaks` for PlainTextChunker and DocumentChunker, and `max_lines` for CodeChunker. These new flags provide even more granular control over how your text and code are chunked, allowing for highly customized segmentation strategies!
-*   **Improved Error Handling:** No more head-scratching! 🤯 We've rolled out more specific exception types (like `FileProcessingError` and `CallbackError`) and a centralized batch error handling system. This means crystal-clear feedback and ultimate control when things inevitably go a little wonky.
-*   **Flexible Batch Error Handling:** Ever wished you could tell Chunklet *exactly* what to do when an error pops up in a batch? Now you can! The new `on_errors` parameter lets you play puppet master: `raise` a dramatic fuss, `skip` it like a pro, or `break` for a well-deserved coffee. Your kingdom, your rules!
-*   **CLI Refactoring:** Our command-line interface has been to the spa and gotten a full makeover! ✨ It's now super streamlined with simplified input/output flags and turbocharged batch processing capabilities. Get ready for a CLI experience so smooth, it's practically butter!
-*   **Modularity & Extensibility:** We've gone full LEGO! 🧱 The library's architecture is now incredibly modular, boasting a dedicated `SentenceSplitter` and a flexible custom splitter registry. Build your chunking dreams, piece by piece, with unparalleled ease!
-*   **Performance & Memory Optimization:** Say goodbye to memory hogs and hello to lightning speed! ⚡ We've unleashed significant refactoring, harnessing generators for batch methods to drastically slash memory footprint for even the most colossal documents. Your RAM will sing praises!
-*   **Caching Strategy Refined:** We've gone lean and mean!♻️ In-memory caching has been largely (but strategically) removed to prioritize raw performance optimization. Only `count_tokens` gets to keep its cozy cache. Speed is the name of the game, and we're playing to win!
-*   **Python 3.8/3.9 Support Dropped:** Time marches on, and so do we! 🕰️ Official support for Python 3.8 and 3.9 has gracefully retired. To keep up with the latest and greatest, the minimum required Python version is now 3.10. Upgrade your Python, upgrade your life!
-*   **CLI Flags Deprecation (--no-cache, --batch, --mode):** Out with the old, in with the streamlined! 👋 We've tidied up the CLI by waving goodbye to the redundant `--no-cache`, the deprecated `--batch`, and the `--mode` arguments. Less clutter, more clarity, and a happier command line!
+*   **Class Renaming:** The `Chunklet` class has been renamed to `PlainTextChunker` for clearer naming. Don't worry about updating your code - our [Migration Guide](migration.md) has you covered!
+*   **Continuation marker:** 📑 Improved the continuation marker logic and exposed its value so you can define your own or disable it entirely.
+*   **Code Chunker Introduction:** We're excited to introduce `CodeChunker`! 🧑‍💻 This new rule-based, language-agnostic chunker provides smart syntax-aware code splitting - perfect for code-related RAG applications.
+*   **Document Chunker Introduction:** We're pleased to introduce `DocumentChunker`! 📄 This robust tool handles a wide variety of file formats including PDF, DOCX, TXT, MD, RST, RTF, TEX, HTML, and EPUB files.
+*   **Expanded Language Support:** ¡Hola! Bonjour! Namaste! 🗣️ We've expanded from 36+ to over 50 languages thanks to our library integrations and smart fallback mechanisms.
+*   **New Constraint Flags:** Added `max_section_breaks` for PlainTextChunker and DocumentChunker, plus `max_lines` for CodeChunker - giving you more precise control over chunking.
+*   **Improved Error Handling:** Added more specific exception types (like `FileProcessingError` and `CallbackError`) and centralized batch error handling for clearer feedback and better control.
+*   **Flexible Batch Error Handling:** The new `on_errors` parameter lets you control what happens when errors occur in batches - you can `raise`, `skip`, or `break` as needed.
+*   **CLI Refactoring:** Streamlined the command-line interface with simplified flags and improved batch processing capabilities for a smoother experience.
+*   **Modularity & Extensibility:** Made the library more modular with a dedicated `SentenceSplitter` and flexible custom splitter registry for easier customization.
+*   **Performance & Memory Optimization:** Significant refactoring with generators for batch methods to drastically reduce memory usage, especially for large documents.
+*   **Caching Strategy Refined:** We've gone lean and mean! ♻️ Removed most in-memory caching to prioritize performance, keeping only `count_tokens` cached.
+*   **Python 3.8/3.9 Support Dropped:** Time marches on, and so do we! 🕰️ Dropped official support for Python 3.8 and 3.9 - minimum version is now 3.10.
+*   **CLI Flags Deprecation (--no-cache, --batch, --mode):** Cleaned up the CLI by removing redundant flags for a simpler interface.
 
 
-## 🗺️ Want to see how far we've come? Check out previous versions!
+## 🗺️ Curious About Our Journey?
 
-For a detailed list of *every single* tweak, fix, and improvement across all versions, including the nitty-gritty details of v2.0.0 and beyond, explore our comprehensive [Changelog](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md). It's like a historical novel, but for code!
+For a complete list of all changes, fixes, and improvements across versions, check out our detailed [Changelog](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md) - it's got all the technical details!

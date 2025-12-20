@@ -4,29 +4,29 @@
   <img src="../../../img/sentence_splitter.jpg?raw=true" alt="Sentence splitter" width="512"/>
 </p>
 
-## The Art of Precise Sentence Splitting
+## The Art of Precise Sentence Splitting ✂️
 
 Let's be honest, simply splitting text by periods can be a bit like trying to perform delicate surgery with a butter knife – it often leads to more problems than solutions! This approach can result in sentences being cut mid-thought, abbreviations being misinterpreted, and a general lack of clarity that can leave your NLP models scratching their heads.
 
 This common challenge in NLP, known as [Sentence Boundary Disambiguation](https://en.wikipedia.org/wiki/Sentence_boundary_disambiguation), is precisely what the `SentenceSplitter` is designed to address.
 
-Imagine the `SentenceSplitter` as a skilled linguistic surgeon. It applies its understanding of grammar and context to make precise cuts, cleanly separating sentences while preserving their original meaning. It's intelligent, multilingual, and an excellent tool for transforming your raw text into a well-structured list of sentences, perfectly prepared for your next NLP endeavor.
+Imagine the `SentenceSplitter` as a skilled linguistic surgeon. It applies its understanding of grammar and context to make precise cuts, cleanly separating sentences while preserving their original meaning. It's intelligent, multilingual, and essential for preparing clean text data for NLP tasks, LLMs, and any application that needs accurate sentence boundaries.
 
-### What's Under the Hood?
+### What's Under the Hood? ⚙️
 
 The `SentenceSplitter` is more than just a basic rule-based tool; it's a sophisticated system packed with powerful features:
 
--  **Multilingual Maestro:** It fluently handles over **50** languages, intelligently detecting the language of your text and applying the most appropriate splitting methods. For a complete overview, check out our [supported languages](../../supported-languages.md) list.
--  **Customizable Genius:** Encounter a unique text format? No problem! You can easily integrate your own custom splitters to manage specific requirements.
--  **Fallback Guardian:** For languages not explicitly covered, a reliable fallback mechanism ensures that sentence splitting is still performed effectively.
--  **Error Detective:** It actively monitors for potential issues, providing clear feedback if any problems arise with your custom splitters.
--  **Punctuation Tamer:** It meticulously refines the output, removing empty sentences and correctly reattaching any misplaced punctuation.
+-  **Multilingual Support 🌍:** Handles over **50** languages with intelligent detection and language-specific splitting methods. Check our [supported languages](../../supported-languages.md) for the full list.
+-  **Custom Splitters 🔧:** Easily integrate your own custom sentence splitting functions for specialized languages or domains.
+-  **Reliable Fallback 🛡️:** For unsupported languages, a robust fallback mechanism ensures effective sentence splitting.
+-  **Error Monitoring 🔍:** Actively monitors for issues and provides clear feedback on custom splitter problems.
+-  **Output Refinement ✨:** Meticulously cleans the output, removing empty sentences and fixing punctuation issues.
 
-### Example Usage
+### Example Usage 
 
 Here's a quick example of how you can use the `SentenceSplitter` to split a block of text into sentences:
 
-```py
+``` py linenums="1"
 from chunklet.sentence_splitter import SentenceSplitter
 
 TEXT = """
@@ -41,11 +41,13 @@ Robots are learning. It's raining. Let's code. Mars is red. Sr. sleep is rare. C
 """
 
 splitter = SentenceSplitter(verbose=True)
-sentences = splitter.split(TEXT, lang="en")
+sentences = splitter.split(TEXT, lang="auto") #(1)!
 
 for sentence in sentences:
     print(sentence)
 ```
+
+1.  **Auto language detection**: Let the splitter automatically detect the language of your text. For best results, specify a language code like `"en"` or `"fr"` directly.
 
 ??? success "Click to show output"
     ```linenums="0"
@@ -73,14 +75,11 @@ for sentence in sentences:
     This is a good year since N.A.S.A. reached 123.4 light year more.
     ```
 
-!!! note
-    While the example above uses English (`en`), the `SentenceSplitter` is a true polyglot! It supports over 50 languages out of the box. You can see the full list of [supported languages](../../supported-languages.md).
-
-### Detecting Top Languages
+### Detecting Top Languages 🎯
 
 Here's how you can detect the top language of a given text using the `SentenceSplitter`:
 
-```py
+``` py linenums="1"
 from chunklet.sentence_splitter import SentenceSplitter
 
 lang_texts = {
@@ -119,68 +118,44 @@ for lang, text in lang_texts.items():
     --------------------
     ```
 
-## Custom Sentence Splitter
+## Custom Sentence Splitter: Your Sentence Splitting Playground 🎨 {#custom-sentence-splitter}
 
-You can provide your own custom sentence splitting functions to Chunklet. This is useful if you have a specialized splitter for a particular language or domain that you want to prioritize over Chunklet's built-in splitters.
+Want to bring your own sentence splitting magic? You can plug in your custom splitter functions to Chunklet! Perfect for specialized languages or domains where you want to prioritize your custom logic over our built-in splitters.
 
-!!! warning "Global Registry: Be Mindful of Side Effects"
-    Custom splitters are registered globally. This means that once you register a splitter, it's available everywhere in your application. Be mindful of potential side effects if you're registering splitters in different parts of your codebase, especially in multi-threaded or long-running applications.
+!!! warning "Global Registry Alert!"
+    Custom splitters get registered globally - once you add one, it's available everywhere in your app. Watch out for side effects if you're registering splitters across different parts of your codebase, especially in multi-threaded or long-running applications!
 
 To use a custom splitter, you leverage the [`@registry.register`](../../reference/chunklet/sentence_splitter/registry.md) decorator. This decorator allows you to register your function for one or more languages directly. Your custom splitter function must accept a single `text` parameter (str) and return a `list[str]` of sentences.
 
-!!! important "Important constraints"
+!!! important "Custom Splitter Rules"
     - Your function must accept exactly one required parameter (the text)
-    - Optional parameters with default values are allowed
-    - The function must return a list of strings
-    - Empty strings in the returned list will be filtered out automatically
-    - Lambda functions are not supported unless you provide a `name` parameter
-    - If an error occurs during the sentence splitting process (e.g., an issue with the custom splitter function), a [`CallbackError`](../../exceptions-and-warnings.md#callbackerror) will be raised
+    - Optional parameters with defaults are totally fine
+    - Must return a list of strings
+    - Empty strings get filtered out automatically
+    - Lambda functions work if you provide a `name` parameter
+    - Errors during splitting will raise a [`CallbackError`](../../exceptions-and-warnings.md#callbackerror)
 
-```py
+#### Basic Custom Splitter
+
+``` py linenums="1" hl_lines="2 5 7-10"
 import re
 from chunklet.sentence_splitter import SentenceSplitter, CustomSplitterRegistry
-
 
 splitter = SentenceSplitter(verbose=False)
 registry = CustomSplitterRegistry()
 
 @registry.register("en", name="MyCustomEnglishSplitter")
-def my_custom_splitter(text: str) -> list[str]:
+def english_sent_splitter(text: str) -> list[str]:
     """A simple custom sentence splitter"""
     return [s.strip() for s in re.split(r'(?<=\\.)\s+', text) if s.strip()]
 
 text = "This is the first sentence. This is the second sentence. And the third."
 sentences = splitter.split(text=text, lang="en")
 
-print("---" + " Sentences using Custom Splitter ---")
+print("--- Sentences using Custom Splitter ---")
 for i, sentence in enumerate(sentences):
     print(f"Sentence {i+1}: {sentence}")
-
-# Example with a custom splitter for multiple languages
-@registry.register("fr", "es", name="MultiLangExclamationSplitter")
-def multi_lang_splitter(text: str) -> list[str]:
-    return [s.strip() for s in re.split(r'(?<=!)\s+', text) if s.strip()]
-
-splitter_multi = SentenceSplitter(verbose=False)
-
-text_fr = "Bonjour! Comment ça va? C'est super. Au revoir!"
-sentences_fr = splitter_multi.split(text=text_fr, lang="fr")
-print("\n--- Sentences using Multi-language Custom Splitter (French) ---")
-for i, sentence in enumerate(sentences_fr):
-    print(f"Sentence {i+1}: {sentence}")
-
-text_es = "Hola. Qué tal? Muy bien! Adiós."
-sentences_es = splitter_multi.split(text=text_es, lang="es")
-print("\n--- Sentences using Multi-language Custom Splitter (Spanish) ---")
-for i, sentence in enumerate(sentences_es):
-    print(f"Sentence {i+1}: {sentence}")
-
-
-# Unregistering Custom Splitters
-registry.unregister("en")            # (1)!
 ```
-
-1.  This will remove the custom splitter associated with the "en" language code. Note that you can unregister multiple languages if you had registered them with the same function: registry.unregister("fr", "es")
 
 ??? success "Click to show output"
     ```linenums="0"
@@ -188,20 +163,30 @@ registry.unregister("en")            # (1)!
     Sentence 1: This is the first sentence.
     Sentence 2: This is the second sentence.
     Sentence 3: And the third.
-
-    --- Sentences using Multi-language Custom Splitter (French) ---
-    Sentence 1: Bonjour!
-    Sentence 2: Comment ça va? C'est super. Au revoir!
-
-    --- Sentences using Multi-language Custom Splitter (Spanish) ---
-    Sentence 1: Hola. Qué tal? Muy bien!
-    Sentence 2: Adiós.
     ```
 
-!!! note "Registering Without the Decorator"
-    If you prefer not to use decorators, you can directly use the `registry.register()` method. This is particularly useful when registering splitters dynamically or when the callback function is not defined in the global scope.
+#### Multi-Language Custom Splitter
 
-```py
+``` py linenums="1"
+@registry.register("fr", "es", name="MultiLangExclamationSplitter")  #(1)!
+def multi_lang_splitter(text: str) -> list[str]:
+    return [s.strip() for s in re.split(r'(?<=!)\s+', text) if s.strip()]
+```
+
+1.  This registers the same custom splitter for both French ("fr") and Spanish ("es") languages.
+
+#### Unregistering Custom Splitters
+
+``` py linenums="1"
+registry.unregister("en")  # (1)!
+```
+
+1.  This will remove the custom splitter associated with the "en" language code. Note that you can unregister multiple languages if you had registered them with the same function: `registry.unregister("fr", "es")`
+
+!!! note "Skip the Decorator?"
+    Not a fan of decorators? No worries - you can directly use the `registry.register()` method. Super handy for dynamic registration or when your callback function isn't in the global scope.
+
+    ``` py linenums="1"
     from chunklet.sentence_splitter import CustomSplitterRegistry
 
     registry = CustomSplitterRegistry()
@@ -212,8 +197,8 @@ registry.unregister("en")            # (1)!
     registry.register(my_other_splitter, "jp", name="MyOtherSplitter")
     ```
 
-!!! tip "Building from Scratch: Leveraging BaseSplitter"
-    If you're looking to implement a sentence splitter entirely from scratch or integrate a highly custom logic, consider inheriting directly from the `BaseSplitter` abstract class. This provides a clear interface (`def split(self, text: str, lang: str) -> list[str]`) that your custom class must implement, ensuring compatibility with Chunklet's architecture. You can then pass an instance of your custom splitter to the `PlainTextChunker` ([documentation](plain_text_chunker.md)) or `DocumentChunker` ([documentation](document_chunker.md)) during their initialization.
+!!! tip "Want to Build from Scratch?"
+    Going full custom? Inherit from the `BaseSplitter` abstract class! It gives you a clear interface (`def split(self, text: str, lang: str) -> list[str]`) to implement. Your custom splitter will then work seamlessly with `PlainTextChunker` ([docs](plain_text_chunker.md)) or `DocumentChunker` ([docs](document_chunker.md)).
 
 ### [`CustomSplitterRegistry`](../../reference/chunklet/sentence_splitter/registry.md) Methods Summary
 
@@ -225,4 +210,4 @@ registry.unregister("en")            # (1)!
 *   `split(text: str, lang: str)`: Processes a text using a splitter registered for the given language, returning a list of sentences and the name of the splitter used.
 
 ??? info "API Reference"
-    For a deep dive into the `SentenceSplitter` class, its methods, and all the nitty-gritty details, check out the full [API documentation](../../reference/chunklet/sentence_splitter/sentence_splitter.md).
+    For complete technical details on the `SentenceSplitter` class, check out the [API documentation](../../reference/chunklet/sentence_splitter/sentence_splitter.md).

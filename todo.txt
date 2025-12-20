@@ -1,33 +1,9 @@
-# documentation
-- highlight code line in docs
-
-# next version
-- add support for csv, excel and eml files in subquent version
-- add support for odf with odfpy
-
-```python
-from odf.opendocument import load
-from odf import text
-
-doc = load("my document.odt")
-
-for paragraph in doc.getElementsByType(text.P):
-    print (paragraph.getAttribute('style name'))
-``
+- dont make warning conditional
 
 # what we have done
-- fix a bug in cli.py
 
-by changing
-# Split Logic
-splitter = SentenceSplitter(verbose=verbose)
-sentences, confidence = splitter.split(input_text, lang=lang)
-
-to
-# Split Logic
-splitter = SentenceSplitter(verbose=verbose)
-lang_detected, confidence = splitter.detected_top_language(input_text)
-sentences = splitter.split(input_text, lang=lang or lang_detected)
-
-
-# done, not yet changelog
+- Fixed bug in `CodeChunker._split_oversized()` where lines exceeding limits were skipped during chunk creation.
+- readded support for python 3.9
+- added missing lang params in visualizer
+- update documentation fullier
+- ensure code cleaning and quality

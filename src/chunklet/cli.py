@@ -6,13 +6,29 @@ from pathlib import Path
 from enum import Enum
 import subprocess
 import shlex
+import socket
 from importlib.metadata import version, PackageNotFoundError
 
 from chunklet.sentence_splitter import SentenceSplitter
 from chunklet.plain_text_chunker import PlainTextChunker
-from chunklet.document_chunker import DocumentChunker
-from chunklet.code_chunker import CodeChunker
+
+try:
+    from chunklet.document_chunker import DocumentChunker
+except ImportError:
+    DocumentChunker = None
+
+try:
+    from chunklet.code_chunker import CodeChunker
+except ImportError:
+    CodeChunker = None
+
+try:
+    from chunklet.visualizer import Visualizer
+except ImportError:
+    Visualizer = None
+
 from chunklet.common.path_utils import is_path_like
+
 
 try:
     __version__ = version("chunklet-py")
@@ -40,12 +56,13 @@ class DocstringMode(str, Enum):
 
 app = typer.Typer(
     name="chunklet",
-    help="A comprehensive library for advanced text, code, and document chunking, designed for LLM applications. It offers flexible, context-aware segmentation across various content types.",
+    help="Advanced text, code, and document chunking for LLM applications. Split content semantically, visualize chunks interactively, and process multiple file formats with flexible, context-aware segmentation.",
     rich_help_panel=True,
+    add_completion=False,
 )
 
 
-def create_external_tokenizer(command_str: str):
+def _create_external_tokenizer(command_str: str):
     command_list = shlex.split(command_str)
 
     def external_tokenizer(text):
@@ -64,6 +81,141 @@ def create_external_tokenizer(command_str: str):
             sys.exit(1)
 
     return external_tokenizer
+
+
+def _check_port_available(host: str, port: int) -> bool:
+    """Check if a port is available on the given host."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)
+            result = s.connect_ex((host, port))
+            return result != 0  # 0 means connection successful (port in use)
+    except Exception:
+        return False
+
+
+def _extract_files(source: Optional[List[Path]]) -> List[Path]:
+    """Extract and validate file paths from the source list."""
+    file_paths = []
+
+    for path in source:
+        path = path.resolve()
+
+        if is_path_like(str(path)):
+            if path.is_file():
+                file_paths.append(path)
+            elif path.is_dir():
+                file_paths.extend([p for p in path.glob("**/*") if p.is_file()])
+            else:
+                # This single 'else' catches paths that pass the heuristic but
+                # either don't exist OR exist but are special file types
+                # (e.g., pipes, sockets, broken symlinks, etc.)
+                typer.echo(
+                    f"Warning: '{path}' is path-like but was not found "
+                    "or is not a processable file/directory. Skipping.",
+                    err=True,
+                )
+        else:
+            # Fails the path-like regex heuristic check
+            typer.echo(
+                f"Warning: '{path}' does not resemble a valid file system path "
+                "(failed heuristic check). Skipping.",
+                err=True,
+            )
+
+    if not file_paths:
+        typer.echo(
+            "Warning: No processable files found in the specified source(s). Exiting.",
+            err=True,
+        )
+        raise typer.Exit(code=0)
+
+    return file_paths
+
+
+def _write_chunks(chunks, destination: Path, metadata: bool):
+    """Write chunks to a destination (file as JSON or directory as separate files)."""
+    if destination.suffix == ".json" or destination.is_file():
+        # Write as JSON
+        if destination.suffix != ".json":
+            typer.echo(
+                f"Warning: Writing to a non-JSON file extension '{destination.suffix}'. Output will be JSON format.",
+                err=True,
+            )
+
+        all_chunks = [chunk_box.to_dict() for chunk_box in chunks]
+
+        if not metadata:
+            for chunk_dict in all_chunks:
+                del chunk_dict["metadata"]
+
+        json_str = json.dumps(all_chunks, indent=4)
+        destination.write_text(json_str, encoding="utf-8")
+        typer.echo(
+            f"Successfully wrote {len(all_chunks)} chunks to {destination} as JSON"
+        )
+        return
+
+    # Write to directory
+    destination.mkdir(parents=True, exist_ok=True)
+    total_chunks_written = 0
+    processed_sources = set()
+
+    for chunk_box in chunks:
+        source_name = chunk_box.metadata["source"]
+        base_name = Path(source_name).stem
+
+        base_output_filename = f"{base_name}_chunk_{chunk_box.metadata['chunk_num']}"
+
+        # Write content file
+        output_txt_path = destination / f"{base_output_filename}.txt"
+        with open(output_txt_path, "w", encoding="utf-8") as f:
+            f.write(chunk_box.content + "\n")
+
+        total_chunks_written += 1
+
+        # Write metadata file if requested
+        if metadata:
+            output_json_path = destination / f"{base_output_filename}.json"
+            with open(output_json_path, "w", encoding="utf-8") as f:
+                json.dump(chunk_box.metadata.to_dict(), f, indent=4)
+
+        processed_sources.add(source_name)
+
+    message = (
+        f"Successfully processed {len(processed_sources)} input(s)"
+        f"and wrote {total_chunks_written} chunk file(s) to {destination}"
+    )
+    message += " (with .json metadata files)." if metadata else "."
+    typer.echo(message)
+
+
+def _print_chunks(chunks, destination: Optional[Path], metadata: bool):
+    """Print or write chunks to stdout or a single file."""
+    output_content = []
+
+    chunk_counter = 0
+    for chunk_box in chunks:
+        chunk_counter += 1
+        output_content.append(f"## --- Chunk {chunk_counter} ---")
+        output_content.append(chunk_box.content)
+        output_content.append("")
+        if metadata:
+            chunk_metadata = chunk_box.metadata.to_dict()
+            output_content.append("\n--- Metadata ---")  # Use a sub-header
+
+            for key, value in chunk_metadata.items():
+                # Use clean pipe formatting for terminal style tables
+                output_content.append(f"| {key}: {value}")
+
+            output_content.append("\n")
+
+    output_str = "\n".join(output_content)
+
+    if destination:
+        destination.write_text(output_str, encoding="utf-8")
+    else:
+        typer.echo(output_str)
 
 
 @app.command(name="split", help="Splits text or a single file into sentences.")
@@ -92,9 +244,7 @@ def split_command(
         False, "--verbose", "-v", help="Enable verbose logging."
     ),
 ):
-    """
-    Split text or a single file into sentences using the SentenceSplitter.
-    """
+    """Split text or a single file into sentences"""
     # Validation and Input Acquisition
     provided_inputs = [arg for arg in [text, source] if arg is not None]
 
@@ -285,9 +435,7 @@ def chunk_command(
         help="Include comments in output chunks for CodeChunker. Applies to CodeChunker only.",
     ),
 ):
-    """
-    Chunk text or files based on specified parameters.
-    """
+    """Chunk text or files based on specified parameters."""
     # --- Input validation logic ---
     provided_inputs = [arg for arg in [text, source] if arg]
 
@@ -296,19 +444,11 @@ def chunk_command(
             "Error: No input provided. Please provide a text, or use the --source option.",
             err=True,
         )
-        typer.echo(
-            "💡 Hint: Use 'chunklet --help' for more information and usage examples.",
-            err=True,
-        )
         raise typer.Exit(code=1)
 
     if len(provided_inputs) > 1:
         typer.echo(
             "Error: Please provide either a text string, or use the --source option, but not both.",
-            err=True,
-        )
-        typer.echo(
-            "💡 Hint: Use 'chunklet --help' for more information and usage examples.",
             err=True,
         )
         raise typer.Exit(code=1)
@@ -323,9 +463,7 @@ def chunk_command(
     # --- Tokenizer setup ---
     token_counter = None
     if tokenizer_command:
-        token_counter = create_external_tokenizer(tokenizer_command)
-
-    all_results = []
+        token_counter = _create_external_tokenizer(tokenizer_command)
 
     # Construct chunk_kwargs dynamically
     chunk_kwargs = {
@@ -334,6 +472,14 @@ def chunk_command(
     }
 
     if code:
+        if CodeChunker is None:
+            typer.echo(
+                "Error: CodeChunker dependencies not available.\n"
+                "Please install with: pip install chunklet-py[code]",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+
         chunker_instance = CodeChunker(
             verbose=verbose,
             token_counter=token_counter,
@@ -354,6 +500,14 @@ def chunk_command(
                 token_counter=token_counter,
             )
         else:
+            if DocumentChunker is None:
+                typer.echo(
+                    "Error: DocumentChunker dependencies not available.\n"
+                    "Please install with: pip install chunklet-py[document]",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+
             chunker_instance = DocumentChunker(
                 verbose=verbose,
                 token_counter=token_counter,
@@ -374,66 +528,31 @@ def chunk_command(
             text=text,
             **chunk_kwargs,
         )
-        all_results.append(chunks)
-
-    elif source:
-        file_paths = []
-
-        for path in source:
-            path = path.resolve()
-
-            if is_path_like(str(path)):
-                if path.is_file():
-                    file_paths.append(path)
-                elif path.is_dir():
-                    file_paths.extend([p for p in path.glob("**/*") if p.is_file()])
-                else:
-                    # This single 'else' catches paths that pass the heuristic but
-                    # either don't exist OR exist but are special file types
-                    # (e.g., pipes, sockets, broken symlinks, etc.)
-                    typer.echo(
-                        f"Warning: '{path}' is path-like but was not found "
-                        "or is not a processable file/directory. Skipping.",
-                        err=True,
-                    )
-            else:
-                # Fails the path-like regex heuristic check
-                typer.echo(
-                    f"Warning: '{path}' does not resemble a valid file system path "
-                    "(failed heuristic check). Skipping.",
-                    err=True,
-                )
-
-        if not file_paths:
-            typer.echo(
-                "Warning: No processable files found in the specified source(s). Exiting.",
-                err=True,
-            )
-            raise typer.Exit(code=0)
+    else:
+        file_paths = _extract_files(source)
 
         if len(file_paths) == 1 and file_paths[0].suffix not in {
-            ".pdf",
-            ".epub",
             ".docx",
+            ".epub",
+            ".pdf",
+            ".odt",
         }:
             single_file = file_paths[0]
             chunks = chunker_instance.chunk(
                 path=single_file,
                 **chunk_kwargs,
             )
-            all_results.append(chunks)
         else:
             # Batch input logic
-            all_results_gen = chunker_instance.batch_chunk(
+            chunks = chunker_instance.batch_chunk(
                 paths=file_paths,
                 n_jobs=n_jobs,
                 show_progress=True,
                 on_errors=on_errors,
                 **chunk_kwargs,
             )
-            all_results.append(all_results_gen)
 
-    if not all_results:
+    if not chunks:
         typer.echo(
             "Warning: No chunks were generated. "
             "This might be because the input was empty or did not contain any processable content.",
@@ -441,89 +560,100 @@ def chunk_command(
         )
         raise typer.Exit(code=0)
 
-    # --- Output handling ---
+    if destination:
+        _write_chunks(chunks, destination, metadata)
+    else:
+        _print_chunks(chunks, destination, metadata)
 
-    # Check for conflict: multi-input requires directory destination
-    if destination and destination.is_file():
+
+@app.command(
+    name="visualize",
+    help="Start the web-based chunk visualizer interface for interactive text and code chunking.",
+)
+def visualize_command(
+    host: str = typer.Option(
+        "127.0.0.1",
+        "--host",
+        help="Host IP to bind the visualizer server. (default: 127.0.0.1)",
+    ),
+    port: int = typer.Option(
+        8000,
+        "--port",
+        "-p",
+        help="Port number to run the visualizer server. (default: 8000)",
+    ),
+    tokenizer_command: Optional[str] = typer.Option(
+        None,
+        "--tokenizer-command",
+        help=(
+            "A shell command to use for token counting in the visualizer. "
+            "The command should take text as stdin and output the token count as a number."
+        ),
+    ),
+    headless: bool = typer.Option(
+        False,
+        "--headless",
+        help="Run visualizer in headless mode (don't open browser automatically).",
+    ),
+):
+    """
+    Start the web-based chunk visualizer interface for interactive text and code chunking.
+    """
+    if Visualizer is None:
         typer.echo(
-            "Error: When processing multiple inputs, '--destination' must be a directory, not a file.",
+            "Error: Visualization dependencies not available.\n"
+            "Please install with: pip install chunklet-py[visualization]",
             err=True,
         )
         raise typer.Exit(code=1)
 
-    if destination and len(destination):
-        # This is the equivalent of the old `if output_dir:` block
-        destination.mkdir(parents=True, exist_ok=True)
-        total_chunks_written = 0
-        processed_sources = set()
-
-        for res in all_results:
-            for chunk_box in res:
-                source_name = chunk_box.metadata["source"]
-                base_name = Path(source_name).stem
-
-                base_output_filename = (
-                    f"{base_name}_chunk_{chunk_box.metadata['chunk_num']}"
-                )
-
-                # Write content file
-                output_txt_path = destination / f"{base_output_filename}.txt"
-                with open(output_txt_path, "w", encoding="utf-8") as f:
-                    f.write(chunk_box.content + "\n")
-
-                total_chunks_written += 1
-
-                # Write metadata file if requested
-                if metadata:
-                    output_json_path = destination / f"{base_output_filename}.json"
-                    with open(output_json_path, "w", encoding="utf-8") as f:
-                        # Ensures metadata is a standard dict before dumping
-                        data_to_dump = (
-                            chunk_box.metadata.to_dict()
-                            if hasattr(chunk_box.metadata, "to_dict")
-                            else dict(chunk_box.metadata)
-                        )
-                        json.dump(data_to_dump, f, indent=4)
-
-                processed_sources.add(source_name)
-
-        message = (
-            f"Successfully processed {len(processed_sources)} input(s)"
-            f"and wrote {total_chunks_written} chunk file(s) to {destination}"
+    # Check if port is available
+    url = f"http://{host}:{port}"
+    if not _check_port_available(host, port):
+        typer.echo(f"Error: Port {port} is already in use on {host}", err=True)
+        typer.echo("Options:", err=True)
+        typer.echo(f"  1. Stop the process currently occupying {url}", err=True)
+        typer.echo(
+            "  2. Use a different port: chunklet visualize --port <different_port>",
+            err=True,
         )
-        if metadata:
-            message += " (with .json metadata files)."
-        else:
-            message += "."
-        typer.echo(message)
+        typer.echo(
+            "  3. Find the PID:\n"
+            f"     - Linux: 'ss -tunlp | grep :{port}' or 'fuser {port}/tcp'\n"
+            f"     - Windows: 'netstat -ano | findstr :{port}'\n"
+            f"     - Mac: 'lsof -i :{port}'",
+            err=True,
+        )
+        raise typer.Exit(code=1)
 
-    else:
-        # This is the equivalent of the old `else:` block (stdout or single output_file)
-        output_content = []
+    # Create token counter if tokenizer command provided
+    token_counter = None
+    if tokenizer_command:
+        token_counter = _create_external_tokenizer(tokenizer_command)
 
-        chunk_counter = 0
-        for res in all_results:
-            for chunk_box in res:
-                chunk_counter += 1
-                output_content.append(f"## --- Chunk {chunk_counter} ---")
-                output_content.append(chunk_box.content)
-                output_content.append("")
-                if metadata:
-                    chunk_metadata = chunk_box.metadata.to_dict()
-                    output_content.append("\n--- Metadata ---")  # Use a sub-header
+    # Start the visualizer
+    visualizer = Visualizer(host=host, port=port, token_counter=token_counter)
 
-                    for key, value in chunk_metadata.items():
-                        # Use clean pipe formatting for terminal style tables
-                        output_content.append(f"| {key}: {value}")
+    typer.echo("Starting Chunklet Visualizer...")
+    typer.echo(f"URL: {url}")
+    typer.echo("Press Ctrl+C to stop the server")
 
-                    output_content.append("\n")
+    if not headless:
+        import webbrowser
 
-        output_str = "\n".join(output_content)
+        try:
+            webbrowser.open(url)
+            typer.echo("Opened in default browser")
+        except Exception as e:
+            typer.echo(f"Could not open browser: {e}", err=True)
 
-        if destination:
-            destination.write_text(output_str, encoding="utf-8")
-        else:
-            typer.echo(output_str)
+    try:
+        visualizer.serve()
+    except KeyboardInterrupt:
+        typer.echo("\nVisualizer stopped.")
+    except Exception as e:
+        typer.echo(f"Error starting visualizer: {e}", err=True)
+        raise typer.Exit(code=1)
 
 
 @app.callback(invoke_without_command=True)
