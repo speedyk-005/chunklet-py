@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.1.1] - 2025-12-20
+## [2.1.1] - 2025-12-21
 
 ### Fixed
 - **Visualizer Static Files:** Fixed critical issue where the Chunk Visualizer static files (CSS, JS, HTML) were not being included in the PyPI package distribution, causing `RuntimeError: Directory does not exist` when running `chunklet visualize`. Added proper package data configuration to include `visualizer/static/*` files in the distribution.
