@@ -1,6 +1,6 @@
 [project]
 name = "chunklet-py"
-version = "2.1.0"
+version = "2.1.1"
 description = "Advanced text, code, and document chunking for LLM applications. Split content semantically, visualize chunks interactively, and process multiple file formats with flexible, context-aware segmentation."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
@@ -132,6 +132,10 @@ packages = [
     "chunklet.sentence_splitter",
     "chunklet.visualizer",
 ]
+include-package-data = true
+
+[tool.setuptools.package-data]
+chunklet = ["visualizer/static/*", "visualizer/static/**/*"]
 
 [tool.pytest.ini_options]
 minversion = "7.4"

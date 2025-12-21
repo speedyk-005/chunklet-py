@@ -1,6 +1,14 @@
 !!! info "What's on This Page"
     This page highlights the **big features and major changes** for each version. For all the nitty-gritty details, bug fixes, and technical improvements, check out our [full changelog](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md).
 
+## What's New in Chunklet v2.1.1! 🐛
+
+### 🐛 Critical Bug Fix in v2.1.1
+
+*   **Visualizer Static Files Issue:** 🚨 **CRITICAL** - Fixed a breaking bug where the Chunk Visualizer static files (CSS, JS, HTML) were missing from the PyPI package distribution. This caused `RuntimeError: Directory does not exist` when running `chunklet visualize`. The visualizer now works correctly after installation!
+
+---
+
 ## What's New in Chunklet v2.1.0! 🎉
 
 ### ✨ Major Features in v2.1.0
