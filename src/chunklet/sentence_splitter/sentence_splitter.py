@@ -91,7 +91,7 @@ class SentenceSplitter(BaseSplitter):
         self.custom_splitter_registry = CustomSplitterRegistry()
         self.fallback_splitter = FallbackSplitter()
 
-        # Create a normalized identifier for langid
+        # Create a normalized identifier for language detection
         self.identifier = LanguageIdentifier.from_pickled_model(
             MODEL_FILE, norm_probs=True
         )
@@ -182,7 +182,6 @@ class SentenceSplitter(BaseSplitter):
             if self.verbose:
                 logger.info("Using registered splitter: {}", splitter_name)
         else:
-            # Find and use the appropriate handler
             sentences = None
             for lang_set, handler in self.LANGUAGE_HANDLERS.items():
                 if lang in lang_set:
@@ -197,7 +196,6 @@ class SentenceSplitter(BaseSplitter):
                 )
                 sentences = self.fallback_splitter.split(text)
 
-        # Apply post-processing filter
         processed_sentences = self._filter_sentences(sentences)
 
         if self.verbose:
