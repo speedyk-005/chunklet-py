@@ -1,6 +1,4 @@
-from __future__ import annotations
 import regex as re
-from typing import List
 from chunklet.sentence_splitter.terminators import GLOBAL_SENTENCE_TERMINATORS
 
 
@@ -46,7 +44,7 @@ class FallbackSplitter:
             re.VERBOSE | re.UNICODE,
         )
 
-    def split(self, text: str) -> List[str]:
+    def split(self, text: str) -> list[str]:
         """
         Splits text into sentences using rule-based regex patterns.
 
@@ -54,7 +52,7 @@ class FallbackSplitter:
             text (str): The input text to be segmented into sentences.
 
         Returns:
-            List[str]: A list of sentences after segmentation.
+            list[str]: A list of sentences after segmentation.
 
         Notes:
             - Normalizes numbered lists during splitting and restores them afterward.
@@ -85,7 +83,7 @@ class FallbackSplitter:
         ]
 
 
-# ===== Example usage =====
+# Example usage
 if __name__ == "__main__":  # pragma: no cover
     import textwrap
 
