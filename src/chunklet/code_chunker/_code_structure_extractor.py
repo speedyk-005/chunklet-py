@@ -163,9 +163,9 @@ class CodeStructureExtractor:
 
         indent = match.group(1)
         raw_doc = match.group(0)
-        prefix = re.match(r"^\s*(//[/!])\s*", raw_doc).group(1)
+        prefix = re.match(r"^\s*(//[/!]|%%|##)\s*", raw_doc).group(1)
 
-        # Remove leading '///' or '//!' and optional spaces at start of each line
+        # Remove leading '///' '%%', '##' or '//!' and optional spaces at start of each line
         clean_doc = re.sub(rf"(?m)^\s*{prefix}\s*", "", raw_doc)
         try:
             # Try parsing it as XML
@@ -336,7 +336,7 @@ class CodeStructureExtractor:
         self,
         curr_struct: list[CodeLine],
         snippet_dicts: list[dict],
-        buffer: dict[list],
+        buffer: dict[str, list],
     ) -> None:
         """
         Consolidate the current structure and any buffered content into a Box and append it to snippet_boxes.
@@ -346,7 +346,7 @@ class CodeStructureExtractor:
                 where each element is a tuple containing:
                 (line_number, line_content, indent_level, func_partial_signature).
             snippet_boxes (list[Box]): The list to which the newly created Box will be appended.
-            buffer (dict[list]): Buffer for intermediate processing (default: empty list).
+            buffer (dict[str, list]): Buffer for intermediate processing (default: empty list).
         """
         if not curr_struct:
             return
@@ -383,7 +383,7 @@ class CodeStructureExtractor:
         line_no: int,
         matched: re.Match,
         indent_level: int,
-        buffer: dict[list],
+        buffer: dict,
         state: dict,
     ):
         """
@@ -394,7 +394,7 @@ class CodeStructureExtractor:
             line_no (int): The number of the line based on one index.
             indent_level (int):
             matched(re.Match): Regex match object for the annotated line.
-            buffer (dict[list]): Buffer for intermediate processing.
+            buffer (dict): Buffer for intermediate processing.
             state (dict): The state dictionary that holds info about current structure, last indentation level,
                 function scope, and the snippet dicts (extracted blocks).
         """
@@ -417,7 +417,7 @@ class CodeStructureExtractor:
         self,
         line: str,
         indent_level: int,
-        buffer: dict[list],
+        buffer: dict,
         state: dict,
         source: str | Path,
         func_start: str | None = None,
@@ -428,7 +428,7 @@ class CodeStructureExtractor:
         Args:
             line (str): The annotated line detected.
             indent_level (int):
-            buffer (dict[list]): Buffer for intermediate processing.
+            buffer (dict): Buffer for intermediate processing.
             state (dict): The state dictionary that holds info about current structure, last indentation level,
                 function scope, and the snippet dicts (extracted blocks).
             source (str | Path): Raw code string or Path to source file.

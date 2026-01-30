@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.2.0] - 2026-01-30
+
+### Added
+## [2.2.0] - 2026-01-30
+
+### Added
+- **Expanded CodeChunker Patterns**: 
+  - Added single-line comment patterns for **Forth** (`\|`).
+  - Added support for **PHP 8 attributes** (`#[...]`) and **VB.NET metadata** (`<...>`).
+  - Added `export` to namespace declarations and `component` to function modifiers for **ColdFusion** compatibility.
+  - Added support for **Pascal-style** `BEGIN` and `END` (case-insensitive) as block delimiters.
+  - Added open curly bracket in the function pattern to support more languages. 
+
+### Changed
+- **CodeChunker Pattern Logic**:
+  - Refactored `METADATA` regex to use recursive sub-routines, enabling proper handling of nested parentheses.
+  - Reclassified **Nim** (`##`) and **Erlang** (`%%`) documentation comments as Style 2 line-prefixed comments for better chunk cohesion.
+
+---
+
 ## [2.1.1] - 2025-12-21
 
 ### Fixed
