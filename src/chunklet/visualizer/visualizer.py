@@ -1,6 +1,5 @@
 import os
 import json
-import tempfile
 import traceback
 import mimetypes
 from typing import Callable
@@ -153,7 +152,9 @@ class Visualizer:
             )
 
         # Saved as txt file since they are all plaintext anyway
-        async with aiofiles.tempfile.NamedTemporaryFile(mode="wb", suffix=".txt", delete=False) as tmp:
+        async with aiofiles.tempfile.NamedTemporaryFile(
+            mode="wb", suffix=".txt", delete=False
+        ) as tmp:
             content = await file.read()
             await tmp.write(content)
             tmp_path = tmp.name

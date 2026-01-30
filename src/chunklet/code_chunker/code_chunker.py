@@ -269,12 +269,12 @@ class CodeChunker(BaseChunker):
             limits.append(f"lines: {box_lines} > {max_lines}")
         if max_functions != sys.maxsize:
             limits.append(f"functions: {function_count} > {max_functions}")
-        
+
         return (
             f"Limits: {', '.join(limits)}\n"
-            f"Content starting with: \n```\n{content_preview}...\n```" 
+            f"Content starting with: \n```\n{content_preview}...\n```"
         )
-        
+
     def _group_by_chunk(
         self,
         snippet_dicts: list[dict],
