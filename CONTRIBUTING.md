@@ -1,17 +1,17 @@
 # Contributing to Chunklet
 
-First and foremost, thank you for considering contributing to Chunklet! We appreciate the time and effort you are willing to invest. Every contribution, whether it's a bug report, a new feature, or a documentation update, helps make Chunklet better for everyone.
+Hey there! Thanks for thinking about contributing to Chunklet. We really appreciate any help you can give, whether it's fixing a bug, adding a new feature, or improving documentation. Every bit helps make this project better for everyone.
 
 ## Getting Started
 
-1.  **Clone the repository:**
+1. **Clone the repository:**
 
     ```bash
     git clone https://github.com/speedyk-005/chunklet-py.git
     cd chunklet-py
     ```
 
-2.  **Install dependencies:** It is recommended to use a virtual environment.
+2. **Install dependencies:** We recommend using a virtual environment.
 
     ```bash
     python -m venv .venv
@@ -26,48 +26,68 @@ First and foremost, thank you for considering contributing to Chunklet! We appre
 
 ## Making Changes
 
-1.  **Create a new branch:**
+1. **Create a new branch:** Use descriptive names like `feature/my-feature-branch` or `bugfix/issue-number-description`
 
     ```bash
-    git checkout -b my-feature-branch
+    git checkout -b feature/my-feature-branch
     ```
 
-2.  **Write your code:** Make your changes and ensure they follow the project's coding style.
+2. **Write your code:** Make your changes and ensure they follow the project's coding style.
 
-3.  **Run tests:** Make sure all tests pass before submitting a pull request.
+3. **Run tests:** Make sure all tests pass before submitting a pull request.
 
     ```bash
     pytest
     ```
 
-4.  **Format your code:** This project uses `black` for code formatting. Please run it before committing your changes.
+4. **Format and lint your code:** This project uses `ruff` for code formatting and linting. Run it before committing your changes.
 
     ```bash
-    black .
+    ruff format
+    ruff check --fix
     ```
 
-5.  **Lint your code:** This project uses `flake8` for linting. Please run it before committing your changes.
-
-    ```bash
-    flake8 src/ tests/
-    ```
-
-6.  **Build documentation (if you've made docs changes):** This project uses MkDocs for documentation. Test your changes by building the docs.
+5. **Build documentation (if you've made docs changes):** This project uses MkDocs for documentation. Test your changes by building the docs.
 
     ```bash
     pip install -e ".[docs]"
     ./build_docs.sh
     ```
 
+## Pull Request Template
+
+We'd love to see a quick summary of what your PR does. Just a few sentences about what problem it solves and how it works.
+
+### Summary
+
+Brief description of what this PR accomplishes.
+
+### Changes
+
+- List of specific changes made
+- What problems this solves
+- How it impacts existing functionality
+
+### Testing
+
+- Tests added or modified
+- Manual testing performed
+- Any edge cases covered
+
+### Related Issues
+
+- Fixes #issue-number
+- Addresses #issue-number
+  
 ## Coding Style Guidelines
 
 ### Method Ordering
 
-Chunklet follows a **logical, hierarchical method ordering style** to maintain code readability and consistency:
+Chunklet follows a logical, hierarchical method ordering style to keep things readable and consistent:
 
 1. **Class Docstring** - Comprehensive documentation at the top
 2. **Class Constants/Attributes** - Static configuration (e.g., `BUILTIN_SUPPORTED_EXTENSIONS`)
-3. **`__init__` Method** - Constructor always first after constants
+3. **`__init__` Method** - Constructor always first after constants  
 4. **Properties** - `@property` decorators and setters (if any)
 5. **Private Methods** (`def _method`) - Helper/internal methods in logical execution order
 6. **Public Methods** (`def method`) - Main API methods at the end
@@ -98,17 +118,35 @@ class ExampleClass:
         pass
 ```
 
-**Rationale:** This ordering follows the object lifecycle (init → helpers → public API) and makes the public interface easily discoverable while keeping implementation details organized.
+**Rationale:** This ordering follows the object lifecycle (init -> helpers -> public API) and keeps implementation details organized while making the public interface easy to find.
+
+### Docstring Standards
+
+All public methods and classes should include docstrings following the **Google Python Style Guide**. Private methods can have docstrings if they're helpful.
+
+For docstring format, please follow the Google style as outlined in:
+
+- [Google Python Style Guide - Comments and Docstrings](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
+- [Google Style Example](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html)
+
+This ensures consistency across the codebase and makes documentation more predictable for users and contributors.
+
+### Code Quality Tools
+
+We use **Ruff** for linting and formatting, which provides:
+- Faster feedback cycles (10-100x faster than previous tools)
+- Unified linting and formatting in a single tool
+- Better Python 3.12+ support
 
 ## Submitting a Pull Request
 
-When you are ready to submit your pull request, please ensure you have done the following:
+When you're ready to submit your pull request, here's what we need:
 
--   Provided a clear and descriptive title for your pull request.
--   Included a summary of the changes and why they are being made.
--   Referenced any related issues in the pull request description (e.g., "Fixes #123").
--   Confirmed that all tests pass.
+- Clear and descriptive title for your pull request
+- Summary of what changes you made and why
+- Links to any related issues (e.g., "Fixes #123")
+- Confirmation that all tests pass
 
 ## Code of Conduct
 
-Look, we're all adults here trying to build cool software together. Be nice, don't be a jerk, respect different opinions, and remember that behind every GitHub profile is a human being who probably has better things to do than deal with your nonsense. If you can't contribute without making the experience miserable for others, maybe try contributing to a different project instead. We're here to code, not to psychoanalyze each other's life choices. Keep it professional, keep it civil, and we'll all get along just fine.
+We're all adults here trying to build cool software together. Be nice, don't be a jerk, respect different opinions, and remember that behind every GitHub profile is a human being who probably has better things to do than deal with your nonsense. If you can't contribute without making the experience miserable for others, maybe try contributing to a different project instead. We're here to code, not to psychoanalyze each other's life choices. Keep it professional, keep it civil, and we'll all get along just fine.

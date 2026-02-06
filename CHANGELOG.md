@@ -7,10 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.2.0] - 2026-01-30
-
-### Added
-## [2.2.0] - 2026-01-30
+## [2.2.0] - 2026-02-06
 
 ### Added
 - **Expanded CodeChunker Patterns**: 
@@ -18,12 +15,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added support for **PHP 8 attributes** (`#[...]`) and **VB.NET metadata** (`<...>`).
   - Added `export` to namespace declarations and `component` to function modifiers for **ColdFusion** compatibility.
   - Added support for **Pascal-style** `BEGIN` and `END` (case-insensitive) as block delimiters.
-  - Added open curly bracket in the function pattern to support more languages. 
+  - Added open curly bracket in the function pattern to support more languages.
+- **Multi-line String Protection**: Added MULTI_LINE_STRING_ASSIGN to prevent the extractor from splitting snippets inside large string blocks or triple-quotes.
 
 ### Changed
 - **CodeChunker Pattern Logic**:
   - Refactored `METADATA` regex to use recursive sub-routines, enabling proper handling of nested parentheses.
   - Reclassified **Nim** (`##`) and **Erlang** (`%%`) documentation comments as Style 2 line-prefixed comments for better chunk cohesion.
+- **Code Extractor Architecture**:
+  - Centralized structural state management within _handle_block_start, moving block_indent_level updates away from annotation handlers to follow SRP.
+  - Refined the indentation "anchor" logic and guard clauses to correctly separate sibling methods while maintaining parent-child relations for nested closures.
+- **Development Tooling**:
+  - Replaced Flake8 + Black with **Ruff** for improved performance and unified tooling
+  - Ruff provides 10-100x faster feedback cycles while maintaining all existing code quality standards
 
 ---
 

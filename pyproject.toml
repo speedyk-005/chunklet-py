@@ -1,6 +1,6 @@
 [project]
 name = "chunklet-py"
-version = "2.1.1"
+version = "2.2.0"
 description = "Advanced text, code, and document chunking for LLM applications. Split content semantically, visualize chunks interactively, and process multiple file formats with flexible, context-aware segmentation."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
@@ -88,9 +88,7 @@ dev = [
   "pytest>=8.3.5",
   "pytest-cov>=6.2.1",
   "pytest-mock>=3.14.1",
-  "black>=25.1.0",
-  "flake8>=7.3.0",
-  "flake8-pyproject>=1.2.3",
+  "ruff>=0.14.14",
 ]
 
 docs = [
@@ -151,32 +149,24 @@ omit = [
     "src/chunklet/cli.py"
 ]
 
-[tool.black]
+[tool.ruff]
+target-version = "py310"
 line-length = 88
-force-exclude = '''
-/(
-      \.eggs         # exclude a few common directories in the
-    | \.git          # root of the project
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | _build
-    | buck-out
-    | build
-    | dist
-  )/
-  | src/chunklet/code_chunker/patterns.py
-'''
 
-[tool.flake8]
-per-file-ignores = [
-    "src/chunklet/__init__.py:F401",
-    "src/chunklet/document_chunker/__init__.py:F401,F403",
-    "src/chunklet/sentence_splitter/__init__.py:F401,F403",
-    "src/chunklet/code_chunker/__init__.py:F401,F403",
-    "src/chunklet/visualizer/__init__.py:F401,F403",
+[tool.ruff.lint]
+# E, W (Flake8), F (Pyflakes), I (Isort), B (Bugbear)
+select = ["E", "F", "I", "W", "B"]
+ignore = ["E501", "E203"]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore unused imports in all __init__.py files
+"src/chunklet/**/__init__.py" = ["F401", "F403"]
+# Disable all linting for the heavy regex file
+"src/chunklet/code_chunker/patterns.py" = ["ALL"]
+
+[tool.ruff.format]
+# Replaces Black exclude logic
+exclude = [
+    ".git", ".venv", "build", "dist",
+    "src/chunklet/code_chunker/patterns.py"
 ]
-extend-ignore = ["E501", "E203"]
-count = true
-exclude = ["src/chunklet/code_chunker/patterns.py"]
