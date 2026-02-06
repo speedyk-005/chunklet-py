@@ -177,6 +177,7 @@ def test_chunking_with_different_constraints(
     # Test for Decorator Separation Bug: ensure decorators stay with their functions
     if max_functions is not None:
         for chunk in chunks:
+            print(chunk)
             # Check for decorator and function patterns in the same chunk
             decorator_pos = chunk.content.find("@")
             function_pos = chunk.content.find("def")
@@ -186,7 +187,7 @@ def test_chunking_with_different_constraints(
                 # decorator must come before the function definition
                 assert (
                     decorator_pos < function_pos
-                ), f"Decorator found after function in chunk: {chunk.content[:100]}..."
+                ), f"Decorator found after function in chunk: {chunk.content}..."
 
 
 # --- Docstring Tests ---

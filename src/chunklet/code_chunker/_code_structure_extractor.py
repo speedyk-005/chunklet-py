@@ -198,7 +198,7 @@ class CodeStructureExtractor:
         return summarized_line_content + "\n" * padding_count
 
     def _preprocess(
-        self, code: str, include_comments: bool, docstring_mode: str = "all"
+        self, source_code: str, include_comments: bool, docstring_mode: str = "all"
     ) -> tuple[str, tuple[int, ...]]:
         """
         Preprocess the code before extraction.
@@ -209,7 +209,7 @@ class CodeStructureExtractor:
           - Annotate comments, docstrings, and annotations for later detection
 
         Args:
-            code (str): Source code to preprocess.
+            source_code (str): Source code to preprocess.
             include_comments (bool): Whether to include comments in output.
             docstring_mode (str): How to handle docstrings.
 
@@ -221,32 +221,32 @@ class CodeStructureExtractor:
         # Call at first to preserve span accurary befire any altering
         # Pad with 0 so cumulative_lengths[line_number - 1] == start_char_offset
         cumulative_lengths = (0,) + tuple(
-            accumulate(len(line) for line in code.splitlines(keepends=True))
+            accumulate(len(line) for line in source_code.splitlines(keepends=True))
         )
 
         # Remove comments if not required
         if not include_comments:
-            code = SINGLE_LINE_COMMENT.sub(
-                lambda m: self._replace_with_newlines(m), code
+            source_code = SINGLE_LINE_COMMENT.sub(
+                lambda m: self._replace_with_newlines(m), source_code
             )
-            code = MULTI_LINE_COMMENT.sub(
-                lambda m: self._replace_with_newlines(m), code
+            source_code = MULTI_LINE_COMMENT.sub(
+                lambda m: self._replace_with_newlines(m), source_code
             )
 
         # Process docstrings according to mode
         if docstring_mode == "summary":
-            code = DOCSTRING_STYLE_ONE.sub(
-                lambda m: self._summarize_docstring_style_one(m), code
+            source_code = DOCSTRING_STYLE_ONE.sub(
+                lambda m: self._summarize_docstring_style_one(m), source_code
             )
-            code = DOCSTRING_STYLE_TWO.sub(
-                lambda m: self._summarize_docstring_style_two(m), code
+            source_code = DOCSTRING_STYLE_TWO.sub(
+                lambda m: self._summarize_docstring_style_two(m), source_code
             )
         elif docstring_mode == "excluded":
-            code = DOCSTRING_STYLE_ONE.sub(
-                lambda m: self._replace_with_newlines(m), code
+            source_code = DOCSTRING_STYLE_ONE.sub(
+                lambda m: self._replace_with_newlines(m), source_code
             )
-            code = DOCSTRING_STYLE_TWO.sub(
-                lambda m: self._replace_with_newlines(m), code
+            source_code = DOCSTRING_STYLE_TWO.sub(
+                lambda m: self._replace_with_newlines(m), source_code
             )
         # Else "all": do nothing
 
@@ -261,11 +261,11 @@ class CodeStructureExtractor:
 
         # Apply _annotate_block to all matches for each pattern
         for pattern, tag in patterns_n_tags:
-            code = pattern.sub(
-                lambda match, tag=tag: self._annotate_block(tag, match), code
+            source_code = pattern.sub(
+                lambda match, tag=tag: self._annotate_block(tag, match), source_code
             )
 
-        return code, cumulative_lengths
+        return source_code, cumulative_lengths
 
     def _post_processing(self, snippet_dicts: list[dict]):
         """
@@ -341,6 +341,8 @@ class CodeStructureExtractor:
         """
         Consolidate the current structure and any buffered content into a Box and append it to snippet_boxes.
 
+        It automatically flushs the buffer.
+
         Args:
             curr_struct (list[tuple]): Accumulated code lines and metadata,
                 where each element is a tuple containing:
@@ -357,13 +359,8 @@ class CodeStructureExtractor:
         content = "\n".join(c.content for c in sorted_candidates)
         start_line = sorted_candidates[0].line_number
         end_line = sorted_candidates[-1].line_number
-        indent_level = sorted_candidates[0].indent_level
-
-        # Capture the first func_partial_signature
-        match = next(
-            (c.func_partial_signature for c in curr_struct if c.func_partial_signature),
-            None,
-        )
+        indent_level = next((c.indent_level for c in curr_struct if c.content), 0)
+        func_partial_signature = next((c.func_partial_signature for c in curr_struct if c.func_partial_signature), None)
 
         snippet_dicts.append(
             {
@@ -371,7 +368,7 @@ class CodeStructureExtractor:
                 "indent_level": indent_level,
                 "start_line": start_line,
                 "end_line": end_line,
-                "func_partial_signature": match,
+                "func_partial_signature": func_partial_signature,
             }
         )
         curr_struct.clear()
@@ -382,35 +379,38 @@ class CodeStructureExtractor:
         line: str,
         line_no: int,
         matched: re.Match,
-        indent_level: int,
         buffer: dict,
         state: dict,
     ):
         """
         Handle processing of annotated lines (comments, docstrings, etc.).
 
+        It automatically flushes the current struct if the current line is the only decorator.
+
         Args:
             line (str): The annotated line detected.
             line_no (int): The number of the line based on one index.
-            indent_level (int):
             matched(re.Match): Regex match object for the annotated line.
             buffer (dict): Buffer for intermediate processing.
             state (dict): The state dictionary that holds info about current structure, last indentation level,
                 function scope, and the snippet dicts (extracted blocks).
         """
-        # Flush if DOC buffered lines are not consecutive
+        tag = matched.group(1)
+        deannoted_line = line[: matched.start()] + line[matched.end() :]  # Slice off the annotation
+
+        # Now we can calculate the proper indentation level
+        indent_level = len(deannoted_line) - len(deannoted_line.lstrip())
+
+        print(f"{deannoted_line} - {tag=}")
+        
+        # REMOVED # Flush if it is the first decorator/attribute line
+        # REMOVED # or DOC buffered lines are not consecutive
         if (
-            len(buffer["META"]) == 1  # First decorator/attribute
-            or buffer["DOC"]
-            and buffer["DOC"][-1].line_number != line_no - 1
+            (tag == "META" and not buffer["META"])
+            #REMOVED or (buffer["DOC"] and buffer["DOC"][-1].line_number != line_no - 1)
         ):
             self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
-            state["inside_func"] = False
 
-        tag = matched.group(1)
-        deannoted_line = (
-            line[: matched.start()] + line[matched.end() :]
-        )  # slice off the annotation
         buffer[tag].append(CodeLine(line_no, deannoted_line, indent_level, None))
 
     def _handle_block_start(
@@ -427,40 +427,51 @@ class CodeStructureExtractor:
 
         Args:
             line (str): The annotated line detected.
-            indent_level (int):
+            indent_level (int): The level of indentation detected.
             buffer (dict): Buffer for intermediate processing.
             state (dict): The state dictionary that holds info about current structure, last indentation level,
                 function scope, and the snippet dicts (extracted blocks).
             source (str | Path): Raw code string or Path to source file.
             func_start (str, optional): Line corresponds to a function partial signature
         """
-        namespace_start = NAMESPACE_DECLARATION.match(line)
+        is_namespace = bool(NAMESPACE_DECLARATION.match(line))
+        func_count = sum(1 for l in state["curr_struct"] if l.func_partial_signature)
 
-        if (
-            namespace_start
-            # If decorator/attribute exists in buffer, skip flushing
-            or (func_start and not (state["inside_func"] or buffer["META"]))
-        ):
-            state["last_indent"] = indent_level
+        # Determine if this block (class or func) is nested based on the anchor
+        is_nested = indent_level > state["block_indent_level"]
 
+        if func_start:
+            has_decorators = bool(buffer.get("META"))
+
+            # We need to skip nesled functions or those that have subsequent decorators
+            # because having nesled functions as their own block is clunky
+            # and for functions with subsequent decorators are already handled
+            if is_nested and func_count != 0:
+                return
+                 
+            if has_decorators and func_count == 0:
+                # Set the new anchor for indentation
+                state["block_indent_level"] = indent_level
+                return
+
+        # If it's a namespace but it's indented deeper than our anchor,
+        # we treat it as part of the current block rather than a new top-level flush.
+        if is_namespace and is_nested:
+            return
+            
+        if is_namespace or func_start:
             # If it is a Python code, we can flush everything, else we won't flush the docstring yet
             # This helps including the docstring that is on top of block definition in the other languages
             if state["curr_struct"]:
                 if is_python_code(source):
-                    self._flush_snippet(
-                        state["curr_struct"], state["snippet_dicts"], buffer
-                    )
+                    self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
                 else:
                     doc = buffer.pop("DOC", [])
-                    self._flush_snippet(
-                        state["curr_struct"], state["snippet_dicts"], buffer
-                    )
+                    self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
                     buffer.clear()
                     buffer["doc"] = doc
 
-        # Nestled blocks are not to be extracted
-        if func_start:
-            state["inside_func"] = True
+            state["block_indent_level"] = indent_level
 
     def extract_code_structure(
         self,
@@ -492,8 +503,7 @@ class CodeStructureExtractor:
 
         state = {
             "curr_struct": [],
-            "last_indent": 0,
-            "inside_func": False,
+            "block_indent_level": 0,
             "snippet_dicts": [],
         }
         buffer = defaultdict(list)
@@ -507,7 +517,6 @@ class CodeStructureExtractor:
                 self._handle_annotated_line(
                     line=line,
                     line_no=line_no,
-                    indent_level=indent_level,
                     matched=matched,
                     buffer=buffer,
                     state=state,
@@ -519,6 +528,13 @@ class CodeStructureExtractor:
             func_start = FUNCTION_DECLARATION.match(line)
             func_start = func_start.group(0) if func_start else None
 
+            if not state["curr_struct"]:  # Fresh block
+                state["curr_struct"] = [CodeLine(line_no, line, indent_level, func_start)]
+                state["block_indent_level"] = indent_level
+                continue
+
+            # Block start triggered by functions or namespaces indentification
+            # You might think it is in the wrong place, but it isnt
             self._handle_block_start(
                 line=line,
                 indent_level=indent_level,
@@ -527,32 +543,16 @@ class CodeStructureExtractor:
                 source=source,
                 func_start=func_start,
             )
-
-            if not state["curr_struct"]:  # Fresh block
-                state["curr_struct"] = [
-                    CodeLine(
-                        line_no,
-                        line,
-                        indent_level,
-                        func_start,
-                    )
-                ]
-                continue
-
+           
             if (
                 line.strip()
-                and indent_level <= state["last_indent"]
+                and indent_level <= state["block_indent_level"]
                 and not (OPENER.match(line) or CLOSURE.match(line))
             ):  # Block end
-                self._flush_snippet(
-                    state["curr_struct"], state["snippet_dicts"], buffer
-                )
-                state["last_indent"] = 0
-                state["inside_func"] = False
+                state["block_indent_level"] = indent_level
+                self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
 
-            state["curr_struct"].append(
-                CodeLine(line_no, line, indent_level, func_start)
-            )
+            state["curr_struct"].append(CodeLine(line_no, line, indent_level, func_start))
 
         # Append last snippet
         if state["curr_struct"]:
@@ -560,8 +560,58 @@ class CodeStructureExtractor:
 
         snippet_dicts = self._post_processing(state["snippet_dicts"])
         if self.verbose:
-            logger.info(
-                "Extracted {} structural blocks from source", len(snippet_dicts)
-            )
+            logger.info("Extracted {} structural blocks from source", len(snippet_dicts))
 
         return snippet_dicts, cumulative_lengths
+
+
+PYTHON_CODE = '''
+"""
+Module docstring
+"""
+
+import os
+
+class Calculator:
+    """
+    A simple calculator class.
+
+    A calculator that Contains basic arithmetic operations for demonstration purposes.
+    """
+
+    def __init__(self):
+        self.value = 0
+
+    @property
+    def current_value(self):
+        """Get the current value."""
+        return self.value
+
+    def add(self, x, y):
+        """Add two numbers and return result.
+
+        This is a longer description that should be truncated
+        in summary mode. It has multiple lines and details.
+        """
+        result = x + y
+        return result
+
+    def multiply(self, x, y):
+        # Multiply two numbers
+        return x * y
+
+def standalone_function():
+    """A standalone function."""
+    return True
+'''
+
+if __name__ == "__main__":
+    from pprint import pprint
+
+    extr = CodeStructureExtractor()
+    
+    snippets, _ = extr.extract_code_structure(PYTHON_CODE, True, "all")
+    for s in snippets:
+        pprint(s)
+        print("\n-------\n")
+        
