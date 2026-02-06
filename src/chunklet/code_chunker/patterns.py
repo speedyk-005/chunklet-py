@@ -8,6 +8,7 @@ License: MIT
 This module contains regular expressions for chunking and parsing source code
 across multiple programming languages. The patterns are designed to match:
 
+  - General multiline string
   - Single-line comments (Python, C/C++, Java, JavaScript, Lisp, etc.)
   - Multi-line comments / docstrings (Python, C-style, Ruby, Lisp, etc.)
   - Function or method definitions across various languages
@@ -25,6 +26,22 @@ Note:
 
 import regex as re
 
+
+# --- General multiline string ---
+MULTI_LINE_STRING_ASSIGN = re.compile(
+    r"^(?:[\p{L}\p{N}_]+\s*){1,2}"      # (Optional type hint - e.g c#) + Variable name
+    r"(?:\s*:\s*[^:=]+)?"          # Optional type hint - e.g python
+    r"\s*:?=\s*"             # Assignment sign
+    r"(?:"
+        r"(['\"]{3}).*?\1\s*|"     # """...""" or '''...''' (Python, Julia, GDScript, etc...) 
+        r"\[=?\[.*?\]=?\]\s*|"     # [[ ... ]] or [=[ ... ]=] (Lua, Terra, ...)
+        r"`.*?`\s*|"          # `...` (Go, JS, Ts, Zig, etc...)
+        r'@"\n.*?\n"@\s*|'         # PowerShell @" ... "@ style
+        r"qq?[{\[\(<\|].*?[\}\]\(>\|]\s*|"      # q{ ... }, qq{ ... }, q[ ... ], ... (Perl / Raku)
+        r"<{2,3}(\p{L}+)\n.*?\n\2;?\s*"      # Ruby, PHP heredoc / nowdoc <<<label...label; style 
+    r")$",
+    re.M | re.S
+)
 
 # --- Single-line comments (inline or full-line) ---
 SINGLE_LINE_COMMENT = re.compile(

@@ -23,6 +23,12 @@ PYTHON_CODE = '''
 Module docstring
 """
 
+myVar = """
+    Line 1
+    Line 2
+    Line 3
+"""
+
 import os
 
 class Calculator:
@@ -137,7 +143,7 @@ def chunker():
 @pytest.mark.parametrize(
     "code_string, max_tokens, max_lines, max_functions, expected_num_chunks",
     [
-        (PYTHON_CODE, 40, None, None, 3),
+        (PYTHON_CODE, 40, None, None, 4),
         (CSHARP_CODE, 50, None, None, 2),
         (RUBY_CODE, 40, None, None, 3),
         (PYTHON_CODE, None, 10, None, 5),

@@ -20,6 +20,7 @@ except ImportError:
 from loguru import logger
 
 from chunklet.code_chunker.patterns import (
+    MULTI_LINE_STRING_ASSIGN,
     SINGLE_LINE_COMMENT,
     MULTI_LINE_COMMENT,
     DOCSTRING_STYLE_ONE,
@@ -252,6 +253,7 @@ class CodeStructureExtractor:
 
         # List of all regex patterns with the tag to annotate them
         patterns_n_tags = [
+            (MULTI_LINE_STRING_ASSIGN, "STR"),
             (SINGLE_LINE_COMMENT, "COMM"),
             (MULTI_LINE_COMMENT, "COMM"),
             (DOCSTRING_STYLE_ONE, "DOC"),
@@ -308,7 +310,6 @@ class CodeStructureExtractor:
                 if node_to_detach is not tree_root:
                     node_to_detach.detach()
 
-            # Handle Namespace Declaration
             matched = NAMESPACE_DECLARATION.search(snippet_dict["content"])
             if matched:
                 namespace_name = matched.group(1)
@@ -316,14 +317,13 @@ class CodeStructureExtractor:
                     name=namespace_name, indent_level=snippet_dict["indent_level"]
                 )
 
-            # Handle Partial Function Signature
             if snippet_dict.get("func_partial_signature"):
                 _add_namespace_node(
                     name=snippet_dict["func_partial_signature"].strip(),
                     indent_level=snippet_dict["indent_level"],
                 )
 
-            # Attach the current tree structure as relations
+            # Attach the current tree structure as relation
             snippet_dict["relations"] = list(tree_root.to_relations())
 
         # Normalize newlines in chunk in place
@@ -350,12 +350,15 @@ class CodeStructureExtractor:
             snippet_boxes (list[Box]): The list to which the newly created Box will be appended.
             buffer (dict[str, list]): Buffer for intermediate processing (default: empty list).
         """
-        if not curr_struct:
+        if not (curr_struct or buffer):
             return
 
         candidates = [entry for v in buffer.values() for entry in v] + curr_struct
         sorted_candidates = sorted(candidates, key=lambda x: x.line_number)
 
+        if not sorted_candidates:
+            return
+            
         content = "\n".join(c.content for c in sorted_candidates)
         start_line = sorted_candidates[0].line_number
         end_line = sorted_candidates[-1].line_number
@@ -400,15 +403,8 @@ class CodeStructureExtractor:
 
         # Now we can calculate the proper indentation level
         indent_level = len(deannoted_line) - len(deannoted_line.lstrip())
-
-        print(f"{deannoted_line} - {tag=}")
-        
-        # REMOVED # Flush if it is the first decorator/attribute line
-        # REMOVED # or DOC buffered lines are not consecutive
-        if (
-            (tag == "META" and not buffer["META"])
-            #REMOVED or (buffer["DOC"] and buffer["DOC"][-1].line_number != line_no - 1)
-        ):
+ 
+        if tag == "META" and not buffer["META"]:
             self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
 
         buffer[tag].append(CodeLine(line_no, deannoted_line, indent_level, None))
@@ -436,12 +432,10 @@ class CodeStructureExtractor:
         """
         is_namespace = bool(NAMESPACE_DECLARATION.match(line))
         func_count = sum(1 for l in state["curr_struct"] if l.func_partial_signature)
-
-        # Determine if this block (class or func) is nested based on the anchor
         is_nested = indent_level > state["block_indent_level"]
 
         if func_start:
-            has_decorators = bool(buffer.get("META"))
+            has_decorators = bool(buffer["META"])
 
             # We need to skip nesled functions or those that have subsequent decorators
             # because having nesled functions as their own block is clunky
@@ -450,12 +444,9 @@ class CodeStructureExtractor:
                 return
                  
             if has_decorators and func_count == 0:
-                # Set the new anchor for indentation
                 state["block_indent_level"] = indent_level
                 return
 
-        # If it's a namespace but it's indented deeper than our anchor,
-        # we treat it as part of the current block rather than a new top-level flush.
         if is_namespace and is_nested:
             return
             
@@ -523,11 +514,14 @@ class CodeStructureExtractor:
                 )
                 continue
 
-            # Manage block accumulation
+            if buffer["STR"]:
+                self._flush_snippet([], state["snippet_dicts"], buffer)
+
+            # -- Manage block accumulation logic--
 
             func_start = FUNCTION_DECLARATION.match(line)
             func_start = func_start.group(0) if func_start else None
-
+                
             if not state["curr_struct"]:  # Fresh block
                 state["curr_struct"] = [CodeLine(line_no, line, indent_level, func_start)]
                 state["block_indent_level"] = indent_level
@@ -563,55 +557,3 @@ class CodeStructureExtractor:
             logger.info("Extracted {} structural blocks from source", len(snippet_dicts))
 
         return snippet_dicts, cumulative_lengths
-
-
-PYTHON_CODE = '''
-"""
-Module docstring
-"""
-
-import os
-
-class Calculator:
-    """
-    A simple calculator class.
-
-    A calculator that Contains basic arithmetic operations for demonstration purposes.
-    """
-
-    def __init__(self):
-        self.value = 0
-
-    @property
-    def current_value(self):
-        """Get the current value."""
-        return self.value
-
-    def add(self, x, y):
-        """Add two numbers and return result.
-
-        This is a longer description that should be truncated
-        in summary mode. It has multiple lines and details.
-        """
-        result = x + y
-        return result
-
-    def multiply(self, x, y):
-        # Multiply two numbers
-        return x * y
-
-def standalone_function():
-    """A standalone function."""
-    return True
-'''
-
-if __name__ == "__main__":
-    from pprint import pprint
-
-    extr = CodeStructureExtractor()
-    
-    snippets, _ = extr.extract_code_structure(PYTHON_CODE, True, "all")
-    for s in snippets:
-        pprint(s)
-        print("\n-------\n")
-        
