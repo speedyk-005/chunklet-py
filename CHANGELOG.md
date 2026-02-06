@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added support for **Pascal-style** `BEGIN` and `END` (case-insensitive) as block delimiters.
   - Added open curly bracket in the function pattern to support more languages.
 - **Multi-line String Protection**: Added MULTI_LINE_STRING_ASSIGN to prevent the extractor from splitting snippets inside large string blocks or triple-quotes.
+- **Direct Import Support**: Enhanced lazy loading to support direct imports while maintaining performance optimizations
 
 ### Changed
 - **CodeChunker Pattern Logic**:
