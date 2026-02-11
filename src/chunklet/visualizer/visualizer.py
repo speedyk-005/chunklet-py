@@ -151,17 +151,32 @@ class Visualizer:
                 "with 'pip install 'chunklet-py[visualization]''",
             )
 
-        # Saved as txt file since they are all plaintext anyway
-        async with aiofiles.tempfile.NamedTemporaryFile(
-            mode="wb", suffix=".txt", delete=False
-        ) as tmp:
-            content = await file.read()
-            await tmp.write(content)
-            tmp_path = tmp.name
-
+        content = await file.read()
         encoding = detect(content).get("encoding", "utf-8")
         text = content.decode(encoding, errors="ignore")
         chunker = self.code_chunker if mode == "code" else self.document_chunker
+
+        if mode == "code":
+            # For code mode, use the uploaded file directly with original extension
+
+            _, suffix = os.path.splitext(file.filename)
+            async with aiofiles.tempfile.NamedTemporaryFile(
+                mode="wb",
+                suffix=suffix or "txt",
+                delete=False,
+            ) as tmp:
+                await tmp.write(content)
+                tmp_path = tmp.name
+        else:
+            # For document mode, rewrite as txt file
+            async with aiofiles.tempfile.NamedTemporaryFile(
+                mode="w",
+                suffix=".txt",
+                encoding=encoding,
+                delete=False,
+            ) as tmp:
+                await tmp.write(content.decode("utf-8", errors="ignore"))
+                tmp_path = tmp.name
 
         try:
             chunks = [

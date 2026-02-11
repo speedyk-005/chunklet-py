@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.2.0] - 2026-02-06
 
+### Fixed
+- **Visualizer CSS and Docstring Positioning**:
+  - Fixed docstring positioning issue in visualizer web interface. The issue was caused by forcing `.txt` extension on temporary files, preventing proper Python parsing. Fix preserves original file extensions for code mode.
+  - Optimized chunk span interactions by replacing layout-affecting borders with box-shadows for smooth, non-jumpy hover effects, custom scrollbar styling, and improved overlap visibility with consistent transitions across all states.
+- 
 ### Added
 - **Expanded CodeChunker Patterns**: 
   - Added single-line comment patterns for **Forth** (`\|`).
