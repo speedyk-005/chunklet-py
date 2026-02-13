@@ -358,12 +358,15 @@ class CodeStructureExtractor:
 
         if not sorted_candidates:
             return
-            
+
         content = "\n".join(c.content for c in sorted_candidates)
         start_line = sorted_candidates[0].line_number
         end_line = sorted_candidates[-1].line_number
         indent_level = next((c.indent_level for c in curr_struct if c.content), 0)
-        func_partial_signature = next((c.func_partial_signature for c in curr_struct if c.func_partial_signature), None)
+        func_partial_signature = next(
+            (c.func_partial_signature for c in curr_struct if c.func_partial_signature),
+            None,
+        )
 
         snippet_dicts.append(
             {
@@ -399,12 +402,17 @@ class CodeStructureExtractor:
                 function scope, and the snippet dicts (extracted blocks).
         """
         tag = matched.group(1)
-        deannoted_line = line[: matched.start()] + line[matched.end() :]  # Slice off the annotation
+        deannoted_line = (
+            line[: matched.start()] + line[matched.end() :]
+        )  # Slice off the annotation
 
         # Now we can calculate the proper indentation level
         indent_level = len(deannoted_line) - len(deannoted_line.lstrip())
- 
-        if tag == "META" and not buffer["META"]:
+        
+        first_metadata = tag == "META" and not buffer["META"]
+        consecutive_docstrings = buffer["DOC"] and buffer["DOC"][-1].line_number == line_no - 1
+        
+        if first_metadata or not consecutive_docstrings:
             self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
 
         buffer[tag].append(CodeLine(line_no, deannoted_line, indent_level, None))
@@ -442,23 +450,27 @@ class CodeStructureExtractor:
             # and for functions with subsequent decorators are already handled
             if is_nested and func_count != 0:
                 return
-                 
+
             if has_decorators and func_count == 0:
                 state["block_indent_level"] = indent_level
                 return
 
         if is_namespace and is_nested:
             return
-            
+
         if is_namespace or func_start:
             # If it is a Python code, we can flush everything, else we won't flush the docstring yet
             # This helps including the docstring that is on top of block definition in the other languages
             if state["curr_struct"]:
                 if is_python_code(source):
-                    self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
+                    self._flush_snippet(
+                        state["curr_struct"], state["snippet_dicts"], buffer
+                    )
                 else:
                     doc = buffer.pop("DOC", [])
-                    self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
+                    self._flush_snippet(
+                        state["curr_struct"], state["snippet_dicts"], buffer
+                    )
                     buffer.clear()
                     buffer["doc"] = doc
 
@@ -521,9 +533,11 @@ class CodeStructureExtractor:
 
             func_start = FUNCTION_DECLARATION.match(line)
             func_start = func_start.group(0) if func_start else None
-                
+
             if not state["curr_struct"]:  # Fresh block
-                state["curr_struct"] = [CodeLine(line_no, line, indent_level, func_start)]
+                state["curr_struct"] = [
+                    CodeLine(line_no, line, indent_level, func_start)
+                ]
                 state["block_indent_level"] = indent_level
                 continue
 
@@ -537,16 +551,20 @@ class CodeStructureExtractor:
                 source=source,
                 func_start=func_start,
             )
-           
+
             if (
                 line.strip()
                 and indent_level <= state["block_indent_level"]
                 and not (OPENER.match(line) or CLOSURE.match(line))
             ):  # Block end
                 state["block_indent_level"] = indent_level
-                self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
+                self._flush_snippet(
+                    state["curr_struct"], state["snippet_dicts"], buffer
+                )
 
-            state["curr_struct"].append(CodeLine(line_no, line, indent_level, func_start))
+            state["curr_struct"].append(
+                CodeLine(line_no, line, indent_level, func_start)
+            )
 
         # Append last snippet
         if state["curr_struct"]:
@@ -554,6 +572,8 @@ class CodeStructureExtractor:
 
         snippet_dicts = self._post_processing(state["snippet_dicts"])
         if self.verbose:
-            logger.info("Extracted {} structural blocks from source", len(snippet_dicts))
+            logger.info(
+                "Extracted {} structural blocks from source", len(snippet_dicts)
+            )
 
         return snippet_dicts, cumulative_lengths
