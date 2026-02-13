@@ -196,6 +196,8 @@ h1 {
     border-radius: 8px;
     font-weight: 500;
     box-shadow: 0 2px 4px rgba(108, 99, 255, 0.2);
+    flex: 1;
+    text-align: center;
 }
 
 /* Buttons */
@@ -265,14 +267,13 @@ h1 {
     align-items: center;
 }
 
-
-
-
-
 .button-subtitle {
     font-size: 0.8em;
     color: var(--text-secondary);
     font-weight: 500;
+    text-align: center;
+    margin-bottom: 5px;
+    margin-left: -10%;
 }
 
 /* Text Container */
@@ -286,27 +287,33 @@ h1 {
     white-space: pre-wrap;
     word-wrap: break-word;
     line-height: 1.8;
-    min-height: 200px;
-    max-height: 180vh;
+    min-height: 550px;
+    height: 550px;
     overflow-y: auto;
+    overscroll-behavior: auto;
+    box-sizing: border-box;
+    user-select: none !important;
+    -webkit-user-select: none !important;
 }
 
-/* Custom Scrollbar */
-.text-container::-webkit-scrollbar {
+/* Custom Scrollbar - Global */
+::-webkit-scrollbar {
     width: 8px;
+    height: 8px;
 }
 
-.text-container::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
     background: var(--bg-tertiary);
     border-radius: 4px;
 }
 
-.text-container::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
     background: var(--accent-color);
+    opacity: 0.7;
     border-radius: 4px;
 }
 
-.text-container::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
     background: var(--accent-hover);
 }
 
@@ -315,6 +322,12 @@ h1 {
     color: var(--text-tertiary);
     font-style: italic;
     padding: 40px;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
 }
 
 /* Chunk Spans */
@@ -322,6 +335,7 @@ h1 {
     padding: 2px 1px;
     border-radius: 3px;
     transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    pointer-events: auto;
     cursor: pointer;
     position: relative;
     display: inline;
@@ -348,19 +362,6 @@ h1 {
     background-color: var(--overlap-color) !important;
     box-shadow: inset 0 -2px 0 0 var(--overlap-border);
     transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.chunk-span.selected {
-    background-color: var(--highlight-selected) !important;
-    border-bottom: 2px solid var(--highlight-selected-border);
-    transition: background-color 0.2s ease, border-color 0.2s ease, z-index 0.2s ease;
-    z-index: 10;
-}
-
-.chunk-span.overlap {
-    background-color: var(--overlap-color) !important;
-    border-bottom: 2px solid var(--overlap-border);
-    transition: background-color 0.2s ease, border-color 0.2s ease, z-index 0.2s ease;
     z-index: 5;
 }
 
@@ -465,12 +466,16 @@ h1 {
     padding: 8px 16px;
     border-radius: 20px;
     font-size: 0.85em;
-    display: flex;
+    display: none;
     align-items: center;
     gap: 8px;
     animation: bounce 2s infinite;
     z-index: 1;
     white-space: nowrap;
+}
+
+.scroll-hint.visible {
+    display: flex;
 }
 
 .scroll-hint::after {
@@ -512,11 +517,9 @@ h1 {
 /* ===== Control Panel Styles ===== */
 
 .control-panel {
-    background: var(--bg-secondary);
-    padding: 25px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 8px var(--shadow-color);
+    /* Remove background/shadow since settings-column now handles this */
+    padding: 0;
+    margin-bottom: 0;
 }
 
 .mode-selector {
@@ -775,42 +778,152 @@ h1 {
     .param-label {
         padding-top: 0;
     }
-
-    .card-layout-container {
-        grid-template-columns: 1fr; /* Single column on small screens */
-        padding: 0 15px; /* Add some horizontal padding */
-    }
 }
 
 
 .main-layout-container {
     display: flex;
-    flex-wrap: wrap; /* Allow items to wrap to the next line */
-    gap: 20px; /* Spacing between columns */
-    max-width: 1200px; /* Match the max-width of card-layout-container */
-    margin: 20px auto; /* Center the container */
-    padding: 0 20px; /* Add some padding on the sides */
+    flex-direction: column;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
 }
 
-.left-column {
-    flex: 1; /* Allow left column to grow */
+/* Top Row: Instructions | Upload */
+.top-section {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+}
+
+.top-section .instructions {
+    flex: 2;
+    padding: 12px;
+}
+
+.top-section .upload-section {
+    flex: 1;
+    padding: 12px;
+    aspect-ratio: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.top-section .upload-area {
+    z-index: 2;
+}
+
+.top-section .control-btn {
+    position: relative;
+    z-index: 3;
+}
+
+/* Middle Row: Stats bar (full width) */
+.stats-section {
+    background: var(--bg-secondary);
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.stats-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin-right: 0;
+}
+
+.stats-bar .stats {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.stats-bar .stats .stat {
+    flex: 1;
+}
+
+/* Bottom Row: Settings | Visualization */
+.bottom-section {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+}
+
+.settings-column {
+    flex: 1 0 0;
     min-width: 360px;
+    max-width: 400px;
+    background: var(--bg-secondary);
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .results-section {
-    flex: 2;
-    min-width: 300px;
+    flex: 2 0 0;
+    background: var(--bg-primary);
+    padding: 25px;
+    border-radius: 0;
+    box-shadow: none;
+    min-height: 600px;
+    max-height: 800px;
+    min-width: 500px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
+.results-section .text-container {
+    flex: 1;
+    min-height: 0;
+}
+
+.results-section .generated-info {
+    flex-shrink: 0;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
     .main-layout-container {
-        flex-direction: column; /* Stack columns vertically on small screens */
         padding: 0 15px;
     }
-
-    .left-column, .results-section {
-        min-width: unset; /* Remove min-width constraint on small screens */
-        width: 100%; /* Take full width */
+    
+    .top-section {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .bottom-section {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .stats {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .upload-section {
+        padding: 10px;
+        aspect-ratio: unset;
+        max-width: 300px;
+        align-self: center;
+    }
+    
+    .settings-column {
+        min-width: unset;
+        width: 100%;
     }
 }
 

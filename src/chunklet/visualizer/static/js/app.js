@@ -107,9 +107,13 @@ async function fetchConfigAndSetupUI() {
  * overlap toggling, and modal interactions.
  */
 function setupEventListeners() {
-    addElementListener(elements.browseBtn, 'click', () => elements.fileInput.click());
+    addElementListener(elements.browseBtn, 'click', (e) => {
+        e.stopPropagation(); // Prevent bubbling to upload area
+        elements.fileInput.click();
+    });
     addElementListener(elements.fileInput, 'change', handleFileSelect);
     
+    addElementListener(elements.uploadArea, 'click', () => elements.fileInput.click());
     addElementListener(elements.uploadArea, 'dragover', handleDragOver);
     addElementListener(elements.uploadArea, 'dragleave', handleDragLeave);
     addElementListener(elements.uploadArea, 'drop', handleDrop);
@@ -154,6 +158,8 @@ function setupEventListeners() {
     // Setup go-to-top button
     setupGoToTopButton();
 }
+
+
 
 /**
  * Sets up go-to-top button functionality for mobile devices
@@ -207,7 +213,6 @@ function resetUploadArea() {
     setElementText(elements.processBtn, 'No file is uploaded yet');
     state.uploadedFileName = '';
 
-    setElementDisabled(elements.downloadChunksBtn, true);
     setElementStyle(elements.generatedInfo, 'display', 'none'); // Hide generated info
     
     // Re-query browseBtn and re-attach event listener
@@ -531,15 +536,18 @@ function handleChunkClick(event) {
     if (chunkIds.length > 0) {
         state.highlightedChunks.clear();
         toggleChunkHighlight(chunkIds[0]);
+        console.log('Chunk clicked:', chunkIds[0], 'Total highlighted:', state.highlightedChunks.size);
     }
 }
 
 function handleChunkDoubleClick(event) {
+    event.preventDefault(); // Prevent text selection
     const span = event.target.closest('.chunk-span');
     if (!span) return;
     
     const chunkIds = span.dataset.chunkIds.split(',').map(id => Number.parseInt(id));
     if (chunkIds.length > 0) {
+        console.log('Chunk double-clicked:', chunkIds[0]);
         showMetadata(chunkIds[0]);
     }
 }
@@ -684,6 +692,30 @@ function showMetadata(chunkId) {
     
     document.body.style.overflow = 'hidden';
     toggleElementClass(elements.metadataModal, 'active', true);
+    
+    // Check for overflow and show scroll hint
+    setTimeout(() => {
+        const scrollHint = document.querySelector('.scroll-hint');
+        const modalContent = document.querySelector('.modal-content');
+        
+        if (scrollHint && modalContent) {
+            const hasVerticalOverflow = modalContent.scrollHeight > modalContent.clientHeight;
+            const hasHorizontalOverflow = modalContent.scrollWidth > modalContent.clientWidth;
+            const hasOverflow = hasVerticalOverflow || hasHorizontalOverflow;
+            
+            scrollHint.classList.toggle('visible', hasOverflow);
+            
+            // Hide scroll hint on scroll or any interaction
+            const hideScrollHint = () => {
+                scrollHint.classList.remove('visible');
+                modalContent.removeEventListener('scroll', hideScrollHint);
+                document.removeEventListener('click', hideScrollHint);
+            };
+            
+            modalContent.addEventListener('scroll', hideScrollHint);
+            document.addEventListener('click', hideScrollHint);
+        }
+    }, 200);
 }
 
 function closeMetadataModal() {
@@ -710,6 +742,15 @@ function setupScrollHint() {
 function updateStats() {
     setElementText(elements.totalChunksElem, `Chunks: ${state.chunksData.length}`);
     setElementText(elements.textLengthElem, `Text Length: ${state.originalText.length} chars`);
+    
+    // Show/hide scrollbar in text container based on content
+    if (elements.textDisplay) {
+        if (state.chunksData.length > 0 && state.originalText.length > 0) {
+            elements.textDisplay.style.overflowY = 'auto';
+        } else {
+            elements.textDisplay.style.overflowY = 'hidden';
+        }
+    }
 }
 
 function downloadChunksAsJson() {

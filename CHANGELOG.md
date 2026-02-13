@@ -7,15 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.2.0] - 2026-02-06
+## [2.2.0] - 2026-02-13
 
-### Fixed
-- **Visualizer CSS and Docstring Positioning**:
-  - Fixed docstring positioning issue in visualizer web interface. The issue was caused by forcing `.txt` extension on temporary files, preventing proper Python parsing. Fix preserves original file extensions for code mode.
-  - Optimized chunk span interactions by replacing layout-affecting borders with box-shadows for smooth, non-jumpy hover effects, custom scrollbar styling, and improved overlap visibility with consistent transitions across all states.
-- 
 ### Added
-- **Expanded CodeChunker Patterns**: 
+- **Visualizer UI Redesign**:
+  - Redesigned layout from 2-column to 3-row structure
+  - Added scroll hint that shows only when modal has overflow
+  - Fixed placeholder text centering in visualization box
+  - Added chunk span pointer-events for better click handling
+  - Added custom scrollbar styling
+- **Expanded CodeChunker Patterns**:
   - Added single-line comment patterns for **Forth** (`\|`).
   - Added support for **PHP 8 attributes** (`#[...]`) and **VB.NET metadata** (`<...>`).
   - Added `export` to namespace declarations and `component` to function modifiers for **ColdFusion** compatibility.
@@ -34,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Development Tooling**:
   - Replaced Flake8 + Black with **Ruff** for improved performance and unified tooling
   - Ruff provides 10-100x faster feedback cycles while maintaining all existing code quality standards
+
+### Fixed
+- **Visualizer CSS and Docstring Positioning**:
+  - Fixed docstring positioning issue in visualizer web interface. The issue was caused by forcing `.txt` extension on temporary files, preventing proper Python parsing. Fix preserves original file extensions for code mode.
+  - Optimized chunk span interactions by replacing layout-affecting borders with box-shadows for smooth, non-jumpy hover effects, custom scrollbar styling, and improved overlap visibility with consistent transitions across all states.
+  - Fixed download and reveal buttons to remain enabled after processing chunks, rather than being disabled when no file is uploaded.
 
 ---
 
