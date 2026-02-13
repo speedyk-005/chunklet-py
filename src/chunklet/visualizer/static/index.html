@@ -35,6 +35,8 @@
                     <li>Click on text to select that chunk (appears with bright yellow highlight in light mode / blue in dark mode)</li>
                     <li>Use the <strong>Reveal/Hide overlaps</strong> button to toggle overlap display</li>
                     <li>Double-click on text to open chunk details and <strong>metadata</strong></li>
+                    <li>Click the <strong>⛶</strong> icon to enter fullscreen mode</li>
+                    <li>Press <strong>ESC</strong> or click the <strong>↘</strong> icon to exit fullscreen</li>
                 </ul>
             </div>
         </div>
@@ -185,6 +187,9 @@
         <div class="bottom-section">
             <!-- Visualization Section - Right side on Desktop -->
             <div class="results-section" id="resultsSection">
+                <button class="fullscreen-overlay-btn" id="fullscreenBtn" title="Toggle Fullscreen">
+                    ⛶
+                </button>
                 <div class="text-container" id="textDisplay">
                     <!-- Text with spans will be inserted here -->
                     <div class="placeholder-text">
@@ -196,6 +201,20 @@
                 <div class="generated-info" id="generatedInfo">
                     Generated with <a href="https://speedyk-005.github.io/chunklet-py/latest" class="footer-link" target="_blank">Chunklet-py</a> on <span id="generatedDate"></span>
                 </div>
+                
+                <!-- Metadata Modal (inside results-section for fullscreen support) -->
+                <div class="modal" id="metadataModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>Chunk Metadata</h2>
+                            <div class="scroll-hint">Scroll for more details</div>
+                            <button class="close-btn" id="closeModalBtn">&times;</button>
+                        </div>
+                        <div class="modal-body" id="modalBody">
+                            <!-- Metadata will be inserted here -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     
@@ -203,22 +222,6 @@
     <div class="toast" id="toastNotification">
         <span id="toastMessage">Chunk highlighted</span>
     </div>
-    
-    <!-- Metadata Modal -->
-    <div class="modal" id="metadataModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Chunk Metadata</h2>
-                <div class="scroll-hint">Scroll for more details</div>
-                <button class="close-btn" id="closeModalBtn">&times;</button>
-            </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Metadata will be inserted here -->
-            </div>
-        </div>
-    </div>
-    
-    
     
     <!-- Go to Top Button (Mobile) -->
     <button class="go-to-top-btn" id="goToTopBtn" title="Go to top">↑</button>

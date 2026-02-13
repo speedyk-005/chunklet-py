@@ -35,6 +35,7 @@ const elements = {
     generatedInfo: document.getElementById('generatedInfo'),
     generatedDate: document.getElementById('generatedDate'),
     downloadChunksBtn: document.getElementById('downloadChunksBtn'),
+    fullscreenBtn: document.getElementById('fullscreenBtn'),
     clearUploadBtn: document.getElementById('clearUploadBtn'),
     
     modeSelect: document.getElementById('modeSelect'),
@@ -153,7 +154,11 @@ function setupEventListeners() {
     });
     
     elements.downloadChunksBtn?.addEventListener('click', downloadChunksAsJson);
+    elements.fullscreenBtn?.addEventListener('click', toggleFullscreen);
     elements.clearUploadBtn?.addEventListener('click', resetUploadArea);
+    
+    // Fullscreen change listener
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
     
     // Setup go-to-top button
     setupGoToTopButton();
@@ -214,6 +219,7 @@ function resetUploadArea() {
     state.uploadedFileName = '';
 
     setElementStyle(elements.generatedInfo, 'display', 'none'); // Hide generated info
+    setElementStyle(elements.fullscreenBtn, 'display', 'none'); // Hide fullscreen button
     
     // Re-query browseBtn and re-attach event listener
     const newBrowseBtn = document.getElementById('browseBtn');
@@ -398,6 +404,7 @@ async function processUploadedFile() {
         
         setElementDisabled(elements.toggleOverlapsBtn, false);
         setElementDisabled(elements.downloadChunksBtn, false);
+        setElementStyle(elements.fullscreenBtn, 'display', 'flex');
         
         const now = new Date();
         const formattedDate = formatDate(now);
@@ -408,10 +415,23 @@ async function processUploadedFile() {
         
     } catch (error) {
         console.error('Error processing file:', error);
+        
+        // Detect network errors (server not running)
+        const isNetworkError = error.message === 'Failed to fetch' || error.message.includes('NetworkError');
+        
+        let errorTitle, errorDetail;
+        if (isNetworkError) {
+            errorTitle = 'Cannot connect to server';
+            errorDetail = 'Make sure the visualizer server is running. Restart with: chunklet visualize';
+        } else {
+            errorTitle = 'Error processing file';
+            errorDetail = error.message || 'Please check the file format and parameters.';
+        }
+        
         setElementHTML(elements.textDisplay, `
             <div class="placeholder-text" style="color: var(--error-color);">
-                <p>Error processing file: ${escapeHtml(error.message)}</p>
-                <p>Please check the file format and parameters.</p>
+                <p><strong>${errorTitle}</strong></p>
+                <p>${errorDetail}</p>
             </div>
         `);
 
@@ -645,6 +665,21 @@ function toggleOverlaps() {
     setElementText(elements.toggleOverlapsBtn, state.showOverlaps ? 'Hide Overlaps' : 'Reveal Overlaps');
     updateAllHighlights();
     updateStats();
+}
+
+function toggleFullscreen() {
+    if (!elements.resultsSection) return;
+    
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else {
+        elements.resultsSection.requestFullscreen();
+    }
+}
+
+function updateFullscreenButton() {
+    const isFullscreen = !!document.fullscreenElement;
+    setElementText(elements.fullscreenBtn, isFullscreen ? '↘' : '⛶');
 }
 
 function showMetadata(chunkId) {

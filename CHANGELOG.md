@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed placeholder text centering in visualization box
   - Added chunk span pointer-events for better click handling
   - Added custom scrollbar styling
+  - **Added fullscreen mode** for visualization area with overlay toggle button. Uses browser native fullscreen API with modal dialogs properly rendered on top via Top Layer.
+- **Visualizer Layout**:
+  - Reduced top row height to 300px max for upload and instructions sections
+  - Removed square constraint from upload area for better border adaptation
+- **Improved Visualizer Error Handling**: Error messages now distinguish between server connection issues and file format errors, making troubleshooting easier for users.
 - **Expanded CodeChunker Patterns**:
   - Added single-line comment patterns for **Forth** (`\|`).
   - Added support for **PHP 8 attributes** (`#[...]`) and **VB.NET metadata** (`<...>`).

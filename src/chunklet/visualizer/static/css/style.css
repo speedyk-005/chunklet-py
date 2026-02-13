@@ -109,11 +109,11 @@ h1 {
 .upload-area {
     border: 3px dashed var(--border-color);
     border-radius: 8px;
-    padding: 40px 20px;
-    margin-bottom: 20px;
+    padding: 15px;
+    margin-bottom: 10px;
     transition: all 0.3s ease;
     cursor: pointer;
-    position: relative; /* Added for positioning close button */
+    position: relative;
 }
 
 #uploadContent {
@@ -292,8 +292,6 @@ h1 {
     overflow-y: auto;
     overscroll-behavior: auto;
     box-sizing: border-box;
-    user-select: none !important;
-    -webkit-user-select: none !important;
 }
 
 /* Custom Scrollbar - Global */
@@ -328,6 +326,7 @@ h1 {
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 /* Chunk Spans */
@@ -409,6 +408,12 @@ h1 {
 
 .modal.active {
     display: flex;
+}
+
+/* Modal inside fullscreen results-section */
+.results-section:fullscreen .modal {
+    position: fixed;
+    z-index: 2147483647;
 }
 
 .modal-content {
@@ -800,12 +805,13 @@ h1 {
 .top-section .instructions {
     flex: 2;
     padding: 12px;
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .top-section .upload-section {
-    flex: 1;
     padding: 12px;
-    aspect-ratio: 1;
+    max-height: 300px;
     position: relative;
     z-index: 1;
 }
@@ -878,7 +884,7 @@ h1 {
     box-shadow: none;
     min-height: 600px;
     max-height: 800px;
-    min-width: 500px;
+    min-width: 700px;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -886,11 +892,52 @@ h1 {
 
 .results-section .text-container {
     flex: 1;
-    min-height: 0;
+    min-height: 550px;
 }
 
 .results-section .generated-info {
     flex-shrink: 0;
+}
+
+/* Fullscreen Overlay Button */
+.fullscreen-overlay-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.fullscreen-overlay-btn:hover {
+    background: var(--accent-hover);
+    transform: scale(1.05);
+}
+
+.fullscreen-overlay-btn.visible {
+    display: flex;
+}
+
+/* Fullscreen mode styles */
+.fullscreen-overlay-btn:fullscreen {
+    display: flex;
+}
+
+.results-section:fullscreen .fullscreen-overlay-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
 }
 
 /* Responsive Design */
@@ -916,7 +963,6 @@ h1 {
     
     .upload-section {
         padding: 10px;
-        aspect-ratio: unset;
         max-width: 300px;
         align-self: center;
     }
@@ -1002,5 +1048,33 @@ h1 {
     .go-to-top-btn {
         display: none !important;
     }
+}
+
+/* Fullscreen Styles */
+.results-section:fullscreen {
+    background: var(--bg-primary);
+    padding: 20px;
+    max-height: 100vh;
+    max-width: 100vw;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.results-section:fullscreen .text-container {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+}
+
+.results-section:fullscreen .generated-info {
+    flex-shrink: 0;
+}
+
+.results-section:fullscreen ~ .modal,
+body:fullscreen .modal {
+    z-index: 9999 !important;
 }
 
