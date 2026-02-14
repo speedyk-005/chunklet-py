@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Tokenizer CLI Enhancements**:
-  - Added `--tokenizer-timeout` option (default: 10s) for both `chunk` and `visualize` commands
+  - Added `--tokenizer-timeout` / `-t` option (default: 10s) for both `chunk` and `visualize` commands
   - Improved tokenizer error messages to distinguish between invalid output, timeout, and execution errors
   - Added `-h` as a shortcut for `--host` in the `visualize` command
 - **Visualizer UI Redesign**:
@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed placeholder text centering in visualization box
   - Added chunk span pointer-events for better click handling
   - Added custom scrollbar styling
-  - **Added fullscreen mode** for visualization area with overlay toggle button. Uses browser native fullscreen API with modal dialogs properly rendered on top via Top Layer.
+- **Added fullscreen mode** for visualization area with overlay toggle button. Uses browser native fullscreen API with modal dialogs properly rendered on top via Top Layer.
 - **Visualizer Layout**:
   - Reduced top row height to 300px max for upload and instructions sections
   - Removed square constraint from upload area for better border adaptation

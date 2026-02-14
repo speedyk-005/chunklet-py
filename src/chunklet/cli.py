@@ -403,6 +403,7 @@ def chunk_command(
     tokenizer_timeout: int = typer.Option(
         10,
         "--tokenizer-timeout",
+        "-t",
         help="Timeout in seconds for the tokenizer command.",
     ),
     metadata: bool = typer.Option(
@@ -611,6 +612,7 @@ def visualize_command(
     tokenizer_timeout: int = typer.Option(
         10,
         "--tokenizer-timeout",
+        "-t",
         help="Timeout in seconds for the tokenizer command.",
     ),
     headless: bool = typer.Option(
