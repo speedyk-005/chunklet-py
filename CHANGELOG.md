@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed `_find_span` to remove continuation markers before matching
   - Added `.strip()` to exact match for whitespace edge cases
   - Added budget cap at 60 to prevent extreme regex backtracking
+- **Dependencies**: Added upper version bounds to all dependencies for better stability and reproducibility
 
 ### Added
 - **Global Registry Instances**: Added global `custom_splitter_registry` and `custom_processor_registry` instances for easier customization

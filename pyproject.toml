@@ -35,51 +35,57 @@ keywords = [
 ]
 
 dependencies = [
-  "pysbd>=0.3.4",
-  "sentsplit>=1.0.7",
+  "pysbd>=0.3.4,<1.0",
+  "sentsplit>=1.0.8,<2.0",
 
   # Pinning to the last known working version with a reliable binary/build.
   # The 1.0.x series has a broken sdist package structure.
   "sentencex<=0.6.1",
 
-  "indic-nlp-library>=0.90",
-  "py3langid>=0.3.0",
-  "mpire>=2.10.0",
-  "python-box>=7.3.0",
-  "more-itertools>=10.6.0",
-  "regex>=2024.11.6",
-  "pydantic>=2.11",
-  "typer>=0.19.0",
+  "indic-nlp-library>=0.92,<1.0",
+  "py3langid>=0.3.0,<1.0",
+  "mpire>=2.10.2,<3.0",
+  "python-box>=7.3.2,<8.0",
+  "more-itertools>=10.6.0,<11.0",
+  "regex>=2025.7.29",
+  "pydantic>=2.11.6,<3.0",
+  "typer>=0.19.0,<1.0",
  ]
 
 [project.optional-dependencies]
 document = [
   "pdfminer.six>=20250324",
-  "python-docx>=1.2.0",
-  "mammoth>=1.9.0",
-  "ebooklib>=0.19",
-  "docutils>=0.21.2",
-  "markdownify>=1.1.0",
-  "striprtf>=0.0.29",
-  "pylatexenc>=2.10",
-  "odfpy>=1.4.1",
-  "openpyxl>=3.1.2",
-  "tabulate2>=1.10.0",
-  "charset-normalizer>=3.4.0",
+  "python-docx>=1.2.0,<2.0",
+  "mammoth>=1.9.1,<2.0",
+  "ebooklib>=0.19,<1.0",
+  "docutils>=0.21.2,<1.0",
+  "markdownify>=1.1.0,<2.0",
+  "striprtf>=0.0.29,<1.0",
+
+  # Lastest version of 2.x.x series
+  "pylatexenc==2.10",
+  
+  "odfpy>=1.4.1,<2.0",
+  "openpyxl>=3.1.5,<4.0",
+  "tabulate2>=1.10.2,<2.0",
+  "charset-normalizer>=3.4.2,<4.0",
 ]
 
 code = [
-  "defusedxml>=0.7.1",
-  "littletree>=0.8.4",
-  "charset-normalizer>=3.4.0",
+  "defusedxml>=0.7.1,<1.0",
+  "littletree>=0.8.7,<1.0",
+  "charset-normalizer>=3.4.2,<4.0",
 ]
 
 visualization = [
-  "uvicorn>=0.34.0",
-  "fastapi>=0.115.12",
-  "python-multipart>=0.0.20",
-  "aiofiles>=24.1.0",
-  "charset-normalizer>=3.4.0",
+  "uvicorn>=0.35.0,<1.0",
+  "fastapi>=0.116.0,<1.0",
+  "python-multipart>=0.0.20,<1.0",
+
+  # Major changes happens often
+  "aiofiles==25.1.0",
+  
+  "charset-normalizer>=3.4.2,<4.0",
 ]
 
 all = ["chunklet-py[document,code,visualization]"]
