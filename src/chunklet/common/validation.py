@@ -32,8 +32,8 @@ def pretty_errors(error: ValidationError) -> str:
         )
 
         lines.append(
-            f"{ind}) {formatted_loc} {msg}.\n"
-            f"  Found: (input={input_value!r}, type={input_type})"
+            (f"{ind}) {formatted_loc} {msg}.\n"
+             f"  Found: (input={input_value!r}, type={input_type})")
         )
 
     lines.append("  " + getattr(error, "hint", ""))
