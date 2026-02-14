@@ -1,7 +1,7 @@
 import re
 import pytest
 from collections import defaultdict
-from chunklet.document_chunker import DocumentChunker, CustomProcessorRegistry
+from chunklet.document_chunker import DocumentChunker, custom_processor_registry
 from chunklet import (
     UnsupportedFileTypeError,
     CallbackError,
@@ -19,8 +19,8 @@ def chunker():
 
 @pytest.fixture
 def registry():
-    """Provides a CustomSplitterRegistry instance"""
-    return CustomProcessorRegistry()
+    """Provides the global CustomProcessorRegistry instance"""
+    return custom_processor_registry
 
 
 # --- Core Tests ---

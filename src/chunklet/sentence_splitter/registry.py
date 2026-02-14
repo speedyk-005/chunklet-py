@@ -176,3 +176,7 @@ class CustomSplitterRegistry:
             ) from None
 
         return result, name
+
+
+# Global registry instance
+custom_splitter_registry = CustomSplitterRegistry()

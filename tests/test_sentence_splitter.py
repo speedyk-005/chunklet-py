@@ -1,6 +1,6 @@
 import re
 import pytest
-from chunklet.sentence_splitter import SentenceSplitter, CustomSplitterRegistry
+from chunklet.sentence_splitter import SentenceSplitter, custom_splitter_registry
 from chunklet import CallbackError
 
 # --- Fixture ---
@@ -14,8 +14,8 @@ def splitter():
 
 @pytest.fixture
 def registry():
-    """Provides aCustomSplitterRegistry instance"""
-    return CustomSplitterRegistry()
+    """Provides the global CustomSplitterRegistry instance"""
+    return custom_splitter_registry
 
 
 # --- Multilingual Splitting Tests ---

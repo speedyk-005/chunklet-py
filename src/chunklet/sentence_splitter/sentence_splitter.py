@@ -13,7 +13,7 @@ from chunklet.sentence_splitter.languages import (
     SENTENCEX_UNIQUE_LANGUAGES,
     INDIC_NLP_UNIQUE_LANGUAGES,
 )
-from chunklet.sentence_splitter.registry import CustomSplitterRegistry
+from chunklet.sentence_splitter.registry import custom_splitter_registry
 from chunklet.sentence_splitter._fallback_splitter import FallbackSplitter
 from chunklet.common.validation import validate_input
 
@@ -73,9 +73,9 @@ class SentenceSplitter(BaseSplitter):
         frozenset(SENTSPLIT_UNIQUE_LANGUAGES): lambda lang, text: SentSplit(
             lang
         ).segment(text),
-        frozenset(
-            INDIC_NLP_UNIQUE_LANGUAGES
-        ): lambda lang, text: sentence_tokenize.sentence_split(text, lang),
+        frozenset(INDIC_NLP_UNIQUE_LANGUAGES): lambda lang, text: (
+            sentence_tokenize.sentence_split(text, lang)
+        ),
         frozenset(SENTENCEX_UNIQUE_LANGUAGES): lambda lang, text: segment(lang, text),
     }
 
@@ -88,7 +88,6 @@ class SentenceSplitter(BaseSplitter):
             verbose (bool, optional): If True, enables verbose logging for debugging and informational messages.
         """
         self.verbose = verbose
-        self.custom_splitter_registry = CustomSplitterRegistry()
         self.fallback_splitter = FallbackSplitter()
 
         # Create a normalized identifier for language detection
@@ -177,8 +176,8 @@ class SentenceSplitter(BaseSplitter):
             lang = lang_detected if confidence >= 0.7 else lang
 
         # Prioritize custom splitters from registry
-        if self.custom_splitter_registry.is_registered(lang):
-            sentences, splitter_name = self.custom_splitter_registry.split(text, lang)
+        if custom_splitter_registry.is_registered(lang):
+            sentences, splitter_name = custom_splitter_registry.split(text, lang)
             if self.verbose:
                 logger.info("Using registered splitter: {}", splitter_name)
         else:

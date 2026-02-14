@@ -193,3 +193,7 @@ class CustomProcessorRegistry:
             ) from None
 
         return result, name
+
+
+# Global registry instance
+custom_processor_registry = CustomProcessorRegistry()

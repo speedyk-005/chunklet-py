@@ -31,7 +31,7 @@ from chunklet.document_chunker.converters import (
     latex_2_md,
     table_2_md,
 )
-from chunklet.document_chunker.registry import CustomProcessorRegistry
+from chunklet.document_chunker.registry import custom_processor_registry
 from chunklet.common.validation import validate_input, restricted_iterable
 from chunklet.exceptions import InvalidInputError, UnsupportedFileTypeError
 
@@ -125,14 +125,13 @@ class DocumentChunker(BaseChunker):
             ".csv": table_2_md.table_to_md,
             ".xlsx": table_2_md.table_to_md,
         }
-        self.processor_registry = CustomProcessorRegistry()
 
     @property
     def supported_extensions(self):
         """Get the supported extensions, including the custom ones."""
         return (
             self.BUILTIN_SUPPORTED_EXTENSIONS
-            | self.processor_registry.processors.keys()
+            | custom_processor_registry.processors.keys()
         )
 
     @property
@@ -232,8 +231,8 @@ class DocumentChunker(BaseChunker):
         self.log_info("Extracting text from file {}", path)
 
         # Prioritize custom processors from registry
-        if self.processor_registry.is_registered(ext):
-            texts_and_metadata, processor_name = self.processor_registry.extract_data(
+        if custom_processor_registry.is_registered(ext):
+            texts_and_metadata, processor_name = custom_processor_registry.extract_data(
                 str(path), ext
             )
             self.log_info("Used registered processor: {}", processor_name)
