@@ -108,20 +108,22 @@ class PlainTextChunker(BaseChunker):
             A tuple (start, end) representing the span in full_text.
             Returns (-1, -1) if not found.
         """
-        # Fast path for exact match
-        if text_portion in full_text:
-            start = full_text.find(text_portion)
-            return start, start + len(text_portion)
-
         # Remove continuation marker from the beginning of text_portion first
         if text_portion.startswith(self.continuation_marker):
             text_portion = text_portion[len(self.continuation_marker) :].lstrip()
+            
+        # Fast path for exact match
+        if text_portion.strip() in full_text:
+            start = full_text.find(text_portion.strip())
+            return start, start + len(text_portion)
 
         lines = [line.strip() for line in text_portion.splitlines() if line.strip()]
         if not lines:
             return -1, -1
 
-        budget = len(text_portion) // 5  # 20 %
+        budget = int(
+            max(0, min(len(text_portion) // 5, 60))   # 20 %
+        )
 
         # Build flexible separator pattern that allows newlines, Unicode separators, and punctuation
         sep = rf"""

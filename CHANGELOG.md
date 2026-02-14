@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.2.0] - 2026-02-13
 
+### Changed
+- **PlainTextChunker Improvements**:
+  - Fixed `_find_span` to remove continuation markers before matching
+  - Added `.strip()` to exact match for whitespace edge cases
+  - Added budget cap at 60 to prevent extreme regex backtracking
+
 ### Added
 - **Tokenizer CLI Enhancements**:
   - Added `--tokenizer-timeout` option (default: 10s) for both `chunk` and `visualize` commands
