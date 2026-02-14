@@ -44,7 +44,7 @@ MULTI_LINE_STRING_ASSIGN = re.compile(
 )
 
 # --- Single-line comments (inline or full-line) ---
-SINGLE_LINE_COMMENT = re.compile(
+_single_line_comment = (
     r"(?<!\S)(?:"  # ensure not inside a word
         r"#(?![#\[])|"  # Python, Bash, Perl, Ruby, Nim, etc. — exclude ##, Nim doc-comments, php attr
         r"//(?![/!])|"  # C, C++, C#, Java, JS, Go, etc. — exclude /// and //! (doc-comments)
@@ -56,14 +56,15 @@ SINGLE_LINE_COMMENT = re.compile(
         r"^(?:\s*)'|"  # VB.NET, VBA, Classic BASIC, etc.
         r"⍝"  # Haskell
     r")"
-    r"\s.+$",  # everything after the symbol
-    re.M,
+    r"\s.+$"  # everything after the symbol
 )
+ALL_SINGLE_LINE_COMM = re.compile(r"(?<!\S)" + _single_line_comment, re.M)
+FULL_LINE_SINGLE_COMM = re.compile(r"^\s*" + _single_line_comment, re.M)
 
 
 # --- Multi-line / block comments ---
-MULTI_LINE_COMMENT = re.compile(
-    r"\s*(?:"  # anchored at start, optional leading whitespace
+MULTI_LINE_COMM = re.compile(
+    r"^\s*(?:"  # anchored at start, optional leading whitespace
         r"#\|.+?\|#|"    # #| ... |# (Ruby, Perl, Nim, etc.) 
         r"<#.+?#>|"     # <# ... #> (Powershell style) 
         r"(#{3}).+?\1|"    # ### ... ### (CoffeeScript)
@@ -201,7 +202,7 @@ OPENER = re.compile(
 
 # --- Closure Indicators ---
 # Matches lines that consist solely of a closing symbol or keyword (ecluding comments).
-CLOSURE = re.compile(
+CLOSER = re.compile(
     r"^\s*(?:"              # Start of line with optional leading space
         r"[\)\]\}]|"                      # Any closing bracket
         r"\b(?:fi|done|END|@?end)\b|" # Any block end keyword

@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.2.0] - 2026-02-13
+## [2.2.0] - 2026-02-14
 
 ### Changed
+- **CodeChunker Renames**:
+  - Renamed `MULTI_LINE_COMMENT` to `MULTI_LINE_COMM` for consistency
+  - Renamed `CLOSURE` to `CLOSER` as it's a misconception
 - **PlainTextChunker Improvements**:
   - Fixed `_find_span` to remove continuation markers before matching
   - Added `.strip()` to exact match for whitespace edge cases
@@ -52,6 +55,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Ruff provides 10-100x faster feedback cycles while maintaining all existing code quality standards
 
 ### Fixed
+- **CodeChunker Annotation Remnants**:
+  - Fixed remnants of annotation tags in output by using separate patterns for full-line vs inline comments
+  - Only full-line comments are now annotated, inline comments stay with their code line
 - **Visualizer CSS and Docstring Positioning**:
   - Fixed docstring positioning issue in visualizer web interface. The issue was caused by forcing `.txt` extension on temporary files, preventing proper Python parsing. Fix preserves original file extensions for code mode.
   - Optimized chunk span interactions by replacing layout-affecting borders with box-shadows for smooth, non-jumpy hover effects, custom scrollbar styling, and improved overlap visibility with consistent transitions across all states.

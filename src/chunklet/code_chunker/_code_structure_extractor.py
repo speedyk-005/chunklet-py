@@ -21,15 +21,16 @@ from loguru import logger
 
 from chunklet.code_chunker.patterns import (
     MULTI_LINE_STRING_ASSIGN,
-    SINGLE_LINE_COMMENT,
-    MULTI_LINE_COMMENT,
+    ALL_SINGLE_LINE_COMM,
+    FULL_LINE_SINGLE_COMM,
+    MULTI_LINE_COMM,
     DOCSTRING_STYLE_ONE,
     DOCSTRING_STYLE_TWO,
     FUNCTION_DECLARATION,
     NAMESPACE_DECLARATION,
     METADATA,
     OPENER,
-    CLOSURE,
+    CLOSER,
 )
 from chunklet.code_chunker.helpers import is_binary_file, is_python_code
 from chunklet.common.path_utils import is_path_like
@@ -227,10 +228,10 @@ class CodeStructureExtractor:
 
         # Remove comments if not required
         if not include_comments:
-            source_code = SINGLE_LINE_COMMENT.sub(
+            source_code = ALL_SINGLE_LINE_COMM.sub(
                 lambda m: self._replace_with_newlines(m), source_code
             )
-            source_code = MULTI_LINE_COMMENT.sub(
+            source_code = MULTI_LINE_COMM.sub(
                 lambda m: self._replace_with_newlines(m), source_code
             )
 
@@ -254,8 +255,8 @@ class CodeStructureExtractor:
         # List of all regex patterns with the tag to annotate them
         patterns_n_tags = [
             (MULTI_LINE_STRING_ASSIGN, "STR"),
-            (SINGLE_LINE_COMMENT, "COMM"),
-            (MULTI_LINE_COMMENT, "COMM"),
+            (FULL_LINE_SINGLE_COMM, "COMM"),
+            (MULTI_LINE_COMM, "COMM"),
             (DOCSTRING_STYLE_ONE, "DOC"),
             (DOCSTRING_STYLE_TWO, "DOC"),
             (METADATA, "META"),
@@ -402,20 +403,22 @@ class CodeStructureExtractor:
                 function scope, and the snippet dicts (extracted blocks).
         """
         tag = matched.group(1)
-        deannoted_line = (
+        deannotated_line = (
             line[: matched.start()] + line[matched.end() :]
         )  # Slice off the annotation
 
         # Now we can calculate the proper indentation level
-        indent_level = len(deannoted_line) - len(deannoted_line.lstrip())
-        
+        indent_level = len(deannotated_line) - len(deannotated_line.lstrip())
+
         first_metadata = tag == "META" and not buffer["META"]
-        consecutive_docstrings = buffer["DOC"] and buffer["DOC"][-1].line_number == line_no - 1
-        
+        consecutive_docstrings = (
+            buffer["DOC"] and buffer["DOC"][-1].line_number == line_no - 1
+        )
+
         if first_metadata or not consecutive_docstrings:
             self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
 
-        buffer[tag].append(CodeLine(line_no, deannoted_line, indent_level, None))
+        buffer[tag].append(CodeLine(line_no, deannotated_line, indent_level, None))
 
     def _handle_block_start(
         self,
@@ -555,7 +558,7 @@ class CodeStructureExtractor:
             if (
                 line.strip()
                 and indent_level <= state["block_indent_level"]
-                and not (OPENER.match(line) or CLOSURE.match(line))
+                and not (OPENER.match(line) or CLOSER.match(line))
             ):  # Block end
                 state["block_indent_level"] = indent_level
                 self._flush_snippet(
