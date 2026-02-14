@@ -364,6 +364,8 @@ Run in the background with your own token counting script:
 chunklet visualize --headless --tokenizer-command "python my_tokenizer.py"
 ```
 
+See [Scenario 4: Custom Token Counting with an External Script](#scenario-4-custom-token-counting-with-an-external-script) for how to create your tokenizer script.
+
 The visualizer will show you the URL to access it in your browser. Press `Ctrl+C` to stop the server when you're done!
 
 !!! info "REST API for Headless Automation! 🤖"

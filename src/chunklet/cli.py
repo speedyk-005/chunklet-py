@@ -62,7 +62,8 @@ app = typer.Typer(
 )
 
 
-def _create_external_tokenizer(command_str: str):
+def _create_external_tokenizer(command_str: str, timeout: int):
+    """Create a tokenizer function from a shell command string."""
     command_list = shlex.split(command_str)
 
     def external_tokenizer(text):
@@ -73,10 +74,21 @@ def _create_external_tokenizer(command_str: str):
                 input=text,
                 capture_output=True,
                 text=True,
+                timeout=timeout,
                 check=True,
             )
             return int(process.stdout.strip())
-        except (subprocess.CalledProcessError, ValueError) as e:
+
+        except ValueError:
+            print(
+                f"Tokenizer output is not an integer: {process.stdout!r}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        except subprocess.TimeoutExpired:
+            print(f"Tokenizer command timed out after {timeout}s", file=sys.stderr)
+            sys.exit(1)
+        except subprocess.CalledProcessError as e:
             print(f"Error executing tokenizer command: {e}", file=sys.stderr)
             sys.exit(1)
 
@@ -350,7 +362,7 @@ def chunk_command(
     lang: str = typer.Option(
         "auto",
         "--lang",
-        help="Language of the text (e.g., 'en', 'fr', 'auto'). (default: auto)",
+        help="Language of the text (e.g., 'en', 'fr', 'auto').",
     ),
     max_tokens: int = typer.Option(
         None,
@@ -370,12 +382,12 @@ def chunk_command(
     overlap_percent: float = typer.Option(
         20.0,
         "--overlap-percent",
-        help="Percentage of overlap between chunks (0-85). Applies to PlainTextChunker and DocumentChunker. (default: 20)",
+        help="Percentage of overlap between chunks (0-85). Applies to PlainTextChunker and DocumentChunker.",
     ),
     offset: int = typer.Option(
         0,
         "--offset",
-        help="Starting sentence offset for chunking. Applies to PlainTextChunker and DocumentChunker. (default: 0)",
+        help="Starting sentence offset for chunking. Applies to PlainTextChunker and DocumentChunker.",
     ),
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging."
@@ -387,6 +399,11 @@ def chunk_command(
             "A shell command to use for token counting. "
             "The command should take text as stdin and output the token count as a number."
         ),
+    ),
+    tokenizer_timeout: int = typer.Option(
+        10,
+        "--tokenizer-timeout",
+        help="Timeout in seconds for the tokenizer command.",
     ),
     metadata: bool = typer.Option(
         False,
@@ -401,7 +418,7 @@ def chunk_command(
     n_jobs: Optional[int] = typer.Option(
         None,
         "--n-jobs",
-        help="Number of parallel jobs for batch chunking. (default: None, uses all available cores)",
+        help="Number of parallel jobs for batch chunking.",
     ),
     on_errors: OnError = typer.Option(
         OnError.raise_,
@@ -463,7 +480,7 @@ def chunk_command(
     # --- Tokenizer setup ---
     token_counter = None
     if tokenizer_command:
-        token_counter = _create_external_tokenizer(tokenizer_command)
+        token_counter = _create_external_tokenizer(tokenizer_command, tokenizer_timeout)
 
     # Construct chunk_kwargs dynamically
     chunk_kwargs = {
@@ -574,13 +591,14 @@ def visualize_command(
     host: str = typer.Option(
         "127.0.0.1",
         "--host",
-        help="Host IP to bind the visualizer server. (default: 127.0.0.1)",
+        "-h",
+        help="Host IP to bind the visualizer server.",
     ),
     port: int = typer.Option(
         8000,
         "--port",
         "-p",
-        help="Port number to run the visualizer server. (default: 8000)",
+        help="Port number to run the visualizer server.",
     ),
     tokenizer_command: Optional[str] = typer.Option(
         None,
@@ -589,6 +607,11 @@ def visualize_command(
             "A shell command to use for token counting in the visualizer. "
             "The command should take text as stdin and output the token count as a number."
         ),
+    ),
+    tokenizer_timeout: int = typer.Option(
+        10,
+        "--tokenizer-timeout",
+        help="Timeout in seconds for the tokenizer command.",
     ),
     headless: bool = typer.Option(
         False,
@@ -629,7 +652,7 @@ def visualize_command(
     # Create token counter if tokenizer command provided
     token_counter = None
     if tokenizer_command:
-        token_counter = _create_external_tokenizer(tokenizer_command)
+        token_counter = _create_external_tokenizer(tokenizer_command, tokenizer_timeout)
 
     # Start the visualizer
     visualizer = Visualizer(host=host, port=port, token_counter=token_counter)
@@ -660,7 +683,7 @@ def visualize_command(
 def main_callback(
     version: Optional[bool] = typer.Option(
         None, "--version", "-v", help="Show program's version number and exit."
-    )
+    ),
 ):
     if version:
         typer.echo(f"chunklet v{__version__}")

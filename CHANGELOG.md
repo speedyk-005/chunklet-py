@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.2.0] - 2026-02-13
 
 ### Added
+- **Tokenizer CLI Enhancements**:
+  - Added `--tokenizer-timeout` option (default: 10s) for both `chunk` and `visualize` commands
+  - Improved tokenizer error messages to distinguish between invalid output, timeout, and execution errors
+  - Added `-h` as a shortcut for `--host` in the `visualize` command
 - **Visualizer UI Redesign**:
   - Redesigned layout from 2-column to 3-row structure
   - Added scroll hint that shows only when modal has overflow
