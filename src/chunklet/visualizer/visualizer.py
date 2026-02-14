@@ -2,6 +2,7 @@ import os
 import json
 import traceback
 import mimetypes
+from pathlib import Path
 from typing import Callable
 import aiofiles
 
@@ -77,10 +78,9 @@ class Visualizer:
         self.document_chunker = DocumentChunker(token_counter=token_counter)
         self.code_chunker = CodeChunker(token_counter=token_counter)
 
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        static_dir = os.path.join(base_dir, "static")
+        self.static_dir = Path(__file__).parent / "static"
 
-        self.app.mount("/static", StaticFiles(directory=static_dir), name="static")
+        self.app.mount("/static", StaticFiles(directory=str(self.static_dir)), name="static")
 
         # API endpoints
         self.app.get("/api/token_counter_status")(self._get_token_counter_status)
@@ -102,10 +102,8 @@ class Visualizer:
         Returns:
             HTMLResponse: The content of index.html if exists, else a default heading.
         """
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        static_dir = os.path.join(base_dir, "static")
-        index_path = os.path.join(static_dir, "index.html")
-        if os.path.exists(index_path):
+        index_path = self.static_dir / "index.html"
+        if index_path.exists():
             async with aiofiles.open(index_path, "r", encoding="utf-8") as f:
                 content = await f.read()
                 return HTMLResponse(content=content)
@@ -159,7 +157,7 @@ class Visualizer:
         if mode == "code":
             # For code mode, use the uploaded file directly with original extension
 
-            _, suffix = os.path.splitext(file.filename)
+            suffix = Path(file.filename).suffix
             async with aiofiles.tempfile.NamedTemporaryFile(
                 mode="wb",
                 suffix=suffix or "txt",
