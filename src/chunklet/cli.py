@@ -292,7 +292,7 @@ def split_command(
             input_text = source.read_text(encoding="utf-8")
         except Exception as e:
             typer.echo(f"Error reading source file: {e}", err=True)
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from None
     else:
         input_text = text
 
@@ -330,7 +330,7 @@ def split_command(
             )
         except Exception as e:
             typer.echo(f"Error writing to destination file: {e}", err=True)
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from None
     else:
         source_display = f"Source: {source.name}" if source else "Source: stdin"
 
@@ -678,7 +678,7 @@ def visualize_command(
         typer.echo("\nVisualizer stopped.")
     except Exception as e:
         typer.echo(f"Error starting visualizer: {e}", err=True)
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from None
 
 
 @app.callback(invoke_without_command=True)

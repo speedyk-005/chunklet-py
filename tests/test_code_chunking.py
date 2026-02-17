@@ -1,15 +1,18 @@
 import os
 import re
 import tempfile
+
 import pytest
 from more_itertools import split_at
-from chunklet.code_chunker import CodeChunker
+
 from chunklet import (
-    MissingTokenCounterError,
-    TokenLimitError,
+    CallbackError,
     FileProcessingError,
     InvalidInputError,
+    MissingTokenCounterError,
+    TokenLimitError,
 )
+from chunklet.code_chunker import CodeChunker
 
 
 # Helper function
@@ -291,7 +294,7 @@ def test_broken_token_counter():
         raise ValueError("Token counter failed")
 
     chunker = CodeChunker(token_counter=broken_token_counter)
-    with pytest.raises(Exception):  # Should raise from the broken token counter
+    with pytest.raises(CallbackError):  # Should raise from the broken token counter
         chunker.chunk_text("def test(): pass", max_tokens=30)
 
 
@@ -425,17 +428,17 @@ def test_batch_chunk_different_max_tokens(max_tokens, chunker):
 
 def test_batch_chunk_error_handling_on_task(chunker):
     """Test the on_errors parameter in chunk_texts."""
-    
+
     # Create a temp file for testing
     with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
         f.write("def valid(): pass")
         valid_file = f.name
 
     sources_with_error = ["/nonexistent/file.py", valid_file]
-    
+
     try:
         # Test on_errors = 'raise'
-        with pytest.raises(Exception):
+        with pytest.raises(FileProcessingError):
             list(
                 chunker.chunk_files(
                     sources_with_error,

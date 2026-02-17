@@ -1,7 +1,9 @@
 import re
+
 import pytest
-from chunklet.sentence_splitter import SentenceSplitter, custom_splitter_registry
+
 from chunklet import CallbackError
+from chunklet.sentence_splitter import SentenceSplitter, custom_splitter_registry
 
 # --- Fixture ---
 

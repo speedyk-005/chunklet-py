@@ -1,13 +1,15 @@
 """Tests for the visualizer module."""
 
-import pytest
 import json
-import time
-import requests
-import urllib.request
-import urllib.error
 import threading
+import time
+import urllib.error
+import urllib.request
 from pathlib import Path
+
+import pytest
+import requests
+
 from chunklet.visualizer import Visualizer
 
 

@@ -405,7 +405,9 @@ class CodeStructureExtractor:
             is_python_code (bool): Whether the code is Python.
         """
         is_namespace = bool(NAMESPACE_DECLARATION.match(line))
-        func_count = sum(1 for l in state["curr_struct"] if l.func_partial_signature)
+        func_count = sum(
+            1 for line in state["curr_struct"] if line.func_partial_signature
+        )
         is_nested = indent_level > state["block_indent_level"]
 
         if func_start:

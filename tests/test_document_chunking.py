@@ -1,12 +1,13 @@
 import re
-import pytest
 from collections import defaultdict
-from chunklet.document_chunker import DocumentChunker, custom_processor_registry
-from chunklet import (
-    UnsupportedFileTypeError,
-    CallbackError,
-)
 
+import pytest
+
+from chunklet import (
+    CallbackError,
+    UnsupportedFileTypeError,
+)
+from chunklet.document_chunker import DocumentChunker, custom_processor_registry
 
 # --- Fixtures ---
 

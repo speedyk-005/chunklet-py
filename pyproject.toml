@@ -162,10 +162,18 @@ select = ["E", "F", "I", "W", "B"]
 ignore = ["E501", "E203"]
 
 [tool.ruff.lint.per-file-ignores]
+
 # Ignore unused imports in all __init__.py files
 "src/chunklet/**/__init__.py" = ["F401", "F403"]
+
 # Disable all linting for the heavy regex file
 "src/chunklet/code_chunker/patterns.py" = ["ALL"]
+
+# Ignore warnings about typer.Option(...)
+"src/chunklet/cli.py" = ["B008"]
+
+# Ignore warnings about File(...)
+"src/chunklet/visualizer/visualizer.py" = ["B008"]
 
 [tool.ruff.format]
 # Replaces Black exclude logic

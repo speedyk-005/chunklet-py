@@ -1,16 +1,16 @@
 import re
+
 import pytest
 from more_itertools import split_at
+
+from chunklet import (
+    CallbackError,
+    InvalidInputError,
+    MissingTokenCounterError,
+)
 from chunklet.document_chunker import DocumentChunker
 from chunklet.document_chunker._plain_text_chunker import SECTION_BREAK_PATTERN
 from chunklet.sentence_splitter import SentenceSplitter
-
-from chunklet import (
-    InvalidInputError,
-    CallbackError,
-    MissingTokenCounterError,
-)
-
 
 # --- Constants ---
 

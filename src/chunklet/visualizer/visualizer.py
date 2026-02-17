@@ -1,6 +1,5 @@
 import json
 import mimetypes
-import os
 import traceback
 from pathlib import Path
 from typing import Callable
@@ -138,7 +137,9 @@ class Visualizer:
             chunker_params = json.loads(params)
             chunker_params = {k: v for k, v in chunker_params.items() if v is not None}
         except (json.JSONDecodeError, TypeError):
-            raise HTTPException(400, f"Invalid chunking parameters JSON: {params}")
+            raise HTTPException(
+                400, f"Invalid chunking parameters JSON: {params}"
+            ) from None
 
         # Use Python mimetypes instead of browser content_type
         mimetype, _ = mimetypes.guess_type(file.filename or "")
@@ -177,11 +178,7 @@ class Visualizer:
             raise HTTPException(
                 500,
                 f"Chunking failed. Please check the server terminal for specific error details. ({str(e)})",
-            )
-            try:
-                os.unlink(tmp_path)
-            except OSError:
-                pass
+            ) from None
 
     @property
     def token_counter(self):

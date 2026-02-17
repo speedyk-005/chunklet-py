@@ -348,7 +348,7 @@ class DocumentChunker(BaseChunker):
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
-        base_metadata: dict[str, Any] = {},
+        base_metadata: dict[str, Any] | None = None,
     ) -> list[Box]:
         """
         Chunks raw text content.
@@ -384,7 +384,7 @@ class DocumentChunker(BaseChunker):
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
-        base_metadata: dict[str, Any] = {},
+        base_metadata: dict[str, Any] | None = None,
         separator: Any = None,
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
@@ -434,7 +434,6 @@ class DocumentChunker(BaseChunker):
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
-        base_metadata: dict[str, Any] = {},
     ) -> list[Box]:
         """
         Chunks a single document from a given path.
@@ -453,7 +452,6 @@ class DocumentChunker(BaseChunker):
             offset (int): Starting sentence offset for chunking. Defaults to 0.
             token_counter (callable | None): Optional token counting function.
                 Required if `max_tokens` is provided.
-            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
 
         Returns:
             list[Box]: A list of `Box` objects, each representing
@@ -470,7 +468,6 @@ class DocumentChunker(BaseChunker):
         ext = self._validate_and_get_extension(path)
 
         text_content_or_generator, document_metadata = self._extract_data(path, ext)
-        base_metadata.update(document_metadata)
 
         if not isinstance(text_content_or_generator, str):
             raise UnsupportedFileTypeError(
@@ -493,7 +490,6 @@ class DocumentChunker(BaseChunker):
             overlap_percent=overlap_percent,
             offset=offset,
             token_counter=token_counter or self.token_counter,
-            base_metadata=base_metadata,
         )
 
         self.log_info("Generated {} chunks for {}.", len(chunk_boxes), path)
@@ -516,7 +512,6 @@ class DocumentChunker(BaseChunker):
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
-        base_metadata: dict[str, Any] = {},
     ) -> Generator[Box, None, None]:
         """
         Chunks multiple documents from a list of file paths.
@@ -542,7 +537,6 @@ class DocumentChunker(BaseChunker):
                    Must be >= 1 if specified.
             show_progress (bool): Flag to show or disable the loading bar.
             on_errors: How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
-            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
 
         yields:
             Box: `Box` object, representing a chunk with its content and metadata.
@@ -603,8 +597,7 @@ class DocumentChunker(BaseChunker):
                 doc_metadata["section_count"] = path_section_counts[curr_path]
                 doc_metadata["curr_section"] = i
 
-                # Ensure we have all metadata
-                ch["metadata"] = base_metadata | ch["metadata"] | doc_metadata
+                ch["metadata"].update(doc_metadata)
                 yield ch
 
             path_section_counts[curr_path] -= 1
@@ -620,7 +613,7 @@ class DocumentChunker(BaseChunker):
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
-        base_metadata: dict[str, Any] = {},
+        base_metadata: dict[str, Any] | None = None,
     ) -> list[Box]:
         """
         Note:
@@ -650,7 +643,6 @@ class DocumentChunker(BaseChunker):
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
-        base_metadata: dict[str, Any] = {},
     ) -> Generator[Box, None, None]:
         """
         Note:
