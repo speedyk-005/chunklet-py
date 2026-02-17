@@ -72,7 +72,7 @@ chunks_from_path_obj = chunker.chunk(Path("/path/to/your/code.py"))
 Ready to chunk code by line count? This gives you predictable, size-based chunks:
 
 ``` py linenums="1"
-from chunklet.experimental.code_chunker import CodeChunker
+from chunklet.code_chunker import CodeChunker
 
 PYTHON_CODE = '''
 """
