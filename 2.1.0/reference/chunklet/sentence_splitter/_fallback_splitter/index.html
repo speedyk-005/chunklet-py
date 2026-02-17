@@ -2827,7 +2827,9 @@ which reduces false splits inside abbreviations, multi-punctuation sequences, or
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>src/chunklet/sentence_splitter/_fallback_splitter.py</code></summary>
-                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-26">26</a></span>
+                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span>
+<span class="normal"><a href="#__codelineno-0-26">26</a></span>
 <span class="normal"><a href="#__codelineno-0-27">27</a></span>
 <span class="normal"><a href="#__codelineno-0-28">28</a></span>
 <span class="normal"><a href="#__codelineno-0-29">29</a></span>
@@ -2846,30 +2848,28 @@ which reduces false splits inside abbreviations, multi-punctuation sequences, or
 <span class="normal"><a href="#__codelineno-0-42">42</a></span>
 <span class="normal"><a href="#__codelineno-0-43">43</a></span>
 <span class="normal"><a href="#__codelineno-0-44">44</a></span>
-<span class="normal"><a href="#__codelineno-0-45">45</a></span>
-<span class="normal"><a href="#__codelineno-0-46">46</a></span>
-<span class="normal"><a href="#__codelineno-0-47">47</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Initializes regex patterns for sentence splitting.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">sentence_terminators</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">GLOBAL_SENTENCE_TERMINATORS</span><span class="p">)</span>
-<a id="__codelineno-0-29" name="__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30"></a>    <span class="c1"># Patterns for handling numbered lists</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">flattened_numbered_list_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32"></a>        <span class="sa">rf</span><span class="s2">&quot;(?&lt;=[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sentence_terminators</span><span class="si">}</span><span class="s2">:])\s+(\p</span><span class="se">{{</span><span class="s2">N</span><span class="se">}}</span><span class="s2">\.)+&quot;</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="p">)</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">numbered_list_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;([\n:]\s*)(\p</span><span class="si">{N}</span><span class="s2">)\.&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">norm_numbered_list_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\s*)(\p</span><span class="si">{N}</span><span class="s2">)&lt;DOT&gt;&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a>
-<a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="c1"># Core sentence split regex</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">sentence_end_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a>        <span class="sa">rf</span><span class="s2">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="s2">        (?&lt;!\b(\p</span><span class="se">{{</span><span class="s2">Lu</span><span class="se">}}</span><span class="s2">\p</span><span class="se">{{</span><span class="s2">Ll</span><span class="se">}}{{</span><span class="s2">1, 5</span><span class="se">}}</span><span class="s2">\.)*)   # negative lookbehind for abbreviations</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="s2">        (?&lt;=[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sentence_terminators</span><span class="si">}</span><span class="s2">]        # sentence-ending punctuation</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="s2">        [\&quot;&#39;》」\p</span><span class="se">{{</span><span class="s2">pf</span><span class="se">}}</span><span class="s2">\p</span><span class="se">{{</span><span class="s2">pe</span><span class="se">}}</span><span class="s2">]*)                  # optional quotes or closing chars</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="s2">        (?=\s+\p</span><span class="se">{{</span><span class="s2">Lu</span><span class="se">}}</span><span class="s2">|\s*\n|\s*$)               # followed by uppercase or end of text</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a>        <span class="n">re</span><span class="o">.</span><span class="n">VERBOSE</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">UNICODE</span><span class="p">,</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Initializes regex patterns for sentence splitting.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">sentence_terminators</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">GLOBAL_SENTENCE_TERMINATORS</span><span class="p">)</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a>    <span class="c1"># Patterns for handling numbered lists</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">flattened_numbered_list_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a>        <span class="sa">rf</span><span class="s2">&quot;(?&lt;=[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sentence_terminators</span><span class="si">}</span><span class="s2">:])\s+(\p</span><span class="se">{{</span><span class="s2">N</span><span class="se">}}</span><span class="s2">\.)+&quot;</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="p">)</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">numbered_list_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;([\n:]\s*)(\p</span><span class="si">{N}</span><span class="s2">)\.&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">norm_numbered_list_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\s*)(\p</span><span class="si">{N}</span><span class="s2">)&lt;DOT&gt;&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="c1"># Core sentence split regex</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">sentence_end_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a>        <span class="sa">rf</span><span class="s2">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="s2">        (?&lt;!\b(\p</span><span class="se">{{</span><span class="s2">Lu</span><span class="se">}}</span><span class="s2">\p</span><span class="se">{{</span><span class="s2">Ll</span><span class="se">}}{{</span><span class="s2">1, 5</span><span class="se">}}</span><span class="s2">\.)*)   # negative lookbehind for abbreviations</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="s2">        (?&lt;=[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sentence_terminators</span><span class="si">}</span><span class="s2">]        # sentence-ending punctuation</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="s2">        [\&quot;&#39;》」\p</span><span class="se">{{</span><span class="s2">pf</span><span class="se">}}</span><span class="s2">\p</span><span class="se">{{</span><span class="s2">pe</span><span class="se">}}</span><span class="s2">]*)                  # optional quotes or closing chars</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="s2">        (?=\s+\p</span><span class="se">{{</span><span class="s2">Lu</span><span class="se">}}</span><span class="s2">|\s*\n|\s*$)               # followed by uppercase or end of text</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>        <span class="n">re</span><span class="o">.</span><span class="n">VERBOSE</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">UNICODE</span><span class="p">,</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
                   </details>
 
@@ -2894,7 +2894,7 @@ which reduces false splits inside abbreviations, multi-punctuation sequences, or
 
 
 </h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">split</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">split</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2918,10 +2918,10 @@ which reduces false splits inside abbreviations, multi-punctuation sequences, or
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="typing.List">List</span>[<span title="str">str</span>]</code>
+              <code><span title="list">list</span>[<span title="str">str</span>]</code>
           –
           <div class="doc-md-description">
-            <p>List[str]: A list of sentences after segmentation.</p>
+            <p>list[str]: A list of sentences after segmentation.</p>
           </div>
         </li>
     </ul>
@@ -2937,7 +2937,9 @@ which reduces false splits inside abbreviations, multi-punctuation sequences, or
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chunklet/sentence_splitter/_fallback_splitter.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-49">49</a></span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
 <span class="normal"><a href="#__codelineno-0-50">50</a></span>
 <span class="normal"><a href="#__codelineno-0-51">51</a></span>
 <span class="normal"><a href="#__codelineno-0-52">52</a></span>
@@ -2971,45 +2973,43 @@ which reduces false splits inside abbreviations, multi-punctuation sequences, or
 <span class="normal"><a href="#__codelineno-0-80">80</a></span>
 <span class="normal"><a href="#__codelineno-0-81">81</a></span>
 <span class="normal"><a href="#__codelineno-0-82">82</a></span>
-<span class="normal"><a href="#__codelineno-0-83">83</a></span>
-<span class="normal"><a href="#__codelineno-0-84">84</a></span>
-<span class="normal"><a href="#__codelineno-0-85">85</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="k">def</span><span class="w"> </span><span class="nf">split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    Splits text into sentences using rule-based regex patterns.</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">        text (str): The input text to be segmented into sentences.</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">        List[str]: A list of sentences after segmentation.</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a>
-<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">    Notes:</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">        - Normalizes numbered lists during splitting and restores them afterward.</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">        - Handles punctuation, newlines, and common edge cases.</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="c1"># Stage 1: handle flattened numbered lists</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flattened_numbered_list_pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\n \1&quot;</span><span class="p">,</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="c1"># Stage 2: normalize numbered lists</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numbered_list_pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\1\2&lt;DOT&gt;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>
-<a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="c1"># Stage 3: first pass - punctuation-based split</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="n">sentences</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sentence_end_pattern</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="c1"># Stage 4: remove empty strings and strip whitespace</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="n">fixed_sentences</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sentences</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="c1"># Stage 5: second pass - split further on newline (if not at start)</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="n">final_sentences</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="k">for</span> <span class="n">sent</span> <span class="ow">in</span> <span class="n">fixed_sentences</span><span class="p">:</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="n">final_sentences</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">sent</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="c1"># Stage 6: remove _ in numbered list numbers</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="k">return</span> <span class="p">[</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">norm_numbered_list_pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\1\2.&quot;</span><span class="p">,</span> <span class="n">sent</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a>        <span class="k">for</span> <span class="n">sent</span> <span class="ow">in</span> <span class="n">final_sentences</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84"></a>        <span class="k">if</span> <span class="n">sent</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="p">]</span>
+<span class="normal"><a href="#__codelineno-0-83">83</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="k">def</span><span class="w"> </span><span class="nf">split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">    Splits text into sentences using rule-based regex patterns.</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">        text (str): The input text to be segmented into sentences.</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">        list[str]: A list of sentences after segmentation.</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">    Notes:</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">        - Normalizes numbered lists during splitting and restores them afterward.</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">        - Handles punctuation, newlines, and common edge cases.</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="c1"># Stage 1: handle flattened numbered lists</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flattened_numbered_list_pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\n \1&quot;</span><span class="p">,</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="c1"># Stage 2: normalize numbered lists</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numbered_list_pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\1\2&lt;DOT&gt;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="c1"># Stage 3: first pass - punctuation-based split</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="n">sentences</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sentence_end_pattern</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="c1"># Stage 4: remove empty strings and strip whitespace</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="n">fixed_sentences</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sentences</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="c1"># Stage 5: second pass - split further on newline (if not at start)</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="n">final_sentences</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="k">for</span> <span class="n">sent</span> <span class="ow">in</span> <span class="n">fixed_sentences</span><span class="p">:</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="n">final_sentences</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">sent</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="c1"># Stage 6: remove _ in numbered list numbers</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">return</span> <span class="p">[</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">norm_numbered_list_pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\1\2.&quot;</span><span class="p">,</span> <span class="n">sent</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="k">for</span> <span class="n">sent</span> <span class="ow">in</span> <span class="n">final_sentences</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>        <span class="k">if</span> <span class="n">sent</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="p">]</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
