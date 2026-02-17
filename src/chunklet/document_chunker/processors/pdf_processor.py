@@ -1,11 +1,10 @@
 from typing import Any, Generator
+
 import regex as re
 from more_itertools import ilen
 
 # pdfminer is lazily imported
-
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
-
 
 # Pattern to normalize consecutive newlines
 MULTIPLE_NEWLINE_PATTERN = re.compile(r"(\n\s*){2,}")
@@ -156,9 +155,9 @@ class PDFProcessor(BaseProcessor):
                 - created
                 - modified
         """
+        from pdfminer.pdfdocument import PDFDocument
         from pdfminer.pdfpage import PDFPage
         from pdfminer.pdfparser import PDFParser
-        from pdfminer.pdfdocument import PDFDocument
 
         metadata = {"source": str(self.file_path), "page_count": 0}
         with open(self.file_path, "rb") as f:

@@ -1,24 +1,23 @@
-from typing import Any, Literal, Callable, Generator, Annotated
-from collections.abc import Iterable
-import sys
 import copy
+import sys
+from collections.abc import Iterable
+from functools import partial
+from typing import Annotated, Any, Callable, Generator, Literal
+
 import regex as re
 from box import Box
-from functools import partial
-from pydantic import Field
 from loguru import logger
+from pydantic import Field
 
-from chunklet.base_chunker import BaseChunker
-from chunklet.sentence_splitter import SentenceSplitter, BaseSplitter
-from chunklet.common.validation import validate_input, restricted_iterable
 from chunklet.common.batch_runner import run_in_batch
 from chunklet.common.token_utils import count_tokens
+from chunklet.common.validation import restricted_iterable, validate_input
 from chunklet.exceptions import (
+    CallbackError,
     InvalidInputError,
     MissingTokenCounterError,
-    CallbackError,
 )
-
+from chunklet.sentence_splitter import BaseSplitter, SentenceSplitter
 
 # Regex to split sentences into individual clauses
 CLAUSE_END_PATTERN = re.compile(r"(?<=[;,’：—)&…])\s")
@@ -32,7 +31,7 @@ SECTION_BREAK_PATTERN = re.compile(
 )
 
 
-class PlainTextChunker(BaseChunker):
+class PlainTextChunker:
     """
     A powerful text chunking utility offering flexible strategies for optimal text segmentation.
 
@@ -111,7 +110,7 @@ class PlainTextChunker(BaseChunker):
         # Remove continuation marker from the beginning of text_portion first
         if text_portion.startswith(self.continuation_marker):
             text_portion = text_portion[len(self.continuation_marker) :].lstrip()
-            
+
         # Fast path for exact match
         if text_portion.strip() in full_text:
             start = full_text.find(text_portion.strip())
@@ -122,7 +121,7 @@ class PlainTextChunker(BaseChunker):
             return -1, -1
 
         budget = int(
-            max(0, min(len(text_portion) // 5, 60))   # 20 %
+            max(0, min(len(text_portion) // 5, 60))  # 20 %
         )
 
         # Build flexible separator pattern that allows newlines, Unicode separators, and punctuation
@@ -484,7 +483,6 @@ class PlainTextChunker(BaseChunker):
         if max_tokens is not None and not (token_counter or self.token_counter):
             raise MissingTokenCounterError()
 
-    @validate_input
     def chunk(
         self,
         text: str,
@@ -527,10 +525,11 @@ class PlainTextChunker(BaseChunker):
             max_tokens, max_sentences, max_section_breaks, token_counter
         )
 
-        self.log_info(
-            "Starting chunk processing for text starting with: {}.",
-            f"{text[:100]}...",
-        )
+        if self.verbose:
+            logger.info(
+                "Starting chunk processing for text starting with: {}.",
+                f"{text[:100]}...",
+            )
 
         # Adjust limits for _group_by_chunk's internal use
         if max_tokens is None:
@@ -541,11 +540,12 @@ class PlainTextChunker(BaseChunker):
             max_section_breaks = sys.maxsize
 
         if not text.strip():
-            self.log_info("Input text is empty. Returning empty list.")
+            if self.verbose:
+                logger.info("Input text is empty. Returning empty list.")
             return []
 
         try:
-            sentences = self.sentence_splitter.split(
+            sentences = self.sentence_splitter.split_text(
                 text,
                 lang,
             )
@@ -581,10 +581,9 @@ class PlainTextChunker(BaseChunker):
 
         return self._create_chunk_boxes(chunks, base_metadata, text)
 
-    @validate_input
     def batch_chunk(
         self,
-        texts: restricted_iterable(str),
+        texts: "restricted_iterable(str)",  # pyright: ignore
         *,
         lang: str = "auto",
         max_tokens: Annotated[int | None, Field(ge=12)] = None,

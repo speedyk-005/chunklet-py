@@ -1,7 +1,9 @@
 import inspect
-from typing import Callable, Any
+from typing import Any, Callable
+
 from pydantic import TypeAdapter, ValidationError
-from chunklet.common.validation import validate_input, pretty_errors
+
+from chunklet.common.validation import pretty_errors, validate_input
 from chunklet.exceptions import CallbackError
 
 

@@ -1,10 +1,12 @@
+import warnings
+from itertools import chain, tee
 from pathlib import Path
-from typing import Callable, Literal, Any, Generator, Annotated, Iterable
-from pydantic import Field
+from typing import Annotated, Any, Callable, Generator, Iterable, Literal
+
 from box import Box
 from loguru import logger
-from itertools import chain, tee
 from more_itertools import ilen, split_at
+from pydantic import Field
 
 try:
     from striprtf.striprtf import rtf_to_text
@@ -17,23 +19,23 @@ except ImportError:
     from_path = None
 
 from chunklet.base_chunker import BaseChunker
-from chunklet.sentence_splitter import BaseSplitter
-from chunklet.plain_text_chunker import PlainTextChunker
-from chunklet.document_chunker.processors import (
-    pdf_processor,
-    epub_processor,
-    docx_processor,
-    odt_processor,
-)
+from chunklet.common.validation import restricted_iterable, validate_input
+from chunklet.document_chunker._plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker.converters import (
     html_2_md,
-    rst_2_md,
     latex_2_md,
+    rst_2_md,
     table_2_md,
 )
+from chunklet.document_chunker.processors import (
+    docx_processor,
+    epub_processor,
+    odt_processor,
+    pdf_processor,
+)
 from chunklet.document_chunker.registry import custom_processor_registry
-from chunklet.common.validation import validate_input, restricted_iterable
 from chunklet.exceptions import InvalidInputError, UnsupportedFileTypeError
+from chunklet.sentence_splitter import BaseSplitter
 
 
 class DocumentChunker(BaseChunker):
@@ -335,7 +337,93 @@ class DocumentChunker(BaseChunker):
         }
 
     @validate_input
-    def chunk(
+    def chunk_text(
+        self,
+        text: str,
+        *,
+        lang: str = "auto",
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_sentences: Annotated[int | None, Field(ge=1)] = None,
+        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
+        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
+        offset: Annotated[int, Field(ge=0)] = 0,
+        token_counter: Callable[[str], int] | None = None,
+        base_metadata: dict[str, Any] = {},
+    ) -> list[Box]:
+        """
+        Chunks raw text content.
+
+        Args:
+            text (str): The raw text to chunk.
+            lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
+            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
+            overlap_percent (int | float): Percentage of overlap between chunks (0-85).
+            offset (int): Starting sentence offset for chunking. Defaults to 0.
+            token_counter (callable | None): Optional token counting function.
+                Required if `max_tokens` is provided.
+            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
+
+        Returns:
+            list[Box]: A list of `Box` objects, each representing a chunk.
+        """
+        params = {k: v for k, v in locals().items() if k != "self"}
+        params["token_counter"] = params.get("token_counter") or self.token_counter
+        return self.plain_text_chunker.chunk(**params)
+
+    @validate_input
+    def chunk_texts(
+        self,
+        texts: "restricted_iterable(str)",  # noqa: F722
+        *,
+        lang: str = "auto",
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_sentences: Annotated[int | None, Field(ge=1)] = None,
+        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
+        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
+        offset: Annotated[int, Field(ge=0)] = 0,
+        token_counter: Callable[[str], int] | None = None,
+        base_metadata: dict[str, Any] = {},
+        separator: Any = None,
+        n_jobs: Annotated[int, Field(ge=1)] | None = None,
+        show_progress: bool = True,
+        on_errors: Literal["raise", "skip", "break"] = "raise",
+    ) -> Generator[Box, None, None]:
+        """
+        Chunks multiple text contents.
+
+        Args:
+            texts (list[str]): The list of texts to chunk.
+            lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
+            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
+            overlap_percent (int | float): Percentage of overlap between chunks (0-85).
+            offset (int): Starting sentence offset for chunking. Defaults to 0.
+            token_counter (callable | None): Optional token counting function.
+                Required if `max_tokens` is provided.
+            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
+            separator (Any): A value to be yielded after the chunks of each text are processed.
+            n_jobs (int | None): Number of parallel workers.
+            show_progress (bool): Show progress bar.
+            on_errors (str): How to handle errors.
+
+        yields:
+            Box: `Box` object, representing a chunk with its content and metadata.
+
+        Raises:
+            InvalidInputError: If the input arguments aren't valid.
+            UnsupportedFileTypeError: If the file extension is not supported or is missing.
+            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
+            CallbackError: If a callback function (e.g., custom processors callbacks) fails during execution.
+        """
+        params = {k: v for k, v in locals().items() if k != "self"}
+        params["token_counter"] = params["token_counter"] or self.token_counter
+        yield from self.plain_text_chunker.batch_chunk(**params)
+
+    @validate_input
+    def chunk_file(
         self,
         path: str | Path,
         *,
@@ -346,6 +434,7 @@ class DocumentChunker(BaseChunker):
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
+        base_metadata: dict[str, Any] = {},
     ) -> list[Box]:
         """
         Chunks a single document from a given path.
@@ -364,6 +453,7 @@ class DocumentChunker(BaseChunker):
             offset (int): Starting sentence offset for chunking. Defaults to 0.
             token_counter (callable | None): Optional token counting function.
                 Required if `max_tokens` is provided.
+            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
 
         Returns:
             list[Box]: A list of `Box` objects, each representing
@@ -380,20 +470,20 @@ class DocumentChunker(BaseChunker):
         ext = self._validate_and_get_extension(path)
 
         text_content_or_generator, document_metadata = self._extract_data(path, ext)
+        base_metadata.update(document_metadata)
 
         if not isinstance(text_content_or_generator, str):
             raise UnsupportedFileTypeError(
                 f"File type '{ext}' is not supported by the general chunk method.\n"
                 "Reason: The processor for this file returns iterable, "
                 "so it must be processed in parallel for efficiency.\n"
-                "💡 Hint: use `chunker.batch_chunk([file.ext])` for this file type."
+                "💡 Hint: use `chunker.chunk_files([file.ext])` for this file type."
             )
 
         self.log_info("Starting chunk processing for path: {}.", path)
 
         text_content = text_content_or_generator
 
-        # Process as a single block of text
         chunk_boxes = self.plain_text_chunker.chunk(
             text=text_content,
             lang=lang,
@@ -403,7 +493,7 @@ class DocumentChunker(BaseChunker):
             overlap_percent=overlap_percent,
             offset=offset,
             token_counter=token_counter or self.token_counter,
-            base_metadata=document_metadata,
+            base_metadata=base_metadata,
         )
 
         self.log_info("Generated {} chunks for {}.", len(chunk_boxes), path)
@@ -411,9 +501,9 @@ class DocumentChunker(BaseChunker):
         return chunk_boxes
 
     @validate_input
-    def batch_chunk(
+    def chunk_files(
         self,
-        paths: restricted_iterable(str | Path),
+        paths: "restricted_iterable(str | Path)",  # noqa: F722
         *,
         lang: str = "auto",
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
@@ -426,6 +516,7 @@ class DocumentChunker(BaseChunker):
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
+        base_metadata: dict[str, Any] = {},
     ) -> Generator[Box, None, None]:
         """
         Chunks multiple documents from a list of file paths.
@@ -451,6 +542,7 @@ class DocumentChunker(BaseChunker):
                    Must be >= 1 if specified.
             show_progress (bool): Flag to show or disable the loading bar.
             on_errors: How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
+            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
 
         yields:
             Box: `Box` object, representing a chunk with its content and metadata.
@@ -467,7 +559,7 @@ class DocumentChunker(BaseChunker):
         gathered_data = self._gather_all_data(paths, on_errors)
 
         all_chunks_gen = self.plain_text_chunker.batch_chunk(
-            texts=gathered_data["all_texts_gen"],
+            texts=list(gathered_data["all_texts_gen"]),
             lang=lang,
             max_tokens=max_tokens,
             max_sentences=max_sentences,
@@ -511,7 +603,64 @@ class DocumentChunker(BaseChunker):
                 doc_metadata["section_count"] = path_section_counts[curr_path]
                 doc_metadata["curr_section"] = i
 
-                ch["metadata"].update(doc_metadata)
+                # Ensure we have all metadata
+                ch["metadata"] = base_metadata | ch["metadata"] | doc_metadata
                 yield ch
 
             path_section_counts[curr_path] -= 1
+
+    def chunk(
+        self,
+        path: str | Path,
+        *,
+        lang: str = "auto",
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_sentences: Annotated[int | None, Field(ge=1)] = None,
+        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
+        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
+        offset: Annotated[int, Field(ge=0)] = 0,
+        token_counter: Callable[[str], int] | None = None,
+        base_metadata: dict[str, Any] = {},
+    ) -> list[Box]:
+        """
+        Note:
+            Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_file` instead.
+        """
+        warnings.warn(
+            "The `chunk` method is deprecated since v2.2.0 and will be removed in v3.0.0. Use `chunk_file` instead.",
+            FutureWarning,
+            stacklevel=2,
+        )
+        params = {k: v for k, v in locals().items() if k != "self"}
+        params["token_counter"] = params["token_counter"] or self.token_counter
+        return self.chunk_file(**params)
+
+    def batch_chunk(
+        self,
+        paths: "restricted_iterable(str | Path)",  # noqa: F722
+        *,
+        lang: str = "auto",
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_sentences: Annotated[int | None, Field(ge=1)] = None,
+        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
+        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
+        offset: Annotated[int, Field(ge=0)] = 0,
+        token_counter: Callable[[str], int] | None = None,
+        separator: Any = None,
+        n_jobs: Annotated[int, Field(ge=1)] | None = None,
+        show_progress: bool = True,
+        on_errors: Literal["raise", "skip", "break"] = "raise",
+        base_metadata: dict[str, Any] = {},
+    ) -> Generator[Box, None, None]:
+        """
+        Note:
+            Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_files` instead.
+        """
+        warnings.warn(
+            "The `batch_chunk` method is deprecated since v2.2.0 and will be removed in v3.0.0. Use `chunk_files` instead.",
+            FutureWarning,
+            stacklevel=2,
+        )
+        params = {k: v for k, v in locals().items() if k != "self"}
+        params["token_counter"] = params["token_counter"] or self.token_counter
+        yield from self.chunk_files(**params)

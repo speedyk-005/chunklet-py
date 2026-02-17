@@ -1,15 +1,16 @@
-import os
 import json
-import traceback
 import mimetypes
+import os
+import traceback
 from pathlib import Path
 from typing import Callable
+
 import aiofiles
 
 try:
     import uvicorn
     from charset_normalizer import detect
-    from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+    from fastapi import FastAPI, File, Form, HTTPException, UploadFile
     from fastapi.responses import HTMLResponse
     from fastapi.staticfiles import StaticFiles
 except ImportError:
@@ -25,9 +26,9 @@ except ImportError:
     HTMLResponse = lambda x: x  # noqa: E731
     StaticFiles = None
 
-from chunklet.document_chunker import DocumentChunker
 from chunklet.code_chunker import CodeChunker
 from chunklet.common.validation import validate_input
+from chunklet.document_chunker import DocumentChunker
 
 
 class Visualizer:
@@ -80,7 +81,9 @@ class Visualizer:
 
         self.static_dir = Path(__file__).parent / "static"
 
-        self.app.mount("/static", StaticFiles(directory=str(self.static_dir)), name="static")
+        self.app.mount(
+            "/static", StaticFiles(directory=str(self.static_dir)), name="static"
+        )
 
         # API endpoints
         self.app.get("/api/token_counter_status")(self._get_token_counter_status)
@@ -154,31 +157,9 @@ class Visualizer:
         text = content.decode(encoding, errors="ignore")
         chunker = self.code_chunker if mode == "code" else self.document_chunker
 
-        if mode == "code":
-            # For code mode, use the uploaded file directly with original extension
-
-            suffix = Path(file.filename).suffix
-            async with aiofiles.tempfile.NamedTemporaryFile(
-                mode="wb",
-                suffix=suffix or "txt",
-                delete=False,
-            ) as tmp:
-                await tmp.write(content)
-                tmp_path = tmp.name
-        else:
-            # For document mode, rewrite as txt file
-            async with aiofiles.tempfile.NamedTemporaryFile(
-                mode="w",
-                suffix=".txt",
-                encoding=encoding,
-                delete=False,
-            ) as tmp:
-                await tmp.write(content.decode("utf-8", errors="ignore"))
-                tmp_path = tmp.name
-
         try:
             chunks = [
-                dict(chunk) for chunk in chunker.chunk(tmp_path, **chunker_params)
+                dict(chunk) for chunk in chunker.chunk_text(text, **chunker_params)
             ]
 
             return {
@@ -197,8 +178,6 @@ class Visualizer:
                 500,
                 f"Chunking failed. Please check the server terminal for specific error details. ({str(e)})",
             )
-        finally:
-            # Always cleanup temp file
             try:
                 os.unlink(tmp_path)
             except OSError:

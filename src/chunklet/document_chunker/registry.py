@@ -1,9 +1,10 @@
 import inspect
-from typing import Callable, Iterable, Any
-from pydantic import TypeAdapter, ValidationError
-from chunklet.common.validation import validate_input, pretty_errors
-from chunklet.exceptions import CallbackError, InvalidInputError
+from typing import Any, Callable, Iterable
 
+from pydantic import TypeAdapter, ValidationError
+
+from chunklet.common.validation import pretty_errors, validate_input
+from chunklet.exceptions import CallbackError, InvalidInputError
 
 # A tuple containing the extracted text(s) and a dictionary of metadata.
 ReturnType = tuple[str | Iterable[str], dict[str, Any]]

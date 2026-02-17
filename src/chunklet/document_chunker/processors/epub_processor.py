@@ -1,13 +1,13 @@
-from typing import Any
 from collections.abc import Generator
+from typing import Any
 
 try:
     from ebooklib import epub
 except ImportError:
     epub = None
 
-from chunklet.document_chunker.processors.base_processor import BaseProcessor
 from chunklet.document_chunker.converters.html_2_md import html_to_md
+from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
 
 class EPUBProcessor(BaseProcessor):

@@ -1,9 +1,9 @@
 from typing import Any, Generator
 
-# mammoth and docx are lazily imported
-
-from chunklet.document_chunker.processors.base_processor import BaseProcessor
 from chunklet.document_chunker.converters.html_2_md import html_to_md
+
+# mammoth and docx are lazily imported
+from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
 
 class DOCXProcessor(BaseProcessor):

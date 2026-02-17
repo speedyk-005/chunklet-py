@@ -1,7 +1,6 @@
 from typing import Any, Generator
 
 # odfpy is lazy imported
-
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
 
@@ -57,7 +56,7 @@ class ODTProcessor(BaseProcessor):
                  - author_name
 
         """
-        from odf import text, meta, dc
+        from odf import dc, meta, text
 
         metadata = {}
         for field in [

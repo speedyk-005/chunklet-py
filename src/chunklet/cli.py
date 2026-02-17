@@ -1,16 +1,16 @@
-import sys
 import json
-import typer
-from typing import Optional, List
-from pathlib import Path
-from enum import Enum
-import subprocess
 import shlex
 import socket
-from importlib.metadata import version, PackageNotFoundError
+import subprocess
+import sys
+from enum import Enum
+from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
+from typing import List, Optional
+
+import typer
 
 from chunklet.sentence_splitter import SentenceSplitter
-from chunklet.plain_text_chunker import PlainTextChunker
 
 try:
     from chunklet.document_chunker import DocumentChunker
@@ -28,7 +28,6 @@ except ImportError:
     Visualizer = None
 
 from chunklet.common.path_utils import is_path_like
-
 
 try:
     __version__ = version("chunklet-py")
@@ -307,8 +306,15 @@ def split_command(
 
     # Split Logic
     splitter = SentenceSplitter(verbose=verbose)
-    lang_detected, confidence = splitter.detected_top_language(input_text)
-    sentences = splitter.split(input_text, lang=lang or lang_detected)
+
+    if source:
+        sentences = splitter.split_file(source, lang=lang or "auto")
+        lang_detected, confidence = splitter.detected_top_language(
+            source.read_text(encoding="utf-8")
+        )
+    else:
+        sentences = splitter.split_text(input_text, lang=lang or "auto")
+        lang_detected, confidence = splitter.detected_top_language(input_text)
 
     # Output Handling
     if destination:
@@ -372,22 +378,22 @@ def chunk_command(
     max_sentences: int = typer.Option(
         None,
         "--max-sentences",
-        help="Maximum number of sentences per chunk. Applies to PlainTextChunker and DocumentChunker. (must be >= 1)",
+        help="Maximum number of sentences per chunk. (must be >= 1)",
     ),
     max_section_breaks: Optional[int] = typer.Option(
         None,
         "--max-section-breaks",
-        help="Maximum number of section breaks per chunk. Applies to PlainTextChunker and DocumentChunker. (must be >= 1)",
+        help="Maximum number of section breaks per chunk. (must be >= 1)",
     ),
     overlap_percent: float = typer.Option(
         20.0,
         "--overlap-percent",
-        help="Percentage of overlap between chunks (0-85). Applies to PlainTextChunker and DocumentChunker.",
+        help="Percentage of overlap between chunks (0-85).",
     ),
     offset: int = typer.Option(
         0,
         "--offset",
-        help="Starting sentence offset for chunking. Applies to PlainTextChunker and DocumentChunker.",
+        help="Starting sentence offset for chunking.",
     ),
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging."
@@ -512,24 +518,18 @@ def chunk_command(
             }
         )
     else:
-        if text:
-            chunker_instance = PlainTextChunker(
-                verbose=verbose,
-                token_counter=token_counter,
+        if DocumentChunker is None:
+            typer.echo(
+                "Error: DocumentChunker dependencies not available.\n"
+                "Please install with: pip install chunklet-py[document]",
+                err=True,
             )
-        else:
-            if DocumentChunker is None:
-                typer.echo(
-                    "Error: DocumentChunker dependencies not available.\n"
-                    "Please install with: pip install chunklet-py[document]",
-                    err=True,
-                )
-                raise typer.Exit(code=1)
+            raise typer.Exit(code=1)
 
-            chunker_instance = DocumentChunker(
-                verbose=verbose,
-                token_counter=token_counter,
-            )
+        chunker_instance = DocumentChunker(
+            verbose=verbose,
+            token_counter=token_counter,
+        )
         chunk_kwargs.update(
             {
                 "lang": lang,
@@ -542,8 +542,8 @@ def chunk_command(
 
     # --- Chunking logic ---
     if text:
-        chunks = chunker_instance.chunk(
-            text=text,
+        chunks = chunker_instance.chunk_text(
+            text,
             **chunk_kwargs,
         )
     else:
@@ -556,14 +556,14 @@ def chunk_command(
             ".odt",
         }:
             single_file = file_paths[0]
-            chunks = chunker_instance.chunk(
-                path=single_file,
+            chunks = chunker_instance.chunk_file(
+                single_file,
                 **chunk_kwargs,
             )
         else:
             # Batch input logic
-            chunks = chunker_instance.batch_chunk(
-                paths=file_paths,
+            chunks = chunker_instance.chunk_files(
+                file_paths,
                 n_jobs=n_jobs,
                 show_progress=True,
                 on_errors=on_errors,

@@ -1,9 +1,9 @@
-from typing import Any, Literal, Callable
-from collections.abc import Iterable, Generator
+from collections.abc import Generator, Iterable
+from typing import Any, Callable, Literal
 
 # mpire is lazy imported
-
 from loguru import logger
+
 from chunklet.common.validation import safely_count_iterable
 
 

@@ -1,9 +1,11 @@
-from typing import Annotated, Any, Union
-from collections.abc import Iterable, Iterator, Generator
-from itertools import tee
-from more_itertools import ilen
+from collections.abc import Generator, Iterable, Iterator
 from functools import wraps
-from pydantic import validate_call, ConfigDict, PlainValidator, ValidationError
+from itertools import tee
+from typing import Annotated, Any, Union
+
+from more_itertools import ilen
+from pydantic import ConfigDict, PlainValidator, ValidationError, validate_call
+
 from chunklet.exceptions import InvalidInputError
 
 
@@ -32,8 +34,10 @@ def pretty_errors(error: ValidationError) -> str:
         )
 
         lines.append(
-            (f"{ind}) {formatted_loc} {msg}.\n"
-             f"  Found: (input={input_value!r}, type={input_type})")
+            (
+                f"{ind}) {formatted_loc} {msg}.\n"
+                f"  Found: (input={input_value!r}, type={input_type})"
+            )
         )
 
     lines.append("  " + getattr(error, "hint", ""))

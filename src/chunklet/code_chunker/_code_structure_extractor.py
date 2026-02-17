@@ -1,42 +1,40 @@
 """
-Code Structure Extractor
+Internal module for extracting code structures from source code files.
 
-Internal module for extracting code structures from source code.
-Split from CodeChunker for modularity.
+Provides functionality to parse and analyze code syntax trees, identifying functions,
+classes, namespaces, and other structural elements.
+This module is used by CodeChunker to understand code structure before
+splitting into chunks.
 """
 
-from pathlib import Path
-from itertools import accumulate
-import regex as re
 from collections import defaultdict, namedtuple
+from itertools import accumulate
+from pathlib import Path
+
+import regex as re
 
 try:
-    from charset_normalizer import from_path
-    from littletree import Node
     import defusedxml.ElementTree as ET
+    from littletree import Node
 except ImportError:
-    from_path, Node, ET = None, None, None
+    Node, ET = None, None
 
 from loguru import logger
 
 from chunklet.code_chunker.patterns import (
-    MULTI_LINE_STRING_ASSIGN,
     ALL_SINGLE_LINE_COMM,
-    FULL_LINE_SINGLE_COMM,
-    MULTI_LINE_COMM,
+    CLOSER,
     DOCSTRING_STYLE_ONE,
     DOCSTRING_STYLE_TWO,
+    FULL_LINE_SINGLE_COMM,
     FUNCTION_DECLARATION,
-    NAMESPACE_DECLARATION,
     METADATA,
+    MULTI_LINE_COMM,
+    MULTI_LINE_STRING_ASSIGN,
+    NAMESPACE_DECLARATION,
     OPENER,
-    CLOSER,
 )
-from chunklet.code_chunker.helpers import is_binary_file, is_python_code
-from chunklet.common.path_utils import is_path_like
 from chunklet.common.validation import validate_input
-from chunklet.exceptions import FileProcessingError
-
 
 CodeLine = namedtuple(
     "CodeLine", ["line_number", "content", "indent_level", "func_partial_signature"]
@@ -44,8 +42,10 @@ CodeLine = namedtuple(
 
 
 class CodeStructureExtractor:
-    """
-    Internal class for extracting structural units from source code.
+    """Extracts structural units from source code.
+
+    This class provides functionality to parse source code files and identify functions,
+    classes, namespaces, and other structural elements using a language-agnostic approach.
     """
 
     @validate_input
@@ -62,43 +62,6 @@ class CodeStructureExtractor:
         num_newlines = max(0, len(matched_text.splitlines()) - 1)
 
         return "\n" * num_newlines
-
-    def _read_source(self, source: str | Path) -> str:
-        """Retrieve source code from file or treat input as raw string.
-
-        Args:
-            source (str | Path): File path or raw code string.
-
-        Returns:
-            str: Source code content.
-
-        Raises:
-            FileProcessingError: When file cannot be read or doesn't exist.
-        """
-        if from_path is None:
-            raise ImportError(
-                "The 'charset-normalizer' library is not installed. "
-                "Please install it with 'pip install charset-normalizer>=3.4.0' "
-                "or install the code processing extras with 'pip install chunklet-py[code]'"
-            )
-
-        if isinstance(source, Path) or is_path_like(source):
-            path = Path(source)
-            if not path.exists():
-                raise FileProcessingError(f"File does not exist: {path}")
-            if is_binary_file(path):
-                raise FileProcessingError(f"Binary file not supported: {path}")
-
-            match = from_path(str(path)).best()
-            content = str(match) if match else ""
-            if self.verbose:
-                logger.info(
-                    "Successfully read %d characters from {} using charset detection",
-                    len(content),
-                    path,
-                )
-            return content
-        return source
 
     def _annotate_block(self, tag: str, match: re.Match) -> str:
         """Prefix each line in a matched block with a tag for tracking.
@@ -200,7 +163,7 @@ class CodeStructureExtractor:
         return summarized_line_content + "\n" * padding_count
 
     def _preprocess(
-        self, source_code: str, include_comments: bool, docstring_mode: str = "all"
+        self, code: str, include_comments: bool, docstring_mode: str = "all"
     ) -> tuple[str, tuple[int, ...]]:
         """
         Preprocess the code before extraction.
@@ -211,7 +174,7 @@ class CodeStructureExtractor:
           - Annotate comments, docstrings, and annotations for later detection
 
         Args:
-            source_code (str): Source code to preprocess.
+            code (str): Source code to preprocess.
             include_comments (bool): Whether to include comments in output.
             docstring_mode (str): How to handle docstrings.
 
@@ -223,32 +186,30 @@ class CodeStructureExtractor:
         # Call at first to preserve span accurary befire any altering
         # Pad with 0 so cumulative_lengths[line_number - 1] == start_char_offset
         cumulative_lengths = (0,) + tuple(
-            accumulate(len(line) for line in source_code.splitlines(keepends=True))
+            accumulate(len(line) for line in code.splitlines(keepends=True))
         )
 
         # Remove comments if not required
         if not include_comments:
-            source_code = ALL_SINGLE_LINE_COMM.sub(
-                lambda m: self._replace_with_newlines(m), source_code
+            code = ALL_SINGLE_LINE_COMM.sub(
+                lambda m: self._replace_with_newlines(m), code
             )
-            source_code = MULTI_LINE_COMM.sub(
-                lambda m: self._replace_with_newlines(m), source_code
-            )
+            code = MULTI_LINE_COMM.sub(lambda m: self._replace_with_newlines(m), code)
 
         # Process docstrings according to mode
         if docstring_mode == "summary":
-            source_code = DOCSTRING_STYLE_ONE.sub(
-                lambda m: self._summarize_docstring_style_one(m), source_code
+            code = DOCSTRING_STYLE_ONE.sub(
+                lambda m: self._summarize_docstring_style_one(m), code
             )
-            source_code = DOCSTRING_STYLE_TWO.sub(
-                lambda m: self._summarize_docstring_style_two(m), source_code
+            code = DOCSTRING_STYLE_TWO.sub(
+                lambda m: self._summarize_docstring_style_two(m), code
             )
         elif docstring_mode == "excluded":
-            source_code = DOCSTRING_STYLE_ONE.sub(
-                lambda m: self._replace_with_newlines(m), source_code
+            code = DOCSTRING_STYLE_ONE.sub(
+                lambda m: self._replace_with_newlines(m), code
             )
-            source_code = DOCSTRING_STYLE_TWO.sub(
-                lambda m: self._replace_with_newlines(m), source_code
+            code = DOCSTRING_STYLE_TWO.sub(
+                lambda m: self._replace_with_newlines(m), code
             )
         # Else "all": do nothing
 
@@ -264,11 +225,11 @@ class CodeStructureExtractor:
 
         # Apply _annotate_block to all matches for each pattern
         for pattern, tag in patterns_n_tags:
-            source_code = pattern.sub(
-                lambda match, tag=tag: self._annotate_block(tag, match), source_code
+            code = pattern.sub(
+                lambda match, tag=tag: self._annotate_block(tag, match), code
             )
 
-        return source_code, cumulative_lengths
+        return code, cumulative_lengths
 
     def _post_processing(self, snippet_dicts: list[dict]):
         """
@@ -426,8 +387,9 @@ class CodeStructureExtractor:
         indent_level: int,
         buffer: dict,
         state: dict,
-        source: str | Path,
+        code: str | Path,
         func_start: str | None = None,
+        is_python_code: bool = False,
     ):
         """
         Detects top-level namespace or function starts and performs language-aware flushing.
@@ -438,8 +400,9 @@ class CodeStructureExtractor:
             buffer (dict): Buffer for intermediate processing.
             state (dict): The state dictionary that holds info about current structure, last indentation level,
                 function scope, and the snippet dicts (extracted blocks).
-            source (str | Path): Raw code string or Path to source file.
+            code (str | Path): Raw code string or Path to code file.
             func_start (str, optional): Line corresponds to a function partial signature
+            is_python_code (bool): Whether the code is Python.
         """
         is_namespace = bool(NAMESPACE_DECLARATION.match(line))
         func_count = sum(1 for l in state["curr_struct"] if l.func_partial_signature)
@@ -465,7 +428,7 @@ class CodeStructureExtractor:
             # If it is a Python code, we can flush everything, else we won't flush the docstring yet
             # This helps including the docstring that is on top of block definition in the other languages
             if state["curr_struct"]:
-                if is_python_code(source):
+                if is_python_code:
                     self._flush_snippet(
                         state["curr_struct"], state["snippet_dicts"], buffer
                     )
@@ -481,30 +444,31 @@ class CodeStructureExtractor:
 
     def extract_code_structure(
         self,
-        source: str | Path,
+        code: str,
         include_comments: bool,
         docstring_mode: str,
+        is_python_code: bool = False,
     ) -> tuple[list[dict], tuple[int, ...]]:
         """
-        Preprocess and parse source into individual snippet boxes.
+        Preprocess and parse code into individual snippet boxes.
 
         This function-first extraction identifies functions as primary units
         while implicitly handling other structures within the function context.
 
         Args:
-            source (str | Path): Raw code string or Path to source file.
+            code (str): Raw code string.
             include_comments (bool): Whether to include comments in output.
             docstring_mode (Literal["summary", "all", "excluded"]): How to handle docstrings.
+            is_python_code (bool): Whether the code is Python.
 
         Returns:
             tuple[list[dict], tuple[int, ...]]: A tuple containing the list of extracted code structure boxes and the line lengths.
         """
-        source_code = self._read_source(source)
-        if not source_code:
+        if not code:
             return [], ()
 
-        source_code, cumulative_lengths = self._preprocess(
-            source_code, include_comments, docstring_mode
+        code, cumulative_lengths = self._preprocess(
+            code, include_comments, docstring_mode
         )
 
         state = {
@@ -514,7 +478,7 @@ class CodeStructureExtractor:
         }
         buffer = defaultdict(list)
 
-        for line_no, line in enumerate(source_code.splitlines(), start=1):
+        for line_no, line in enumerate(code.splitlines(), start=1):
             indent_level = len(line) - len(line.lstrip())
 
             # Detect annotated lines
@@ -551,8 +515,9 @@ class CodeStructureExtractor:
                 indent_level=indent_level,
                 buffer=buffer,
                 state=state,
-                source=source,
+                code=code,
                 func_start=func_start,
+                is_python_code=is_python_code,
             )
 
             if (
@@ -575,8 +540,6 @@ class CodeStructureExtractor:
 
         snippet_dicts = self._post_processing(state["snippet_dicts"])
         if self.verbose:
-            logger.info(
-                "Extracted {} structural blocks from source", len(snippet_dicts)
-            )
+            logger.info("Extracted {} structural blocks from code", len(snippet_dicts))
 
         return snippet_dicts, cumulative_lengths

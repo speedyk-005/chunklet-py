@@ -50,6 +50,7 @@ dependencies = [
   "regex>=2025.7.29",
   "pydantic>=2.11.6,<3.0",
   "typer>=0.19.0,<1.0",
+  "charset-normalizer>=3.4.2,<4.0",
  ]
 
 [project.optional-dependencies]
@@ -68,13 +69,11 @@ document = [
   "odfpy>=1.4.1,<2.0",
   "openpyxl>=3.1.5,<4.0",
   "tabulate2>=1.10.2,<2.0",
-  "charset-normalizer>=3.4.2,<4.0",
 ]
 
 code = [
   "defusedxml>=0.7.1,<1.0",
   "littletree>=0.8.7,<1.0",
-  "charset-normalizer>=3.4.2,<4.0",
 ]
 
 visualization = [
@@ -84,8 +83,6 @@ visualization = [
 
   # Major changes happens often
   "aiofiles==25.1.0",
-  
-  "charset-normalizer>=3.4.2,<4.0",
 ]
 
 all = ["chunklet-py[document,code,visualization]"]

@@ -1,2 +1,2 @@
-from .sentence_splitter import *
 from .registry import *
+from .sentence_splitter import *

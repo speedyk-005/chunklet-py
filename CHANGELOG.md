@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.2.0] - 2026-02-14
+## [2.2.0] - 2026-02-17
 
 ### Changed
+- **API Unification**: Renamed chunking methods to `chunk_text`, `chunk_file`, `chunk_texts`, `chunk_files` following new base class interface, with deprecated wrappers for old `chunk` and `batch_chunk` methods (will be removed in v3.0.0)
+- **PlainTextChunker Merge**: Moved PlainTextChunker into document_chunker as `_plain_text_chunker.py`, now accessible via DocumentChunker with deprecated import from top-level
+- **SentenceSplitter Rename**: Renamed `split` method to `split_text` with deprecation warning
 - **CodeChunker Renames**:
   - Renamed `MULTI_LINE_COMMENT` to `MULTI_LINE_COMM` for consistency
   - Renamed `CLOSURE` to `CLOSER` as it's a misconception
@@ -61,7 +64,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed remnants of annotation tags in output by using separate patterns for full-line vs inline comments
   - Only full-line comments are now annotated, inline comments stay with their code line
 - **Visualizer CSS and Docstring Positioning**:
-  - Fixed docstring positioning issue in visualizer web interface. The issue was caused by forcing `.txt` extension on temporary files, preventing proper Python parsing. Fix preserves original file extensions for code mode.
   - Optimized chunk span interactions by replacing layout-affecting borders with box-shadows for smooth, non-jumpy hover effects, custom scrollbar styling, and improved overlap visibility with consistent transitions across all states.
   - Fixed download and reveal buttons to remain enabled after processing chunks, rather than being disabled when no file is uploaded.
 
