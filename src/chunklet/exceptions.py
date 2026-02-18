@@ -19,7 +19,7 @@ class MissingTokenCounterError(InvalidInputError):
     def __init__(self, msg: str = ""):
         self.msg = msg or (
             "A token_counter is required for token-based chunking.\n"
-            "💡 Hint: Pass a token counting function to the `chunk` method, like `chunker.chunk(..., token_counter=tk)`\n"
+            "💡 Hint: Pass a token counting function to the chunking method, like `chunker.chunk_text(..., token_counter=tk)`\n"
             "or configure it in the class initialization: `.*Chunker(token_counter=tk)`"
         )
         super().__init__(self.msg)

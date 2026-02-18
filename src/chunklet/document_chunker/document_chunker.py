@@ -19,6 +19,7 @@ except ImportError:
     from_path = None
 
 from chunklet.base_chunker import BaseChunker
+from chunklet.common.path_utils import read_text_file
 from chunklet.common.validation import restricted_iterable, validate_input
 from chunklet.document_chunker._plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker.converters import (
@@ -196,24 +197,16 @@ class DocumentChunker(BaseChunker):
         Returns:
             str: The text content of the file
         """
-        if from_path is None:
-            raise ImportError(
-                "The 'charset-normalizer' library is not installed. "
-                "Please install it with 'pip install charset-normalizer>=3.4.0' "
-                "or install the document processing extras with 'pip install chunklet-py[document]'"
-            )
-
-        match = from_path(str(path)).best()
-        raw_content = str(match) if match else ""
+        content = read_text_file(path)
 
         if ext == ".rtf":
             if rtf_to_text is None:
                 raise ImportError(
                     "The 'striprtf' library is not installed. Please install it with 'pip install 'striprtf>=0.0.29'' or install the document processing extras with 'pip install chunklet-py[document]'"
                 )
-            return rtf_to_text(raw_content)
+            return rtf_to_text(content)
         else:  # For .txt, .md, and others handled by simple read
-            return raw_content
+            return content
 
     def _extract_data(
         self, path: str | Path, ext: str

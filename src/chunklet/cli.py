@@ -61,7 +61,7 @@ app = typer.Typer(
 )
 
 
-def _create_external_tokenizer(command_str: str, timeout: int):
+def _create_external_tokenizer(command_str: str, timeout: int | None):
     """Create a tokenizer function from a shell command string."""
     command_list = shlex.split(command_str)
 
@@ -112,6 +112,8 @@ def _extract_files(source: Optional[List[Path]]) -> List[Path]:
     for path in source:
         path = path.resolve()
 
+        # Fast heuristic check: validates path format before filesystem operations
+        # This catches malformed paths early without expensive I/O
         if is_path_like(str(path)):
             if path.is_file():
                 file_paths.append(path)
@@ -406,8 +408,8 @@ def chunk_command(
             "The command should take text as stdin and output the token count as a number."
         ),
     ),
-    tokenizer_timeout: int = typer.Option(
-        10,
+    tokenizer_timeout: int | None = typer.Option(
+        None,
         "--tokenizer-timeout",
         "-t",
         help="Timeout in seconds for the tokenizer command.",
@@ -609,8 +611,8 @@ def visualize_command(
             "The command should take text as stdin and output the token count as a number."
         ),
     ),
-    tokenizer_timeout: int = typer.Option(
-        10,
+    tokenizer_timeout: int | None = typer.Option(
+        None,
         "--tokenizer-timeout",
         "-t",
         help="Timeout in seconds for the tokenizer command.",
