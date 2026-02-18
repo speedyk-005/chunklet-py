@@ -41,7 +41,11 @@ def _is_binary_file(path: str | Path) -> bool:
     path = Path(path)
     mime_type, _ = mimetypes.guess_type(path)
     if mime_type:
-        return not mime_type.startswith("text")
+        if mime_type.startswith("text"):
+            return False
+        if path.suffix.lower() == ".rtf":
+            return False
+        return True
 
     with open(path, "rb") as f:
         chunk = f.read(1024)

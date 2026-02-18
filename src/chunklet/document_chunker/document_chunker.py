@@ -485,6 +485,9 @@ class DocumentChunker(BaseChunker):
             token_counter=token_counter or self.token_counter,
         )
 
+        for chunk in chunk_boxes:
+            chunk.metadata.update(document_metadata)
+
         self.log_info("Generated {} chunks for {}.", len(chunk_boxes), path)
 
         return chunk_boxes
@@ -606,7 +609,6 @@ class DocumentChunker(BaseChunker):
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
-        base_metadata: dict[str, Any] | None = None,
     ) -> list[Box]:
         """
         Note:
