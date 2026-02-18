@@ -13,18 +13,20 @@ No matter which chunker you use, every chunk includes these fundamental metadata
 *   **`source`** (str): Where did this chunk come from? (The origin story!)
      *   **File processing**: Absolute path to the file (for [DocumentChunker](programmatic/document_chunker.md) or [CodeChunker](programmatic/code_chunker.md))
      *   **CLI text input**: `"stdin"` (because it came from standard input)
-     *   **[PlainTextChunker](programmatic/plain_text_chunker.md) strings**: Only included if you provide it via `base_metadata` parameter
+     *   **Text input**: Only included if you provide it via `base_metadata` parameter
      *   **CodeChunker edge cases**: Might be `"N/A"` if the source can't be determined
-
-## PlainTextChunker Metadata: Simple & Clean 📄 {#plaintextchunker-metadata}
-
-The `PlainTextChunker` keeps things straightforward and clean. Your chunks include the essential [Common Metadata](#common-metadata) fields (`chunk_num` and `span`). The `source` field only shows up if you explicitly provide it via the `base_metadata` parameter.
-
-No frills, just the basics - perfect when you want clean, minimal metadata without any extra baggage.
 
 ## DocumentChunker Metadata: Rich & Detailed 📚 {#documentchunker-metadata}
 
-The `DocumentChunker` provides comprehensive metadata beyond the basics. It extracts rich, file-specific information from your documents - revealing detailed insights about each file's properties and history.
+The `DocumentChunker` provides comprehensive metadata for both text and file inputs. The metadata varies based on your input type - think of it as your chunk's detailed biography! 👇
+
+### Text Input
+
+Keeps things straightforward and clean. Your chunks include the essential [Common Metadata](#common-metadata) fields (`chunk_num` and `span`). No frills, just the basics - perfect when you want clean, minimal metadata without any extra baggage. Additional metadata can be provided via the `base_metadata` parameter.
+
+### File Input
+
+Need more context? File input's got you covered! Provides comprehensive metadata beyond the basics - revealing detailed insights about each file's properties and history:
 
 **Universal Fields (for multi-section docs):**
 *   **`section_count`** (int): Total number of sections in the document (pages, chapters, etc.)
@@ -37,7 +39,7 @@ The `DocumentChunker` provides comprehensive metadata beyond the basics. It extr
 *   **DOCX Files:** Core properties like `title`, `author`, `publisher`, `last_modified_by`, `created`, `modified`, `rights`, and `version`
 
 !!! tip "Safety First with Optional Fields!"
-    These metadata fields are optional - not every document fills them out. Use `chunk.metadata.get("author")` instead of `chunk.metadata["author"]` to avoid `KeyError`s when a field is missing.
+    These metadata fields are optional - not every document fills them out. Use `chunk.metadata.get("author")` instead of `chunk.metadata["author"]` to avoid `KeyError`s when a field is missing. Better safe than sorry! 😉
 
 ## CodeChunker Metadata: Code Intelligence 💻 {#codechunker-metadata}
 
@@ -60,7 +62,7 @@ The `chunklet` [CLI](../getting-started/cli.md) adapts metadata output based on 
 
 **Metadata by Input Type:**
 
-*   **Direct Text Input** (`chunklet chunk "Your text..."`): Uses `PlainTextChunker` with essential [Common Metadata](#common-metadata) fields (`chunk_num`, `span`) and `source` set to `"stdin"`
+*   **Direct Text Input** (`chunklet chunk "Your text..."`): Uses `DocumentChunker` with essential [Common Metadata](#common-metadata) fields (`chunk_num`, `span`) and `source` set to `"stdin"`
 *   **Document Processing** (`chunklet chunk --doc --source document.pdf`): `DocumentChunker` provides rich document metadata including [Common Metadata](#common-metadata) plus file-specific details (PDF titles, EPUB creators, DOCX authors) as detailed in [DocumentChunker Metadata](#documentchunker-metadata)
 *   **Code Processing** (`chunklet chunk --code --source code.py`): `CodeChunker` includes structural information with [Common Metadata](#common-metadata) and code-specific fields like `tree`, `start_line`, `end_line` as described in [CodeChunker Metadata](#codechunker-metadata)
 

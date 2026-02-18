@@ -22,7 +22,7 @@ Hey there! Thanks for thinking about contributing to Chunklet. We really appreci
     pip install -e ".[dev-all]"
     ```
 
-    These commands install the package in development mode with all development dependencies (pytest, black, flake8, etc.).
+    These commands install the package in development mode with all development dependencies (pytest, ruff, etc.).
 
 ## Making Changes
 

@@ -43,10 +43,10 @@ The `CodeChunker` comes packed with smart features for your coding adventures:
 | `max_functions` | `int >= 1`        | Function group guru! Keeps related functions together or splits them when you hit the limit. |
 
 !!! note "Constraint Must-Have!"
-    You must specify at least one limit (`max_tokens`, `max_lines`, or `max_functions`) when using `chunk` or `batch_chunk`. Skip this and you'll get an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror) - rules are rules!
+    You must specify at least one limit (`max_tokens`, `max_lines`, or `max_functions`) when using `chunk_text`, `chunk_file`, `chunk_texts`, or `chunk_files`. Skip this and you'll get an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror) - rules are rules!
 
 
-The `CodeChunker` has two main methods: `chunk` for single code inputs and `batch_chunk` for processing multiple codes. `chunk` returns a list of [`Box`](https://pypi.org/project/python-box/#:~:text=Overview,strings%20or%20files.) objects, while `batch_chunk` returns a generator that yields a `Box` object for each chunk. Each `Box` has `content` (str) and `metadata` (dict). For detailed information about metadata structure and usage, see the [Metadata guide](../metadata.md#codechunker-metadata).
+The `CodeChunker` has four main methods: `chunk_text`, `chunk_file`, `chunk_texts`, and `chunk_files`. `chunk_text` and `chunk_file` return a list of [`Box`](https://pypi.org/project/python-box/) objects, while `chunk_texts` and `chunk_files` are memory-friendly generators that yield chunks one by one. Each `Box` has `content` (str) and `metadata` (dict). For metadata details, see the [Metadata guide](../metadata.md#codechunker-metadata).
 
 ## Single Run: 
 
@@ -62,9 +62,9 @@ When you provide a file path, `CodeChunker` automatically handles reading the fi
 from pathlib import Path
 
 # All of the following are valid:
-chunks_from_string = chunker.chunk("def my_func():\n  return 1")
-chunks_from_path_str = chunker.chunk("/path/to/your/code.py")
-chunks_from_path_obj = chunker.chunk(Path("/path/to/your/code.py"))
+chunks_from_string = chunker.chunk_text("def my_func():\n  return 1")
+chunks_from_path_str = chunker.chunk_file("/path/to/your/code.py")
+chunks_from_path_obj = chunker.chunk_file(Path("/path/to/your/code.py"))
 ```
 
 ### Chunking by Lines: Line Count Control! 📏
@@ -113,7 +113,7 @@ def simple_token_counter(text: str) -> int:
 
 chunker = CodeChunker(token_counter=simple_token_counter)
 
-chunks = chunker.chunk(
+chunks = chunker.chunk_text(
     PYTHON_CODE,                
     max_lines=10,               # (1)!
     include_comments=True,      # (2)!
@@ -237,7 +237,7 @@ def simple_token_counter(text: str) -> int:
 
 chunker = CodeChunker(token_counter=simple_token_counter)
 
-chunks = chunker.chunk(
+chunks = chunker.chunk_text(
     PYTHON_CODE,                
     max_tokens=50,                        
 )
@@ -323,14 +323,14 @@ for i, chunk in enumerate(chunks):
     ```
 
 !!! tip "Overrides token_counter"
-    You can also provide the `token_counter` directly to the `chunk` method. within the `chunk` method call (e.g., `chunker.chunk(..., token_counter=my_tokenizer_function)`). If a `token_counter` is provided in both the constructor and the `chunk` method, the one in the `chunk` method will be used.
+    You can also provide the `token_counter` directly to any chunking method (e.g., `chunker.chunk_text(..., token_counter=my_tokenizer_function)`). If a `token_counter` is provided in both the constructor and the chunking method, the one in the method call will be used.
 
 
 ### Chunking by Functions: Function Group Guru! 👥
 This constraint is useful when you want to ensure that each chunk contains a specific number of functions, helping to maintain logical code units.
 
 ```py linenums="1" hl_lines="3"
-chunks = chunker.chunk(
+chunks = chunker.chunk_text(
     PYTHON_CODE,
     max_functions=1,
     include_comments=False,
@@ -417,7 +417,7 @@ The real power of `CodeChunker` comes from combining multiple constraints. This 
 This is useful when you want to limit by both the number of lines and the overall token count, whichever is reached first.
 
 ```py linenums="1"
-chunks = chunker.chunk(
+chunks = chunker.chunk_text(
     PYTHON_CODE,
     max_lines=5,
     max_tokens=50
@@ -428,7 +428,7 @@ chunks = chunker.chunk(
 This combination is great for ensuring that chunks don't span across too many functions while also keeping the line count in check.
 
 ```py linenums="1"
-chunks = chunker.chunk(
+chunks = chunker.chunk_text(
     PYTHON_CODE,
     max_lines=10,
     max_functions=1
@@ -439,7 +439,7 @@ chunks = chunker.chunk(
 A powerful combination for structured code where you want to respect function boundaries while adhering to a strict token budget.
 
 ```py linenums="1"
-chunks = chunker.chunk(
+chunks = chunker.chunk_text(
     PYTHON_CODE,
     max_tokens=100,
     max_functions=1
@@ -450,7 +450,7 @@ chunks = chunker.chunk(
 For the ultimate level of control, you can combine all three constraints. The chunking will stop as soon as any of the three limits is reached.
 
 ```py linenums="1"
-chunks = chunker.chunk(
+chunks = chunker.chunk_text(
     PYTHON_CODE,
     max_lines=8,
     max_tokens=150,
@@ -460,7 +460,7 @@ chunks = chunker.chunk(
 
 ## Batch Run: Processing Multiple Code Files Like a Pro! 📚
 
-While `chunk` is perfect for single code inputs, `batch_chunk` is your power player for processing multiple code files in parallel. It uses a memory-friendly generator so you can handle massive codebases with ease.
+While `chunk_text`/`chunk_file` is perfect for single code inputs, `chunk_files` is your power player for processing multiple code files in parallel. It uses a memory-friendly generator so you can handle massive codebases with ease.
 
 Given we have the following code snippets saved as individual files in a `code_examples` directory:
 # cpp_calculator.cpp
@@ -561,7 +561,7 @@ func (c *Config) displayInfo() {
 }
 ```
 
-We can process them all at once by providing a list of paths to the `batch_chunk` method. Assuming these files are saved in a `code_examples` directory:
+We can process them all at once by providing a list of paths to the `chunk_files` method. Assuming these files are saved in a `code_examples` directory:
 
 ```py linenums="1" hl_lines="18-25"
 from chunklet.code_chunker import CodeChunker
@@ -581,7 +581,7 @@ sources = [
     "code_examples/go_config.go",
 ]
 
-chunks = chunker.batch_chunk(
+chunks = chunker.chunk_files(
     sources=sources,
     max_tokens=50,
     include_comments=False,
@@ -748,7 +748,7 @@ for i, chunk in enumerate(chunks):
     ```
 
 !!! warning "Generator Cleanup"
-    When using `batch_chunk`, it's crucial to ensure the generator is properly closed, especially if you don't iterate through all the chunks. This is necessary to release the underlying multiprocessing resources. The recommended way is to use a `try...finally` block to call `close()` on the generator. For more details, see the [Troubleshooting](../../troubleshooting.md) guide.
+    When using `chunk_files`, it's crucial to ensure the generator is properly closed, especially if you don't iterate through all the chunks. This is necessary to release the underlying multiprocessing resources. The recommended way is to use a `try...finally` block to call `close()` on the generator. For more details, see the [Troubleshooting](../../troubleshooting.md) guide.
 
 ### Separator: Keeping Your Code Batches Organized! 📋
 
@@ -792,7 +792,7 @@ public class Utility
 chunker = CodeChunker(token_counter=simple_token_counter)
 custom_separator = "---END_OF_SOURCE---"
 
-chunks_with_separators = chunker.batch_chunk(
+chunks_with_separators = chunker.chunk_files(
     sources=SIMPLE_SOURCES,
     max_tokens=20,
     separator=custom_separator,

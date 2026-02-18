@@ -118,22 +118,22 @@ You can integrate your own sentence splitting logic in two ways:
 **a) The Function Call Method (A Direct Approach):**
 
 ```py
-from chunklet.sentence_splitter.registry import register_splitter
+from chunklet.sentence_splitter import custom_splitter_registry
 
 def my_custom_splitter(text: str) -> list[str]:
     # Your brilliant, custom splitting logic here
     return text.split('.')
 
 # Teach Chunklet your new trick for English
-register_splitter('en', callback=my_custom_splitter, name='MyCustomSplitter')
+custom_splitter_registry.register(my_custom_splitter, "en", name="MyCustomSplitter")
 ```
 
 **b) The Decorator Method (An Elegant Approach):**
 
 ```py
-from chunklet.sentence_splitter.registry import registered_splitter
+from chunklet.sentence_splitter import custom_splitter_registry
 
-@registered_splitter('fr', name='MyFrenchSplitter')
+@custom_splitter_registry.register("fr", name="MyFrenchSplitter")
 def my_french_splitter(text: str) -> list[str]:
     # Your magnifique splitting logic for French
     return text.split('!')

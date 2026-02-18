@@ -24,6 +24,8 @@ The `SentenceSplitter` is more than just a basic rule-based tool; it's a sophist
 
 ### Example Usage 
 
+### Split Text into Sentences
+
 Here's a quick example of how you can use the `SentenceSplitter` to split a block of text into sentences:
 
 ``` py linenums="1"
@@ -41,7 +43,7 @@ Robots are learning. It's raining. Let's code. Mars is red. Sr. sleep is rare. C
 """
 
 splitter = SentenceSplitter(verbose=True)
-sentences = splitter.split(TEXT, lang="auto") #(1)!
+sentences = splitter.split_text(TEXT, lang="auto") #(1)!
 
 for sentence in sentences:
     print(sentence)
@@ -51,9 +53,9 @@ for sentence in sentences:
 
 ??? success "Click to show output"
     ```linenums="0"
-    2025-11-02 16:27:29.277 | WARNING  | chunklet.sentence_splitter.sentence_splitter:split:136 - The language is set to `auto`. Consider setting the `lang` parameter to a specific language to improve reliability.
-    2025-11-02 16:27:29.316 | INFO     | chunklet.sentence_splitter.sentence_splitter:detected_top_language:109 - Language detection: 'en' with confidence 10/10.
-    2025-11-02 16:27:29.447 | INFO     | chunklet.sentence_splitter.sentence_splitter:split:167 - Text splitted into sentences. Total sentences detected: 19
+    2025-11-02 16:27:29.277 | WARNING  | chunklet.sentence_splitter.sentence_splitter:split_text:192 - The language is set to `auto`. Consider setting the `lang` parameter to a specific language to improve reliability.
+    2025-11-02 16:27:29.316 | INFO     | chunklet.sentence_splitter.sentence_splitter:detected_top_language:146 - Language detection: 'en' with confidence 10/10.
+    2025-11-02 16:27:29.447 | INFO     | chunklet.sentence_splitter.sentence_splitter:split_text:166 - Text splitted into sentences. Total sentences detected: 19
     She loves cooking.
     He studies AI.
     "You are a Dr.", she said.
@@ -73,6 +75,27 @@ for sentence in sentences:
     This is a test.
     The year is 2025.
     This is a good year since N.A.S.A. reached 123.4 light year more.
+    ```
+
+### Splitting Files: From Document to Sentences 📄
+
+Need to split a file directly into sentences? Use `split_file`:
+
+``` py linenums="1"
+from chunklet.sentence_splitter import SentenceSplitter
+
+splitter = SentenceSplitter()
+sentences = splitter.split_file("sample.txt", lang="en")
+
+for i, sentence in enumerate(sentences):
+    print(f"Sentence {i+1}: {sentence}")
+```
+
+??? success "Click to show output"
+    ```linenums="0"
+    Sentence 1: This is the first sentence.
+    Sentence 2: This is the second sentence.
+    Sentence 3: And the third.
     ```
 
 ### Detecting Top Languages 🎯
@@ -137,20 +160,19 @@ To use a custom splitter, you leverage the [`@registry.register`](../../referenc
 
 #### Basic Custom Splitter
 
-``` py linenums="1" hl_lines="2 5 7-10"
+``` py linenums="1" hl_lines="2 6-9"
 import re
-from chunklet.sentence_splitter import SentenceSplitter, CustomSplitterRegistry
+from chunklet.sentence_splitter import SentenceSplitter, custom_splitter_registry
 
 splitter = SentenceSplitter(verbose=False)
-registry = CustomSplitterRegistry()
 
-@registry.register("en", name="MyCustomEnglishSplitter")
+@custom_splitter_registry.register("en", name="MyCustomEnglishSplitter")
 def english_sent_splitter(text: str) -> list[str]:
     """A simple custom sentence splitter"""
     return [s.strip() for s in re.split(r'(?<=\\.)\s+', text) if s.strip()]
 
 text = "This is the first sentence. This is the second sentence. And the third."
-sentences = splitter.split(text=text, lang="en")
+sentences = splitter.split_text(text=text, lang="en")
 
 print("--- Sentences using Custom Splitter ---")
 for i, sentence in enumerate(sentences):
@@ -168,7 +190,7 @@ for i, sentence in enumerate(sentences):
 #### Multi-Language Custom Splitter
 
 ``` py linenums="1"
-@registry.register("fr", "es", name="MultiLangExclamationSplitter")  #(1)!
+@custom_splitter_registry.register("fr", "es", name="MultiLangExclamationSplitter")  #(1)!
 def multi_lang_splitter(text: str) -> list[str]:
     return [s.strip() for s in re.split(r'(?<=!)\s+', text) if s.strip()]
 ```
@@ -178,7 +200,7 @@ def multi_lang_splitter(text: str) -> list[str]:
 #### Unregistering Custom Splitters
 
 ``` py linenums="1"
-registry.unregister("en")  # (1)!
+custom_splitter_registry.unregister("en")  # (1)!
 ```
 
 1.  This will remove the custom splitter associated with the "en" language code. Note that you can unregister multiple languages if you had registered them with the same function: `registry.unregister("fr", "es")`
@@ -187,18 +209,16 @@ registry.unregister("en")  # (1)!
     Not a fan of decorators? No worries - you can directly use the `registry.register()` method. Super handy for dynamic registration or when your callback function isn't in the global scope.
 
     ``` py linenums="1"
-    from chunklet.sentence_splitter import CustomSplitterRegistry
-
-    registry = CustomSplitterRegistry()
+    from chunklet.sentence_splitter import custom_splitter_registry
 
     def my_other_splitter(text: str) -> list[str]:
         return text.split(' ')
 
-    registry.register(my_other_splitter, "jp", name="MyOtherSplitter")
+    custom_splitter_registry.register(my_other_splitter, "jp", name="MyOtherSplitter")
     ```
 
 !!! tip "Want to Build from Scratch?"
-    Going full custom? Inherit from the `BaseSplitter` abstract class! It gives you a clear interface (`def split(self, text: str, lang: str) -> list[str]`) to implement. Your custom splitter will then work seamlessly with `PlainTextChunker` ([docs](plain_text_chunker.md)) or `DocumentChunker` ([docs](document_chunker.md)).
+    Going full custom? Inherit from the `BaseSplitter` abstract class! It gives you a clear interface (`def split(self, text: str, lang: str) -> list[str]`) to implement. Your custom splitter will then work seamlessly with [`DocumentChunker`](document_chunker.md).
 
 ### [`CustomSplitterRegistry`](../../reference/chunklet/sentence_splitter/registry.md) Methods Summary
 

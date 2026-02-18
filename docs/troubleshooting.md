@@ -25,7 +25,7 @@ Welcome to the troubleshooting guide! Here you'll find solutions to common issue
 
     paths = ["path/to/your/doc1.pdf", "path/to/your/doc2.txt"]
     chunker = DocumentChunker()
-    chunks_generator = chunker.batch_chunk(paths)
+    chunks_generator = chunker.chunk_files(paths)
 
     try:
         for i, chunk in enumerate(chunks_generator):
@@ -47,7 +47,7 @@ Welcome to the troubleshooting guide! Here you'll find solutions to common issue
 
     paths = ["path/to/your/doc1.pdf", "path/to/your/doc2.txt"]
     chunker = DocumentChunker()
-    all_chunks = list(chunker.batch_chunk(paths))
+    all_chunks = list(chunker.chunk_files(paths))
 
     for i, chunk in enumerate(all_chunks):
         if i >= 10:  # Example: You can still break, but the pool is already closed
@@ -60,4 +60,35 @@ Welcome to the troubleshooting guide! Here you'll find solutions to common issue
     **Related Reading:**
     *   [mpire Issue #141: Fork-mode processes hanging](https://github.com/sybrenjansen/mpire/issues/141)
     *   [Why your multiprocessing Pool is stuck](https://pythonspeed.com/articles/python-multiprocessing/)
+
+## Visualizer Browser Cache Issues
+
+??? question "Why does the visualizer show old/static/incorrect behavior after an update?"
+
+    After updating `chunklet-py`, your browser may be serving cached CSS, JavaScript, or HTML files from the visualizer, causing it to display outdated or broken behavior.
+
+    **Solution:**
+
+    **Option 1: Hard Refresh (Recommended)**
+
+    - **Windows/Linux:** Press `Ctrl + Shift + R` or `Ctrl + F5`
+    - **macOS:** Press `Cmd + Shift + R` or `Cmd + F5`
+
+    **Option 2: Clear Browser Cache**
+
+    1. Open Developer Tools (`F12` or `Cmd/Ctrl + Shift + I`)
+    2. Go to the **Network** tab
+    3. Check the **Disable cache** checkbox
+    4. Press `Cmd/Ctrl + R` to reload
+
+    **Option 3: Clear Site Data**
+
+    1. Open Developer Tools (`F12` or `Cmd/Ctrl + Shift + I`)
+    2. Go to the **Application** tab (Chrome) or **Storage** tab (Firefox)
+    3. Click **Clear site data** or expand the section and delete all items
+    4. Reload the page
+
+    **Option 4: Incognito/Private Mode**
+
+    Open the visualizer in a new incognito/private window - this bypasses the cache entirely.
     

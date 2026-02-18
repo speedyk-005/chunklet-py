@@ -25,7 +25,6 @@ Smart chunking keeps your content's meaning and structure intact!
 **Chunklet-py** is your friendly neighborhood text splitter that takes all kinds of content - from plain text to PDFs to source code - and breaks them into smart, context-aware chunks. Instead of dumb splitting, we give you specialized tools:
 
 *   `Sentence Splitter`
-*   `Plain Text Chunker`
 *   `Document Chunker`
 *   `Code Chunker`
 *   `Chunk Visualizer` (Interactive web interface)
@@ -119,7 +118,7 @@ Curious about all the features?
 
 Want to keep up with Chunklet-py's latest adventures?
 
-  *   [**What's New:**](whats-new.md) Discover all the exciting new features and improvements in Chunklet 2.1.0.
+  *   [**What's New:**](whats-new.md) Discover all the exciting new features and improvements in Chunklet 2.2.0.
   *   [**Migration Guide:**](migration.md) Learn how to smoothly transition from previous versions to Chunklet 2.x.x.
 
  *   [**Changelog:**](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md) See what's new, what's fixed, and what's been improved in recent versions.

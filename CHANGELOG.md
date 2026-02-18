@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Global Registry Instances**: Added global `custom_splitter_registry` and `custom_processor_registry` instances for easier customization
 - **Tokenizer CLI Enhancements**:
-  - Added `--tokenizer-timeout` / `-t` option (default: 10s) for both `chunk` and `visualize` commands
+  - Added `--tokenizer-timeout` / `-t` option (default: no timeout) for both `chunk` and `visualize` commands
   - Improved tokenizer error messages to distinguish between invalid output, timeout, and execution errors
   - Added `-h` as a shortcut for `--host` in the `visualize` command
 - **Visualizer UI Redesign**:

@@ -54,7 +54,7 @@ dependencies = [
  ]
 
 [project.optional-dependencies]
-document = [
+structured-documents = [
   "pdfminer.six>=20250324",
   "python-docx>=1.2.0,<2.0",
   "mammoth>=1.9.1,<2.0",
@@ -71,6 +71,9 @@ document = [
   "tabulate2>=1.10.2,<2.0",
 ]
 
+# Kept for compatibility
+document = ["chunklet-py[structured-documents]"]
+
 code = [
   "defusedxml>=0.7.1,<1.0",
   "littletree>=0.8.7,<1.0",
@@ -85,7 +88,7 @@ visualization = [
   "aiofiles==25.1.0",
 ]
 
-all = ["chunklet-py[document,code,visualization]"]
+all = ["chunklet-py[structured-documents,code,visualization]"]
 
 dev = [
   "pytest>=8.3.5",
