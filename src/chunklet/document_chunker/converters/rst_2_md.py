@@ -22,7 +22,7 @@ def rst_to_md(file_path: str | Path) -> str:
         raise ImportError(
             "The 'docutils' library is not installed. "
             "Please install it with 'pip install 'docutils>=0.21.2'' or install the document processing extras "
-            "with 'pip install 'chunklet-py[document]''"
+            "with 'pip install 'chunklet-py[structured-document]''"
         )
 
     with open(file_path, "r", encoding="utf-8", errors="ignore") as f:

@@ -8,6 +8,8 @@ from loguru import logger
 from more_itertools import ilen, split_at
 from pydantic import Field
 
+from chunklet.common.deprecation import deprecated_callable
+
 try:
     from striprtf.striprtf import rtf_to_text
 except ImportError:
@@ -202,7 +204,9 @@ class DocumentChunker(BaseChunker):
         if ext == ".rtf":
             if rtf_to_text is None:
                 raise ImportError(
-                    "The 'striprtf' library is not installed. Please install it with 'pip install 'striprtf>=0.0.29'' or install the document processing extras with 'pip install chunklet-py[document]'"
+                    "The 'striprtf' library is not installed. "
+                    "Please install it with 'pip install 'striprtf>=0.0.29'' or install the document processing extras "
+                    "with 'pip install chunklet-py[structured-document]'"
                 )
             return rtf_to_text(content)
         else:  # For .txt, .md, and others handled by simple read
@@ -387,7 +391,7 @@ class DocumentChunker(BaseChunker):
         Chunks multiple text contents.
 
         Args:
-            texts (list[str]): The list of texts to chunk.
+            texts (restricted_iterable(str)): A restricted iterable of texts to chunk.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
             max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
@@ -598,6 +602,9 @@ class DocumentChunker(BaseChunker):
 
             path_section_counts[curr_path] -= 1
 
+    @deprecated_callable(
+        use_instead="chunk_file", deprecated_in="2.2.0", removed_in="3.0.0"
+    )
     def chunk(
         self,
         path: str | Path,
@@ -614,15 +621,13 @@ class DocumentChunker(BaseChunker):
         Note:
             Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_file` instead.
         """
-        warnings.warn(
-            "The `chunk` method is deprecated since v2.2.0 and will be removed in v3.0.0. Use `chunk_file` instead.",
-            FutureWarning,
-            stacklevel=2,
-        )
         params = {k: v for k, v in locals().items() if k != "self"}
         params["token_counter"] = params["token_counter"] or self.token_counter
         return self.chunk_file(**params)
 
+    @deprecated_callable(
+        use_instead="chunk_files", deprecated_in="2.2.0", removed_in="3.0.0"
+    )
     def batch_chunk(
         self,
         paths: "restricted_iterable(str | Path)",  # noqa: F722
@@ -643,11 +648,6 @@ class DocumentChunker(BaseChunker):
         Note:
             Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_files` instead.
         """
-        warnings.warn(
-            "The `batch_chunk` method is deprecated since v2.2.0 and will be removed in v3.0.0. Use `chunk_files` instead.",
-            FutureWarning,
-            stacklevel=2,
-        )
         params = {k: v for k, v in locals().items() if k != "self"}
         params["token_counter"] = params["token_counter"] or self.token_counter
         yield from self.chunk_files(**params)

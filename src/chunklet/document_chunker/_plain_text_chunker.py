@@ -476,7 +476,7 @@ class PlainTextChunker:
         # Validate that at least one limit is provided
         if not any((max_tokens, max_sentences, max_section_breaks)):
             raise InvalidInputError(
-                "At least one of 'max_tokens', 'max_sentences', or 'max_section_break' must be provided."
+                "At least one of 'max_tokens', 'max_sentences', or 'max_section_breaks' must be provided."
             )
 
         # If token_counter is required but not provided

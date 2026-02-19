@@ -25,7 +25,6 @@ Inspired by:
 """
 
 import sys
-import warnings
 from functools import partial
 from itertools import chain
 from pathlib import Path
@@ -48,6 +47,7 @@ from chunklet.base_chunker import BaseChunker
 from chunklet.code_chunker._code_structure_extractor import CodeStructureExtractor
 from chunklet.code_chunker.utils import is_python_code
 from chunklet.common.batch_runner import run_in_batch
+from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.path_utils import is_path_like, read_text_file
 from chunklet.common.token_utils import count_tokens
 from chunklet.common.validation import restricted_iterable, validate_input
@@ -798,6 +798,11 @@ class CodeChunker(BaseChunker):
             verbose=self.verbose,
         )
 
+    @deprecated_callable(
+        use_instead="chunk_text or chunk_file",
+        deprecated_in="2.2.0",
+        removed_in="3.0.0",
+    )
     def chunk(
         self,
         source: str | Path,
@@ -814,12 +819,6 @@ class CodeChunker(BaseChunker):
         Note:
             Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_file` or `chunk_text` instead.
         """
-        warnings.warn(
-            "The `chunk` method is deprecated since v2.2.0 and will be removed in v3.0.0. "
-            "Use `chunk_file` or `chunk_text` instead.",
-            FutureWarning,
-            stacklevel=2,
-        )
         if isinstance(source, Path) or (
             isinstance(source, str) and is_path_like(source)
         ):
@@ -844,6 +843,11 @@ class CodeChunker(BaseChunker):
             strict=strict,
         )
 
+    @deprecated_callable(
+        use_instead="chunk_texts or chunk_files",
+        deprecated_in="2.2.0",
+        removed_in="3.0.0",
+    )
     def batch_chunk(
         self,
         sources: "restricted_iterable(str | Path)",  # pyright: ignore
@@ -864,13 +868,6 @@ class CodeChunker(BaseChunker):
         Note:
             Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_files` instead.
         """
-        warnings.warn(
-            "The `batch_chunk` method is deprecated since v2.2.0 and will be removed in v3.0.0. "
-            "Use `chunk_files` or 'chunk_texts' instead.",
-            FutureWarning,
-            stacklevel=2,
-        )
-
         chunk_func = partial(
             self.chunk,
             max_tokens=max_tokens,

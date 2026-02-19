@@ -48,7 +48,7 @@ class EPUBProcessor(BaseProcessor):
             raise ImportError(
                 "The 'ebooklib' library is not installed. "
                 "Please install it with 'pip install 'ebooklib>=0.19'' or install the document processing extras "
-                "with 'pip install 'chunklet-py[document]''"
+                "with 'pip install 'chunklet-py[structured-document]''"
             )
         self.file_path = file_path
         self.book = epub.read_epub(file_path)

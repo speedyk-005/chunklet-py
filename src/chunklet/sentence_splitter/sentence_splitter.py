@@ -9,6 +9,7 @@ from pysbd import Segmenter
 from sentencex import segment
 from sentsplit.segment import SentSplit
 
+from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.path_utils import read_text_file
 from chunklet.common.validation import validate_input
 from chunklet.sentence_splitter._fallback_splitter import FallbackSplitter
@@ -60,16 +61,14 @@ class BaseSplitter:
         """
         raise NotImplementedError("Subclasses must implement 'split_text'.")
 
+    @deprecated_callable(
+        use_instead="split_text", deprecated_in="2.2.0", removed_in="3.0.0"
+    )
     def split(self, text: str, lang: str = "auto") -> list[str]:
         """
         Note:
             Deprecated since 2.2.0. Will be removed in 3.0.0. Use `split_text` instead.
         """
-        warnings.warn(
-            "The `split` method is deprecated since v2.2.0 and will be removed in v3.0.0. Use `split_text` instead.",
-            FutureWarning,
-            stacklevel=2,
-        )
         return self.split_text(text, lang)
 
 

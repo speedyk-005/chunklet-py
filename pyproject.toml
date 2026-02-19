@@ -54,7 +54,7 @@ dependencies = [
  ]
 
 [project.optional-dependencies]
-structured-documents = [
+structured-document = [
   "pdfminer.six>=20250324",
   "python-docx>=1.2.0,<2.0",
   "mammoth>=1.9.1,<2.0",
@@ -72,7 +72,7 @@ structured-documents = [
 ]
 
 # Kept for compatibility
-document = ["chunklet-py[structured-documents]"]
+document = ["chunklet-py[structured-document]"]
 
 code = [
   "defusedxml>=0.7.1,<1.0",
@@ -88,7 +88,7 @@ visualization = [
   "aiofiles==25.1.0",
 ]
 
-all = ["chunklet-py[structured-documents,code,visualization]"]
+all = ["chunklet-py[structured-document,code,visualization]"]
 
 dev = [
   "pytest>=8.3.5",
@@ -105,7 +105,7 @@ docs = [
   "pymdown-extensions>=10.16.1",
 ]
 
-dev-all = ["chunklet-py[dev,docs,document,code,visualization]"]
+dev-all = ["chunklet-py[dev,docs,structured-document,code,visualization]"]
 
 [project.urls]
 Homepage = "https://github.com/speedyk-005/chunklet-py"

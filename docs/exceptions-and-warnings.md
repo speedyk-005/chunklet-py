@@ -134,32 +134,8 @@ Warnings from Chunklet-py are like friendly nudges – they let you know about s
 *   **Where Logged:** `src/chunklet/cli.py`
 *   **What to do:** Take a peek at your input to make sure there's some actual text content we can work with.
 
-### "The `split` method is deprecated since v2.2.0 and will be removed in v3.0.0. Use `split_text` instead."
+### "`{object_name}` was deprecated since v{version} in favor of `{replacement}`. It will be removed in v{future_version}."
 
-*   **What it means:** The `split()` method in `SentenceSplitter` is deprecated. Use `split_text()` instead.
-*   **Where Logged:** `src/chunklet/sentence_splitter/sentence_splitter.py`
-*   **What to do:** Replace `splitter.split(...)` with `splitter.split_text(...)`.
-
-### "Class '{ClassName}' overrides 'split', which is deprecated. Please migrate to overriding 'split_text' instead."
-
-*   **What it means:** You're subclassing `BaseSplitter` and overriding the deprecated `split` method. Override `split_text` instead.
-*   **Where Logged:** `src/chunklet/sentence_splitter/sentence_splitter.py`
-*   **What to do:** Rename your `split` method override to `split_text` in your custom splitter class.
-
-### "PlainTextChunker has been merged into DocumentChunker since v2.2.0. Use DocumentChunker.chunk_text() or DocumentChunker.chunk_texts() instead."
-
-*   **What it means:** You're using the deprecated `PlainTextChunker` class. Since v2.2.0, it has been merged into `DocumentChunker`.
-*   **Where Logged:** `src/chunklet/__init__.py`
-*   **What to do:** Update your imports to use `DocumentChunker` instead. Use `chunk_text()` for single texts or `chunk_texts()` for batch processing.
-
-### "The `chunk` method is deprecated since v2.2.0 and will be removed in v3.0.0. Use `chunk_file` or `chunk_text` instead."
-
-*   **What it means:** The `chunk()` method is deprecated. Use the new methods `chunk_text()` for strings or `chunk_file()` for files.
-*   **Where Logged:** `src/chunklet/code_chunker/code_chunker.py`, `src/chunklet/document_chunker/_plain_text_chunker.py`
-*   **What to do:** Replace `chunker.chunk(...)` with `chunker.chunk_text(...)` for text strings or `chunker.chunk_file(...)` for file paths.
-
-### "The `batch_chunk` method is deprecated since v2.2.0 and will be removed in v3.0.0. Use `chunk_files` or `chunk_texts` instead."
-
-*   **What it means:** The `batch_chunk()` method is deprecated. Use `chunk_texts()` for multiple texts or `chunk_files()` for multiple files.
-*   **Where Logged:** `src/chunklet/code_chunker/code_chunker.py`, `src/chunklet/document_chunker/_plain_text_chunker.py`
-*   **What to do:** Replace `chunker.batch_chunk(...)` with `chunker.chunk_texts(...)` for text strings or `chunker.chunk_files(...)` for file paths.
+*   **What it means:** Heads up! You're using a function, method, or class that's on its way out. This deprecated item will stick around for a bit longer, but it's on borrowed time. The `replacement` points you to the shiny new alternative you should be using instead.
+*   **Where Logged:** Various locations depending on the deprecated item.
+*   **What to do:** Swap out the deprecated item for the recommended replacement mentioned in the warning message - your future self will thank you!

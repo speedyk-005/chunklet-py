@@ -523,7 +523,7 @@ def chunk_command(
         if DocumentChunker is None:
             typer.echo(
                 "Error: DocumentChunker dependencies not available.\n"
-                "Please install with: pip install chunklet-py[document]",
+                "Please install with: pip install chunklet-py[structured-document]",
                 err=True,
             )
             raise typer.Exit(code=1)

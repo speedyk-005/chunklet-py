@@ -24,6 +24,8 @@ import types
 import typing
 import warnings
 
+from chunklet.common.deprecation import deprecated_callable
+
 from .exceptions import (
     CallbackError,
     ChunkletError,
@@ -71,22 +73,24 @@ class _PlainTextChunkerModuleProxy(types.ModuleType):
 
     def __init__(self):
         super().__init__("chunklet.plain_text_chunker")
-        self._target = importlib.import_module(
-            "chunklet.document_chunker._plain_text_chunker"
-        )
+        self._PlainTextChunker: typing.Any = None
+
+    def _get_deprecated_class(self):
+        if self._PlainTextChunker is None:
+            from chunklet.document_chunker._plain_text_chunker import PlainTextChunker
+
+            self._PlainTextChunker = deprecated_callable(
+                use_instead="chunklet.DocumentChunker.chunk_text and chunk_texts",
+                deprecated_in="2.2.0",
+                removed_in="3.0.0",
+            )(PlainTextChunker)
+        return self._PlainTextChunker
 
     def __getattr__(self, name: str) -> typing.Any:
-        if name == "PlainTextChunker":
-            warnings.warn(
-                "PlainTextChunker has been merged into DocumentChunker since v2.2.0. "
-                "Use DocumentChunker.chunk_text() or DocumentChunker.chunk_texts() instead.",
-                FutureWarning,
-                stacklevel=2,
-            )
-        return getattr(self._target, name)
+        return self._get_deprecated_class()
 
     def __dir__(self):
-        return dir(self._target)
+        return dir(self._get_deprecated_class())
 
 
 # Register proxy in sys.modules for backward compatibility

@@ -93,7 +93,7 @@ Want to unlock more Chunklet-py superpowers? Add these optional dependencies bas
 
 *   **Document Processing:** For handling `.pdf`, `.docx`, `.epub`, and other document formats:
     ```bash
-    pip install "chunklet-py[document]"
+    pip install "chunklet-py[structured-document]"
     ```
 *   **Code Chunking:** For advanced code analysis and chunking features:
     ```bash

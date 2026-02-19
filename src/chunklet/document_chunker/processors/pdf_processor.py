@@ -67,7 +67,7 @@ class PDFProcessor(BaseProcessor):
             raise ImportError(
                 "The 'pdfminer.six' library is not installed. "
                 "Please install it with 'pip install 'pdfminer.six>=20250324'' or install the document processing extras "
-                "with 'pip install 'chunklet-py[document]''"
+                "with 'pip install 'chunklet-py[structured-document]''"
             ) from e
         self.file_path = file_path
         self.laparams = LAParams(
