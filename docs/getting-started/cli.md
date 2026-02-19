@@ -87,7 +87,7 @@ The `chunk` command is where the real magic happens! It's your versatile tool fo
 This is your bread-and-butter chunking for everyday text and diverse document types.
 
 *   **Default Behavior:** If neither `--doc` nor `--code` is specified, `chunklet` uses the [DocumentChunker](programmatic/document_chunker.md) for direct text input. The `DocumentChunker` is designed to transform unruly text into perfectly sized, context-aware chunks.
-*   **Document Power-Up:** Activate the [DocumentChunker](programmatic/document_chunker.md) with the `--doc` flag to process `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, and `.rtf` files! It intelligently extracts text and then applies the same robust chunking logic.
+*   **Document Power-Up:** Activate the [DocumentChunker](programmatic/document_chunker.md) with the `--doc` flag to process `.pdf`, `.docx`, `.odt`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.csv`, '.xlsx' and `.rtf` files! It intelligently extracts text and then applies the same robust chunking logic.
 
 #### Key Flags for Document Power-Up
 
@@ -279,6 +279,10 @@ chunklet chunk --text "Your text here" \
   --tokenizer-timeout 30
 ```
 
+!!! info "Optional flag"
+    Using `--text` is optional since when using `chunk` without `--doc` or `--code` flags, it defaults to text-based chunking.
+    
+    
 👉 See the [Custom Tokenizers](../how-to/custom-tokenizer.md) guide for how to create a tokenizer script in any language.
 
 ##### Scenario 5: Saving Chunks as JSON with Metadata
@@ -286,7 +290,10 @@ chunklet chunk --text "Your text here" \
 Save processed chunks directly as a JSON file for easy parsing and integration:
 
 ```bash
-chunklet chunk --source document.pdf --doc --destination chunks.json --metadata
+chunklet chunk --doc \
+  --source document.pdf \
+  --destination chunks.json \
+  --metadata
 ```
 
 ---

@@ -58,6 +58,7 @@ Welcome to the troubleshooting guide! Here you'll find solutions to common issue
         This approach is simpler if memory isn't a concern and you need all chunks ready before moving on.
 
     **Related Reading:**
+    
     *   [mpire Issue #141: Fork-mode processes hanging](https://github.com/sybrenjansen/mpire/issues/141)
     *   [Why your multiprocessing Pool is stuck](https://pythonspeed.com/articles/python-multiprocessing/)
 
@@ -91,4 +92,8 @@ Welcome to the troubleshooting guide! Here you'll find solutions to common issue
     **Option 4: Incognito/Private Mode**
 
     Open the visualizer in a new incognito/private window - this bypasses the cache entirely.
-    
+
+    **Related Reading:**
+
+    * [Cache Issues](https://help.blocsapp.com/knowledge-base/cache-issues/)
+    * [Learn how to Clear Browser Cache](https://medium.com/@reennamatovu/how-i-finally-learned-to-clear-my-browser-cache-without-panic-or-losing-everything-17368d88d0ea)

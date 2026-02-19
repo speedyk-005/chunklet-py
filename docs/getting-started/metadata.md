@@ -13,7 +13,7 @@ No matter which chunker you use, every chunk includes these fundamental metadata
 *   **`source`** (str): Where did this chunk come from? (The origin story!)
      *   **File processing**: Absolute path to the file (for [DocumentChunker](programmatic/document_chunker.md) or [CodeChunker](programmatic/code_chunker.md))
      *   **CLI text input**: `"stdin"` (because it came from standard input)
-     *   **Text input**: Only included if you provide it via `base_metadata` parameter
+     *   **Document chunker Text input**: Only included if you provide it via `base_metadata` parameter
      *   **CodeChunker edge cases**: Might be `"N/A"` if the source can't be determined
 
 ## DocumentChunker Metadata: Rich & Detailed 📚 {#documentchunker-metadata}
@@ -29,15 +29,17 @@ Keeps things straightforward and clean. Your chunks include the essential [Commo
 Need more context? File input's got you covered! Provides comprehensive metadata beyond the basics - revealing detailed insights about each file's properties and history:
 
 **Universal Fields (for multi-section docs):**
+
 *   **`section_count`** (int): Total number of sections in the document (pages, chapters, etc.)
 *   **`curr_section`** (int): Which section this chunk belongs to
 
 **File-Type Specific Information:**
 
-*   **PDF Files:** Includes `title`, `author`, `creator`, `producer`, `publisher`, `created`, `modified`, and `page_count` fields (powered by pdfminer.six)
-*   **EPUB Files:** Dublin Core metadata including `title`, `creator`, `contributor`, `publisher`, `date`, and `rights`
-*   **DOCX Files:** Core properties like `title`, `author`, `publisher`, `last_modified_by`, `created`, `modified`, `rights`, and `version`
-
+*   **[PDF Files](https://stackoverflow.com/questions/75591385/extract-metadata-info-from-online-pdf-using-pdfminer-in-python):** Includes `title`, `author`, `creator`, `producer`, `publisher`, `created`, `modified`, and `page_count` fields (powered by pdfminer.six)
+*   **[EPUB Files](https://docs.sourcefabric.org/projects/ebooklib/en/latest/tutorial.html):** Dublin Core metadata including `title`, `creator`, `contributor`, `publisher`, `date`, and `rights
+*   **[DOCX Files](https://python-docx.readthedocs.io/en/latest/dev/analysis/features/coreprops.html):** Core properties like `title`, `author`, `publisher`, `last_modified_by`, `created`, `modified`, `rights`, and `version`
+*   **[ODT Files](https://odfpy.readthedocs.io/en/latest/):** Dublin Core and OpenDocument metadata including `title`, `creator`, `initial_creator`, `created`, `chapter`, and `author` (powered by odfpy)
+  
 !!! tip "Safety First with Optional Fields!"
     These metadata fields are optional - not every document fills them out. Use `chunk.metadata.get("author")` instead of `chunk.metadata["author"]` to avoid `KeyError`s when a field is missing. Better safe than sorry! 😉
 
@@ -46,6 +48,7 @@ Need more context? File input's got you covered! Provides comprehensive metadata
 The `CodeChunker` provides code-specific insights beyond basic metadata. It helps you understand the structural context of each chunk - perfect for tracking where your code elements originated! 🔍
 
 **Code-Specific Information:**
+
 *   **`tree`** (str): Abstract syntax tree representation showing structural relationships within the chunk
 *   **`start_line`** (int): Line number where this chunk begins in the original file
 *   **`end_line`** (int): Line number where this chunk ends in the original file
@@ -57,13 +60,14 @@ Automatically included in every `Box` object when chunking code, helping you und
 The `chunklet` [CLI](../getting-started/cli.md) adapts metadata output based on your input type and flags. Think of it as your CLI's helpful companion that provides just the right context!
 
 **Metadata Control:** The `--metadata` flag gives you control over what gets included.
+
 *   **With `--metadata`**: Your chunks come with their full context - metadata appears alongside content, either printed to stdout or saved in `.json` files with `--destination`
 *   **Without `--metadata`**: Just the chunk content - clean and simple when you want to focus purely on the text
 
 **Metadata by Input Type:**
 
-*   **Direct Text Input** (`chunklet chunk "Your text..."`): Uses `DocumentChunker` with essential [Common Metadata](#common-metadata) fields (`chunk_num`, `span`) and `source` set to `"stdin"`
-*   **Document Processing** (`chunklet chunk --doc --source document.pdf`): `DocumentChunker` provides rich document metadata including [Common Metadata](#common-metadata) plus file-specific details (PDF titles, EPUB creators, DOCX authors) as detailed in [DocumentChunker Metadata](#documentchunker-metadata)
+*   **Direct Text Input** (`chunklet chunk "Your text..."`): Uses `DocumentChunker` with essential [Common Metadata](#common-metadata) fields (`chunk_num`, `span`, ...) and `source` set to `"stdin"`
+*   **Document Processing** (`chunklet chunk --doc --source document.pdf`): `DocumentChunker` provides rich document metadata including [Common Metadata](#common-metadata) plus file-specific details (PDF titles, EPUB creators, DOCX authors, ODT creators) as detailed in [DocumentChunker Metadata](#documentchunker-metadata)
 *   **Code Processing** (`chunklet chunk --code --source code.py`): `CodeChunker` includes structural information with [Common Metadata](#common-metadata) and code-specific fields like `tree`, `start_line`, `end_line` as described in [CodeChunker Metadata](#codechunker-metadata)
 
 The CLI automatically provides the most relevant metadata for your use case - making chunk analysis both powerful and intuitive. Smart and simple! 🎯

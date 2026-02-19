@@ -14,7 +14,7 @@ def deprecated_callable(
     use_instead: str,
     deprecated_in: str,
     removed_in: str,
-):
+) -> Callable:
     """Decorate a function or class with warning message.
 
     This decorator marks a function or class as deprecated.

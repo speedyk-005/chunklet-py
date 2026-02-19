@@ -40,6 +40,7 @@ class CustomProcessorRegistry:
         Register a document processor callback for one or more file extensions.
 
         This method can be used in two ways:
+
         1. As a decorator:
             @registry.register(".json", ".xml", name="my_processor")
             def my_processor(file_path):

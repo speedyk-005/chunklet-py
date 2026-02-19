@@ -51,11 +51,11 @@ class DocumentChunker(BaseChunker):
     `PlainTextChunker` instance.
 
     Key Features:
-    - Multi-Format Support: Chunks text from PDF, TXT, MD, and RST files.
-    - Metadata Enrichment: Automatically adds source file path and other
+        - Multi-Format Support: Chunks text from PDF, TXT, MD, and RST files.
+        - Metadata Enrichment: Automatically adds source file path and other
       document-level metadata (e.g., PDF page numbers) to each chunk.
-    - Bulk Processing: Efficiently chunks multiple documents in a single call.
-    - Pluggable Document processors: Integrate custom processors allowing definition
+        - Bulk Processing: Efficiently chunks multiple documents in a single call.
+        - Pluggable Document processors: Integrate custom processors allowing definition
     of specific logic for extracting text from various file types.
     """
 
@@ -618,6 +618,8 @@ class DocumentChunker(BaseChunker):
         token_counter: Callable[[str], int] | None = None,
     ) -> list[Box]:
         """
+        Chunk a document file into semantic pieces.
+
         Note:
             Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_file` instead.
         """
@@ -645,6 +647,8 @@ class DocumentChunker(BaseChunker):
         on_errors: Literal["raise", "skip", "break"] = "raise",
     ) -> Generator[Box, None, None]:
         """
+        Batch chunk multiple document files.
+
         Note:
             Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_files` instead.
         """

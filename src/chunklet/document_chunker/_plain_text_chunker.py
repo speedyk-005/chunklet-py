@@ -36,13 +36,13 @@ class PlainTextChunker:
     A powerful text chunking utility offering flexible strategies for optimal text segmentation.
 
     Key Features:
-    - Flexible Constraint-Based Chunking: Segment text by specifying limits on sentence count, token count and section breaks or combination of them.
-    - Clause-Level Overlap: Ensures semantic continuity between chunks by overlapping
+        - Flexible Constraint-Based Chunking: Segment text by specifying limits on sentence count, token count and section breaks or combination of them.
+        - Clause-Level Overlap: Ensures semantic continuity between chunks by overlapping
     at natural clause boundaries with Customizable continuation marker.
-    - Multilingual Support: Leverages language-specific algorithms and detection for broad coverage.
-    - Pluggable Token Counters: Integrate custom token counting functions (e.g., for specific LLM tokenizers).
-    - Parallel Processing: Efficiently handles batch chunking of multiple texts using multiprocessing.
-    - Memory friendly batching: Yields chunks one at a time, reducing memory usage, especially for very large documents.
+        - Multilingual Support: Leverages language-specific algorithms and detection for broad coverage.
+        - Pluggable Token Counters: Integrate custom token counting functions (e.g., for specific LLM tokenizers).
+        - Parallel Processing: Efficiently handles batch chunking of multiple texts using multiprocessing.
+        - Memory friendly batching: Yields chunks one at a time, reducing memory usage, especially for very large documents.
     """
 
     @validate_input
@@ -161,6 +161,7 @@ class PlainTextChunker:
 
         Returns:
             list[Box]: A list of `Box` objects. Each `Box` contains:
+
                 - 'content' (str): The text of the chunk.
                 - 'metadata' (dict): A dictionary including 'chunk_num' (int)
                     and all key-value pairs from `base_metadata`.
@@ -234,6 +235,7 @@ class PlainTextChunker:
 
         Returns:
             tuple[str, str]: A tuple containing two strings:
+
                 - The clauses that fit within the token budget (joined as a string).
                 - The remaining unfitted clauses (joined as a string).
         """

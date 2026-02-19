@@ -6,10 +6,9 @@ Language-Agnostic Code Chunking Utility
 This module provides a robust, convention-aware engine for segmenting source code into
 semantic units ("chunks") such as functions, classes, namespaces, and logical blocks.
 
-The chunking process operates as a state machine that tracks code context through
-states like GLOBAL, CLASS_BODY, FUNCTION_BODY, NAMESPACE, etc. Transitions between
-states are triggered by pattern matches (e.g., class/function keywords), enabling
-accurate identification of nested structures while respecting language-specific syntax.
+The chunking process uses pattern-based line-by-line processing to identify code structures
+and track context through indentation levels, enabling accurate detection of nested structures
+while respecting language-specific syntax.
 
 Limitations
 -----------
@@ -493,29 +492,31 @@ class CodeChunker(BaseChunker):
         tokens, lines, and logical units while preserving semantic coherence.
 
         Args:
-            source (str | Path): Raw code string or file path to process.
+            code (str | Path): Raw code string or file path to process.
             max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
             max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
             max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
             token_counter (Callable, optional): Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
             include_comments (bool): Include comments in output chunks. Default: True.
-            docstring_mode(Literal["summary", "all", "excluded"]): Docstring processing strategy:
+            docstring_mode (Literal["summary", "all", "excluded"]): Docstring processing strategy:
+
                 - "summary": Include only first line of docstrings
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
-                Defaults to "all"
+                Defaults to "all".
             strict (bool): If True, raise error when structural blocks exceed
                 max_tokens. If False, split oversized blocks. Default: True.
 
         Returns:
             list[Box]: List of code chunks with metadata. Each Box contains:
+
                 - content (str): Code content
                 - tree (str): Namespace hierarchy
                 - start_line (int): Starting line in original source
                 - end_line (int): Ending line in original source
                 - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): Source file path or "N/A"
+                - source_path (str): "N/A"
 
         Raises:
             InvalidInputError: Invalid configuration parameters.
@@ -582,29 +583,31 @@ class CodeChunker(BaseChunker):
         tokens, lines, and logical units while preserving semantic coherence.
 
         Args:
-            source (str | Path): Raw code string or file path to process.
+            path (str | Path): File path to process.
             max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
             max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
             max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
             token_counter (Callable, optional): Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
             include_comments (bool): Include comments in output chunks. Default: True.
-            docstring_mode(Literal["summary", "all", "excluded"]): Docstring processing strategy:
+            docstring_mode (Literal["summary", "all", "excluded"]): Docstring processing strategy:
+
                 - "summary": Include only first line of docstrings
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
-                Defaults to "all"
+                Defaults to "all".
             strict (bool): If True, raise error when structural blocks exceed
                 max_tokens. If False, split oversized blocks. Default: True.
 
         Returns:
             list[Box]: List of code chunks with metadata. Each Box contains:
+
                 - content (str): Code content
                 - tree (str): Namespace hierarchy
                 - start_line (int): Starting line in original source
                 - end_line (int): Ending line in original source
                 - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): Source file path or "N/A"
+                - source_path (str): Source file path
 
         Raises:
             InvalidInputError: Invalid configuration parameters.
@@ -666,12 +669,12 @@ class CodeChunker(BaseChunker):
                 Note: None cannot be used as a separator.
             include_comments (bool): Include comments in output chunks. Default: True.
             docstring_mode(Literal["summary", "all", "excluded"]): Docstring processing strategy:
+
                 - "summary": Include only first line of docstrings
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
                 Defaults to "all"
-            strict (bool): If True, raise error when structural blocks exceed
-            max_tokens. If False, split oversized blocks. Default: True.
+            strict (bool): If True, raise error when structural blocks exceed max_tokens. If False, split oversized blocks. Default: True.
             n_jobs (int | None): Number of parallel workers. Uses all available CPUs if None.
             show_progress (bool): Display progress bar during processing. Defaults to True.
             on_errors (Literal["raise", "skip", "break"]):
@@ -680,12 +683,13 @@ class CodeChunker(BaseChunker):
         yields:
             Box: `Box` object, representing a chunk with its content and metadata.
                 Includes:
+
                 - content (str): Code content
                 - tree (str): Namespace hierarchy
                 - start_line (int): Starting line in original source
                 - end_line (int): Ending line in original source
                 - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): Source file path or "N/A"
+                - source_path (str): "N/A"
 
         Raises:
             InvalidInputError: Invalid input parameters.
@@ -748,12 +752,12 @@ class CodeChunker(BaseChunker):
                 Note: None cannot be used as a separator.
             include_comments (bool): Include comments in output chunks. Default: True.
             docstring_mode(Literal["summary", "all", "excluded"]): Docstring processing strategy:
+
                 - "summary": Include only first line of docstrings
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
                 Defaults to "all"
-            strict (bool): If True, raise error when structural blocks exceed
-            max_tokens. If False, split oversized blocks. Default: True.
+            strict (bool): If True, raise error when structural blocks exceed max_tokens. If False, split oversized blocks. Default: True.
             n_jobs (int | None): Number of parallel workers. Uses all available CPUs if None.
             show_progress (bool): Display progress bar during processing. Defaults to True.
             on_errors (Literal["raise", "skip", "break"]):
@@ -762,12 +766,13 @@ class CodeChunker(BaseChunker):
         yields:
             Box: `Box` object, representing a chunk with its content and metadata.
                 Includes:
+
                 - content (str): Code content
                 - tree (str): Namespace hierarchy
                 - start_line (int): Starting line in original source
                 - end_line (int): Ending line in original source
                 - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): Source file path or "N/A"
+                - source_path (str): Source file path
 
         Raises:
             InvalidInputError: Invalid input parameters.
@@ -816,6 +821,8 @@ class CodeChunker(BaseChunker):
         strict: bool = True,
     ) -> list[Box]:
         """
+        Chunk code into semantic pieces.
+
         Note:
             Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_file` or `chunk_text` instead.
         """
@@ -865,6 +872,8 @@ class CodeChunker(BaseChunker):
         on_errors: Literal["raise", "skip", "break"] = "raise",
     ) -> Generator[Box, None, None]:
         """
+        Batch chunk multiple code sources.
+
         Note:
             Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_files` instead.
         """

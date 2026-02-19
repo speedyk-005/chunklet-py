@@ -29,7 +29,7 @@ Sometimes, unexpected situations arise that require Chunklet-py to pause its ope
     > or configure it in the class initialization: `.*Chunker(token_counter=tk)`
 *   **Inherits from:** `InvalidInputError`
 *   **When Raised:**
-    *   When performing token-based chunking ("token" or "hybrid" modes) without a `token_counter` function having been provided.
+    *   When performing token-based chunking without a `token_counter` function having been provided.
 
 ### `FileProcessingError`
 
@@ -51,7 +51,7 @@ Sometimes, unexpected situations arise that require Chunklet-py to pause its ope
 *   **Description:** This exception occurs when a chunk exceeds the defined `max_tokens` limit. It's particularly relevant in modes where maintaining the semantic integrity of your content is paramount, even if it means not splitting a block further.
 *   **Inherits from:** `ChunkletError`
 *   **When Raised:**
-    *   When a structural block of code (like a function or class) exceeds the `max_tokens` limit while in `strict_mode`, where splitting the block would compromise its integrity.
+    *   When a structural block of code (like a function or class) exceeds the `max_tokens` limit while in `strict` mode, where splitting the block would compromise its integrity.
 
 ### `CallbackError`
 
@@ -85,13 +85,13 @@ Warnings from Chunklet-py are like friendly nudges – they let you know about s
 *   **Where Logged:** `src/chunklet/document_chunker/_plain_text_chunker.py`
 *   **What to do:** To resolve this, simply adjust your `offset` parameter to a value within the valid range of sentences.
 
-### "Skipping a failed task. \nReason: {error}"
+### "Skipping a failed task. \nReason: `{error}`"
 
 *   **What it means:** During a batch operation, if an individual chunking task encounters an error, Chunklet-py is designed to skip that particular task and continue with the rest of the operation. This prevents the entire process from crashing and is a general warning triggered when `on_errors='skip'`.
 *   **Where Logged:** `src/chunklet/commons/batch_runner.py` (This is a general-purpose warning from the batch runner, used by `DocumentChunker` and `CodeChunker` when `on_errors='skip'`).
 *   **What to do:** We recommend checking the `Reason` provided in the warning for details about the failure. You might need to inspect the problematic input or adjust your `on_errors` parameter if you'd rather have the operation stop.
 
-### "Skipping document '{}' at paths[{}] due to validation failure.\nReason: {}"
+### "Skipping document `{path}` at paths[{path_index}] due to validation failure.\nReason: `{reason}`"
 
 *   **What it means:** This warning appears when a file doesn't pass the initial validation checks before its content can be extracted. The `Reason` will give you more details about what went wrong (perhaps a corrupted file or an unsupported format). Don't worry, the invalid file is simply skipped, and processing continues.
 *   **Where Logged:** `src/chunklet/document_chunker/document_chunker.py`
@@ -104,19 +104,19 @@ Warnings from Chunklet-py are like friendly nudges – they let you know about s
 *   **Where Logged:** `src/chunklet/document_chunker/document_chunker.py` (during `batch_chunk` operations)
 *   **What to do:** Double-check those file paths and make sure they're pointing to supported file types - we're ready whenever you are!
 
-### "Splitting oversized block ({} tokens) into sub-chunks"
+### "Splitting oversized block (`{token_count}` tokens) into sub-chunks"
 
 *   **What it means:** In `CodeChunker`'s more relaxed mode, one of your code blocks turned out to be a bit of a heavyweight - too big for the `max_tokens` limit! 💪 Rather than throwing up its hands in defeat, Chunklet-py decided to be extra helpful and split it into more manageable sub-chunks.
-*   **Where Logged:** `src/chunklet/code_chunker/code_chunker.py` (during `chunk` operations when `strict_mode=False`)
-*   **What to do:** This is just a friendly heads-up about what we're doing. If you want us to be more strict about those token limits for code blocks, just set `strict_mode=True` in `CodeChunker`.
+*   **Where Logged:** `src/chunklet/code_chunker/code_chunker.py` (during `chunk` operations when `strict=False`)
+*   **What to do:** This is just a friendly heads-up about what we're doing. If you want us to be more strict about those token limits for code blocks, just set `strict=True` in `CodeChunker`.
 
-### "Warning: '{path}' is path-like but was not found or is not a processable file/directory. Skipping."
+### "Warning: `{path}` is path-like but was not found or is not a processable file/directory. Skipping."
 
 *   **What it means:** The path you provided via `--source` looked promising at first glance, but when we went to find it, it was either playing hide-and-seek (doesn't exist!) or turned out to be something special like a socket or pipe that we can't process. No worries - we'll just skip this one and keep going.
 *   **Where Logged:** `src/chunklet/cli.py`
 *   **What to do:** Give that path another look to make sure it's correct and points to a regular file or directory we can handle.
 
-### "Warning: '{path}' does not resemble a valid file system path (failed heuristic check). Skipping."
+### "Warning: `{path}` does not resemble a valid file system path (failed heuristic check). Skipping."
 
 *   **What it means:** The string you gave us via `--source` just doesn't look like a proper file system path to our trained eye. We use a clever heuristic to spot path-like strings, but this one didn't pass the test - it might be malformed or just text. We'll politely skip it and move along. This check happens *before* any filesystem operations for fast validation!
 *   **Where Logged:** `src/chunklet/cli.py`
@@ -134,7 +134,7 @@ Warnings from Chunklet-py are like friendly nudges – they let you know about s
 *   **Where Logged:** `src/chunklet/cli.py`
 *   **What to do:** Take a peek at your input to make sure there's some actual text content we can work with.
 
-### "`{object_name}` was deprecated since v{version} in favor of `{replacement}`. It will be removed in v{future_version}."
+### "`{object_name}` was deprecated since v`{version}` in favor of `{replacement}`. It will be removed in v`{future_version}`."
 
 *   **What it means:** Heads up! You're using a function, method, or class that's on its way out. This deprecated item will stick around for a bit longer, but it's on borrowed time. The `replacement` points you to the shiny new alternative you should be using instead.
 *   **Where Logged:** Various locations depending on the deprecated item.

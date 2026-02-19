@@ -1,9 +1,0 @@
-- dont make warning conditional
-
-# what we have done
-
-- Fixed bug in `CodeChunker._split_oversized()` where lines exceeding limits were skipped during chunk creation.
-- readded support for python 3.9
-- added missing lang params in visualizer
-- update documentation fullier
-- ensure code cleaning and quality

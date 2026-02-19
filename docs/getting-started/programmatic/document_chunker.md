@@ -1,7 +1,7 @@
 # Document Chunker
 
 <p align="center">
-  <img src="../../../img/document_chunker.jpeg" alt="Document Chunker" width="512"/>
+  <img src="../../../img/document_chunker.jpg" alt="Document Chunker" width="512"/>
 </p>
 
 ## Quick Install
@@ -12,17 +12,17 @@ pip install chunklet-py
 
 No extra dependencies needed - `DocumentChunker` is ready to roll right out of the box for plain text! 🚀
 
-For document processing, install the structured-documents extra:
+For document processing (PDFs, DOCX, EPUB, ODT, Excel, etc.), install the structured-document extra:
 
 ```bash
-pip install chunklet-py[structured-documents]
+pip install chunklet-py[structured-document]
 ```
 
 This installs all the document processing dependencies needed to handle PDFs, DOCX, EPUB, ODT, Excel, and more! 📚
 
 ## Taming Your Text and Documents with Precision
 
-Got a wall of text that's feeling a bit... overwhelming? The `DocumentChunker` is your friendly neighborhood text organizer that transforms unruly paragraphs into perfectly sized, context-aware chunks. Perfect for RAG systems, document analysis, and any workflow that needs smart text segmentation with full control over chunk sizes.
+Got a wall of text that's feeling a bit... overwhelming? The `DocumentChunker` transforms unruly paragraphs into perfectly sized, context-aware chunks. Perfect for RAG systems, document analysis, and any workflow that needs smart text segmentation with full control over chunk sizes.
 
 Forget dumb splitting - we're talking intelligent segmentation that actually understands context! The `DocumentChunker` works hard to preserve meaning and flow, so your chunks don't end up as confusing puzzle pieces.
 
@@ -32,29 +32,28 @@ Ready to bring some order to the chaos? Let's dive in and make your text behave!
 
 The `DocumentChunker` comes packed with smart features that make it your go-to text wrangling sidekick:
 
--  **Flexible Constraint-Based Chunking:** Ultimate control over your chunks! Mix and match limits based on sentences, tokens, or Markdown section breaks. Craft exactly the chunk size you need with precision control! 🎯
--  **Intelligent Overlap for Context Preservation:** Adds smart overlaps between chunks so your text flows smoothly. No more jarring transitions that leave readers scratching their heads!
+-  **Flexible Composable Constraints:** Ultimate control over your chunks! Mix and match limits based on sentences, tokens, or Markdown section breaks. Craft exactly the chunk size you need with precision control! 🎯
+-  **Intelligent Overlap:** Adds smart overlaps between chunks so your text flows smoothly. No more jarring transitions that leave readers scratching their heads!
 -  **Extensive Multilingual Support:** Speaks over 50 languages fluently, thanks to our trusty sentence splitter. Global domination through better text chunking! 🌍
 -  **Customizable Token Counting:** Plug in your own token counter for perfect alignment with different LLMs. Because one size definitely doesn't fit all models!
--  **Optimized Parallel Processing:** Turbocharges through large texts using multiple processors. Speed demon mode activated! ⚡
 -  **Memory-Conscious Operation:** Handles massive documents efficiently by yielding chunks one at a time. Your RAM will thank you later! 💾
 -  **Multi-Format Maestro:** From corporate DOCX boardrooms to academic PDF libraries, this chunker speaks every file language fluently! Handles `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx` files like a pro. 🌍
--  **Metadata Magician:** Not just text - it automatically enriches your chunks with valuable metadata like source file paths and PDF page numbers. Your chunks come with bonus context! 📊
--  **Bulk Processing Beast:** Got a mountain of documents to conquer? No problem! This beast efficiently processes multiple documents in parallel. 📚⚡
+-  **Metadata Magician:** Not just text - it automatically enriches your chunks with valuable metadata. Your chunks come with bonus context! 📊
+-  **Bulk Processing Powerhouse:** Got a mountain of documents to conquer? No problem! This powerhouse efficiently processes multiple documents in parallel. 📚⚡
 -  **Pluggable Processor Power:** Have a mysterious file format that's one-of-a-kind? Plug in your own custom processors - `DocumentChunker` is ready for any challenge you throw at it! 🔌🛠️
 
 !!! note "No Scanned PDF Support"
     Currently, `DocumentChunker` does **not** support scanned PDFs (images). It can only process PDFs with selectable/extractable text. For scanned documents, you'll need to OCR them first before chunking! 📷
 
-### Constraint-Based Chunking: Your Text, Your Rules!
+### Composable Constraints: Your Text, Your Rules!
 
-`DocumentChunker` lets you call the shots with constraint-based chunking. Mix and match limits to craft the perfect chunk size for your needs. Here's the constraint menu:
+`DocumentChunker` lets you call the shots with composable constraints. Mix and match limits to craft the perfect chunk size for your needs. Here's the constraint menu:
 
 | Constraint           | Value Requirement | Description |
 | :------------------- | :---------------- | :---------- |
 | `max_sentences`      | `int >= 1`        | Sentence power mode! Tell us how many sentences per chunk, and we'll group them thoughtfully so your ideas flow like a well-written story. |
 | `max_tokens`         | `int >= 12`       | Token budget watcher! We'll carefully pack sentences into chunks while respecting your token limits. If a sentence gets too chatty, we'll politely split it at clause boundaries. 🤐 |
-| `max_section_breaks` | `int >= 1`        | Structure superhero! Limits Markdown section breaks per chunk (headings `##`, rules `---`) to keep your document's organization intact. Your headings stay where they belong! |
+| `max_section_breaks` | `int >= 1`        | Structure superhero! Limits Markdown section breaks per chunk (e.g., headings `##`, rules `---`) to keep your document's organization intact. Your headings stay where they belong! |
 
 !!! note "Quick Note: Constraints Required!"
     You must specify at least one limit (`max_sentences`, `max_tokens`, or `max_section_breaks`) when using chunking methods. Forget to add one? You'll get an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror)!
@@ -63,6 +62,12 @@ The `DocumentChunker` has four main methods: `chunk_text`, `chunk_file`, `chunk_
 
 
 ## Single: Chunk One Text! 📝
+
+Chunk a single string of text into manageable pieces using various constraints:
+- `chunk_text()` - accepts raw text as a string
+- `chunk_file()` - accepts a file path as a string or `pathlib.Path` object
+  
+### Chunking by Sentences: Sentence Group Guru! 📝
 
 Let's say you have this text:
 
@@ -189,7 +194,7 @@ for i, chunk in enumerate(chunks):
 !!! note "Token Counter Requirement"
     When using the `max_tokens` constraint, a `token_counter` function is essential. This function, which you provide, should accept a string and return an integer representing its token count. Failing to provide a `token_counter` will result in a [`MissingTokenCounterError`](../../exceptions-and-warnings.md#missingtokencountererror).
 
-```py linenums="1"
+```py linenums="1" hl_lines="1 3-4 6 10"
 from chunklet.document_chunker import DocumentChunker
 
 def word_counter(text: str) -> int:
@@ -273,7 +278,7 @@ for i, chunk in enumerate(chunks):
 
 This constraint is useful for documents structured with Markdown headings or thematic breaks.
 
-``` py linenums="1"
+``` py linenums="1" hl_lines="3"
 chunks = chunker.chunk_text(
     text=text,
     max_section_breaks=2
@@ -344,9 +349,9 @@ for i, chunk in enumerate(chunks):
 
 The real power of `DocumentChunker` comes from combining multiple constraints. The chunking will stop as soon as any of the limits is reached.
 
-``` py linenums="1"
+``` py linenums="1" hl_lines="3-5"
 chunks = chunker.chunk_text(
-    text=text,
+    text,
     max_sentences=5,
     max_tokens=100,
     max_section_breaks=2
@@ -417,9 +422,12 @@ for i, chunk in enumerate(chunks):
 
 While `chunk_text` is perfect for single texts and `chunk_file` for single files, `chunk_texts` and `chunk_files` are your power players for processing multiple texts or files in parallel. They use memory-friendly generators so you can handle massive collections with ease.
 
+- `chunk_texts()` - process multiple raw text strings
+- `chunk_files()` - process multiple file paths
+
 ### For Texts
 
-```py linenums="1"
+```py linenums="1" hl_lines="11-19"
 from chunklet.document_chunker import DocumentChunker
 
 def word_counter(text: str) -> int:
@@ -505,7 +513,7 @@ The `separator` parameter works for both `chunk_texts` and `chunk_files`. It let
 !!! note "Quick Note"
     `None` won't work as a separator - you'll need something more substantial!
 
-```py linenums="1"
+```py linenums="1" hl_lines="2 9 14 18-21"
 from chunklet.document_chunker import DocumentChunker
 from more_itertools import split_at
 
@@ -569,7 +577,7 @@ To use a custom processor, you leverage the [`@custom_processor_registry.registe
     - For multi-section documents, return a list of strings - each will be processed as a separate section
     - If an error occurs during the document processing (e.g., an issue with the custom processor function), a [`CallbackError`](../../exceptions-and-warnings.md#callbackerror) will be raised
 
-```py linenums="1"
+```py linenums="1" hl_lines="5 8-18 52-53"
 import os
 import re
 import json

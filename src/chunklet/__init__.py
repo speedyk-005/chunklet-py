@@ -7,6 +7,7 @@ visualize chunks in real-time, and handle various file types with flexible,
 context-aware chunking strategies.
 
 Key Features:
+
 - Sentence splitting: Multilingual text segmentation across 50+ languages
 - Semantic chunking: PlainTextChunker, DocumentChunker, and CodeChunker
 - Interactive visualization: Web-based chunk exploration and parameter tuning

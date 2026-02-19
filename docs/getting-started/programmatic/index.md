@@ -16,7 +16,7 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
     ---
 
-    Transforms plain text and diverse document formats (`.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`) into perfectly sized, context-aware chunks with flexible constraint-based chunking and intelligent overlap for optimal LLM and embedding performance.
+    Transforms plain text and diverse document formats (`.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`) into perfectly sized, context-aware chunks with flexible composable constraints and intelligent overlap for optimal LLM and embedding performance.
 
     Perfect for RAG systems, document analysis, and any workflow that needs smart text segmentation with full control over chunk sizes.
 

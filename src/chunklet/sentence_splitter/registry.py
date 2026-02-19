@@ -37,6 +37,7 @@ class CustomSplitterRegistry:
         Register a splitter callback for one or more languages.
 
         This method can be used in two ways:
+
         1. As a decorator:
             @registry.register("en", "fr", name="my_splitter")
             def my_splitter(text):

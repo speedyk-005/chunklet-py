@@ -51,7 +51,7 @@ The `use_cache` flag has been removed from `DocumentChunker`.
     from chunklet import Chunklet
     
     chunker = Chunklet()
-    chunks = chunker.chunk(text, use_cache=False)
+    chunks = chunker.chunk(text, use_cache=False, ...)
     ```
 
 === "After (v2.x.x)"
@@ -60,7 +60,54 @@ The `use_cache` flag has been removed from `DocumentChunker`.
     from chunklet import DocumentChunker
     
     chunker = DocumentChunker()
-    chunks = chunker.chunk_text(text)
+    chunks = chunker.chunk_text(text, ...)
+    ```
+
+### Constraint Handling: mode Removed, Explicit Limits
+
+We've streamlined how chunking constraints are managed, moving towards more explicit control and introducing new options for granular segmentation.
+
+**What's changed?**
+
+- **Removed mode argument:** The mode argument (e.g., "sentence", "token", "hybrid") has been removed from the CLI and `Chunklet`'s `chunk` and `batch_chunk` methods. The chunking strategy is now implicitly determined by the combination of constraint flags you provide (`max_tokens`, `max_sentences`, `max_section_breaks`).
+- **No More Default Values:** `max_tokens` and `max_sentences` no longer have implicit default values. You must now explicitly set these if you wish to use them.
+- **New Constraint Flags:** We've introduced `max_section_breaks` (for `DocumentChunker`) and `max_lines` (for `CodeChunker`) to provide even more granular control over your chunking strategy.
+
+**Why the change?**
+
+This approach provides clearer, more explicit control over your chunking strategy, preventing unexpected behavior from implicit defaults and allowing for more precise customization. It simplifies the API by removing a redundant argument and provides more direct control over how chunks are formed.
+
+**How to adapt your code:**
+
+- Instead of specifying a mode, simply provide the desired constraint flags. For example, to chunk by sentences, provide `max_sentences`. To chunk by tokens, provide `max_tokens`.
+- Explicitly set `max_tokens` or `max_sentences` if you were relying on their previous defaults.
+- Utilize the new `max_section_breaks` and `max_lines` flags for advanced chunking control.
+
+=== "Before (v1.4.0) - sentence mode"
+
+    ```py
+    from chunklet import Chunklet
+    
+    chunker = Chunklet()
+    chunks = chunker.chunk(text, mode="sentence", max_sentences=5)
+    ```
+
+=== "Before (v1.4.0) - hybrid mode"
+
+    ```py
+    from chunklet import Chunklet
+    
+    chunker = Chunklet()
+    chunks = chunker.chunk(text, mode="hybrid", max_sentences=5, max_tokens=512)
+    ```
+
+=== "After (v2.x.x)"
+
+    ```py
+    from chunklet import DocumentChunker
+    
+    chunker = DocumentChunker()
+    chunks = chunker.chunk_text(text, max_sentences=5, max_tokens=512)
     ```
 
 ### Renamed `chunk()` method
@@ -77,7 +124,7 @@ The `chunk()` method has been renamed to `chunk_text()` for text input.
     from chunklet import Chunklet
     
     chunker = Chunklet()
-    chunks = chunker.chunk(text, max_sentences=5)
+    chunks = chunker.chunk(text, mode="sentence", max_sentences=5)
     ```
 
 === "After (v2.x.x)"
@@ -112,8 +159,7 @@ The `batch_chunk()` method has been renamed to `chunk_texts()` for multiple text
     
     chunker = DocumentChunker()
     texts = ["text1", "text2"]
-    chunks = chunker.chunk_texts(texts, max_sentences=5, max_tokens=512) # Mode is implicit, max_tokens explicit
-    ```
+    chunks = chunker.chunk_texts(texts, max_sentences=5)
     ```
 
 ### Language Detection Logic Integrated
@@ -193,9 +239,9 @@ Have a unique way you prefer your sentences split? We've made it even simpler to
 === "After (v2.x.x)"
 
     ```py
-    from chunklet.sentence_splitter import custom_splitter_registry
-    from chunklet import DocumentChunker
     import re
+    from chunklet import DocumentChunker
+    from chunklet.sentence_splitter import custom_splitter_registry
 
     # Register a custom splitter using the global registry
     # If 'name' is not provided, the function's name ('my_awesome_splitter' in this case) will be used.
@@ -225,6 +271,7 @@ We've refined our exception handling to provide more clarity and specificity.
 In v1.4.0, the `chunklet` CLI had a simpler structure, primarily focused on plain text. In v2.x.x, the CLI has been reorganized for clarity and to support different chunkers.
 
 **New `chunk` command and chunker selection!** A new `chunk` command is now the main entrypoint for all chunking operations.
+
 - When you provide text directly as an argument, `DocumentChunker` is used.
 - When you use `--source` to provide a file path, `DocumentChunker` is used by default to handle a variety of document types.
 - You can use flags like `--code` to explicitly select the `CodeChunker`.

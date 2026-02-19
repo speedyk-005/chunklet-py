@@ -70,6 +70,8 @@ class BaseSplitter:
     )
     def split(self, text: str, lang: str = "auto") -> list[str]:
         """
+        Split text into sentences.
+
         Note:
             Deprecated since 2.2.0. Will be removed in 3.0.0. Use `split_text` instead.
         """

@@ -1,7 +1,7 @@
 # Sentence Splitter
 
 <p align="center">
-  <img src="../../../img/sentence_splitter.jpg?raw=true" alt="Sentence splitter" width="512"/>
+  <img src="../../../img/sentence_splitter.png?raw=true" alt="Sentence splitter" width="512"/>
 </p>
 
 ## The Art of Precise Sentence Splitting ✂️
@@ -160,6 +160,8 @@ To use a custom splitter, you leverage the [`@registry.register`](../../referenc
 
 #### Basic Custom Splitter
 
+Create a custom sentence splitter for a single language using the registry decorator:
+
 ``` py linenums="1" hl_lines="2 6-9"
 import re
 from chunklet.sentence_splitter import SentenceSplitter, custom_splitter_registry
@@ -189,7 +191,9 @@ for i, sentence in enumerate(sentences):
 
 #### Multi-Language Custom Splitter
 
-``` py linenums="1"
+Register the same splitter function for multiple languages at once:
+
+``` py linenums="1" hl_lines="1"
 @custom_splitter_registry.register("fr", "es", name="MultiLangExclamationSplitter")  #(1)!
 def multi_lang_splitter(text: str) -> list[str]:
     return [s.strip() for s in re.split(r'(?<=!)\s+', text) if s.strip()]
@@ -198,6 +202,8 @@ def multi_lang_splitter(text: str) -> list[str]:
 1.  This registers the same custom splitter for both French ("fr") and Spanish ("es") languages.
 
 #### Unregistering Custom Splitters
+
+Remove a registered custom splitter when you no longer need it:
 
 ``` py linenums="1"
 custom_splitter_registry.unregister("en")  # (1)!
