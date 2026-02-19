@@ -483,6 +483,7 @@ class PlainTextChunker:
         if max_tokens is not None and not (token_counter or self.token_counter):
             raise MissingTokenCounterError()
 
+    @validate_input
     def chunk(
         self,
         text: str,
@@ -581,6 +582,7 @@ class PlainTextChunker:
 
         return self._create_chunk_boxes(chunks, base_metadata, text)
 
+    @validate_input
     def batch_chunk(
         self,
         texts: "restricted_iterable(str)",  # pyright: ignore
