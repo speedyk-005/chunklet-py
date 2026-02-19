@@ -1,4 +1,8 @@
 import warnings
+
+# Suppress pkg_resources deprecation warnings from third-party libraries
+warnings.filterwarnings("ignore", message=".*pkg_resources.*", category=UserWarning)
+
 from pathlib import Path
 
 import regex as re

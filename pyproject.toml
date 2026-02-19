@@ -143,6 +143,10 @@ chunklet = ["visualizer/static/*", "visualizer/static/**/*"]
 
 [tool.pytest.ini_options]
 minversion = "7.4"
+filterwarnings = [
+    "ignore::DeprecationWarning:websockets.*",
+    "ignore::DeprecationWarning:pkg_resources.*",
+]
 
 # disable coverage report to prevent racing with multiprocessing
 # addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --durations=10"

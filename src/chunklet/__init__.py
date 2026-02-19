@@ -23,8 +23,14 @@ import sys
 import types
 import typing
 import warnings
+from importlib.metadata import PackageNotFoundError, version
 
 from chunklet.common.deprecation import deprecated_callable
+
+try:
+    __version__ = version("chunklet-py")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
 
 from .exceptions import (
     CallbackError,
@@ -35,8 +41,6 @@ from .exceptions import (
     TokenLimitError,
     UnsupportedFileTypeError,
 )
-
-__version__ = "2.2.0"
 
 __all__ = [
     "ChunkletError",
