@@ -251,6 +251,7 @@ def split_command(
     lang: str = typer.Option(
         "auto",
         "--lang",
+        "-l",
         help="Language of the text (e.g., 'en', 'fr', 'auto').",
     ),
     verbose: bool = typer.Option(
@@ -370,6 +371,7 @@ def chunk_command(
     lang: str = typer.Option(
         "auto",
         "--lang",
+        "-l",
         help="Language of the text (e.g., 'en', 'fr', 'auto').",
     ),
     max_tokens: int = typer.Option(
@@ -417,6 +419,7 @@ def chunk_command(
     metadata: bool = typer.Option(
         False,
         "--metadata",
+        "-m",
         help=(
             "Include metadata in the output. If --destination is a directory, "
             "metadata is saved as separate .json files; otherwise, it's "

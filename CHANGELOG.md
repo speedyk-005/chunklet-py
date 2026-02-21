@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `--tokenizer-timeout` / `-t` option (default: no timeout) for both `chunk` and `visualize` commands
   - Improved tokenizer error messages to distinguish between invalid output, timeout, and execution errors
   - Added `-h` as a shortcut for `--host` in the `visualize` command
+  - Added `-l` as a shortcut for `--lang` and `-m` for `--metadata` in both `split` and `chunk` commands
 - **Visualizer UI Redesign**:
   - Redesigned layout from 2-column to 3-row structure
   - Added scroll hint that shows only when modal has overflow
@@ -46,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added support for **Pascal-style** `BEGIN` and `END` (case-insensitive) as block delimiters.
   - Added open curly bracket in the function pattern to support more languages.
 - **Multi-line String Protection**: Added MULTI_LINE_STRING_ASSIGN to prevent the extractor from splitting snippets inside large string blocks or triple-quotes.
-- **Direct Import Support**: Enhanced lazy loading to support direct imports while maintaining performance optimizations
+- **Direct Import Support**: Enhanced lazy loading to support direct imports like `from chunklet import DocumentChunker` while maintaining performance optimizations
 
 ### Changed
 - **CodeChunker Pattern Logic**:

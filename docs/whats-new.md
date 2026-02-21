@@ -14,7 +14,7 @@ We've cleaned up the chunking method names to make them more intuitive:
 - **chunk_texts()** - Batch process multiple texts
 - **chunk_files()** - Batch process multiple files
 
-The old methods still work but show a friendly deprecation warning.
+The old methods `chunk` and `batch_chunk` still work but show a friendly deprecation warning.
 
 ### 🔗 PlainTextChunker Joins DocumentChunker
 
@@ -33,6 +33,14 @@ The chunk visualizer got a complete makeover:
 - **Smoother Interactions** - No more jumpy hover effects when exploring chunks
 - **Smarter Buttons** - Stay enabled after processing so you can download anytime
 
+### ⌨️ Shorter CLI Flags
+
+New convenient short flags for the CLI:
+
+- `-l` for `--lang`
+- `-h` for `--host`
+- `-m` for `--metadata`
+
 ### 🧑‍💻 Code Chunking Just Got Smarter
 
 Better code understanding with zero extra work from you:
@@ -43,7 +51,8 @@ Better code understanding with zero extra work from you:
 
 ### 🔧 Small Things, Big Difference
 
-- **Tokenizer Timeout** - Custom tokenizers now have a 10-second timeout so your processing never hangs forever
+- **Tokenizer Timeout** - Added `--tokenizer-timeout` / `-t` option for custom tokenizers so your processing never hangs forever
+- **Direct Import Support** - Enhanced lazy loading to support direct imports like `from chunklet import DocumentChunker` while maintaining performance optimizations
 - **Global Registries** - Added `custom_splitter_registry` and `custom_processor_registry` for easier customization
 - **Better Errors** - Clearer messages when things go wrong
 
