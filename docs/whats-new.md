@@ -53,6 +53,7 @@ Better code understanding with zero extra work from you:
 
 - **Tokenizer Timeout** - Added `--tokenizer-timeout` / `-t` option for custom tokenizers so your processing never hangs forever
 - **Direct Import Support** - Enhanced lazy loading to support direct imports like `from chunklet import DocumentChunker` while maintaining performance optimizations
+- **Better Compatibility** - Fixed dependency issue that caused errors in some environments
 - **Global Registries** - Added `custom_splitter_registry` and `custom_processor_registry` for easier customization
 - **Better Errors** - Clearer messages when things go wrong
 

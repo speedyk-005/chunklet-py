@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Ruff provides 10-100x faster feedback cycles while maintaining all existing code quality standards
 
 ### Fixed
+- **Dependency Fix**: Added `jaraco.pkg_resources` to fix `ModuleNotFoundError: No module named 'pkg_resources'` in CI (sentsplit depends on deprecated pkg_resources removed in setuptools 81.0.0)
 - **CodeChunker Annotation Remnants**:
   - Fixed remnants of annotation tags in output by using separate patterns for full-line vs inline comments
   - Only full-line comments are now annotated, inline comments stay with their code line
