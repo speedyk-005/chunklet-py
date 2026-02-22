@@ -1,5 +1,5 @@
 !!! info "What's on This Page"
-    This page highlights the **big features and major changes** for each version. For all the nitty-gritty details, check out our [full changelog](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md).
+    The big stuff. The shiny new things. The stuff we got tired of fixing. For everything else, there's the [changelog](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md).
 
 ---
 
@@ -7,55 +7,57 @@
 
 ### ✨ Simpler Chunking API
 
-We've cleaned up the chunking method names to make them more intuitive:
+We renamed some methods. Yes, we're those people who rename things. But honestly, the old names were confusing — even to us:
 
-- **chunk_text()** - Chunk a string of text
-- **chunk_file()** - Chunk a file directly
-- **chunk_texts()** - Batch process multiple texts
-- **chunk_files()** - Batch process multiple files
+- `chunk_text()` — chunk a string
+- `chunk_file()` — chunk a file directly  
+- `chunk_texts()` — batch strings
+- `chunk_files()` — batch files
 
-The old methods `chunk` and `batch_chunk` still work but show a friendly deprecation warning.
+The old `chunk` and `batch_chunk` still work. They'll whine at you with a deprecation warning. Deal with it or migrate — your choice.
 
-### 🔗 PlainTextChunker Joins DocumentChunker
+### 🔗 PlainTextChunker Got Absorbed
 
-The `PlainTextChunker` class has been merged into `DocumentChunker`. Use `chunk_text()` for single texts or `chunk_texts()` for batch processing. The old `PlainTextChunker` import still works with a deprecation warning.
+`PlainTextChunker` is now part of `DocumentChunker`. We know — having two chunkers was weird. Just use `chunk_text()` or `chunk_texts()` like a normal person. The old import still works, technically, with a deprecation warning.
 
-### ✂️ SentenceSplitter Gets Slicing Upgrades
+### ✂️ SentenceSplitter Now Does `split_text()`
 
-The `SentenceSplitter` now uses `split_text()` instead of the deprecated `split()` method. A new `split_file()` method lets you split files directly into sentences.
+`split()` is out. `split_text()` is in. We renamed it because apparently "split" was too short. There's also now `split_file()` if you're the type who likes skipping steps.
 
-### 🎨 A Fresh New Look for the Visualizer
+### 🎨 Visualizer Makeover
 
-The chunk visualizer got a complete makeover:
+The chunk visualizer finally got some love:
 
-- **Fullscreen Mode** - Present your results without distractions
-- **3-Row Layout** - Cleaner, more intuitive design
-- **Smoother Interactions** - No more jumpy hover effects when exploring chunks
-- **Smarter Buttons** - Stay enabled after processing so you can download anytime
+- **Fullscreen mode** — for when you want to pretend you're doing something important
+- **3-row layout** — less cluttered, more clickable
+- **Smoother hovers** — no more seizure-inducing animations
+- **Smarter buttons** — they stay enabled because, honestly, disabling them was stupid
 
 ### ⌨️ Shorter CLI Flags
 
-New convenient short flags for the CLI:
+Finally, stuff you can actually type without wrist strain:
 
 - `-l` for `--lang`
-- `-h` for `--host`
+- `-h` for `--host`  
 - `-m` for `--metadata`
 
-### 🧑‍💻 Code Chunking Just Got Smarter
+You're welcome.
 
-Better code understanding with zero extra work from you:
+### 🧑‍💻 Code Chunking, Less Broken
 
-- **Cleaner Output** - Fixed weird artifacts in chunks from comment handling
-- **More Languages** - Now supports Forth, PHP 8 attributes, VB.NET, ColdFusion, and Pascal
-- **String Protection** - Multi-line strings and triple-quotes are now protected
+Code chunking got slightly less terrible:
 
-### 🔧 Small Things, Big Difference
+- **Cleaner output** — fixed weird artifacts in chunks from comment handling (we know, it was annoying)
+- **More languages** — Forth, PHP 8 attributes, VB.NET, ColdFusion, and Pascal. Yes, really.
+- **String protection** — multi-line strings and triple-quotes won't get mangled anymore
 
-- **Tokenizer Timeout** - Added `--tokenizer-timeout` / `-t` option for custom tokenizers so your processing never hangs forever
-- **Direct Import Support** - Enhanced lazy loading to support direct imports like `from chunklet import DocumentChunker` while maintaining performance optimizations
-- **Better Compatibility** - Fixed dependency issue that caused errors in some environments
-- **Global Registries** - Added `custom_splitter_registry` and `custom_processor_registry` for easier customization
-- **Better Errors** - Clearer messages when things go wrong
+### 🔧 The Boring But Necessary Stuff
+
+- **Tokenizer timeout** — new `--tokenizer-timeout` / `-t` flag so custom tokenizers don't hang forever
+- **Direct imports** — `from chunklet import DocumentChunker` now works without making things slow
+- **Fewer crashes** — fixed some dependency issues that shall not be named
+- **Global registries** — `custom_splitter_registry` and `custom_processor_registry` exist now
+- **Error messages** — slightly less cryptic when things explode
 
 ---
 
@@ -63,41 +65,41 @@ Better code understanding with zero extra work from you:
 
 ### 🐛 Visualizer Was Broken
 
-The chunk visualizer wasn't working after installation from PyPI - static files were missing. That's now fixed!
+The visualizer didn't work after installing from PyPI. Static files were MIA. Fixed now, obviously.
 
 ---
 
 ## Chunklet v2.1.0
 
-### 🌐 Your First Look at the Visualizer
+### 🌐 Visualizer 1.0
 
-A brand new way to explore chunking:
+We built an actual UI. Because sometimes you want to click buttons instead of writing code:
 
-- Interactive web interface for real-time parameter tuning
+- Interactive web interface for parameter tuning
 - Launch with `chunklet visualize`
 - Works with all chunker types
 
 ### 📁 More File Formats
 
-Added support for ODT, CSV, and Excel files - now you can process pretty much anything.
+ODT, CSV, and Excel (.xlsx) — added in this release. Because apparently plain text wasn't enough for some people.
 
 ---
 
 ## Chunklet v2.0.0
 
-### 🚀 The Big Rewrite
+### 🚀 The Big Rewrite (aka "We Broke Everything")
 
-This was a massive update that changed everything:
+We rewrote the whole thing. You're welcome? Here's what changed:
 
-- ** 🗃 New Classes** - PlainTextChunker, DocumentChunker, and CodeChunker
-- ** 🌍 50+ Languages** - Multilingual support for sentence splitting
-- ** 📄 Document Formats** - PDF, DOCX, EPUB, HTML, and more
-- ** 💻 Code Understanding** - Intelligent code-aware chunking
-- ** 🎯 More Control** - New constraints like max_section_breaks and max_lines
-- ** ⚡ Memory Efficient** - Generators for handling large files
+- **🗃 New classes** — PlainTextChunker, DocumentChunker, CodeChunker
+- **🌍 50+ languages** — because the world has more than English
+- **📄 Document formats** — PDF, DOCX, EPUB, HTML, etc.
+- **💻 Code understanding** — actual code chunking, not just "split by lines like a savage"
+- **🎯 New constraints** — `max_section_breaks` and `max_lines` for finer control
+- **⚡ Memory efficient batch** — generators in batch methods so your RAM doesn't cry
 
 ---
 
 ## 🗺️ Want More Details?
 
-Check out our [changelog](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md) for the complete story!
+The [changelog](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md) has everything. We're not gonna repeat it here.

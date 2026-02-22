@@ -22,17 +22,15 @@ This installs all the document processing dependencies needed to handle PDFs, DO
 
 ## Taming Your Text and Documents with Precision
 
-Got a wall of text that's feeling a bit... overwhelming? The `DocumentChunker` transforms unruly paragraphs into perfectly sized, context-aware chunks. Perfect for RAG systems, document analysis, and any workflow that needs smart text segmentation with full control over chunk sizes.
+Got a wall of text that's overwhelming? The `DocumentChunker` transforms unruly paragraphs into perfectly sized, context-aware chunks. Perfect for RAG systems and document analysis.
 
-Forget dumb splitting - we're talking intelligent segmentation that actually understands context! The `DocumentChunker` works hard to preserve meaning and flow, so your chunks don't end up as confusing puzzle pieces.
-
-Ready to bring some order to the chaos? Let's dive in and make your text behave!
+It preserves meaning and flow — no confusing puzzle pieces.
 
 ### Where `DocumentChunker` Really Shines
 
 The `DocumentChunker` comes packed with smart features that make it your go-to text wrangling sidekick:
 
--  **Flexible Composable Constraints:** Ultimate control over your chunks! Mix and match limits based on sentences, tokens, or Markdown section breaks. Craft exactly the chunk size you need with precision control! 🎯
+-  **Flexible Composable Constraints:** Ultimate control over your chunks! Mix and match limits based on sentences, tokens, or section breaks (headings, horizontal rules, `<details>` tags). Craft exactly the chunk size you need with precision control! 🎯
 -  **Intelligent Overlap:** Adds smart overlaps between chunks so your text flows smoothly. No more jarring transitions that leave readers scratching their heads!
 -  **Extensive Multilingual Support:** Speaks over 50 languages fluently, thanks to our trusty sentence splitter. Global domination through better text chunking! 🌍
 -  **Customizable Token Counting:** Plug in your own token counter for perfect alignment with different LLMs. Because one size definitely doesn't fit all models!
@@ -53,7 +51,7 @@ The `DocumentChunker` comes packed with smart features that make it your go-to t
 | :------------------- | :---------------- | :---------- |
 | `max_sentences`      | `int >= 1`        | Sentence power mode! Tell us how many sentences per chunk, and we'll group them thoughtfully so your ideas flow like a well-written story. |
 | `max_tokens`         | `int >= 12`       | Token budget watcher! We'll carefully pack sentences into chunks while respecting your token limits. If a sentence gets too chatty, we'll politely split it at clause boundaries. 🤐 |
-| `max_section_breaks` | `int >= 1`        | Structure superhero! Limits Markdown section breaks per chunk (e.g., headings `##`, rules `---`) to keep your document's organization intact. Your headings stay where they belong! |
+| `max_section_breaks` | `int >= 1`        | Structure superhero! Limits section breaks per chunk — headings (`##`), horizontal rules (`---`, `***`, `___`), and `<details>` tags. Your document structure stays intact! |
 
 !!! note "Quick Note: Constraints Required!"
     You must specify at least one limit (`max_sentences`, `max_tokens`, or `max_section_breaks`) when using chunking methods. Forget to add one? You'll get an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror)!

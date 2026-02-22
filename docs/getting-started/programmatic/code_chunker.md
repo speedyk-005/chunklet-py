@@ -14,9 +14,9 @@ This installs all the code processing dependencies needed for language-agnostic 
 
 ## Code Chunker: Your Code Intelligence Sidekick!
 
-Ever stared at a massive codebase feeling like you're decoding ancient hieroglyphs? The `CodeChunker` is your trusty code companion that transforms tangled functions and classes into clean, understandable chunks that actually make sense!
+Got a massive codebase that's hard to navigate? The `CodeChunker` transforms tangled functions and classes into clean, understandable chunks that actually make sense.
 
-Under the hood, it uses pattern-based line-by-line processing to identify code structures — no heavy parsers needed. This makes it lightweight yet surprisingly accurate across 30+ languages. 💻
+It uses pattern-based line-by-line processing to identify code structures — no heavy parsers needed. Lightweight yet surprisingly accurate across 30+ languages.
 
 ### Code Chunker Superpowers! ⚡
 

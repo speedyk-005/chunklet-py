@@ -355,7 +355,9 @@ class DocumentChunker(BaseChunker):
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
             max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
+                Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
+                Must be >= 1.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
             offset (int): Starting sentence offset for chunking. Defaults to 0.
             token_counter (callable | None): Optional token counting function.
@@ -395,7 +397,9 @@ class DocumentChunker(BaseChunker):
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
             max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
+                Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
+                Must be >= 1.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
             offset (int): Starting sentence offset for chunking. Defaults to 0.
             token_counter (callable | None): Optional token counting function.
@@ -444,7 +448,9 @@ class DocumentChunker(BaseChunker):
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
             max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
+                Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
+                Must be >= 1.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
             offset (int): Starting sentence offset for chunking. Defaults to 0.
             token_counter (callable | None): Optional token counting function.
@@ -525,7 +531,9 @@ class DocumentChunker(BaseChunker):
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
             max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
+                Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
+                Must be >= 1.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
             offset (int): Starting sentence offset for chunking. Defaults to 0.
             token_counter (callable | None): Optional token counting function.

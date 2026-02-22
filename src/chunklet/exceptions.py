@@ -33,7 +33,13 @@ class FileProcessingError(ChunkletError):
 
 
 class UnsupportedFileTypeError(FileProcessingError):
-    """Raised when a file type is not supported for a given operation."""
+    """Raised when a file type is not supported for a given operation.
+
+    This can happen if:
+    - The file extension is not in the supported list
+    - The file has no extension
+    - The processor returns an iterable (requires batch processing)
+    """
 
     pass
 

@@ -1,4 +1,4 @@
-Welcome to the programmatic interface! This is where you integrate Chunklet-py's intelligent text and code chunking capabilities directly into your Python applications. Whether you're building RAG pipelines, data processing workflows, or custom AI solutions, our flexible API has everything you need.
+Welcome to the programmatic interface! This is where you integrate Chunklet-py's chunking capabilities directly into your Python apps. Building RAG pipelines, data processing workflows, or custom AI solutions? We've got you covered.
 
 <div class="grid cards" markdown>
 
@@ -44,4 +44,4 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
 </div>
 
-Ready to dive in? Click any card above to explore the chunker that matches your mission! Let's turn that text into perfectly chunked gold! ✨
+Pick a card below to get started! 📇

@@ -9,6 +9,8 @@
 > [!WARNING]
 > **Quick heads up!** Version 2 has some breaking changes. No worries though - check our [Migration Guide](https://speedyk-005.github.io/chunklet-py/latest/migration/) for a smooth upgrade!
 
+Hey! Welcome. Let's make some text chunking magic happen.
+
 [![Python Version](https://img.shields.io/badge/Python-3.10%20--%203.14-blue)](https://www.python.org/downloads/)
 [![PyPI](https://img.shields.io/pypi/v/chunklet-py)](https://pypi.org/project/chunklet-py)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/chunklet-py?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=BLUE&left_text=downloads)](https://pepy.tech/projects/chunklet-py)
@@ -27,9 +29,9 @@
 
 ## Why Smart Chunking? (Or: Why Not Just Split on Character Count?)
 
-You might be wondering: "Can't I just split my text by character count or random line breaks?" Well, sure you could... but that's like trying to cut a wedding cake with a chainsaw! 🎂
+You could split your text by character count or random line breaks. But that's like trying to cut a wedding cake with a chainsaw. 🎂
 
-Standard methods slice at arbitrary points, which causes:
+Dumb splitting causes problems:
 
 - **Mid-sentence surprises:** Your thoughts get chopped mid-way, losing all meaning
 - **Language confusion:** Non-English text and code structures get treated the same
@@ -43,14 +45,14 @@ Smart chunking solves this by:
 
 ## 🤔 So What's Chunklet-py Anyway? (And Why Should You Care?)
 
-**Chunklet-py** is a developer-friendly text splitting library designed to be the most versatile chunking solution — for devs, researchers, and AI engineers. It goes way beyond basic character counting. It intelligently chunks text, documents, and code into meaningful, context-aware pieces — perfect for RAG pipelines and LLM applications.
+**Chunklet-py** is a developer-friendly text splitting library designed to be the most versatile chunking solution — for devs, researchers, and AI engineers. It goes way beyond basic character counting. I built this because I was tired of terrible chunking options. Chunklet-py intelligently chunks text, documents, and code into meaningful, context-aware pieces — perfect for RAG pipelines and LLM applications.
 
 Key features:
 
 - **Composable constraints** — Mix and match limits (sentences, tokens, sections) to get exactly the chunks you need
 - **Pluggable architecture** — Swap in custom tokenizers, sentence splitters, or processors
 - **Rich metadata** — Every chunk comes with source references, spans, and structural info
-- **Multi-format support** — Text, PDFs, DOCX, EPUB, HTML, and source code
+- **Multi-format support** — PDF, DOCX, EPUB, Markdown, HTML, LaTeX, ODT, CSV, Excel, and plain text
 
 Available tools:
 

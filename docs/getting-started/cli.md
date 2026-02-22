@@ -1,20 +1,15 @@
-# Chunklet Command Line Interface (CLI): Your Chunking Powerhouse! 🚀
+# Chunklet CLI
 
-Meet `chunklet`, your versatile CLI companion for all things text processing! From precise sentence splitting and smart chunking of any content to interactive visualization in your browser - we've got the tools to make your LLM workflows flow effortlessly. Whether you're processing documents, code, or plain text, chunklet adapts to your needs with RAG-ready precision.
+Meet `chunklet`, your CLI companion for text processing! From sentence splitting to smart chunking to interactive visualization — it's all here.
 
 !!! info "`chunklet` vs `chunklet-py`"
     The CLI command is `chunklet` (kept for backward compatibility), while the Python package is named `chunklet-py` to avoid naming conflicts with other packages.
 
-Before we dive into the fun stuff, you can always check your `chunklet` version or get a quick help guide.:
+Quick help:
 
 ```bash
 chunklet --version
 chunklet --help
-```
-
-You can also get specific help for each command
-
-```bash
 chunklet split --help
 chunklet chunk --help
 chunklet visualize --help
@@ -73,7 +68,7 @@ The `chunk` command is where the real magic happens! It's your versatile tool fo
 | `--destination, -d <PATH>` | Path to a file (writes JSON for `.json` extensions or existing files) or directory (writes separate files) to write the chunks. If a non-JSON file exists, a warning is shown and JSON is written. If not provided, output goes to STDOUT. | STDOUT |
 | `--max-tokens` | Maximum number of tokens per chunk. Applies to all chunking strategies. (Must be >= 12) | None |
 | `--max-sentences` | Maximum number of sentences per chunk. Applies to DocumentChunker. (Must be >= 1) | None |
-| `--max-section-breaks` | Maximum number of section breaks per chunk. Applies to DocumentChunker. (Must be >= 1) | None |
+| `--max-section-breaks` | Maximum number of section breaks per chunk. Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags. Applies to DocumentChunker. (Must be >= 1) | None |
 | `--overlap-percent` | Percentage of overlap between chunks (0-85). Applies to DocumentChunker. | 20.0 |
 | `--offset` | Starting sentence offset for chunking. Applies to DocumentChunker. | 0 |
 | `--lang` | Language of the text (e.g., 'en', 'fr', 'auto'). | auto |

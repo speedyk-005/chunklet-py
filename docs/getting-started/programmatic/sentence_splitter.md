@@ -6,21 +6,21 @@
 
 ## The Art of Precise Sentence Splitting ✂️
 
-Let's be honest, simply splitting text by periods can be a bit like trying to perform delicate surgery with a butter knife – it often leads to more problems than solutions! This approach can result in sentences being cut mid-thought, abbreviations being misinterpreted, and a general lack of clarity that can leave your NLP models scratching their heads.
+Splitting text by periods is like trying to perform surgery with a butter knife — it barely works and makes a mess. Abbreviations get misinterpreted, sentences get cut mid-thought, and your NLP models end up confused.
 
-This common challenge in NLP, known as [Sentence Boundary Disambiguation](https://en.wikipedia.org/wiki/Sentence_boundary_disambiguation), is precisely what the `SentenceSplitter` is designed to address.
+This problem has a name: [Sentence Boundary Disambiguation](https://en.wikipedia.org/wiki/Sentence_boundary_disambiguation). That's where `SentenceSplitter` comes in.
 
-Imagine the `SentenceSplitter` as a skilled linguistic surgeon. It applies its understanding of grammar and context to make precise cuts, cleanly separating sentences while preserving their original meaning. It's intelligent, multilingual, and essential for preparing clean text data for NLP tasks, LLMs, and any application that needs accurate sentence boundaries.
+Think of it as a skilled linguist who knows where sentences actually end. It handles grammar, context, and those tricky abbreviations (like "Dr." or "U.S.A.") without breaking a sweat. Supports 50+ languages out of the box.
 
 ### What's Under the Hood? ⚙️
 
-The `SentenceSplitter` is more than just a basic rule-based tool; it's a sophisticated system packed with powerful features:
+The `SentenceSplitter` is a sophisticated system:
 
--  **Multilingual Support 🌍:** Handles over **50** languages with intelligent detection and language-specific splitting methods. Check our [supported languages](../../supported-languages.md) for the full list.
--  **Custom Splitters 🔧:** Easily integrate your own custom sentence splitting functions for specialized languages or domains.
--  **Reliable Fallback 🛡️:** For unsupported languages, a robust fallback mechanism ensures effective sentence splitting.
--  **Error Monitoring 🔍:** Actively monitors for issues and provides clear feedback on custom splitter problems.
--  **Output Refinement ✨:** Meticulously cleans the output, removing empty sentences and fixing punctuation issues.
+-  **Multilingual Support 🌍:** Handles over **50** languages with intelligent detection. See the [full list](../../supported-languages.md).
+-  **Custom Splitters 🔧:** Plug in your own splitting logic for specialized languages or domains.
+-  **Reliable Fallback 🛡️:** For unsupported languages, a rule-based fallback kicks in.
+-  **Error Monitoring 🔍:** Reports issues with custom splitters clearly.
+-  **Output Refinement ✨:** Removes empty sentences and fixes punctuation.
 
 ### Example Usage 
 
@@ -141,9 +141,9 @@ for lang, text in lang_texts.items():
     --------------------
     ```
 
-## Custom Sentence Splitter: Your Sentence Splitting Playground 🎨 {#custom-sentence-splitter}
+## Custom Sentence Splitter: Your Playground 🎨 {#custom-sentence-splitter}
 
-Want to bring your own sentence splitting magic? You can plug in your custom splitter functions to Chunklet! Perfect for specialized languages or domains where you want to prioritize your custom logic over our built-in splitters.
+Want to bring your own splitting logic? You can plug in custom splitter functions to Chunklet! Perfect for specialized languages or domains.
 
 !!! warning "Global Registry Alert!"
     Custom splitters get registered globally - once you add one, it's available everywhere in your app. Watch out for side effects if you're registering splitters across different parts of your codebase, especially in multi-threaded or long-running applications!
