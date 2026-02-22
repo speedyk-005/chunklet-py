@@ -3,7 +3,7 @@ from pathlib import Path
 
 try:
     from markdownify import markdownify as md
-except ImportError:
+except ImportError:  # pragma: no cover
     md = None
 
 

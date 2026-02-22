@@ -49,7 +49,7 @@ class DOCXProcessor(BaseProcessor):
         """
         try:
             from docx import Document
-        except ImportError as e:
+        except ImportError as e:  # pragma: no cover
             raise ImportError(
                 "The 'python-docx' library is not installed. "
                 "Please install it with 'pip install 'python-docx>=1.2.0'' or install the document processing extras "
@@ -76,7 +76,7 @@ class DOCXProcessor(BaseProcessor):
         """
         try:  # Lazy import
             import mammoth
-        except ImportError as e:
+        except ImportError as e:  # pragma: no cover
             raise ImportError(
                 "The 'mammoth' library is not installed. "
                 "Please install it with 'pip install 'mammoth>=1.9.0'' or install the document processing extras "

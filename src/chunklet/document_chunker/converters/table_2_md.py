@@ -5,7 +5,7 @@ from pathlib import Path
 
 try:
     from tabulate2 import tabulate
-except ImportError:
+except ImportError:  # pragma: no cover
     tabulate = None
 
 
@@ -31,7 +31,7 @@ def table_to_md(file_path: str | Path) -> str:
     elif ext == ".xlsx":
         try:
             from openpyxl import load_workbook
-        except ImportError as e:
+        except ImportError as e:  # pragma: no cover
             raise ImportError(
                 "The 'openpyxl' library is not installed. "
                 "Please install it with 'pip install openpyxl>=3.1.2' "

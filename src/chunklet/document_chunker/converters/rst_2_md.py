@@ -2,7 +2,7 @@ from pathlib import Path
 
 try:
     from docutils.core import publish_string
-except ImportError:
+except ImportError:  # pragma: no cover
     publish_string = None
 
 from chunklet.document_chunker.converters.html_2_md import html_to_md

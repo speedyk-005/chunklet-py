@@ -3,7 +3,7 @@ from typing import Any
 
 try:
     from ebooklib import epub
-except ImportError:
+except ImportError:  # pragma: no cover
     epub = None
 
 from chunklet.document_chunker.converters.html_2_md import html_to_md

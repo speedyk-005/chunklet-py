@@ -3,7 +3,7 @@ from pathlib import Path
 
 try:
     from pylatexenc.latex2text import LatexNodes2Text
-except ImportError:
+except ImportError:  # pragma: no cover
     LatexNodes2Text = None
 
 

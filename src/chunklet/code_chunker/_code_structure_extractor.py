@@ -16,7 +16,7 @@ import regex as re
 try:
     import defusedxml.ElementTree as ET
     from littletree import Node
-except ImportError:
+except ImportError:  # pragma: no cover
     Node, ET = None, None
 
 from loguru import logger

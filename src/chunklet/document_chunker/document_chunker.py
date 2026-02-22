@@ -10,12 +10,12 @@ from pydantic import Field
 
 try:
     from striprtf.striprtf import rtf_to_text
-except ImportError:
+except ImportError:  # pragma: no cover
     rtf_to_text = None
 
 try:
     from charset_normalizer import from_path
-except ImportError:
+except ImportError:  # pragma: no cover
     from_path = None
 
 from chunklet.base_chunker import BaseChunker
@@ -613,7 +613,7 @@ class DocumentChunker(BaseChunker):
     @deprecated_callable(
         use_instead="chunk_file", deprecated_in="2.2.0", removed_in="3.0.0"
     )
-    def chunk(
+    def chunk(  # pragma: no cover
         self,
         path: str | Path,
         *,
@@ -638,7 +638,7 @@ class DocumentChunker(BaseChunker):
     @deprecated_callable(
         use_instead="chunk_files", deprecated_in="2.2.0", removed_in="3.0.0"
     )
-    def batch_chunk(
+    def batch_chunk(  # pragma: no cover
         self,
         paths: "restricted_iterable(str | Path)",  # noqa: F722
         *,

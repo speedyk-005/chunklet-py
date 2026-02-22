@@ -37,7 +37,7 @@ try:
     import defusedxml.ElementTree as ET
     from charset_normalizer import from_path
     from littletree import Node
-except ImportError:
+except ImportError:  # pragma: no cover
     from_path, Node, ET = None, None, None
 
 from loguru import logger
@@ -810,7 +810,7 @@ class CodeChunker(BaseChunker):
         deprecated_in="2.2.0",
         removed_in="3.0.0",
     )
-    def chunk(
+    def chunk(  # pragma: no cover
         self,
         source: str | Path,
         *,
@@ -857,7 +857,7 @@ class CodeChunker(BaseChunker):
         deprecated_in="2.2.0",
         removed_in="3.0.0",
     )
-    def batch_chunk(
+    def batch_chunk(  # pragma: no cover
         self,
         sources: "restricted_iterable(str | Path)",  # pyright: ignore
         *,

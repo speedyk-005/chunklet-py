@@ -14,24 +14,24 @@ from chunklet.sentence_splitter import SentenceSplitter
 
 try:
     from chunklet.document_chunker import DocumentChunker
-except ImportError:
+except ImportError:  # pragma: no cover
     DocumentChunker = None
 
 try:
     from chunklet.code_chunker import CodeChunker
-except ImportError:
+except ImportError:  # pragma: no cover
     CodeChunker = None
 
 try:
     from chunklet.visualizer import Visualizer
-except ImportError:
+except ImportError:  # pragma: no cover
     Visualizer = None
 
 from chunklet.common.path_utils import is_path_like
 
 try:
     __version__ = version("chunklet-py")
-except PackageNotFoundError:
+except PackageNotFoundError:  # pragma: no cover
     __version__ = "unknown"
 
 

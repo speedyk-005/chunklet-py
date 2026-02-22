@@ -34,7 +34,7 @@ class ODTProcessor(BaseProcessor):
             from odf.opendocument import load
 
             self._load_odf = load
-        except ImportError as e:
+        except ImportError as e:  # pragma: no cover
             raise ImportError(
                 "The 'odfpy' library is not installed. "
                 "Please install it with 'pip install odfpy>=1.4.1' or install the document processing extras "

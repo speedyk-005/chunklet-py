@@ -12,7 +12,7 @@ try:
     from fastapi import FastAPI, File, Form, HTTPException, UploadFile
     from fastapi.responses import HTMLResponse
     from fastapi.staticfiles import StaticFiles
-except ImportError:
+except ImportError:  # pragma: no cover
     # Lambda placeholders prevent "None is not callable" errors when imports fail
     # This allows the module to be imported without dependencies, with proper error handling later
     uvicorn = None

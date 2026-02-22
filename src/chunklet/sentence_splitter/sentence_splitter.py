@@ -69,7 +69,7 @@ class BaseSplitter:
     @deprecated_callable(
         use_instead="split_text", deprecated_in="2.2.0", removed_in="3.0.0"
     )
-    def split(self, text: str, lang: str = "auto") -> list[str]:
+    def split(self, text: str, lang: str = "auto") -> list[str]:  # pragma: no cover
         """
         Split text into sentences.
 

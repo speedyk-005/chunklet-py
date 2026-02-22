@@ -119,7 +119,7 @@ chunklet = "chunklet.cli:app"
 
 [build-system]
 requires = [
-    "setuptools>=64,<81",  # sentsplit depends on deprecated pkg_resources removed in setuptools 81.0.0
+    "setuptools>=64", 
     "wheel", # Essential for building dependencies that use legacy setup.py (like odfpy)
 ]
 build-backend = "setuptools.build_meta"
@@ -154,10 +154,14 @@ filterwarnings = [
 testpaths = ["tests"]
 python_files = "test_*.py"
 
-[tool.coverage.report]
+[tool.coverage.run]
 omit = [
-    "src/chunklet/cli.py"
+    "src/chunklet/cli.py",
+    "src/chunklet/common/logging_utils.py",
+    "src/chunklet/base_chunker.py",
+    "src/chunklet/**/__init__.py",
 ]
+
 
 [tool.ruff]
 target-version = "py310"

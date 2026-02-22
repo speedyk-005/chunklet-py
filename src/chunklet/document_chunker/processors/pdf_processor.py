@@ -68,7 +68,7 @@ class PDFProcessor(BaseProcessor):
         """
         try:
             from pdfminer.layout import LAParams
-        except ImportError as e:
+        except ImportError as e:  # pragma: no cover
             raise ImportError(
                 "The 'pdfminer.six' library is not installed. "
                 "Please install it with 'pip install 'pdfminer.six>=20250324'' or install the document processing extras "

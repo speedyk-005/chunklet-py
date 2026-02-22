@@ -6,7 +6,7 @@ from typing import Any, Callable
 
 try:
     CURRENT_VERSION = version("chunklet-py")
-except PackageNotFoundError:
+except PackageNotFoundError:  # pragma: no cover
     CURRENT_VERSION = "0.0.0"
 
 
