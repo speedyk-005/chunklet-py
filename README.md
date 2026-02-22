@@ -4,12 +4,9 @@
   <img src="https://github.com/speedyk-005/chunklet-py/blob/main/logo_with_tagline.png?raw=true" alt="Chunklet-py Logo" width="300"/>
 </p>
 
-“One library to split them all: Sentence, Code, Docs”
-
-> [!WARNING]
-> **Quick heads up!** Version 2 has some breaking changes. No worries though - check our [Migration Guide](https://speedyk-005.github.io/chunklet-py/latest/migration/) for a smooth upgrade!
-
-Hey! Welcome. Let's make some text chunking magic happen.
+<p align="center">
+  “One library to split them all: Sentence, Code, Docs”
+</p>
 
 [![Python Version](https://img.shields.io/badge/Python-3.10%20--%203.14-blue)](https://www.python.org/downloads/)
 [![PyPI](https://img.shields.io/pypi/v/chunklet-py)](https://pypi.org/project/chunklet-py)
@@ -20,6 +17,13 @@ Hey! Welcome. Let's make some text chunking magic happen.
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/speedyk-005/chunklet-py/actions)
 [![CodeFactor](https://www.codefactor.io/repository/github/speedyk-005/chunklet-py/badge)](https://www.codefactor.io/repository/github/speedyk-005/chunklet-py)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/speedyk-005/chunklet-py)
+
+> [!WARNING]
+> **Quick heads up!** Version 2 has some breaking changes. No worries though - check our [Migration Guide](https://speedyk-005.github.io/chunklet-py/latest/migration/) for a smooth upgrade!
+
+---
+
+Hey! Welcome. Let's make some text chunking magic happen.
 
 <p align="center">
   <a href="https://speedyk-005.github.io/chunklet-py/latest" target="_blank" rel="noopener noreferrer">
@@ -158,16 +162,14 @@ Go forth and code! (And remember, good developers write tests. We appreciate exc
 
 ## Quick Reference 🛠️
 
-For the exhaustive details that I know you're probably avoiding, check the [official docs](https://speedyk-005.github.io/chunklet-py/latest/).
+> [!NOTE]
+> For the exhaustive details that I know you're probably avoiding, check the [official docs](https://speedyk-005.github.io/chunklet-py/latest/).
 
 ### The Constraint-Based Logic
 
 Chunklet-py is basically a "choose your own adventure" for data. It's constraint-based, meaning you can swap, combine, or ignore the limits below as you see fit.
 
 **The Golden Rule:** You must provide at least one constraint, or the chunker has no idea when to stop.
-
-> [!NOTE]
-> A quick overview — for the complete picture, check the [detailed docs](https://speedyk-005.github.io/chunklet-py/latest/).
 
 ### Core Imports
 
