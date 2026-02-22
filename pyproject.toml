@@ -1,7 +1,7 @@
 [project]
 name = "chunklet-py"
 version = "2.2.0"
-description = "Advanced text, code, and document chunking for LLM applications. Split content semantically, visualize chunks interactively, and process multiple file formats with flexible, context-aware segmentation."
+description = "High-fidelity context-aware chunking and interactive visualization for RAG. Advanced segmentation for code and documents, because your LLM is only as smart as the fragments you feed it."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
 ]
