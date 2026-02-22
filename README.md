@@ -158,16 +158,14 @@ Go forth and code! (And remember, good developers write tests. We appreciate exc
 
 ## Quick Reference 🛠️
 
-For the exhaustive details that I know you're probably avoiding, check the [official docs](https://speedyk-005.github.io/chunklet-py/latest/).
+> [!NOTE]
+> For the exhaustive details that I know you're probably avoiding, check the [official docs](https://speedyk-005.github.io/chunklet-py/latest/).
 
 ### The Constraint-Based Logic
 
 Chunklet-py is basically a "choose your own adventure" for data. It's constraint-based, meaning you can swap, combine, or ignore the limits below as you see fit.
 
 **The Golden Rule:** You must provide at least one constraint, or the chunker has no idea when to stop.
-
-> [!NOTE]
-> A quick overview — for the complete picture, check the [detailed docs](https://speedyk-005.github.io/chunklet-py/latest/).
 
 ### Core Imports
 
