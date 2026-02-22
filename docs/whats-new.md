@@ -55,7 +55,7 @@ Code chunking got slightly less terrible:
 
 - **Tokenizer timeout** — new `--tokenizer-timeout` / `-t` flag so custom tokenizers don't hang forever
 - **Direct imports** — `from chunklet import DocumentChunker` now works without making things slow
-- **Fewer crashes** — fixed some dependency issues that shall not be named
+- **Fewer crashes** — fixed dependency issues with `setuptools<81` in CI (sentsplit and pkg_resources, long story)
 - **Global registries** — `custom_splitter_registry` and `custom_processor_registry` exist now
 - **Error messages** — slightly less cryptic when things explode
 

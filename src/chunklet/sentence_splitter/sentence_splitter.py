@@ -14,6 +14,7 @@ from sentencex import segment
 from sentsplit.segment import SentSplit
 
 from chunklet.common.deprecation import deprecated_callable
+from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
 from chunklet.common.validation import validate_input
 from chunklet.sentence_splitter._fallback_splitter import FallbackSplitter
@@ -159,12 +160,12 @@ class SentenceSplitter(BaseSplitter):
             tuple[str, float]: A tuple containing the detected language code and its confidence.
         """
         lang_detected, confidence = self.identifier.classify(text)
-        if self.verbose:
-            logger.info(
-                "Language detection: '{}' with confidence {}.",
-                lang_detected,
-                f"{round(confidence) * 10}/10",
-            )
+        log_info(
+            self.verbose,
+            "Language detection: '{}' with confidence {}.",
+            lang_detected,
+            f"{round(confidence) * 10}/10",
+        )
         return lang_detected, confidence
 
     @validate_input
@@ -189,8 +190,7 @@ class SentenceSplitter(BaseSplitter):
             ['Hello world.', 'How are you?']
         """
         if not text:
-            if self.verbose:
-                logger.info("Input text is empty. Returning empty list.")
+            log_info(self.verbose, "Input text is empty. Returning empty list.")
             return []
 
         if lang == "auto":
@@ -203,8 +203,7 @@ class SentenceSplitter(BaseSplitter):
         # Prioritize custom splitters from registry
         if custom_splitter_registry.is_registered(lang):
             sentences, splitter_name = custom_splitter_registry.split(text, lang)
-            if self.verbose:
-                logger.info("Using registered splitter: {}", splitter_name)
+            log_info(self.verbose, "Using registered splitter: {}", splitter_name)
         else:
             sentences = None
             for lang_set, handler in self.LANGUAGE_HANDLERS.items():
@@ -222,11 +221,11 @@ class SentenceSplitter(BaseSplitter):
 
         processed_sentences = self._filter_sentences(sentences)
 
-        if self.verbose:
-            logger.info(
-                "Text splitted into sentences. Total sentences detected: {}",
-                len(processed_sentences),
-            )
+        log_info(
+            self.verbose,
+            "Text splitted into sentences. Total sentences detected: {}",
+            len(processed_sentences),
+        )
 
         return processed_sentences
 

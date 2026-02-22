@@ -260,7 +260,7 @@ def test_docstring_modes(chunker, code_string, all_mode_pattern, summary_mode_pa
         )
     elif code_string == CSHARP_CODE:
         # For C#, the detailed XML tags should be truncated
-        detail_pattern = r"<field.*>.*</field>"
+        detail_pattern = r"<field[^>]*>[^<]*</field>"
         assert not re.search(detail_pattern, content_summary), (
             "XML details found in 'summary' mode for C#"
         )

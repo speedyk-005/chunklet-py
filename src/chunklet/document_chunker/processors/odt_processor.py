@@ -18,6 +18,12 @@ class ODTProcessor(BaseProcessor):
     https://odfpy.readthedocs.io/en/latest/
     """
 
+    ODT_METADATA_KEY_MAP = {
+        "CreationDate": "created",
+        "Creator": "author",
+        "InitialCreator": "creator",
+    }
+
     def __init__(self, file_path: str):
         """Initialize the ODTProcessor.
 
@@ -75,11 +81,7 @@ class ODTProcessor(BaseProcessor):
             ).strip()
             if value:  # Only store if not empty
                 key = field.__name__
-
-                # To keep metadata uniform with the other processors
-                key = "created" if key == "CreationDate" else key
-                key = "author" if key == "Creator" else key
-                key = "creator" if key == "InitialCreator" else key
+                key = self.ODT_METADATA_KEY_MAP.get(key, key)
 
                 metadata[key.lower()] = value
 

@@ -41,7 +41,7 @@ def visualizer_server():
         thread = threading.Thread(target=visualizer.serve, daemon=True)
         thread.start()
 
-        url = f"http://{host}:{port}"
+        url = f"http://{host}:{port}"  # noqa: URLhttp
         wait_for_server(url)
 
         yield {

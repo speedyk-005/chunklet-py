@@ -55,6 +55,11 @@ class PDFProcessor(BaseProcessor):
         "modified",
     ]
 
+    PDF_METADATA_KEY_MAP = {
+        "CreationDate": "created",
+        "ModDate": "modified",
+    }
+
     def __init__(self, file_path: str):
         """Initialize the PDFProcessor.
 
@@ -112,6 +117,32 @@ class PDFProcessor(BaseProcessor):
             return value.decode("utf-8", "ignore")
         return value
 
+    def _extract_info_metadata(self, doc: Any) -> dict:
+        """Extract metadata from PDF document info dictionary.
+
+        Reads PDF info fields and extracts standardized metadata fields
+        defined in METADATA_FIELDS.
+
+        Args:
+            doc (Any): PDFDocument instance with info attribute.
+
+        Returns:
+            dict: Dictionary of normalized metadata key-value pairs.
+        """
+        metadata = {}
+        if not (hasattr(doc, "info") and doc.info):
+            return metadata
+
+        for info in doc.info:
+            for k, v in info.items():
+                k = self.PDF_METADATA_KEY_MAP.get(
+                    self._safe_decode(k), self._safe_decode(k)
+                )
+                v = self._safe_decode(v)
+                if k.lower() in self.METADATA_FIELDS:
+                    metadata[k.lower()] = v
+        return metadata
+
     def extract_text(self) -> Generator[str, None, None]:
         """Yield cleaned text from each PDF page.
 
@@ -164,27 +195,15 @@ class PDFProcessor(BaseProcessor):
             # Initialize parser on the file stream
             parser = PDFParser(f)
 
-            # The PDFDocument constructor reads file structure and advances the pointer
+            # PDFDocument reads file structure, consuming the file pointer
             doc = PDFDocument(parser)
 
-            # Count pages: Reset pointer to the start of the file stream to count pages correctly
+            # Reset pointer to start of file stream for accurate page counting
             f.seek(0)
 
             metadata["page_count"] = ilen(PDFPage.get_pages(f))
+            metadata.update(self._extract_info_metadata(doc))
 
-            # Extract info fields from the document object
-            if hasattr(doc, "info") and doc.info:
-                for info in doc.info:
-                    for k, v in info.items():
-                        k = self._safe_decode(k)
-                        v = self._safe_decode(v)
-
-                        # To keep metadata uniform with the other processorss
-                        k = "created" if k == "CreationDate" else k
-                        k = "modified" if k == "ModDate" else k
-
-                        if k.lower() in self.METADATA_FIELDS:
-                            metadata[k.lower()] = v
         return metadata
 
 

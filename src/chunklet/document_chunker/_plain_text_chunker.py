@@ -10,6 +10,7 @@ from loguru import logger
 from pydantic import Field
 
 from chunklet.common.batch_runner import run_in_batch
+from chunklet.common.logging_utils import log_info
 from chunklet.common.token_utils import count_tokens
 from chunklet.common.validation import restricted_iterable, validate_input
 from chunklet.exceptions import (
@@ -528,11 +529,11 @@ class PlainTextChunker:
             max_tokens, max_sentences, max_section_breaks, token_counter
         )
 
-        if self.verbose:
-            logger.info(
-                "Starting chunk processing for text starting with: {}.",
-                f"{text[:100]}...",
-            )
+        log_info(
+            self.verbose,
+            "Starting chunk processing for text starting with: {}.",
+            f"{text[:100]}...",
+        )
 
         # Adjust limits for _group_by_chunk's internal use
         if max_tokens is None:
@@ -543,8 +544,7 @@ class PlainTextChunker:
             max_section_breaks = sys.maxsize
 
         if not text.strip():
-            if self.verbose:
-                logger.info("Input text is empty. Returning empty list.")
+            log_info(self.verbose, "Input text is empty. Returning empty list.")
             return []
 
         try:

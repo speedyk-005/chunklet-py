@@ -8,8 +8,6 @@ from loguru import logger
 from more_itertools import ilen, split_at
 from pydantic import Field
 
-from chunklet.common.deprecation import deprecated_callable
-
 try:
     from striprtf.striprtf import rtf_to_text
 except ImportError:
@@ -21,6 +19,8 @@ except ImportError:
     from_path = None
 
 from chunklet.base_chunker import BaseChunker
+from chunklet.common.deprecation import deprecated_callable
+from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
 from chunklet.common.validation import restricted_iterable, validate_input
 from chunklet.document_chunker._plain_text_chunker import PlainTextChunker
@@ -227,14 +227,14 @@ class DocumentChunker(BaseChunker):
             either a string (for simple text files) or a generator of strings (for processed documents)
             and a dictionary of metadata.
         """
-        self.log_info("Extracting text from file {}", path)
+        log_info(self.verbose, "Extracting text from file {}", path)
 
         # Prioritize custom processors from registry
         if custom_processor_registry.is_registered(ext):
             texts_and_metadata, processor_name = custom_processor_registry.extract_data(
                 str(path), ext
             )
-            self.log_info("Used registered processor: {}", processor_name)
+            log_info(self.verbose, "Used registered processor: {}", processor_name)
             text_or_gen, metadata = texts_and_metadata
             metadata["source"] = metadata.get("source", str(path))
             return text_or_gen, metadata
@@ -480,7 +480,7 @@ class DocumentChunker(BaseChunker):
                 "💡 Hint: use `chunker.chunk_files([file.ext])` for this file type."
             )
 
-        self.log_info("Starting chunk processing for path: {}.", path)
+        log_info(self.verbose, "Starting chunk processing for path: {}.", path)
 
         text_content = text_content_or_generator
 
@@ -498,7 +498,7 @@ class DocumentChunker(BaseChunker):
         for chunk in chunk_boxes:
             chunk.metadata.update(document_metadata)
 
-        self.log_info("Generated {} chunks for {}.", len(chunk_boxes), path)
+        log_info(self.verbose, "Generated {} chunks for {}.", len(chunk_boxes), path)
 
         return chunk_boxes
 

@@ -47,6 +47,7 @@ from chunklet.code_chunker._code_structure_extractor import CodeStructureExtract
 from chunklet.code_chunker.utils import is_python_code
 from chunklet.common.batch_runner import run_in_batch
 from chunklet.common.deprecation import deprecated_callable
+from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import is_path_like, read_text_file
 from chunklet.common.token_utils import count_tokens
 from chunklet.common.validation import restricted_iterable, validate_input
@@ -536,10 +537,11 @@ class CodeChunker(BaseChunker):
         token_counter = token_counter or self.token_counter
 
         if not code.strip():
-            self.log_info("Input code is empty. Returning empty list.")
+            log_info(self.verbose, "Input code is empty. Returning empty list.")
             return []
 
-        self.log_info(
+        log_info(
+            self.verbose,
             "Starting chunk processing for code starting with:\n```\n{}...\n```",
             code[:100],
         )
@@ -559,7 +561,7 @@ class CodeChunker(BaseChunker):
             source=code,
         )
 
-        self.log_info("Generated {} chunk(s) for the code", len(result_chunks))
+        log_info(self.verbose, "Generated {} chunk(s) for the code", len(result_chunks))
 
         return result_chunks
 
@@ -620,10 +622,10 @@ class CodeChunker(BaseChunker):
         code = read_text_file(path)
 
         if not code.strip():
-            self.log_info("Input code is empty. Returning empty list.")
+            log_info(self.verbose, "Input code is empty. Returning empty list.")
             return []
 
-        self.log_info("Starting chunk processing for file: {}", path)
+        log_info(self.verbose, "Starting chunk processing for file: {}", path)
 
         return self.chunk_text(
             code=code,

@@ -60,8 +60,3 @@ class BaseChunker(ABC):
             Box: `Box` object, representing a chunk with its content and metadata.
         """
         pass
-
-    def log_info(self, *args, **kwargs) -> None:
-        """Log an info message if verbose is enabled."""
-        if self.verbose:
-            logger.info(*args, **kwargs)

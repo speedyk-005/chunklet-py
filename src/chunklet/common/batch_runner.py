@@ -4,6 +4,7 @@ from typing import Any, Callable, Literal
 # mpire is lazy imported
 from loguru import logger
 
+from chunklet.common.logging_utils import log_info
 from chunklet.common.validation import safely_count_iterable
 
 
@@ -54,12 +55,10 @@ def run_in_batch(
 
     total, iterable_of_args = safely_count_iterable(iterable_name, iterable_of_args)
 
-    if verbose:
-        logger.info("Starting batch chunking for {} items.", total)
+    log_info(verbose, "Starting batch chunking for {} items.", total)
 
     if total == 0:
-        if verbose:
-            logger.info("Input {} is empty. Returning empty iterator.", iterable_name)
+        log_info(verbose, "Input {} is empty. Returning empty iterator.", iterable_name)
         return iter([])
 
     failed_count = 0
@@ -103,9 +102,9 @@ def run_in_batch(
                     yield separator
 
     finally:
-        if verbose:
-            logger.info(
-                "Batch processing completed. {}/{} items processed successfully.",
-                total - failed_count,
-                total,
-            )
+        log_info(
+            verbose,
+            "Batch processing completed. {}/{} items processed successfully.",
+            total - failed_count,
+            total,
+        )

@@ -62,19 +62,17 @@ def restricted_iterable(*hints: Any) -> Any:
             )
         return v
 
-    ItemUnion = Union[hints] if len(hints) == 1 else hints[0]
+    item_union = Union[hints] if len(hints) == 1 else hints[0]
 
-    # Build the Full Container Type
-    TargetType = (
-        list[ItemUnion]
-        | tuple[ItemUnion, ...]
-        | set[ItemUnion]
-        | frozenset[ItemUnion]
-        | Generator[ItemUnion, None, None]
+    target_type = (
+        list[item_union]
+        | tuple[item_union, ...]
+        | set[item_union]
+        | frozenset[item_union]
+        | Generator[item_union, None, None]
     )
 
-    # Create the Annotated Type
-    return Annotated[TargetType, PlainValidator(enforce_non_string)]
+    return Annotated[target_type, PlainValidator(enforce_non_string)]
 
 
 def validate_input(fn):

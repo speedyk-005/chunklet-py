@@ -35,6 +35,7 @@ from chunklet.code_chunker.patterns import (
     OPENER,
 )
 from chunklet.common.validation import validate_input
+from chunklet.common.logging_utils import log_info
 
 CodeLine = namedtuple(
     "CodeLine", ["line_number", "content", "indent_level", "func_partial_signature"]
@@ -541,7 +542,8 @@ class CodeStructureExtractor:
             self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
 
         snippet_dicts = self._post_processing(state["snippet_dicts"])
-        if self.verbose:
-            logger.info("Extracted {} structural blocks from code", len(snippet_dicts))
+        log_info(
+            self.verbose, "Extracted {} structural blocks from code", len(snippet_dicts)
+        )
 
         return snippet_dicts, cumulative_lengths
