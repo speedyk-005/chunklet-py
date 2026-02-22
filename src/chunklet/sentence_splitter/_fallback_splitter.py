@@ -1,4 +1,5 @@
 import regex as re
+
 from chunklet.sentence_splitter.terminators import GLOBAL_SENTENCE_TERMINATORS
 
 

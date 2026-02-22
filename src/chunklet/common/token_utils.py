@@ -1,5 +1,6 @@
-from typing import Callable
 from functools import lru_cache
+from typing import Callable
+
 from chunklet.exceptions import CallbackError
 
 

@@ -35,6 +35,7 @@ const elements = {
     generatedInfo: document.getElementById('generatedInfo'),
     generatedDate: document.getElementById('generatedDate'),
     downloadChunksBtn: document.getElementById('downloadChunksBtn'),
+    fullscreenBtn: document.getElementById('fullscreenBtn'),
     clearUploadBtn: document.getElementById('clearUploadBtn'),
     
     modeSelect: document.getElementById('modeSelect'),
@@ -107,9 +108,13 @@ async function fetchConfigAndSetupUI() {
  * overlap toggling, and modal interactions.
  */
 function setupEventListeners() {
-    addElementListener(elements.browseBtn, 'click', () => elements.fileInput.click());
+    addElementListener(elements.browseBtn, 'click', (e) => {
+        e.stopPropagation(); // Prevent bubbling to upload area
+        elements.fileInput.click();
+    });
     addElementListener(elements.fileInput, 'change', handleFileSelect);
     
+    addElementListener(elements.uploadArea, 'click', () => elements.fileInput.click());
     addElementListener(elements.uploadArea, 'dragover', handleDragOver);
     addElementListener(elements.uploadArea, 'dragleave', handleDragLeave);
     addElementListener(elements.uploadArea, 'drop', handleDrop);
@@ -149,11 +154,17 @@ function setupEventListeners() {
     });
     
     elements.downloadChunksBtn?.addEventListener('click', downloadChunksAsJson);
+    elements.fullscreenBtn?.addEventListener('click', toggleFullscreen);
     elements.clearUploadBtn?.addEventListener('click', resetUploadArea);
+    
+    // Fullscreen change listener
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
     
     // Setup go-to-top button
     setupGoToTopButton();
 }
+
+
 
 /**
  * Sets up go-to-top button functionality for mobile devices
@@ -207,8 +218,8 @@ function resetUploadArea() {
     setElementText(elements.processBtn, 'No file is uploaded yet');
     state.uploadedFileName = '';
 
-    setElementDisabled(elements.downloadChunksBtn, true);
     setElementStyle(elements.generatedInfo, 'display', 'none'); // Hide generated info
+    setElementStyle(elements.fullscreenBtn, 'display', 'none'); // Hide fullscreen button
     
     // Re-query browseBtn and re-attach event listener
     const newBrowseBtn = document.getElementById('browseBtn');
@@ -393,6 +404,7 @@ async function processUploadedFile() {
         
         setElementDisabled(elements.toggleOverlapsBtn, false);
         setElementDisabled(elements.downloadChunksBtn, false);
+        setElementStyle(elements.fullscreenBtn, 'display', 'flex');
         
         const now = new Date();
         const formattedDate = formatDate(now);
@@ -403,10 +415,23 @@ async function processUploadedFile() {
         
     } catch (error) {
         console.error('Error processing file:', error);
+        
+        // Detect network errors (server not running)
+        const isNetworkError = error.message === 'Failed to fetch' || error.message.includes('NetworkError');
+        
+        let errorTitle, errorDetail;
+        if (isNetworkError) {
+            errorTitle = 'Cannot connect to server';
+            errorDetail = 'Make sure the visualizer server is running. Restart with: chunklet visualize';
+        } else {
+            errorTitle = 'Error processing file';
+            errorDetail = error.message || 'Please check the file format and parameters.';
+        }
+        
         setElementHTML(elements.textDisplay, `
             <div class="placeholder-text" style="color: var(--error-color);">
-                <p>Error processing file: ${escapeHtml(error.message)}</p>
-                <p>Please check the file format and parameters.</p>
+                <p><strong>${errorTitle}</strong></p>
+                <p>${errorDetail}</p>
             </div>
         `);
 
@@ -531,15 +556,18 @@ function handleChunkClick(event) {
     if (chunkIds.length > 0) {
         state.highlightedChunks.clear();
         toggleChunkHighlight(chunkIds[0]);
+        console.log('Chunk clicked:', chunkIds[0], 'Total highlighted:', state.highlightedChunks.size);
     }
 }
 
 function handleChunkDoubleClick(event) {
+    event.preventDefault(); // Prevent text selection
     const span = event.target.closest('.chunk-span');
     if (!span) return;
     
     const chunkIds = span.dataset.chunkIds.split(',').map(id => Number.parseInt(id));
     if (chunkIds.length > 0) {
+        console.log('Chunk double-clicked:', chunkIds[0]);
         showMetadata(chunkIds[0]);
     }
 }
@@ -639,6 +667,21 @@ function toggleOverlaps() {
     updateStats();
 }
 
+function toggleFullscreen() {
+    if (!elements.resultsSection) return;
+    
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else {
+        elements.resultsSection.requestFullscreen();
+    }
+}
+
+function updateFullscreenButton() {
+    const isFullscreen = !!document.fullscreenElement;
+    setElementText(elements.fullscreenBtn, isFullscreen ? '↘' : '⛶');
+}
+
 function showMetadata(chunkId) {
     const chunk = state.chunksData[chunkId];
     const [start, end] = chunk.span;
@@ -684,6 +727,30 @@ function showMetadata(chunkId) {
     
     document.body.style.overflow = 'hidden';
     toggleElementClass(elements.metadataModal, 'active', true);
+    
+    // Check for overflow and show scroll hint
+    setTimeout(() => {
+        const scrollHint = document.querySelector('.scroll-hint');
+        const modalContent = document.querySelector('.modal-content');
+        
+        if (scrollHint && modalContent) {
+            const hasVerticalOverflow = modalContent.scrollHeight > modalContent.clientHeight;
+            const hasHorizontalOverflow = modalContent.scrollWidth > modalContent.clientWidth;
+            const hasOverflow = hasVerticalOverflow || hasHorizontalOverflow;
+            
+            scrollHint.classList.toggle('visible', hasOverflow);
+            
+            // Hide scroll hint on scroll or any interaction
+            const hideScrollHint = () => {
+                scrollHint.classList.remove('visible');
+                modalContent.removeEventListener('scroll', hideScrollHint);
+                document.removeEventListener('click', hideScrollHint);
+            };
+            
+            modalContent.addEventListener('scroll', hideScrollHint);
+            document.addEventListener('click', hideScrollHint);
+        }
+    }, 200);
 }
 
 function closeMetadataModal() {
@@ -710,6 +777,15 @@ function setupScrollHint() {
 function updateStats() {
     setElementText(elements.totalChunksElem, `Chunks: ${state.chunksData.length}`);
     setElementText(elements.textLengthElem, `Text Length: ${state.originalText.length} chars`);
+    
+    // Show/hide scrollbar in text container based on content
+    if (elements.textDisplay) {
+        if (state.chunksData.length > 0 && state.originalText.length > 0) {
+            elements.textDisplay.style.overflowY = 'auto';
+        } else {
+            elements.textDisplay.style.overflowY = 'hidden';
+        }
+    }
 }
 
 function downloadChunksAsJson() {

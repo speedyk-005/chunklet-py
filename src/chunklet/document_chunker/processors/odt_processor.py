@@ -1,7 +1,6 @@
 from typing import Any, Generator
 
 # odfpy is lazy imported
-
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
 
@@ -19,6 +18,12 @@ class ODTProcessor(BaseProcessor):
     https://odfpy.readthedocs.io/en/latest/
     """
 
+    ODT_METADATA_KEY_MAP = {
+        "CreationDate": "created",
+        "Creator": "author",
+        "InitialCreator": "creator",
+    }
+
     def __init__(self, file_path: str):
         """Initialize the ODTProcessor.
 
@@ -32,9 +37,8 @@ class ODTProcessor(BaseProcessor):
         except ImportError as e:
             raise ImportError(
                 "The 'odfpy' library is not installed. "
-                "Please install it with 'pip install odfpy>=1.4.1' "
-                "or install the document processing extras with "
-                "'pip install chunklet-py[document]'"
+                "Please install it with 'pip install odfpy>=1.4.1' or install the document processing extras "
+                "with 'pip install chunklet-py[structured-document]'"
             ) from e
 
         self.file_path = file_path
@@ -57,7 +61,7 @@ class ODTProcessor(BaseProcessor):
                  - author_name
 
         """
-        from odf import text, meta, dc
+        from odf import dc, meta, text
 
         metadata = {}
         for field in [
@@ -77,11 +81,7 @@ class ODTProcessor(BaseProcessor):
             ).strip()
             if value:  # Only store if not empty
                 key = field.__name__
-
-                # To keep metadata uniform with the other processors
-                key = "created" if key == "CreationDate" else key
-                key = "author" if key == "Creator" else key
-                key = "creator" if key == "InitialCreator" else key
+                key = self.ODT_METADATA_KEY_MAP.get(key, key)
 
                 metadata[key.lower()] = value
 

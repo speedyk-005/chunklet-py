@@ -36,7 +36,7 @@ def table_to_md(file_path: str | Path) -> str:
                 "The 'openpyxl' library is not installed. "
                 "Please install it with 'pip install openpyxl>=3.1.2' "
                 "or install the document processing extras with "
-                "'pip install chunklet-py[document]'"
+                "'pip install chunklet-py[structured-document]'"
             ) from e
         wb = load_workbook(file_path, read_only=True)
         sheet = wb.active
@@ -54,7 +54,7 @@ def table_to_md(file_path: str | Path) -> str:
             "The 'tabulate2' library is not installed. "
             "Please install it with 'pip install tabulate2>=1.10.0' "
             "or install the document processing extras with "
-            "'pip install chunklet-py[document]'"
+            "'pip install chunklet-py[structured-document]'"
         )
 
     return tabulate(rows, headers=headers, tablefmt="pipe")

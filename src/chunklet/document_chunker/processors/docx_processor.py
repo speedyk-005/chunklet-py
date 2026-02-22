@@ -1,9 +1,9 @@
 from typing import Any, Generator
 
-# mammoth and docx are lazily imported
-
-from chunklet.document_chunker.processors.base_processor import BaseProcessor
 from chunklet.document_chunker.converters.html_2_md import html_to_md
+
+# mammoth and docx are lazily imported
+from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
 
 class DOCXProcessor(BaseProcessor):
@@ -53,7 +53,7 @@ class DOCXProcessor(BaseProcessor):
             raise ImportError(
                 "The 'python-docx' library is not installed. "
                 "Please install it with 'pip install 'python-docx>=1.2.0'' or install the document processing extras "
-                "with 'pip install 'chunklet-py[document]''"
+                "with 'pip install 'chunklet-py[structured-document]''"
             ) from e
 
         doc = Document(self.file_path)
@@ -80,7 +80,7 @@ class DOCXProcessor(BaseProcessor):
             raise ImportError(
                 "The 'mammoth' library is not installed. "
                 "Please install it with 'pip install 'mammoth>=1.9.0'' or install the document processing extras "
-                "with 'pip install 'chunklet-py[document]''"
+                "with 'pip install 'chunklet-py[structured-document]''"
             ) from e
 
         count = 0

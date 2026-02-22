@@ -1,15 +1,15 @@
-import os
 import json
-import tempfile
-import traceback
 import mimetypes
+import traceback
+from pathlib import Path
 from typing import Callable
+
 import aiofiles
 
 try:
     import uvicorn
     from charset_normalizer import detect
-    from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+    from fastapi import FastAPI, File, Form, HTTPException, UploadFile
     from fastapi.responses import HTMLResponse
     from fastapi.staticfiles import StaticFiles
 except ImportError:
@@ -25,9 +25,9 @@ except ImportError:
     HTMLResponse = lambda x: x  # noqa: E731
     StaticFiles = None
 
-from chunklet.document_chunker import DocumentChunker
 from chunklet.code_chunker import CodeChunker
 from chunklet.common.validation import validate_input
+from chunklet.document_chunker import DocumentChunker
 
 
 class Visualizer:
@@ -78,10 +78,11 @@ class Visualizer:
         self.document_chunker = DocumentChunker(token_counter=token_counter)
         self.code_chunker = CodeChunker(token_counter=token_counter)
 
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        static_dir = os.path.join(base_dir, "static")
+        self.static_dir = Path(__file__).parent / "static"
 
-        self.app.mount("/static", StaticFiles(directory=static_dir), name="static")
+        self.app.mount(
+            "/static", StaticFiles(directory=str(self.static_dir)), name="static"
+        )
 
         # API endpoints
         self.app.get("/api/token_counter_status")(self._get_token_counter_status)
@@ -103,10 +104,8 @@ class Visualizer:
         Returns:
             HTMLResponse: The content of index.html if exists, else a default heading.
         """
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        static_dir = os.path.join(base_dir, "static")
-        index_path = os.path.join(static_dir, "index.html")
-        if os.path.exists(index_path):
+        index_path = self.static_dir / "index.html"
+        if index_path.exists():
             async with aiofiles.open(index_path, "r", encoding="utf-8") as f:
                 content = await f.read()
                 return HTMLResponse(content=content)
@@ -138,7 +137,9 @@ class Visualizer:
             chunker_params = json.loads(params)
             chunker_params = {k: v for k, v in chunker_params.items() if v is not None}
         except (json.JSONDecodeError, TypeError):
-            raise HTTPException(400, f"Invalid chunking parameters JSON: {params}")
+            raise HTTPException(
+                400, f"Invalid chunking parameters JSON: {params}"
+            ) from None
 
         # Use Python mimetypes instead of browser content_type
         mimetype, _ = mimetypes.guess_type(file.filename or "")
@@ -152,19 +153,14 @@ class Visualizer:
                 "with 'pip install 'chunklet-py[visualization]''",
             )
 
-        # Saved as txt file since they are all plaintext anyway
-        async with aiofiles.tempfile.NamedTemporaryFile(mode="wb", suffix=".txt", delete=False) as tmp:
-            content = await file.read()
-            await tmp.write(content)
-            tmp_path = tmp.name
-
+        content = await file.read()
         encoding = detect(content).get("encoding", "utf-8")
         text = content.decode(encoding, errors="ignore")
         chunker = self.code_chunker if mode == "code" else self.document_chunker
 
         try:
             chunks = [
-                dict(chunk) for chunk in chunker.chunk(tmp_path, **chunker_params)
+                dict(chunk) for chunk in chunker.chunk_text(text, **chunker_params)
             ]
 
             return {
@@ -182,13 +178,7 @@ class Visualizer:
             raise HTTPException(
                 500,
                 f"Chunking failed. Please check the server terminal for specific error details. ({str(e)})",
-            )
-        finally:
-            # Always cleanup temp file
-            try:
-                os.unlink(tmp_path)
-            except OSError:
-                pass
+            ) from None
 
     @property
     def token_counter(self):

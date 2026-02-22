@@ -1,7 +1,9 @@
 import re
+
 import pytest
-from chunklet.sentence_splitter import SentenceSplitter, CustomSplitterRegistry
+
 from chunklet import CallbackError
+from chunklet.sentence_splitter import SentenceSplitter, custom_splitter_registry
 
 # --- Fixture ---
 
@@ -14,8 +16,8 @@ def splitter():
 
 @pytest.fixture
 def registry():
-    """Provides aCustomSplitterRegistry instance"""
-    return CustomSplitterRegistry()
+    """Provides the global CustomSplitterRegistry instance"""
+    return custom_splitter_registry
 
 
 # --- Multilingual Splitting Tests ---
@@ -45,7 +47,7 @@ def registry():
 )
 def test_multilingual_splitting(splitter, text, expected_sentences):
     """Test sentence splitting for various languages but not limited to."""
-    sentences = splitter.split(text, lang="auto")
+    sentences = splitter.split_text(text, lang="auto")
     assert sentences == expected_sentences
 
 
@@ -64,7 +66,7 @@ def test_multilingual_splitting(splitter, text, expected_sentences):
 )
 def test_unsupported_language_fallback(splitter, text, expected_sentences):
     """Test fallback to universal regex splitter for unsupported languages."""
-    sentences = splitter.split(text, "auto")
+    sentences = splitter.split_text(text, "auto")
     assert sentences == expected_sentences
 
 
@@ -84,7 +86,7 @@ def test_custom_splitter_usage(registry):
         text = "ThisXisXaXtestXstring."
         expected_sentences = ["This", "is", "a", "test", "string."]
 
-        sentences = splitter.split(text, lang="x_lang")
+        sentences = splitter.split_text(text, lang="x_lang")
 
         assert sentences == expected_sentences
     finally:
@@ -125,6 +127,6 @@ def test_custom_splitter_validation_scenarios(
     try:
         with pytest.raises(CallbackError, match=re.escape(expected_match)):
             assert registry.is_registered("xx")
-            splitter.split("Some text.", lang="xx")
+            splitter.split_text("Some text.", lang="xx")
     finally:
         registry.unregister("xx")

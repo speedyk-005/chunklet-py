@@ -1,9 +1,11 @@
-from typing import Annotated, Any, Union
-from collections.abc import Iterable, Iterator, Generator
-from itertools import tee
-from more_itertools import ilen
+from collections.abc import Generator, Iterable, Iterator
 from functools import wraps
-from pydantic import validate_call, ConfigDict, PlainValidator, ValidationError
+from itertools import tee
+from typing import Annotated, Any, Union
+
+from more_itertools import ilen
+from pydantic import ConfigDict, PlainValidator, ValidationError, validate_call
+
 from chunklet.exceptions import InvalidInputError
 
 
@@ -32,8 +34,10 @@ def pretty_errors(error: ValidationError) -> str:
         )
 
         lines.append(
-            f"{ind}) {formatted_loc} {msg}.\n"
-            f"  Found: (input={input_value!r}, type={input_type})"
+            (
+                f"{ind}) {formatted_loc} {msg}.\n"
+                f"  Found: (input={input_value!r}, type={input_type})"
+            )
         )
 
     lines.append("  " + getattr(error, "hint", ""))
@@ -58,19 +62,17 @@ def restricted_iterable(*hints: Any) -> Any:
             )
         return v
 
-    ItemUnion = Union[hints] if len(hints) == 1 else hints[0]
+    item_union = Union[hints] if len(hints) == 1 else hints[0]
 
-    # Build the Full Container Type
-    TargetType = (
-        list[ItemUnion]
-        | tuple[ItemUnion, ...]
-        | set[ItemUnion]
-        | frozenset[ItemUnion]
-        | Generator[ItemUnion, None, None]
+    target_type = (
+        list[item_union]
+        | tuple[item_union, ...]
+        | set[item_union]
+        | frozenset[item_union]
+        | Generator[item_union, None, None]
     )
 
-    # Create the Annotated Type
-    return Annotated[TargetType, PlainValidator(enforce_non_string)]
+    return Annotated[target_type, PlainValidator(enforce_non_string)]
 
 
 def validate_input(fn):

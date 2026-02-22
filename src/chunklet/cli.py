@@ -1,16 +1,16 @@
-import sys
 import json
-import typer
-from typing import Optional, List
-from pathlib import Path
-from enum import Enum
-import subprocess
 import shlex
 import socket
-from importlib.metadata import version, PackageNotFoundError
+import subprocess
+import sys
+from enum import Enum
+from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
+from typing import List, Optional
+
+import typer
 
 from chunklet.sentence_splitter import SentenceSplitter
-from chunklet.plain_text_chunker import PlainTextChunker
 
 try:
     from chunklet.document_chunker import DocumentChunker
@@ -28,7 +28,6 @@ except ImportError:
     Visualizer = None
 
 from chunklet.common.path_utils import is_path_like
-
 
 try:
     __version__ = version("chunklet-py")
@@ -62,7 +61,8 @@ app = typer.Typer(
 )
 
 
-def _create_external_tokenizer(command_str: str):
+def _create_external_tokenizer(command_str: str, timeout: int | None):
+    """Create a tokenizer function from a shell command string."""
     command_list = shlex.split(command_str)
 
     def external_tokenizer(text):
@@ -73,10 +73,21 @@ def _create_external_tokenizer(command_str: str):
                 input=text,
                 capture_output=True,
                 text=True,
+                timeout=timeout,
                 check=True,
             )
             return int(process.stdout.strip())
-        except (subprocess.CalledProcessError, ValueError) as e:
+
+        except ValueError:
+            print(
+                f"Tokenizer output is not an integer: {process.stdout!r}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        except subprocess.TimeoutExpired:
+            print(f"Tokenizer command timed out after {timeout}s", file=sys.stderr)
+            sys.exit(1)
+        except subprocess.CalledProcessError as e:
             print(f"Error executing tokenizer command: {e}", file=sys.stderr)
             sys.exit(1)
 
@@ -101,6 +112,8 @@ def _extract_files(source: Optional[List[Path]]) -> List[Path]:
     for path in source:
         path = path.resolve()
 
+        # Fast heuristic check: validates path format before filesystem operations
+        # This catches malformed paths early without expensive I/O
         if is_path_like(str(path)):
             if path.is_file():
                 file_paths.append(path)
@@ -238,6 +251,7 @@ def split_command(
     lang: str = typer.Option(
         "auto",
         "--lang",
+        "-l",
         help="Language of the text (e.g., 'en', 'fr', 'auto').",
     ),
     verbose: bool = typer.Option(
@@ -281,7 +295,7 @@ def split_command(
             input_text = source.read_text(encoding="utf-8")
         except Exception as e:
             typer.echo(f"Error reading source file: {e}", err=True)
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from None
     else:
         input_text = text
 
@@ -295,8 +309,15 @@ def split_command(
 
     # Split Logic
     splitter = SentenceSplitter(verbose=verbose)
-    lang_detected, confidence = splitter.detected_top_language(input_text)
-    sentences = splitter.split(input_text, lang=lang or lang_detected)
+
+    if source:
+        sentences = splitter.split_file(source, lang=lang or "auto")
+        lang_detected, confidence = splitter.detected_top_language(
+            source.read_text(encoding="utf-8")
+        )
+    else:
+        sentences = splitter.split_text(input_text, lang=lang or "auto")
+        lang_detected, confidence = splitter.detected_top_language(input_text)
 
     # Output Handling
     if destination:
@@ -312,7 +333,7 @@ def split_command(
             )
         except Exception as e:
             typer.echo(f"Error writing to destination file: {e}", err=True)
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from None
     else:
         source_display = f"Source: {source.name}" if source else "Source: stdin"
 
@@ -350,7 +371,8 @@ def chunk_command(
     lang: str = typer.Option(
         "auto",
         "--lang",
-        help="Language of the text (e.g., 'en', 'fr', 'auto'). (default: auto)",
+        "-l",
+        help="Language of the text (e.g., 'en', 'fr', 'auto').",
     ),
     max_tokens: int = typer.Option(
         None,
@@ -360,22 +382,22 @@ def chunk_command(
     max_sentences: int = typer.Option(
         None,
         "--max-sentences",
-        help="Maximum number of sentences per chunk. Applies to PlainTextChunker and DocumentChunker. (must be >= 1)",
+        help="Maximum number of sentences per chunk. (must be >= 1)",
     ),
     max_section_breaks: Optional[int] = typer.Option(
         None,
         "--max-section-breaks",
-        help="Maximum number of section breaks per chunk. Applies to PlainTextChunker and DocumentChunker. (must be >= 1)",
+        help="Maximum number of section breaks per chunk. (must be >= 1)",
     ),
     overlap_percent: float = typer.Option(
         20.0,
         "--overlap-percent",
-        help="Percentage of overlap between chunks (0-85). Applies to PlainTextChunker and DocumentChunker. (default: 20)",
+        help="Percentage of overlap between chunks (0-85).",
     ),
     offset: int = typer.Option(
         0,
         "--offset",
-        help="Starting sentence offset for chunking. Applies to PlainTextChunker and DocumentChunker. (default: 0)",
+        help="Starting sentence offset for chunking.",
     ),
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging."
@@ -388,9 +410,16 @@ def chunk_command(
             "The command should take text as stdin and output the token count as a number."
         ),
     ),
+    tokenizer_timeout: int | None = typer.Option(
+        None,
+        "--tokenizer-timeout",
+        "-t",
+        help="Timeout in seconds for the tokenizer command.",
+    ),
     metadata: bool = typer.Option(
         False,
         "--metadata",
+        "-m",
         help=(
             "Include metadata in the output. If --destination is a directory, "
             "metadata is saved as separate .json files; otherwise, it's "
@@ -401,7 +430,7 @@ def chunk_command(
     n_jobs: Optional[int] = typer.Option(
         None,
         "--n-jobs",
-        help="Number of parallel jobs for batch chunking. (default: None, uses all available cores)",
+        help="Number of parallel jobs for batch chunking.",
     ),
     on_errors: OnError = typer.Option(
         OnError.raise_,
@@ -463,7 +492,7 @@ def chunk_command(
     # --- Tokenizer setup ---
     token_counter = None
     if tokenizer_command:
-        token_counter = _create_external_tokenizer(tokenizer_command)
+        token_counter = _create_external_tokenizer(tokenizer_command, tokenizer_timeout)
 
     # Construct chunk_kwargs dynamically
     chunk_kwargs = {
@@ -494,24 +523,18 @@ def chunk_command(
             }
         )
     else:
-        if text:
-            chunker_instance = PlainTextChunker(
-                verbose=verbose,
-                token_counter=token_counter,
+        if DocumentChunker is None:
+            typer.echo(
+                "Error: DocumentChunker dependencies not available.\n"
+                "Please install with: pip install chunklet-py[structured-document]",
+                err=True,
             )
-        else:
-            if DocumentChunker is None:
-                typer.echo(
-                    "Error: DocumentChunker dependencies not available.\n"
-                    "Please install with: pip install chunklet-py[document]",
-                    err=True,
-                )
-                raise typer.Exit(code=1)
+            raise typer.Exit(code=1)
 
-            chunker_instance = DocumentChunker(
-                verbose=verbose,
-                token_counter=token_counter,
-            )
+        chunker_instance = DocumentChunker(
+            verbose=verbose,
+            token_counter=token_counter,
+        )
         chunk_kwargs.update(
             {
                 "lang": lang,
@@ -524,8 +547,8 @@ def chunk_command(
 
     # --- Chunking logic ---
     if text:
-        chunks = chunker_instance.chunk(
-            text=text,
+        chunks = chunker_instance.chunk_text(
+            text,
             **chunk_kwargs,
         )
     else:
@@ -538,14 +561,14 @@ def chunk_command(
             ".odt",
         }:
             single_file = file_paths[0]
-            chunks = chunker_instance.chunk(
-                path=single_file,
+            chunks = chunker_instance.chunk_file(
+                single_file,
                 **chunk_kwargs,
             )
         else:
             # Batch input logic
-            chunks = chunker_instance.batch_chunk(
-                paths=file_paths,
+            chunks = chunker_instance.chunk_files(
+                file_paths,
                 n_jobs=n_jobs,
                 show_progress=True,
                 on_errors=on_errors,
@@ -574,13 +597,14 @@ def visualize_command(
     host: str = typer.Option(
         "127.0.0.1",
         "--host",
-        help="Host IP to bind the visualizer server. (default: 127.0.0.1)",
+        "-h",
+        help="Host IP to bind the visualizer server.",
     ),
     port: int = typer.Option(
         8000,
         "--port",
         "-p",
-        help="Port number to run the visualizer server. (default: 8000)",
+        help="Port number to run the visualizer server.",
     ),
     tokenizer_command: Optional[str] = typer.Option(
         None,
@@ -589,6 +613,12 @@ def visualize_command(
             "A shell command to use for token counting in the visualizer. "
             "The command should take text as stdin and output the token count as a number."
         ),
+    ),
+    tokenizer_timeout: int | None = typer.Option(
+        None,
+        "--tokenizer-timeout",
+        "-t",
+        help="Timeout in seconds for the tokenizer command.",
     ),
     headless: bool = typer.Option(
         False,
@@ -629,7 +659,7 @@ def visualize_command(
     # Create token counter if tokenizer command provided
     token_counter = None
     if tokenizer_command:
-        token_counter = _create_external_tokenizer(tokenizer_command)
+        token_counter = _create_external_tokenizer(tokenizer_command, tokenizer_timeout)
 
     # Start the visualizer
     visualizer = Visualizer(host=host, port=port, token_counter=token_counter)
@@ -653,14 +683,14 @@ def visualize_command(
         typer.echo("\nVisualizer stopped.")
     except Exception as e:
         typer.echo(f"Error starting visualizer: {e}", err=True)
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from None
 
 
 @app.callback(invoke_without_command=True)
 def main_callback(
     version: Optional[bool] = typer.Option(
         None, "--version", "-v", help="Show program's version number and exit."
-    )
+    ),
 ):
     if version:
         typer.echo(f"chunklet v{__version__}")

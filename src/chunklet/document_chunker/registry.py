@@ -1,9 +1,10 @@
 import inspect
-from typing import Callable, Iterable, Any
-from pydantic import TypeAdapter, ValidationError
-from chunklet.common.validation import validate_input, pretty_errors
-from chunklet.exceptions import CallbackError, InvalidInputError
+from typing import Any, Callable, Iterable
 
+from pydantic import TypeAdapter, ValidationError
+
+from chunklet.common.validation import pretty_errors, validate_input
+from chunklet.exceptions import CallbackError, InvalidInputError
 
 # A tuple containing the extracted text(s) and a dictionary of metadata.
 ReturnType = tuple[str | Iterable[str], dict[str, Any]]
@@ -39,6 +40,7 @@ class CustomProcessorRegistry:
         Register a document processor callback for one or more file extensions.
 
         This method can be used in two ways:
+
         1. As a decorator:
             @registry.register(".json", ".xml", name="my_processor")
             def my_processor(file_path):
@@ -193,3 +195,7 @@ class CustomProcessorRegistry:
             ) from None
 
         return result, name
+
+
+# Global registry instance
+custom_processor_registry = CustomProcessorRegistry()

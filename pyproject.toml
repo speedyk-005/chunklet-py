@@ -1,6 +1,6 @@
 [project]
 name = "chunklet-py"
-version = "2.1.1"
+version = "2.2.0"
 description = "Advanced text, code, and document chunking for LLM applications. Split content semantically, visualize chunks interactively, and process multiple file formats with flexible, context-aware segmentation."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
@@ -35,62 +35,66 @@ keywords = [
 ]
 
 dependencies = [
-  "pysbd>=0.3.4",
-  "sentsplit>=1.0.7",
+  "pysbd>=0.3.4,<1.0",
+  "sentsplit>=1.0.8,<2.0",
 
   # Pinning to the last known working version with a reliable binary/build.
   # The 1.0.x series has a broken sdist package structure.
   "sentencex<=0.6.1",
 
-  "indic-nlp-library>=0.90",
-  "py3langid>=0.3.0",
-  "mpire>=2.10.0",
-  "python-box>=7.3.0",
-  "more-itertools>=10.6.0",
-  "regex>=2024.11.6",
-  "pydantic>=2.11",
-  "typer>=0.19.0",
- ]
-
-[project.optional-dependencies]
-document = [
-  "pdfminer.six>=20250324",
-  "python-docx>=1.2.0",
-  "mammoth>=1.9.0",
-  "ebooklib>=0.19",
-  "docutils>=0.21.2",
-  "markdownify>=1.1.0",
-  "striprtf>=0.0.29",
-  "pylatexenc>=2.10",
-  "odfpy>=1.4.1",
-  "openpyxl>=3.1.2",
-  "tabulate2>=1.10.0",
-  "charset-normalizer>=3.4.0",
+  "indic-nlp-library>=0.92,<1.0",
+  "py3langid>=0.3.0,<1.0",
+  "mpire>=2.10.2,<3.0",
+  "python-box>=7.3.2,<8.0",
+  "more-itertools>=10.6.0,<11.0",
+  "regex>=2025.7.29",
+  "pydantic>=2.11.6,<3.0",
+  "typer>=0.19.0,<1.0",
+  "charset-normalizer>=3.4.2,<4.0",
 ]
 
+[project.optional-dependencies]
+structured-document = [
+  "pdfminer.six>=20250324",
+  "python-docx>=1.2.0,<2.0",
+  "mammoth>=1.9.1,<2.0",
+  "ebooklib>=0.19,<1.0",
+  "docutils>=0.21.2,<1.0",
+  "markdownify>=1.1.0,<2.0",
+  "striprtf>=0.0.29,<1.0",
+
+  # Lastest version of 2.x.x series
+  "pylatexenc==2.10",
+  
+  "odfpy>=1.4.1,<2.0",
+  "openpyxl>=3.1.5,<4.0",
+  "tabulate2>=1.10.2,<2.0",
+]
+
+# Kept for compatibility
+document = ["chunklet-py[structured-document]"]
+
 code = [
-  "defusedxml>=0.7.1",
-  "littletree>=0.8.4",
-  "charset-normalizer>=3.4.0",
+  "defusedxml>=0.7.1,<1.0",
+  "littletree>=0.8.7,<1.0",
 ]
 
 visualization = [
-  "uvicorn>=0.34.0",
-  "fastapi>=0.115.12",
-  "python-multipart>=0.0.20",
-  "aiofiles>=24.1.0",
-  "charset-normalizer>=3.4.0",
+  "uvicorn>=0.35.0,<1.0",
+  "fastapi>=0.116.0,<1.0",
+  "python-multipart>=0.0.20,<1.0",
+
+  # Major changes happens often
+  "aiofiles==25.1.0",
 ]
 
-all = ["chunklet-py[document,code,visualization]"]
+all = ["chunklet-py[structured-document,code,visualization]"]
 
 dev = [
   "pytest>=8.3.5",
   "pytest-cov>=6.2.1",
   "pytest-mock>=3.14.1",
-  "black>=25.1.0",
-  "flake8>=7.3.0",
-  "flake8-pyproject>=1.2.3",
+  "ruff>=0.14.14",
 ]
 
 docs = [
@@ -101,7 +105,7 @@ docs = [
   "pymdown-extensions>=10.16.1",
 ]
 
-dev-all = ["chunklet-py[dev,docs,document,code,visualization]"]
+dev-all = ["chunklet-py[dev,docs,structured-document,code,visualization]"]
 
 [project.urls]
 Homepage = "https://github.com/speedyk-005/chunklet-py"
@@ -115,7 +119,7 @@ chunklet = "chunklet.cli:app"
 
 [build-system]
 requires = [
-    "setuptools>=64", 
+    "setuptools>=64,<81",  # sentsplit depends on deprecated pkg_resources removed in setuptools 81.0.0
     "wheel", # Essential for building dependencies that use legacy setup.py (like odfpy)
 ]
 build-backend = "setuptools.build_meta"
@@ -139,6 +143,10 @@ chunklet = ["visualizer/static/*", "visualizer/static/**/*"]
 
 [tool.pytest.ini_options]
 minversion = "7.4"
+filterwarnings = [
+    "ignore::DeprecationWarning:websockets.*",
+    "ignore::DeprecationWarning:pkg_resources.*",
+]
 
 # disable coverage report to prevent racing with multiprocessing
 # addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --durations=10"
@@ -151,32 +159,32 @@ omit = [
     "src/chunklet/cli.py"
 ]
 
-[tool.black]
+[tool.ruff]
+target-version = "py310"
 line-length = 88
-force-exclude = '''
-/(
-      \.eggs         # exclude a few common directories in the
-    | \.git          # root of the project
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | _build
-    | buck-out
-    | build
-    | dist
-  )/
-  | src/chunklet/code_chunker/patterns.py
-'''
 
-[tool.flake8]
-per-file-ignores = [
-    "src/chunklet/__init__.py:F401",
-    "src/chunklet/document_chunker/__init__.py:F401,F403",
-    "src/chunklet/sentence_splitter/__init__.py:F401,F403",
-    "src/chunklet/code_chunker/__init__.py:F401,F403",
-    "src/chunklet/visualizer/__init__.py:F401,F403",
+[tool.ruff.lint]
+# E, W (Flake8), F (Pyflakes), I (Isort), B (Bugbear)
+select = ["E", "F", "I", "W", "B"]
+ignore = ["E501", "E203"]
+
+[tool.ruff.lint.per-file-ignores]
+
+# Ignore unused imports in all __init__.py files
+"src/chunklet/**/__init__.py" = ["F401", "F403"]
+
+# Disable all linting for the heavy regex file
+"src/chunklet/code_chunker/patterns.py" = ["ALL"]
+
+# Ignore warnings about typer.Option(...)
+"src/chunklet/cli.py" = ["B008"]
+
+# Ignore warnings about File(...)
+"src/chunklet/visualizer/visualizer.py" = ["B008"]
+
+[tool.ruff.format]
+# Replaces Black exclude logic
+exclude = [
+    ".git", ".venv", "build", "dist",
+    "src/chunklet/code_chunker/patterns.py"
 ]
-extend-ignore = ["E501", "E203"]
-count = true
-exclude = ["src/chunklet/code_chunker/patterns.py"]

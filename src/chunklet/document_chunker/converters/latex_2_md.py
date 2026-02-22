@@ -21,7 +21,7 @@ def latex_to_md(file_path: str | Path) -> str:
         raise ImportError(
             "The 'pylatexenc' library is not installed. "
             "Please install it with 'pip install 'pylatexenc>=2.10'' or install the document processing extras "
-            "with 'pip install 'chunklet-py[document]''"
+            "with 'pip install 'chunklet-py[structured-document]''"
         )
 
     with open(file_path, encoding="utf-8", errors="ignore") as f:
@@ -40,8 +40,8 @@ def latex_to_md(file_path: str | Path) -> str:
 
 # Example usage
 if __name__ == "__main__":  # pragma: no cover
-    import textwrap
     import tempfile
+    import textwrap
 
     latex_code = textwrap.dedent(
         r"""

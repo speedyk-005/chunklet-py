@@ -1,40 +1,41 @@
 """
-Code Structure Extractor
+Internal module for extracting code structures from source code files.
 
-Internal module for extracting code structures from source code.
-Split from CodeChunker for modularity.
+Provides functionality to parse and analyze code syntax trees, identifying functions,
+classes, namespaces, and other structural elements.
+This module is used by CodeChunker to understand code structure before
+splitting into chunks.
 """
 
-from pathlib import Path
-from itertools import accumulate
-import regex as re
 from collections import defaultdict, namedtuple
+from itertools import accumulate
+from pathlib import Path
+
+import regex as re
 
 try:
-    from charset_normalizer import from_path
-    from littletree import Node
     import defusedxml.ElementTree as ET
+    from littletree import Node
 except ImportError:
-    from_path, Node, ET = None, None, None
+    Node, ET = None, None
 
 from loguru import logger
 
 from chunklet.code_chunker.patterns import (
-    SINGLE_LINE_COMMENT,
-    MULTI_LINE_COMMENT,
+    ALL_SINGLE_LINE_COMM,
+    CLOSER,
     DOCSTRING_STYLE_ONE,
     DOCSTRING_STYLE_TWO,
+    FULL_LINE_SINGLE_COMM,
     FUNCTION_DECLARATION,
-    NAMESPACE_DECLARATION,
     METADATA,
+    MULTI_LINE_COMM,
+    MULTI_LINE_STRING_ASSIGN,
+    NAMESPACE_DECLARATION,
     OPENER,
-    CLOSURE,
 )
-from chunklet.code_chunker.helpers import is_binary_file, is_python_code
-from chunklet.common.path_utils import is_path_like
 from chunklet.common.validation import validate_input
-from chunklet.exceptions import FileProcessingError
-
+from chunklet.common.logging_utils import log_info
 
 CodeLine = namedtuple(
     "CodeLine", ["line_number", "content", "indent_level", "func_partial_signature"]
@@ -42,8 +43,10 @@ CodeLine = namedtuple(
 
 
 class CodeStructureExtractor:
-    """
-    Internal class for extracting structural units from source code.
+    """Extracts structural units from source code.
+
+    This class provides functionality to parse source code files and identify functions,
+    classes, namespaces, and other structural elements using a language-agnostic approach.
     """
 
     @validate_input
@@ -60,43 +63,6 @@ class CodeStructureExtractor:
         num_newlines = max(0, len(matched_text.splitlines()) - 1)
 
         return "\n" * num_newlines
-
-    def _read_source(self, source: str | Path) -> str:
-        """Retrieve source code from file or treat input as raw string.
-
-        Args:
-            source (str | Path): File path or raw code string.
-
-        Returns:
-            str: Source code content.
-
-        Raises:
-            FileProcessingError: When file cannot be read or doesn't exist.
-        """
-        if from_path is None:
-            raise ImportError(
-                "The 'charset-normalizer' library is not installed. "
-                "Please install it with 'pip install charset-normalizer>=3.4.0' "
-                "or install the code processing extras with 'pip install chunklet-py[code]'"
-            )
-
-        if isinstance(source, Path) or is_path_like(source):
-            path = Path(source)
-            if not path.exists():
-                raise FileProcessingError(f"File does not exist: {path}")
-            if is_binary_file(path):
-                raise FileProcessingError(f"Binary file not supported: {path}")
-
-            match = from_path(str(path)).best()
-            content = str(match) if match else ""
-            if self.verbose:
-                logger.info(
-                    "Successfully read %d characters from {} using charset detection",
-                    len(content),
-                    path,
-                )
-            return content
-        return source
 
     def _annotate_block(self, tag: str, match: re.Match) -> str:
         """Prefix each line in a matched block with a tag for tracking.
@@ -163,9 +129,9 @@ class CodeStructureExtractor:
 
         indent = match.group(1)
         raw_doc = match.group(0)
-        prefix = re.match(r"^\s*(//[/!])\s*", raw_doc).group(1)
+        prefix = re.match(r"^\s*(//[/!]|%%|##)\s*", raw_doc).group(1)
 
-        # Remove leading '///' or '//!' and optional spaces at start of each line
+        # Remove leading '///' '%%', '##' or '//!' and optional spaces at start of each line
         clean_doc = re.sub(rf"(?m)^\s*{prefix}\s*", "", raw_doc)
         try:
             # Try parsing it as XML
@@ -226,12 +192,10 @@ class CodeStructureExtractor:
 
         # Remove comments if not required
         if not include_comments:
-            code = SINGLE_LINE_COMMENT.sub(
+            code = ALL_SINGLE_LINE_COMM.sub(
                 lambda m: self._replace_with_newlines(m), code
             )
-            code = MULTI_LINE_COMMENT.sub(
-                lambda m: self._replace_with_newlines(m), code
-            )
+            code = MULTI_LINE_COMM.sub(lambda m: self._replace_with_newlines(m), code)
 
         # Process docstrings according to mode
         if docstring_mode == "summary":
@@ -252,8 +216,9 @@ class CodeStructureExtractor:
 
         # List of all regex patterns with the tag to annotate them
         patterns_n_tags = [
-            (SINGLE_LINE_COMMENT, "COMM"),
-            (MULTI_LINE_COMMENT, "COMM"),
+            (MULTI_LINE_STRING_ASSIGN, "STR"),
+            (FULL_LINE_SINGLE_COMM, "COMM"),
+            (MULTI_LINE_COMM, "COMM"),
             (DOCSTRING_STYLE_ONE, "DOC"),
             (DOCSTRING_STYLE_TWO, "DOC"),
             (METADATA, "META"),
@@ -308,7 +273,6 @@ class CodeStructureExtractor:
                 if node_to_detach is not tree_root:
                     node_to_detach.detach()
 
-            # Handle Namespace Declaration
             matched = NAMESPACE_DECLARATION.search(snippet_dict["content"])
             if matched:
                 namespace_name = matched.group(1)
@@ -316,14 +280,13 @@ class CodeStructureExtractor:
                     name=namespace_name, indent_level=snippet_dict["indent_level"]
                 )
 
-            # Handle Partial Function Signature
             if snippet_dict.get("func_partial_signature"):
                 _add_namespace_node(
                     name=snippet_dict["func_partial_signature"].strip(),
                     indent_level=snippet_dict["indent_level"],
                 )
 
-            # Attach the current tree structure as relations
+            # Attach the current tree structure as relation
             snippet_dict["relations"] = list(tree_root.to_relations())
 
         # Normalize newlines in chunk in place
@@ -336,31 +299,34 @@ class CodeStructureExtractor:
         self,
         curr_struct: list[CodeLine],
         snippet_dicts: list[dict],
-        buffer: dict[list],
+        buffer: dict[str, list],
     ) -> None:
         """
         Consolidate the current structure and any buffered content into a Box and append it to snippet_boxes.
+
+        It automatically flushs the buffer.
 
         Args:
             curr_struct (list[tuple]): Accumulated code lines and metadata,
                 where each element is a tuple containing:
                 (line_number, line_content, indent_level, func_partial_signature).
             snippet_boxes (list[Box]): The list to which the newly created Box will be appended.
-            buffer (dict[list]): Buffer for intermediate processing (default: empty list).
+            buffer (dict[str, list]): Buffer for intermediate processing (default: empty list).
         """
-        if not curr_struct:
+        if not (curr_struct or buffer):
             return
 
         candidates = [entry for v in buffer.values() for entry in v] + curr_struct
         sorted_candidates = sorted(candidates, key=lambda x: x.line_number)
 
+        if not sorted_candidates:
+            return
+
         content = "\n".join(c.content for c in sorted_candidates)
         start_line = sorted_candidates[0].line_number
         end_line = sorted_candidates[-1].line_number
-        indent_level = sorted_candidates[0].indent_level
-
-        # Capture the first func_partial_signature
-        match = next(
+        indent_level = next((c.indent_level for c in curr_struct if c.content), 0)
+        func_partial_signature = next(
             (c.func_partial_signature for c in curr_struct if c.func_partial_signature),
             None,
         )
@@ -371,7 +337,7 @@ class CodeStructureExtractor:
                 "indent_level": indent_level,
                 "start_line": start_line,
                 "end_line": end_line,
-                "func_partial_signature": match,
+                "func_partial_signature": func_partial_signature,
             }
         )
         curr_struct.clear()
@@ -382,71 +348,90 @@ class CodeStructureExtractor:
         line: str,
         line_no: int,
         matched: re.Match,
-        indent_level: int,
-        buffer: dict[list],
+        buffer: dict,
         state: dict,
     ):
         """
         Handle processing of annotated lines (comments, docstrings, etc.).
 
+        It automatically flushes the current struct if the current line is the only decorator.
+
         Args:
             line (str): The annotated line detected.
             line_no (int): The number of the line based on one index.
-            indent_level (int):
             matched(re.Match): Regex match object for the annotated line.
-            buffer (dict[list]): Buffer for intermediate processing.
+            buffer (dict): Buffer for intermediate processing.
             state (dict): The state dictionary that holds info about current structure, last indentation level,
                 function scope, and the snippet dicts (extracted blocks).
         """
-        # Flush if DOC buffered lines are not consecutive
-        if (
-            len(buffer["META"]) == 1  # First decorator/attribute
-            or buffer["DOC"]
-            and buffer["DOC"][-1].line_number != line_no - 1
-        ):
-            self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
-            state["inside_func"] = False
-
         tag = matched.group(1)
-        deannoted_line = (
+        deannotated_line = (
             line[: matched.start()] + line[matched.end() :]
-        )  # slice off the annotation
-        buffer[tag].append(CodeLine(line_no, deannoted_line, indent_level, None))
+        )  # Slice off the annotation
+
+        # Now we can calculate the proper indentation level
+        indent_level = len(deannotated_line) - len(deannotated_line.lstrip())
+
+        first_metadata = tag == "META" and not buffer["META"]
+        consecutive_docstrings = (
+            buffer["DOC"] and buffer["DOC"][-1].line_number == line_no - 1
+        )
+
+        if first_metadata or not consecutive_docstrings:
+            self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
+
+        buffer[tag].append(CodeLine(line_no, deannotated_line, indent_level, None))
 
     def _handle_block_start(
         self,
         line: str,
         indent_level: int,
-        buffer: dict[list],
+        buffer: dict,
         state: dict,
-        source: str | Path,
+        code: str | Path,
         func_start: str | None = None,
+        is_python_code: bool = False,
     ):
         """
         Detects top-level namespace or function starts and performs language-aware flushing.
 
         Args:
             line (str): The annotated line detected.
-            indent_level (int):
-            buffer (dict[list]): Buffer for intermediate processing.
+            indent_level (int): The level of indentation detected.
+            buffer (dict): Buffer for intermediate processing.
             state (dict): The state dictionary that holds info about current structure, last indentation level,
                 function scope, and the snippet dicts (extracted blocks).
-            source (str | Path): Raw code string or Path to source file.
+            code (str | Path): Raw code string or Path to code file.
             func_start (str, optional): Line corresponds to a function partial signature
+            is_python_code (bool): Whether the code is Python.
         """
-        namespace_start = NAMESPACE_DECLARATION.match(line)
+        is_namespace = bool(NAMESPACE_DECLARATION.match(line))
+        func_count = sum(
+            1 for line in state["curr_struct"] if line.func_partial_signature
+        )
+        is_nested = indent_level > state["block_indent_level"]
 
-        if (
-            namespace_start
-            # If decorator/attribute exists in buffer, skip flushing
-            or (func_start and not (state["inside_func"] or buffer["META"]))
-        ):
-            state["last_indent"] = indent_level
+        if func_start:
+            has_decorators = bool(buffer["META"])
 
+            # We need to skip nesled functions or those that have subsequent decorators
+            # because having nesled functions as their own block is clunky
+            # and for functions with subsequent decorators are already handled
+            if is_nested and func_count != 0:
+                return
+
+            if has_decorators and func_count == 0:
+                state["block_indent_level"] = indent_level
+                return
+
+        if is_namespace and is_nested:
+            return
+
+        if is_namespace or func_start:
             # If it is a Python code, we can flush everything, else we won't flush the docstring yet
             # This helps including the docstring that is on top of block definition in the other languages
             if state["curr_struct"]:
-                if is_python_code(source):
+                if is_python_code:
                     self._flush_snippet(
                         state["curr_struct"], state["snippet_dicts"], buffer
                     )
@@ -458,47 +443,45 @@ class CodeStructureExtractor:
                     buffer.clear()
                     buffer["doc"] = doc
 
-        # Nestled blocks are not to be extracted
-        if func_start:
-            state["inside_func"] = True
+            state["block_indent_level"] = indent_level
 
     def extract_code_structure(
         self,
-        source: str | Path,
+        code: str,
         include_comments: bool,
         docstring_mode: str,
+        is_python_code: bool = False,
     ) -> tuple[list[dict], tuple[int, ...]]:
         """
-        Preprocess and parse source into individual snippet boxes.
+        Preprocess and parse code into individual snippet boxes.
 
         This function-first extraction identifies functions as primary units
         while implicitly handling other structures within the function context.
 
         Args:
-            source (str | Path): Raw code string or Path to source file.
+            code (str): Raw code string.
             include_comments (bool): Whether to include comments in output.
             docstring_mode (Literal["summary", "all", "excluded"]): How to handle docstrings.
+            is_python_code (bool): Whether the code is Python.
 
         Returns:
             tuple[list[dict], tuple[int, ...]]: A tuple containing the list of extracted code structure boxes and the line lengths.
         """
-        source_code = self._read_source(source)
-        if not source_code:
+        if not code:
             return [], ()
 
-        source_code, cumulative_lengths = self._preprocess(
-            source_code, include_comments, docstring_mode
+        code, cumulative_lengths = self._preprocess(
+            code, include_comments, docstring_mode
         )
 
         state = {
             "curr_struct": [],
-            "last_indent": 0,
-            "inside_func": False,
+            "block_indent_level": 0,
             "snippet_dicts": [],
         }
         buffer = defaultdict(list)
 
-        for line_no, line in enumerate(source_code.splitlines(), start=1):
+        for line_no, line in enumerate(code.splitlines(), start=1):
             indent_level = len(line) - len(line.lstrip())
 
             # Detect annotated lines
@@ -507,48 +490,48 @@ class CodeStructureExtractor:
                 self._handle_annotated_line(
                     line=line,
                     line_no=line_no,
-                    indent_level=indent_level,
                     matched=matched,
                     buffer=buffer,
                     state=state,
                 )
                 continue
 
-            # Manage block accumulation
+            if buffer["STR"]:
+                self._flush_snippet([], state["snippet_dicts"], buffer)
+
+            # -- Manage block accumulation logic--
 
             func_start = FUNCTION_DECLARATION.match(line)
             func_start = func_start.group(0) if func_start else None
 
+            if not state["curr_struct"]:  # Fresh block
+                state["curr_struct"] = [
+                    CodeLine(line_no, line, indent_level, func_start)
+                ]
+                state["block_indent_level"] = indent_level
+                continue
+
+            # Block start triggered by functions or namespaces indentification
+            # You might think it is in the wrong place, but it isnt
             self._handle_block_start(
                 line=line,
                 indent_level=indent_level,
                 buffer=buffer,
                 state=state,
-                source=source,
+                code=code,
                 func_start=func_start,
+                is_python_code=is_python_code,
             )
-
-            if not state["curr_struct"]:  # Fresh block
-                state["curr_struct"] = [
-                    CodeLine(
-                        line_no,
-                        line,
-                        indent_level,
-                        func_start,
-                    )
-                ]
-                continue
 
             if (
                 line.strip()
-                and indent_level <= state["last_indent"]
-                and not (OPENER.match(line) or CLOSURE.match(line))
+                and indent_level <= state["block_indent_level"]
+                and not (OPENER.match(line) or CLOSER.match(line))
             ):  # Block end
+                state["block_indent_level"] = indent_level
                 self._flush_snippet(
                     state["curr_struct"], state["snippet_dicts"], buffer
                 )
-                state["last_indent"] = 0
-                state["inside_func"] = False
 
             state["curr_struct"].append(
                 CodeLine(line_no, line, indent_level, func_start)
@@ -559,9 +542,8 @@ class CodeStructureExtractor:
             self._flush_snippet(state["curr_struct"], state["snippet_dicts"], buffer)
 
         snippet_dicts = self._post_processing(state["snippet_dicts"])
-        if self.verbose:
-            logger.info(
-                "Extracted {} structural blocks from source", len(snippet_dicts)
-            )
+        log_info(
+            self.verbose, "Extracted {} structural blocks from code", len(snippet_dicts)
+        )
 
         return snippet_dicts, cumulative_lengths

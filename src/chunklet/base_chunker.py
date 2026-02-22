@@ -5,7 +5,8 @@ Defines the interface for chunkers.
 """
 
 from abc import ABC, abstractmethod
-from typing import Generator
+from collections.abc import Generator
+
 from box import Box
 from loguru import logger
 
@@ -21,9 +22,9 @@ class BaseChunker(ABC):
         self.verbose = verbose
 
     @abstractmethod
-    def chunk(self, *args, **kwargs) -> list[Box]:
+    def chunk_text(self, *args, **kwargs) -> list[Box]:
         """
-        Extract chunks.
+        Extract chunks from text.
 
         Returns:
             list[Box]: List of chunks with content and metadata.
@@ -31,16 +32,31 @@ class BaseChunker(ABC):
         pass
 
     @abstractmethod
-    def batch_chunk(self, *args, **kwargs) -> Generator[Box, None, None]:
+    def chunk_texts(self, *args, **kwargs) -> list[list[Box]]:
         """
-        Process multiple items in parallel.
+        Process multiple texts.
+
+        Returns:
+            list[list[Box]]: List of chunks for each input text.
+        """
+        pass
+
+    @abstractmethod
+    def chunk_file(self, *args, **kwargs) -> list[Box]:
+        """
+        Read and chunk a file.
+
+        Returns:
+            list[Box]: List of chunks with content and metadata.
+        """
+        pass
+
+    @abstractmethod
+    def chunk_files(self, *args, **kwargs) -> Generator[Box, None, None]:
+        """
+        Process multiple files.
 
         Yields:
             Box: `Box` object, representing a chunk with its content and metadata.
         """
         pass
-
-    def log_info(self, *args, **kwargs) -> None:
-        """Log an info message if verbose is enabled."""
-        if self.verbose:
-            logger.info(*args, **kwargs)

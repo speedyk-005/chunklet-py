@@ -1,24 +1,24 @@
-from typing import Any, Literal, Callable, Generator, Annotated
-from collections.abc import Iterable
-import sys
 import copy
+import sys
+from collections.abc import Iterable
+from functools import partial
+from typing import Annotated, Any, Callable, Generator, Literal
+
 import regex as re
 from box import Box
-from functools import partial
-from pydantic import Field
 from loguru import logger
+from pydantic import Field
 
-from chunklet.base_chunker import BaseChunker
-from chunklet.sentence_splitter import SentenceSplitter, BaseSplitter
-from chunklet.common.validation import validate_input, restricted_iterable
 from chunklet.common.batch_runner import run_in_batch
+from chunklet.common.logging_utils import log_info
 from chunklet.common.token_utils import count_tokens
+from chunklet.common.validation import restricted_iterable, validate_input
 from chunklet.exceptions import (
+    CallbackError,
     InvalidInputError,
     MissingTokenCounterError,
-    CallbackError,
 )
-
+from chunklet.sentence_splitter import BaseSplitter, SentenceSplitter
 
 # Regex to split sentences into individual clauses
 CLAUSE_END_PATTERN = re.compile(r"(?<=[;,’：—)&…])\s")
@@ -32,18 +32,18 @@ SECTION_BREAK_PATTERN = re.compile(
 )
 
 
-class PlainTextChunker(BaseChunker):
+class PlainTextChunker:
     """
     A powerful text chunking utility offering flexible strategies for optimal text segmentation.
 
     Key Features:
-    - Flexible Constraint-Based Chunking: Segment text by specifying limits on sentence count, token count and section breaks or combination of them.
-    - Clause-Level Overlap: Ensures semantic continuity between chunks by overlapping
+        - Flexible Constraint-Based Chunking: Segment text by specifying limits on sentence count, token count and section breaks or combination of them.
+        - Clause-Level Overlap: Ensures semantic continuity between chunks by overlapping
     at natural clause boundaries with Customizable continuation marker.
-    - Multilingual Support: Leverages language-specific algorithms and detection for broad coverage.
-    - Pluggable Token Counters: Integrate custom token counting functions (e.g., for specific LLM tokenizers).
-    - Parallel Processing: Efficiently handles batch chunking of multiple texts using multiprocessing.
-    - Memory friendly batching: Yields chunks one at a time, reducing memory usage, especially for very large documents.
+        - Multilingual Support: Leverages language-specific algorithms and detection for broad coverage.
+        - Pluggable Token Counters: Integrate custom token counting functions (e.g., for specific LLM tokenizers).
+        - Parallel Processing: Efficiently handles batch chunking of multiple texts using multiprocessing.
+        - Memory friendly batching: Yields chunks one at a time, reducing memory usage, especially for very large documents.
     """
 
     @validate_input
@@ -108,20 +108,22 @@ class PlainTextChunker(BaseChunker):
             A tuple (start, end) representing the span in full_text.
             Returns (-1, -1) if not found.
         """
-        # Fast path for exact match
-        if text_portion in full_text:
-            start = full_text.find(text_portion)
-            return start, start + len(text_portion)
-
         # Remove continuation marker from the beginning of text_portion first
         if text_portion.startswith(self.continuation_marker):
             text_portion = text_portion[len(self.continuation_marker) :].lstrip()
+
+        # Fast path for exact match
+        if text_portion.strip() in full_text:
+            start = full_text.find(text_portion.strip())
+            return start, start + len(text_portion)
 
         lines = [line.strip() for line in text_portion.splitlines() if line.strip()]
         if not lines:
             return -1, -1
 
-        budget = len(text_portion) // 5  # 20 %
+        budget = int(
+            max(0, min(len(text_portion) // 5, 60))  # 20 %
+        )
 
         # Build flexible separator pattern that allows newlines, Unicode separators, and punctuation
         sep = rf"""
@@ -160,6 +162,7 @@ class PlainTextChunker(BaseChunker):
 
         Returns:
             list[Box]: A list of `Box` objects. Each `Box` contains:
+
                 - 'content' (str): The text of the chunk.
                 - 'metadata' (dict): A dictionary including 'chunk_num' (int)
                     and all key-value pairs from `base_metadata`.
@@ -233,6 +236,7 @@ class PlainTextChunker(BaseChunker):
 
         Returns:
             tuple[str, str]: A tuple containing two strings:
+
                 - The clauses that fit within the token budget (joined as a string).
                 - The remaining unfitted clauses (joined as a string).
         """
@@ -475,7 +479,7 @@ class PlainTextChunker(BaseChunker):
         # Validate that at least one limit is provided
         if not any((max_tokens, max_sentences, max_section_breaks)):
             raise InvalidInputError(
-                "At least one of 'max_tokens', 'max_sentences', or 'max_section_break' must be provided."
+                "At least one of 'max_tokens', 'max_sentences', or 'max_section_breaks' must be provided."
             )
 
         # If token_counter is required but not provided
@@ -525,7 +529,8 @@ class PlainTextChunker(BaseChunker):
             max_tokens, max_sentences, max_section_breaks, token_counter
         )
 
-        self.log_info(
+        log_info(
+            self.verbose,
             "Starting chunk processing for text starting with: {}.",
             f"{text[:100]}...",
         )
@@ -539,11 +544,11 @@ class PlainTextChunker(BaseChunker):
             max_section_breaks = sys.maxsize
 
         if not text.strip():
-            self.log_info("Input text is empty. Returning empty list.")
+            log_info(self.verbose, "Input text is empty. Returning empty list.")
             return []
 
         try:
-            sentences = self.sentence_splitter.split(
+            sentences = self.sentence_splitter.split_text(
                 text,
                 lang,
             )
@@ -582,7 +587,7 @@ class PlainTextChunker(BaseChunker):
     @validate_input
     def batch_chunk(
         self,
-        texts: restricted_iterable(str),
+        texts: "restricted_iterable(str)",  # pyright: ignore
         *,
         lang: str = "auto",
         max_tokens: Annotated[int | None, Field(ge=12)] = None,

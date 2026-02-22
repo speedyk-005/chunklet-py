@@ -19,7 +19,7 @@ class MissingTokenCounterError(InvalidInputError):
     def __init__(self, msg: str = ""):
         self.msg = msg or (
             "A token_counter is required for token-based chunking.\n"
-            "💡 Hint: Pass a token counting function to the `chunk` method, like `chunker.chunk(..., token_counter=tk)`\n"
+            "💡 Hint: Pass a token counting function to the chunking method, like `chunker.chunk_text(..., token_counter=tk)`\n"
             "or configure it in the class initialization: `.*Chunker(token_counter=tk)`"
         )
         super().__init__(self.msg)
@@ -33,7 +33,13 @@ class FileProcessingError(ChunkletError):
 
 
 class UnsupportedFileTypeError(FileProcessingError):
-    """Raised when a file type is not supported for a given operation."""
+    """Raised when a file type is not supported for a given operation.
+
+    This can happen if:
+    - The file extension is not in the supported list
+    - The file has no extension
+    - The processor returns an iterable (requires batch processing)
+    """
 
     pass
 

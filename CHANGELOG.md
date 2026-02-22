@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.2.0] - 2026-02-17
+
+### Changed
+- **API Unification**: Renamed chunking methods to `chunk_text`, `chunk_file`, `chunk_texts`, `chunk_files` following new base class interface, with deprecated wrappers for old `chunk` and `batch_chunk` methods (will be removed in v3.0.0)
+- **PlainTextChunker Merge**: Moved PlainTextChunker into document_chunker as `_plain_text_chunker.py`, now accessible via DocumentChunker with deprecated import from top-level
+- **SentenceSplitter Rename**: Renamed `split` method to `split_text` with deprecation warning
+- **CodeChunker Renames**:
+  - Renamed `MULTI_LINE_COMMENT` to `MULTI_LINE_COMM` for consistency
+  - Renamed `CLOSURE` to `CLOSER` as it's a misconception
+- **PlainTextChunker Improvements**:
+  - Fixed `_find_span` to remove continuation markers before matching
+  - Added `.strip()` to exact match for whitespace edge cases
+  - Added budget cap at 60 to prevent extreme regex backtracking
+- **Dependencies**: Added upper version bounds to all dependencies for better stability and reproducibility
+
+### Added
+- **Global Registry Instances**: Added global `custom_splitter_registry` and `custom_processor_registry` instances for easier customization
+- **Tokenizer CLI Enhancements**:
+  - Added `--tokenizer-timeout` / `-t` option (default: no timeout) for both `chunk` and `visualize` commands
+  - Improved tokenizer error messages to distinguish between invalid output, timeout, and execution errors
+  - Added `-h` as a shortcut for `--host` in the `visualize` command
+  - Added `-l` as a shortcut for `--lang` and `-m` for `--metadata` in both `split` and `chunk` commands
+- **Visualizer UI Redesign**:
+  - Redesigned layout from 2-column to 3-row structure
+  - Added scroll hint that shows only when modal has overflow
+  - Fixed placeholder text centering in visualization box
+  - Added chunk span pointer-events for better click handling
+  - Added custom scrollbar styling
+- **Added fullscreen mode** for visualization area with overlay toggle button. Uses browser native fullscreen API with modal dialogs properly rendered on top via Top Layer.
+- **Visualizer Layout**:
+  - Reduced top row height to 300px max for upload and instructions sections
+  - Removed square constraint from upload area for better border adaptation
+- **Improved Visualizer Error Handling**: Error messages now distinguish between server connection issues and file format errors, making troubleshooting easier for users.
+- **Expanded CodeChunker Patterns**:
+  - Added single-line comment patterns for **Forth** (`\|`).
+  - Added support for **PHP 8 attributes** (`#[...]`) and **VB.NET metadata** (`<...>`).
+  - Added `export` to namespace declarations and `component` to function modifiers for **ColdFusion** compatibility.
+  - Added support for **Pascal-style** `BEGIN` and `END` (case-insensitive) as block delimiters.
+  - Added open curly bracket in the function pattern to support more languages.
+- **Multi-line String Protection**: Added MULTI_LINE_STRING_ASSIGN to prevent the extractor from splitting snippets inside large string blocks or triple-quotes.
+- **Direct Import Support**: Enhanced lazy loading to support direct imports like `from chunklet import DocumentChunker` while maintaining performance optimizations
+
+### Changed
+- **CodeChunker Pattern Logic**:
+  - Refactored `METADATA` regex to use recursive sub-routines, enabling proper handling of nested parentheses.
+  - Reclassified **Nim** (`##`) and **Erlang** (`%%`) documentation comments as Style 2 line-prefixed comments for better chunk cohesion.
+- **Code Extractor Architecture**:
+  - Centralized structural state management within _handle_block_start, moving block_indent_level updates away from annotation handlers to follow SRP.
+  - Refined the indentation "anchor" logic and guard clauses to correctly separate sibling methods while maintaining parent-child relations for nested closures.
+- **Development Tooling**:
+  - Replaced Flake8 + Black with **Ruff** for improved performance and unified tooling
+  - Ruff provides 10-100x faster feedback cycles while maintaining all existing code quality standards
+
+### Fixed
+- **Dependency Fix**: Added `setuptools<81` to CI to fix `ModuleNotFoundError: No module named 'pkg_resources'` (sentsplit depends on deprecated pkg_resources removed in setuptools 81.0.0)
+- **CodeChunker Annotation Remnants**:
+  - Fixed remnants of annotation tags in output by using separate patterns for full-line vs inline comments
+  - Only full-line comments are now annotated, inline comments stay with their code line
+- **Visualizer CSS and Docstring Positioning**:
+  - Optimized chunk span interactions by replacing layout-affecting borders with box-shadows for smooth, non-jumpy hover effects, custom scrollbar styling, and improved overlap visibility with consistent transitions across all states.
+  - Fixed download and reveal buttons to remain enabled after processing chunks, rather than being disabled when no file is uploaded.
+
+---
+
 ## [2.1.1] - 2025-12-21
 
 ### Fixed

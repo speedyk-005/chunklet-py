@@ -1,22 +1,30 @@
-from abc import ABC, abstractmethod
+import warnings
+
+# Suppress pkg_resources deprecation warnings from third-party libraries
+warnings.filterwarnings("ignore", message=".*pkg_resources.*", category=UserWarning)
+
+from pathlib import Path
+
 import regex as re
-from py3langid.langid import LanguageIdentifier, MODEL_FILE
-from pysbd import Segmenter
-from sentsplit.segment import SentSplit
-from sentencex import segment
 from indicnlp.tokenize import sentence_tokenize
 from loguru import logger
+from py3langid.langid import MODEL_FILE, LanguageIdentifier
+from pysbd import Segmenter
+from sentencex import segment
+from sentsplit.segment import SentSplit
 
-from chunklet.sentence_splitter.languages import (
-    PYSBD_SUPPORTED_LANGUAGES,
-    SENTSPLIT_UNIQUE_LANGUAGES,
-    SENTENCEX_UNIQUE_LANGUAGES,
-    INDIC_NLP_UNIQUE_LANGUAGES,
-)
-from chunklet.sentence_splitter.registry import CustomSplitterRegistry
-from chunklet.sentence_splitter._fallback_splitter import FallbackSplitter
+from chunklet.common.deprecation import deprecated_callable
+from chunklet.common.logging_utils import log_info
+from chunklet.common.path_utils import read_text_file
 from chunklet.common.validation import validate_input
-
+from chunklet.sentence_splitter._fallback_splitter import FallbackSplitter
+from chunklet.sentence_splitter.languages import (
+    INDIC_NLP_UNIQUE_LANGUAGES,
+    PYSBD_SUPPORTED_LANGUAGES,
+    SENTENCEX_UNIQUE_LANGUAGES,
+    SENTSPLIT_UNIQUE_LANGUAGES,
+)
+from chunklet.sentence_splitter.registry import custom_splitter_registry
 
 # Regex pattern to identify strings consisting solely of punctuation or symbols.
 PUNCTUATION_ONLY_PATTERN = re.compile(r"[\p{P}\p{S}]+")
@@ -25,32 +33,50 @@ PUNCTUATION_ONLY_PATTERN = re.compile(r"[\p{P}\p{S}]+")
 THEMATIC_BREAK_PATTERN = re.compile(r"^\s*[\-\*_]{2,}\s*$")
 
 
-class BaseSplitter(ABC):
+class BaseSplitter:
     """
-    Abstract base class for sentence splitting.
-    Defines the interface that all sentence splitter implementations must adhere to.
+    Base class for sentence splitting.
+    Defines the interface that all splitter implementations must adhere to.
     """
 
-    @abstractmethod
-    def split(self, text: str, lang: str) -> list[str]:
-        """
-        Splits the given text into a list of sentences.
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
 
-        text (str): The input text to be split.
+        # Compare against BaseSplitter (the class that actually owns the defaults)
+        is_split_overridden = cls.split is not BaseSplitter.split
+        is_split_text_overridden = cls.split_text is not BaseSplitter.split_text
+
+        if is_split_overridden and not is_split_text_overridden:
+            warnings.warn(
+                f"Class '{cls.__name__}' overrides 'split', which is deprecated. "
+                f"Please migrate to overriding 'split_text' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+    def split_text(self, text: str, lang: str = "auto") -> list[str]:
+        """Splits the given text into a list of sentences.
+
+        Args:
+            text (str): The input text to be split.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto').
 
         Returns:
             list[str]: A list of sentences extracted from the text.
-
-        Examples:
-            >>> class MySplitter(BaseSplitter):
-            ...     def split(self, text: str, lang: str) -> list[str]:
-            ...         return text.split(".")
-            >>> splitter = MySplitter()
-            >>> splitter.split("Hello. World.", "en")
-            ['Hello', ' World']
         """
-        pass
+        raise NotImplementedError("Subclasses must implement 'split_text'.")
+
+    @deprecated_callable(
+        use_instead="split_text", deprecated_in="2.2.0", removed_in="3.0.0"
+    )
+    def split(self, text: str, lang: str = "auto") -> list[str]:
+        """
+        Split text into sentences.
+
+        Note:
+            Deprecated since 2.2.0. Will be removed in 3.0.0. Use `split_text` instead.
+        """
+        return self.split_text(text, lang)
 
 
 class SentenceSplitter(BaseSplitter):
@@ -73,9 +99,9 @@ class SentenceSplitter(BaseSplitter):
         frozenset(SENTSPLIT_UNIQUE_LANGUAGES): lambda lang, text: SentSplit(
             lang
         ).segment(text),
-        frozenset(
-            INDIC_NLP_UNIQUE_LANGUAGES
-        ): lambda lang, text: sentence_tokenize.sentence_split(text, lang),
+        frozenset(INDIC_NLP_UNIQUE_LANGUAGES): lambda lang, text: (
+            sentence_tokenize.sentence_split(text, lang)
+        ),
         frozenset(SENTENCEX_UNIQUE_LANGUAGES): lambda lang, text: segment(lang, text),
     }
 
@@ -88,7 +114,6 @@ class SentenceSplitter(BaseSplitter):
             verbose (bool, optional): If True, enables verbose logging for debugging and informational messages.
         """
         self.verbose = verbose
-        self.custom_splitter_registry = CustomSplitterRegistry()
         self.fallback_splitter = FallbackSplitter()
 
         # Create a normalized identifier for language detection
@@ -135,16 +160,16 @@ class SentenceSplitter(BaseSplitter):
             tuple[str, float]: A tuple containing the detected language code and its confidence.
         """
         lang_detected, confidence = self.identifier.classify(text)
-        if self.verbose:
-            logger.info(
-                "Language detection: '{}' with confidence {}.",
-                lang_detected,
-                f"{round(confidence) * 10}/10",
-            )
+        log_info(
+            self.verbose,
+            "Language detection: '{}' with confidence {}.",
+            lang_detected,
+            f"{round(confidence) * 10}/10",
+        )
         return lang_detected, confidence
 
     @validate_input
-    def split(self, text: str, lang: str = "auto") -> list[str]:
+    def split_text(self, text: str, lang: str = "auto") -> list[str]:
         """
         Splits a given text into a list of sentences.
 
@@ -157,16 +182,15 @@ class SentenceSplitter(BaseSplitter):
 
         Examples:
             >>> splitter = SentenceSplitter()
-            >>> splitter.split("Hello world. How are you?", "en")
+            >>> splitter.split_text("Hello world. How are you?", "en")
             ['Hello world.', 'How are you?']
-            >>> splitter.split("Bonjour le monde. Comment allez-vous?", "fr")
+            >>> splitter.split_text("Bonjour le monde. Comment allez-vous?", "fr")
             ['Bonjour le monde.', 'Comment allez-vous?']
-            >>> splitter.split("Hello world. How are you?", "auto")
+            >>> splitter.split_text("Hello world. How are you?", "auto")
             ['Hello world.', 'How are you?']
         """
         if not text:
-            if self.verbose:
-                logger.info("Input text is empty. Returning empty list.")
+            log_info(self.verbose, "Input text is empty. Returning empty list.")
             return []
 
         if lang == "auto":
@@ -177,10 +201,9 @@ class SentenceSplitter(BaseSplitter):
             lang = lang_detected if confidence >= 0.7 else lang
 
         # Prioritize custom splitters from registry
-        if self.custom_splitter_registry.is_registered(lang):
-            sentences, splitter_name = self.custom_splitter_registry.split(text, lang)
-            if self.verbose:
-                logger.info("Using registered splitter: {}", splitter_name)
+        if custom_splitter_registry.is_registered(lang):
+            sentences, splitter_name = custom_splitter_registry.split(text, lang)
+            log_info(self.verbose, "Using registered splitter: {}", splitter_name)
         else:
             sentences = None
             for lang_set, handler in self.LANGUAGE_HANDLERS.items():
@@ -198,10 +221,24 @@ class SentenceSplitter(BaseSplitter):
 
         processed_sentences = self._filter_sentences(sentences)
 
-        if self.verbose:
-            logger.info(
-                "Text splitted into sentences. Total sentences detected: {}",
-                len(processed_sentences),
-            )
+        log_info(
+            self.verbose,
+            "Text splitted into sentences. Total sentences detected: {}",
+            len(processed_sentences),
+        )
 
         return processed_sentences
+
+    def split_file(self, path: str | Path, lang: str = "auto") -> list[str]:
+        """
+        Read and split a file into sentences.
+
+        Args:
+            path: Path to the file to read.
+            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to 'auto'.
+
+        Returns:
+            list[str]: A list of sentences extracted from the file.
+        """
+        content = read_text_file(path)
+        return self.split_text(content, lang)

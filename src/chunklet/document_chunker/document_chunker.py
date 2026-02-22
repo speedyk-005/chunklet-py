@@ -1,10 +1,12 @@
+import warnings
+from itertools import chain, tee
 from pathlib import Path
-from typing import Callable, Literal, Any, Generator, Annotated, Iterable
-from pydantic import Field
+from typing import Annotated, Any, Callable, Generator, Iterable, Literal
+
 from box import Box
 from loguru import logger
-from itertools import chain, tee
 from more_itertools import ilen, split_at
+from pydantic import Field
 
 try:
     from striprtf.striprtf import rtf_to_text
@@ -17,23 +19,26 @@ except ImportError:
     from_path = None
 
 from chunklet.base_chunker import BaseChunker
-from chunklet.sentence_splitter import BaseSplitter
-from chunklet.plain_text_chunker import PlainTextChunker
-from chunklet.document_chunker.processors import (
-    pdf_processor,
-    epub_processor,
-    docx_processor,
-    odt_processor,
-)
+from chunklet.common.deprecation import deprecated_callable
+from chunklet.common.logging_utils import log_info
+from chunklet.common.path_utils import read_text_file
+from chunklet.common.validation import restricted_iterable, validate_input
+from chunklet.document_chunker._plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker.converters import (
     html_2_md,
-    rst_2_md,
     latex_2_md,
+    rst_2_md,
     table_2_md,
 )
-from chunklet.document_chunker.registry import CustomProcessorRegistry
-from chunklet.common.validation import validate_input, restricted_iterable
+from chunklet.document_chunker.processors import (
+    docx_processor,
+    epub_processor,
+    odt_processor,
+    pdf_processor,
+)
+from chunklet.document_chunker.registry import custom_processor_registry
 from chunklet.exceptions import InvalidInputError, UnsupportedFileTypeError
+from chunklet.sentence_splitter import BaseSplitter
 
 
 class DocumentChunker(BaseChunker):
@@ -46,11 +51,11 @@ class DocumentChunker(BaseChunker):
     `PlainTextChunker` instance.
 
     Key Features:
-    - Multi-Format Support: Chunks text from PDF, TXT, MD, and RST files.
-    - Metadata Enrichment: Automatically adds source file path and other
+        - Multi-Format Support: Chunks text from PDF, TXT, MD, and RST files.
+        - Metadata Enrichment: Automatically adds source file path and other
       document-level metadata (e.g., PDF page numbers) to each chunk.
-    - Bulk Processing: Efficiently chunks multiple documents in a single call.
-    - Pluggable Document processors: Integrate custom processors allowing definition
+        - Bulk Processing: Efficiently chunks multiple documents in a single call.
+        - Pluggable Document processors: Integrate custom processors allowing definition
     of specific logic for extracting text from various file types.
     """
 
@@ -125,14 +130,13 @@ class DocumentChunker(BaseChunker):
             ".csv": table_2_md.table_to_md,
             ".xlsx": table_2_md.table_to_md,
         }
-        self.processor_registry = CustomProcessorRegistry()
 
     @property
     def supported_extensions(self):
         """Get the supported extensions, including the custom ones."""
         return (
             self.BUILTIN_SUPPORTED_EXTENSIONS
-            | self.processor_registry.processors.keys()
+            | custom_processor_registry.processors.keys()
         )
 
     @property
@@ -195,24 +199,18 @@ class DocumentChunker(BaseChunker):
         Returns:
             str: The text content of the file
         """
-        if from_path is None:
-            raise ImportError(
-                "The 'charset-normalizer' library is not installed. "
-                "Please install it with 'pip install charset-normalizer>=3.4.0' "
-                "or install the document processing extras with 'pip install chunklet-py[document]'"
-            )
-
-        match = from_path(str(path)).best()
-        raw_content = str(match) if match else ""
+        content = read_text_file(path)
 
         if ext == ".rtf":
             if rtf_to_text is None:
                 raise ImportError(
-                    "The 'striprtf' library is not installed. Please install it with 'pip install 'striprtf>=0.0.29'' or install the document processing extras with 'pip install chunklet-py[document]'"
+                    "The 'striprtf' library is not installed. "
+                    "Please install it with 'pip install 'striprtf>=0.0.29'' or install the document processing extras "
+                    "with 'pip install chunklet-py[structured-document]'"
                 )
-            return rtf_to_text(raw_content)
+            return rtf_to_text(content)
         else:  # For .txt, .md, and others handled by simple read
-            return raw_content
+            return content
 
     def _extract_data(
         self, path: str | Path, ext: str
@@ -229,14 +227,14 @@ class DocumentChunker(BaseChunker):
             either a string (for simple text files) or a generator of strings (for processed documents)
             and a dictionary of metadata.
         """
-        self.log_info("Extracting text from file {}", path)
+        log_info(self.verbose, "Extracting text from file {}", path)
 
         # Prioritize custom processors from registry
-        if self.processor_registry.is_registered(ext):
-            texts_and_metadata, processor_name = self.processor_registry.extract_data(
+        if custom_processor_registry.is_registered(ext):
+            texts_and_metadata, processor_name = custom_processor_registry.extract_data(
                 str(path), ext
             )
-            self.log_info("Used registered processor: {}", processor_name)
+            log_info(self.verbose, "Used registered processor: {}", processor_name)
             text_or_gen, metadata = texts_and_metadata
             metadata["source"] = metadata.get("source", str(path))
             return text_or_gen, metadata
@@ -336,7 +334,97 @@ class DocumentChunker(BaseChunker):
         }
 
     @validate_input
-    def chunk(
+    def chunk_text(
+        self,
+        text: str,
+        *,
+        lang: str = "auto",
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_sentences: Annotated[int | None, Field(ge=1)] = None,
+        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
+        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
+        offset: Annotated[int, Field(ge=0)] = 0,
+        token_counter: Callable[[str], int] | None = None,
+        base_metadata: dict[str, Any] | None = None,
+    ) -> list[Box]:
+        """
+        Chunks raw text content.
+
+        Args:
+            text (str): The raw text to chunk.
+            lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
+            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
+                Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
+                Must be >= 1.
+            overlap_percent (int | float): Percentage of overlap between chunks (0-85).
+            offset (int): Starting sentence offset for chunking. Defaults to 0.
+            token_counter (callable | None): Optional token counting function.
+                Required if `max_tokens` is provided.
+            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
+
+        Returns:
+            list[Box]: A list of `Box` objects, each representing a chunk.
+        """
+        params = {k: v for k, v in locals().items() if k != "self"}
+        params["token_counter"] = params.get("token_counter") or self.token_counter
+        return self.plain_text_chunker.chunk(**params)
+
+    @validate_input
+    def chunk_texts(
+        self,
+        texts: "restricted_iterable(str)",  # noqa: F722
+        *,
+        lang: str = "auto",
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_sentences: Annotated[int | None, Field(ge=1)] = None,
+        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
+        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
+        offset: Annotated[int, Field(ge=0)] = 0,
+        token_counter: Callable[[str], int] | None = None,
+        base_metadata: dict[str, Any] | None = None,
+        separator: Any = None,
+        n_jobs: Annotated[int, Field(ge=1)] | None = None,
+        show_progress: bool = True,
+        on_errors: Literal["raise", "skip", "break"] = "raise",
+    ) -> Generator[Box, None, None]:
+        """
+        Chunks multiple text contents.
+
+        Args:
+            texts (restricted_iterable(str)): A restricted iterable of texts to chunk.
+            lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
+            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
+                Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
+                Must be >= 1.
+            overlap_percent (int | float): Percentage of overlap between chunks (0-85).
+            offset (int): Starting sentence offset for chunking. Defaults to 0.
+            token_counter (callable | None): Optional token counting function.
+                Required if `max_tokens` is provided.
+            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
+            separator (Any): A value to be yielded after the chunks of each text are processed.
+            n_jobs (int | None): Number of parallel workers.
+            show_progress (bool): Show progress bar.
+            on_errors (str): How to handle errors.
+
+        yields:
+            Box: `Box` object, representing a chunk with its content and metadata.
+
+        Raises:
+            InvalidInputError: If the input arguments aren't valid.
+            UnsupportedFileTypeError: If the file extension is not supported or is missing.
+            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
+            CallbackError: If a callback function (e.g., custom processors callbacks) fails during execution.
+        """
+        params = {k: v for k, v in locals().items() if k != "self"}
+        params["token_counter"] = params["token_counter"] or self.token_counter
+        yield from self.plain_text_chunker.batch_chunk(**params)
+
+    @validate_input
+    def chunk_file(
         self,
         path: str | Path,
         *,
@@ -360,7 +448,9 @@ class DocumentChunker(BaseChunker):
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
             max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
+                Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
+                Must be >= 1.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
             offset (int): Starting sentence offset for chunking. Defaults to 0.
             token_counter (callable | None): Optional token counting function.
@@ -387,14 +477,13 @@ class DocumentChunker(BaseChunker):
                 f"File type '{ext}' is not supported by the general chunk method.\n"
                 "Reason: The processor for this file returns iterable, "
                 "so it must be processed in parallel for efficiency.\n"
-                "💡 Hint: use `chunker.batch_chunk([file.ext])` for this file type."
+                "💡 Hint: use `chunker.chunk_files([file.ext])` for this file type."
             )
 
-        self.log_info("Starting chunk processing for path: {}.", path)
+        log_info(self.verbose, "Starting chunk processing for path: {}.", path)
 
         text_content = text_content_or_generator
 
-        # Process as a single block of text
         chunk_boxes = self.plain_text_chunker.chunk(
             text=text_content,
             lang=lang,
@@ -404,17 +493,19 @@ class DocumentChunker(BaseChunker):
             overlap_percent=overlap_percent,
             offset=offset,
             token_counter=token_counter or self.token_counter,
-            base_metadata=document_metadata,
         )
 
-        self.log_info("Generated {} chunks for {}.", len(chunk_boxes), path)
+        for chunk in chunk_boxes:
+            chunk.metadata.update(document_metadata)
+
+        log_info(self.verbose, "Generated {} chunks for {}.", len(chunk_boxes), path)
 
         return chunk_boxes
 
     @validate_input
-    def batch_chunk(
+    def chunk_files(
         self,
-        paths: restricted_iterable(str | Path),
+        paths: "restricted_iterable(str | Path)",  # noqa: F722
         *,
         lang: str = "auto",
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
@@ -440,7 +531,9 @@ class DocumentChunker(BaseChunker):
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
             max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
+            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
+                Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
+                Must be >= 1.
             overlap_percent (int | float): Percentage of overlap between chunks (0-85).
             offset (int): Starting sentence offset for chunking. Defaults to 0.
             token_counter (callable | None): Optional token counting function.
@@ -468,7 +561,7 @@ class DocumentChunker(BaseChunker):
         gathered_data = self._gather_all_data(paths, on_errors)
 
         all_chunks_gen = self.plain_text_chunker.batch_chunk(
-            texts=gathered_data["all_texts_gen"],
+            texts=list(gathered_data["all_texts_gen"]),
             lang=lang,
             max_tokens=max_tokens,
             max_sentences=max_sentences,
@@ -516,3 +609,57 @@ class DocumentChunker(BaseChunker):
                 yield ch
 
             path_section_counts[curr_path] -= 1
+
+    @deprecated_callable(
+        use_instead="chunk_file", deprecated_in="2.2.0", removed_in="3.0.0"
+    )
+    def chunk(
+        self,
+        path: str | Path,
+        *,
+        lang: str = "auto",
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_sentences: Annotated[int | None, Field(ge=1)] = None,
+        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
+        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
+        offset: Annotated[int, Field(ge=0)] = 0,
+        token_counter: Callable[[str], int] | None = None,
+    ) -> list[Box]:
+        """
+        Chunk a document file into semantic pieces.
+
+        Note:
+            Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_file` instead.
+        """
+        params = {k: v for k, v in locals().items() if k != "self"}
+        params["token_counter"] = params["token_counter"] or self.token_counter
+        return self.chunk_file(**params)
+
+    @deprecated_callable(
+        use_instead="chunk_files", deprecated_in="2.2.0", removed_in="3.0.0"
+    )
+    def batch_chunk(
+        self,
+        paths: "restricted_iterable(str | Path)",  # noqa: F722
+        *,
+        lang: str = "auto",
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_sentences: Annotated[int | None, Field(ge=1)] = None,
+        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
+        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
+        offset: Annotated[int, Field(ge=0)] = 0,
+        token_counter: Callable[[str], int] | None = None,
+        separator: Any = None,
+        n_jobs: Annotated[int, Field(ge=1)] | None = None,
+        show_progress: bool = True,
+        on_errors: Literal["raise", "skip", "break"] = "raise",
+    ) -> Generator[Box, None, None]:
+        """
+        Batch chunk multiple document files.
+
+        Note:
+            Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_files` instead.
+        """
+        params = {k: v for k, v in locals().items() if k != "self"}
+        params["token_counter"] = params["token_counter"] or self.token_counter
+        yield from self.chunk_files(**params)

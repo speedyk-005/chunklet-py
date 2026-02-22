@@ -1,12 +1,13 @@
 import re
-import pytest
 from collections import defaultdict
-from chunklet.document_chunker import DocumentChunker, CustomProcessorRegistry
-from chunklet import (
-    UnsupportedFileTypeError,
-    CallbackError,
-)
 
+import pytest
+
+from chunklet import (
+    CallbackError,
+    UnsupportedFileTypeError,
+)
+from chunklet.document_chunker import DocumentChunker, custom_processor_registry
 
 # --- Fixtures ---
 
@@ -19,8 +20,8 @@ def chunker():
 
 @pytest.fixture
 def registry():
-    """Provides a CustomSplitterRegistry instance"""
-    return CustomProcessorRegistry()
+    """Provides the global CustomProcessorRegistry instance"""
+    return custom_processor_registry
 
 
 # --- Core Tests ---
@@ -37,7 +38,7 @@ def registry():
 )
 def test_chunk_simple_files(chunker, path):
     """Test the main chunk method with various supported file types."""
-    chunks = chunker.chunk(path, max_sentences=5)
+    chunks = chunker.chunk_file(path, max_sentences=5)
     assert len(chunks) > 0
     assert "source" in chunks[0].metadata
 
@@ -50,7 +51,7 @@ def test_chunk_unsupported_file(chunker, tmp_path):
     with pytest.raises(
         UnsupportedFileTypeError, match=re.escape("File type '.xyz' is not supported.")
     ):
-        chunker.chunk(unsupported_file)
+        chunker.chunk_file(unsupported_file)
 
 
 def test_batch_chunk_with_different_file_type(chunker):
@@ -62,7 +63,7 @@ def test_batch_chunk_with_different_file_type(chunker):
         "samples/sample-pdf-a4-size.pdf",
         "samples/file-sample_100kB.odt",
     ]
-    all_document_chunks = list(chunker.batch_chunk(paths, max_sentences=5))
+    all_document_chunks = list(chunker.chunk_files(paths, max_sentences=5))
 
     # Check that we got some chunks
     assert len(all_document_chunks) > 0
@@ -89,10 +90,10 @@ def test_chunk_method_unsupported_iterable_processor(chunker):
             "File type '.pdf' is not supported by the general chunk method.\n"
             "Reason: The processor for this file returns iterable, "
             "so it must be processed in parallel for efficiency.\n"
-            "💡 Hint: use `chunker.batch_chunk([file.ext])` for this file type."
+            "💡 Hint: use `chunker.chunk_files([file.ext])` for this file type."
         ),
     ):
-        chunker.chunk("samples/sample-pdf-a4-size.pdf", max_sentences=5)
+        chunker.chunk_file("samples/sample-pdf-a4-size.pdf", max_sentences=5)
 
 
 # --- Custom Processor Tests ---
@@ -114,7 +115,7 @@ def test_chunk_method_with_custom_processor(tmp_path, mocker, chunker, registry)
         )
 
         # Chunk the dummy file
-        chunks = chunker.chunk(dummy_file, max_sentences=5)
+        chunks = chunker.chunk_file(dummy_file, max_sentences=5)
 
         # Assert that the custom processor's output was used
         expected_content_prefix = "Processed failed."
@@ -164,7 +165,7 @@ def test_custom_processor_validation_scenarios(
 
     try:
         with pytest.raises(CallbackError, match=re.escape(expected_match)):
-            chunker.chunk(dummy_file, max_sentences=5)
+            chunker.chunk_file(dummy_file, max_sentences=5)
     finally:
         # Unregister to not affect other tests
         registry.unregister(".txt")
@@ -186,18 +187,18 @@ def test_batch_chunk_custom_processor_error_handling(chunker, registry, tmp_path
         # Test on_errors="raise" - should re-raise
         with pytest.raises(CallbackError):
             list(
-                chunker.batch_chunk([file1, file2], max_sentences=5, on_errors="raise")
+                chunker.chunk_files([file1, file2], max_sentences=5, on_errors="raise")
             )
 
         # Test on_errors="skip" - should skip failed file, process .md file
         chunks = list(
-            chunker.batch_chunk([file1, file2], max_sentences=5, on_errors="skip")
+            chunker.chunk_files([file1, file2], max_sentences=5, on_errors="skip")
         )
         assert len(chunks) >= 1  # Should get chunks from successful .md file
 
         # Test on_errors="break" - should stop on first error (txt file)
         chunks = list(
-            chunker.batch_chunk([file1, file2], max_sentences=5, on_errors="break")
+            chunker.chunk_files([file1, file2], max_sentences=5, on_errors="break")
         )
         assert len(chunks) == 0  # Should get no chunks since txt fails first
 

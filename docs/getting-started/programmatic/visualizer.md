@@ -87,6 +87,7 @@ Open your browser to the URL shown in the terminal output. You'll find a clean i
 ??? question "What's the difference between Document and Code mode?"
 
     Choose your chunking strategy after upload:
+    
     - **Document Mode**: For general text, articles, and documents - focuses on sentences and sections
     - **Code Mode**: For source code - understands functions, classes, and code structure
 

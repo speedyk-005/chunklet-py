@@ -26,7 +26,7 @@ def html_to_md(
         raise ImportError(
             "The 'markdownify' library is not installed. "
             "Please install it with 'pip install markdownify' or install the document processing extras "
-            "with 'pip install 'chunklet-py[document]''"
+            "with 'pip install 'chunklet-py[structured-document]''"
         )
 
     if raw_text:

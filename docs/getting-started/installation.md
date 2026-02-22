@@ -5,8 +5,8 @@ Ready to get Chunklet-py up and running? Fantastic! This guide will walk you thr
 !!! info "Requirements"
     Chunklet-py requires **Python 3.10 or newer**. We recommend using Python 3.11+ for the best experience.
 
-!!! note "Package Name Change"
-    Chunklet-py was previously named `chunklet`. The old `chunklet` package is no longer maintained. When installing, make sure to use `chunklet-py` (with the hyphen) to get the latest version.
+!!! note "chunklet-py (aka chunklet)"
+    The old `chunklet` package is no longer maintained. Use `chunklet-py` to get the latest version.
     
 ## The Easy Way
 
@@ -24,11 +24,11 @@ And that's all there is to it! You're now ready to start using Chunklet-py.
 
 Chunklet-py offers optional dependencies to unlock additional functionalities, such as document processing or code chunking. You can install these extras using the following syntax:
 
-*   **Document Processing:** For handling `.pdf`, `.docx`, `.epub`, and other document formats:
+*   **Structured Documents:** For handling `.pdf`, `.docx`, `.epub`, and other document formats:
     ```bash
-    pip install "chunklet-py[document]"
+    pip install "chunklet-py[structured-document]"
     ```
-*   **Code Chunking:** For advanced code analysis and chunking features:
+*   **Code Chunking:** For Language-agnostic code chunking features:
     ```bash
     pip install "chunklet-py[code]"
     ```

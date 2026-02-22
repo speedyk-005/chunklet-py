@@ -1,13 +1,13 @@
-from typing import Any
 from collections.abc import Generator
+from typing import Any
 
 try:
     from ebooklib import epub
 except ImportError:
     epub = None
 
-from chunklet.document_chunker.processors.base_processor import BaseProcessor
 from chunklet.document_chunker.converters.html_2_md import html_to_md
+from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
 
 class EPUBProcessor(BaseProcessor):
@@ -48,7 +48,7 @@ class EPUBProcessor(BaseProcessor):
             raise ImportError(
                 "The 'ebooklib' library is not installed. "
                 "Please install it with 'pip install 'ebooklib>=0.19'' or install the document processing extras "
-                "with 'pip install 'chunklet-py[document]''"
+                "with 'pip install 'chunklet-py[structured-document]''"
             )
         self.file_path = file_path
         self.book = epub.read_epub(file_path)

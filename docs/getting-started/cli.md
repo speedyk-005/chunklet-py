@@ -1,20 +1,15 @@
-# Chunklet Command Line Interface (CLI): Your Chunking Powerhouse! 🚀
+# Chunklet CLI
 
-Meet `chunklet`, your versatile CLI companion for all things text processing! From precise sentence splitting and smart chunking of any content to interactive visualization in your browser - we've got the tools to make your LLM workflows flow effortlessly. Whether you're processing documents, code, or plain text, chunklet adapts to your needs with RAG-ready precision.
+Meet `chunklet`, your CLI companion for text processing! From sentence splitting to smart chunking to interactive visualization — it's all here.
 
 !!! info "`chunklet` vs `chunklet-py`"
     The CLI command is `chunklet` (kept for backward compatibility), while the Python package is named `chunklet-py` to avoid naming conflicts with other packages.
 
-Before we dive into the fun stuff, you can always check your `chunklet` version or get a quick help guide.:
+Quick help:
 
 ```bash
 chunklet --version
 chunklet --help
-```
-
-You can also get specific help for each command
-
-```bash
 chunklet split --help
 chunklet chunk --help
 chunklet visualize --help
@@ -72,11 +67,11 @@ The `chunk` command is where the real magic happens! It's your versatile tool fo
 | `--source, -s <PATH>` | Path(s) to one or more files or directories to read input from. Repeat for multiple sources (e.g., `-s file1.txt -s dir/`). | None |
 | `--destination, -d <PATH>` | Path to a file (writes JSON for `.json` extensions or existing files) or directory (writes separate files) to write the chunks. If a non-JSON file exists, a warning is shown and JSON is written. If not provided, output goes to STDOUT. | STDOUT |
 | `--max-tokens` | Maximum number of tokens per chunk. Applies to all chunking strategies. (Must be >= 12) | None |
-| `--max-sentences` | Maximum number of sentences per chunk. Applies to PlainTextChunker and DocumentChunker. (Must be >= 1) | None |
-| `--max-section-breaks` | Maximum number of section breaks per chunk. Applies to PlainTextChunker and DocumentChunker. (Must be >= 1) | None |
-| `--overlap-percent` | Percentage of overlap between chunks (0-85). Applies to PlainTextChunker and DocumentChunker. | 20.0 |
-| `--offset` | Starting sentence offset for chunking. Applies to PlainTextChunker and DocumentChunker. | 0 |
-| `--lang` | Language of the text (e.g., 'en', 'fr', 'auto'). (default: auto) | auto |
+| `--max-sentences` | Maximum number of sentences per chunk. Applies to DocumentChunker. (Must be >= 1) | None |
+| `--max-section-breaks` | Maximum number of section breaks per chunk. Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags. Applies to DocumentChunker. (Must be >= 1) | None |
+| `--overlap-percent` | Percentage of overlap between chunks (0-85). Applies to DocumentChunker. | 20.0 |
+| `--offset` | Starting sentence offset for chunking. Applies to DocumentChunker. | 0 |
+| `--lang` | Language of the text (e.g., 'en', 'fr', 'auto'). | auto |
 | `--metadata` | Include rich metadata (source, span, chunk num, etc.) in the output. If `--destination` is a directory, metadata is saved as separate `.json` files; otherwise, it's included inline in the output. | False |
 | `--verbose, -v` | Enable verbose logging for extra insights. | False |
 
@@ -86,8 +81,8 @@ The `chunk` command is where the real magic happens! It's your versatile tool fo
 
 This is your bread-and-butter chunking for everyday text and diverse document types.
 
-*   **Default Behavior:** If neither `--doc` nor `--code` is specified, `chunklet` uses the [PlainTextChunker](programmatic/plain_text_chunker.md) for direct text input. The `PlainTextChunker` is designed to transform unruly text into perfectly sized, context-aware chunks.
-*   **Document Power-Up:** Activate the [DocumentChunker](programmatic/document_chunker.md) with the `--doc` flag to process `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, and `.rtf` files! It intelligently extracts text and then applies the same robust chunking logic.
+*   **Default Behavior:** If neither `--doc` nor `--code` is specified, `chunklet` uses the [DocumentChunker](programmatic/document_chunker.md) for direct text input. The `DocumentChunker` is designed to transform unruly text into perfectly sized, context-aware chunks.
+*   **Document Power-Up:** Activate the [DocumentChunker](programmatic/document_chunker.md) with the `--doc` flag to process `.pdf`, `.docx`, `.odt`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.csv`, '.xlsx' and `.rtf` files! It intelligently extracts text and then applies the same robust chunking logic.
 
 #### Key Flags for Document Power-Up
 
@@ -221,6 +216,7 @@ These flags are your secret weapons for scaling up operations, integrating with 
 | Flag | Description | Default |
 |---|---|---|
 | `--tokenizer-command` | A shell command string for token counting. It must take text via STDIN and output the integer count via STDOUT. | None |
+| `--tokenizer-timeout, -t` | Timeout in seconds for the tokenizer command (default: no timeout). | None |
 | `--n-jobs` | Number of parallel processes to use during batch operations. (None uses all available CPU cores) | None |
 | `--on-errors` | Defines batch error handling: `raise` (stop), `skip` (ignore file, continue), or `break` (halt, return partial result). | raise |
 | `--metadata` | Include rich [metadata](metadata.md) (source, span, chunk num, etc.) in the output. If `--destination` is a directory, metadata is saved as separate `.json` files; otherwise, it's included inline in the output. | False |
@@ -269,41 +265,30 @@ chunklet chunk --doc \
 
 #### Scenario 4: Custom Token Counting with an External Script
 
-Align `chunklet`'s chunk sizes perfectly with your LLM's token limits using *any* external tokenizer you can imagine!
-
-Create your external script (e.g., `my_llm_tokenizer.py`):
-
-```py
-# my_llm_tokenizer.py
-import sys
-import tiktoken # Or your LLM's specific tokenizer library
-
-# Read text from stdin
-text = sys.stdin.read()
-
-# Replace with your actual token counting logic (e.g., for OpenAI's GPT models)
-encoding = tiktoken.encoding_for_model("gpt-4")
-token_count = len(encoding.encode(text))
-
-print(token_count) # Must print only the integer count
-```
-
-Now, run `chunklet` with your custom tokenizer:
+Align `chunklet`'s chunk sizes perfectly with your LLM's token limits using *any* external tokenizer you can imagine! Optionally set a timeout:
 
 ```bash
-chunklet chunk \
-  --text "This is a super important piece of text that needs precise token counting for my large language model."
+chunklet chunk --text "Your text here" \
   --max-tokens 50 \
-  --tokenizer-command "python ./my_llm_tokenizer.py" \
-  --metadata
+  --tokenizer-command "python ./my_tokenizer.py" \
+  --tokenizer-timeout 30
 ```
+
+!!! info "Optional flag"
+    Using `--text` is optional since when using `chunk` without `--doc` or `--code` flags, it defaults to text-based chunking.
+    
+    
+👉 See the [Custom Tokenizers](../how-to/custom-tokenizer.md) guide for how to create a tokenizer script in any language.
 
 ##### Scenario 5: Saving Chunks as JSON with Metadata
 
 Save processed chunks directly as a JSON file for easy parsing and integration:
 
 ```bash
-chunklet chunk --source document.pdf --doc --destination chunks.json --metadata
+chunklet chunk --doc \
+  --source document.pdf \
+  --destination chunks.json \
+  --metadata
 ```
 
 ---
@@ -324,6 +309,7 @@ Ready to see your chunking in action with a beautiful web interface? The `visual
     For code-based usage and detailed technical information, check out the [Text Chunk Visualizer documentation](programmatic/visualizer.md).
 
 This command starts a local web server that gives you:
+
 - **Live parameter tuning** - Adjust chunking settings and see results instantly
 - **Visual chunk exploration** - See exactly how your text gets divided
 - **Multiple chunking modes** - Try plain text, document, and code chunking all in one place
@@ -333,9 +319,10 @@ This command starts a local web server that gives you:
 
 | Flag | Description | Default |
 |---|---|---|
-| `--host` | Host IP to bind the server (use `0.0.0.0` for network access) | 127.0.0.1 |
+| `--host, -h` | Host IP to bind the server (use `0.0.0.0` for network access) | 127.0.0.1 |
 | `--port, -p` | Port number for the server | 8000 |
 | `--tokenizer-command` | Shell command for custom token counting | None |
+| `--tokenizer-timeout, -t` | Timeout in seconds for the tokenizer command (default: no timeout) | None |
 | `--headless` | Run without opening browser automatically | False |
 
 ### Getting Started with Visualization! 🖥
@@ -361,8 +348,12 @@ chunklet visualize --host 0.0.0.0 --port 8080
 Run in the background with your own token counting script:
 
 ```bash
-chunklet visualize --headless --tokenizer-command "python my_tokenizer.py"
+chunklet visualize --headless \
+  --tokenizer-command "python my_tokenizer.py" \
+  --tokenizer-timeout 30
 ```
+
+See the [Custom Tokenizers](../how-to/custom-tokenizer.md) guide for how to create a tokenizer script in any language.
 
 The visualizer will show you the URL to access it in your browser. Press `Ctrl+C` to stop the server when you're done!
 

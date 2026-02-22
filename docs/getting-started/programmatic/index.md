@@ -1,4 +1,4 @@
-Welcome to the programmatic interface! This is where you integrate Chunklet-py's intelligent text and code chunking capabilities directly into your Python applications. Whether you're building RAG pipelines, data processing workflows, or custom AI solutions, our flexible API has everything you need.
+Welcome to the programmatic interface! This is where you integrate Chunklet-py's chunking capabilities directly into your Python apps. Building RAG pipelines, data processing workflows, or custom AI solutions? We've got you covered.
 
 <div class="grid cards" markdown>
 
@@ -12,23 +12,13 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
     [:octicons-arrow-right-24: Learn More](sentence_splitter.md)
     
--   :material-text:{ .lg .middle } __Plain Text Chunker__
-
-    ---
-
-    Transforms plain text into perfectly sized, context-aware chunks with flexible constraint-based chunking and intelligent overlap for optimal LLM and embedding performance.
-
-    Perfect for RAG systems, document analysis, and any workflow that needs smart text segmentation with full control over chunk sizes.
-
-    [:octicons-arrow-right-24: Learn More](plain_text_chunker.md)
-
 -   :material-file-document-outline:{ .lg .middle } __Document Chunker__
 
     ---
 
-    Work with diverse document formats including `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`, transforming them into structured, chunked outputs.
+    Transforms plain text and diverse document formats (`.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`) into perfectly sized, context-aware chunks with flexible composable constraints and intelligent overlap for optimal LLM and embedding performance.
 
-    Handles the complexity of different file types so you can focus on building great applications without worrying about format compatibility.
+    Perfect for RAG systems, document analysis, and any workflow that needs smart text segmentation with full control over chunk sizes.
 
     [:octicons-arrow-right-24: Learn More](document_chunker.md)
 
@@ -54,4 +44,4 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
 </div>
 
-Ready to dive in? Click any card above to explore the chunker that matches your mission! Let's turn that text into perfectly chunked gold! ✨
+Pick a card below to get started! 📇

@@ -1,7 +1,9 @@
 import inspect
-from typing import Callable, Any
+from typing import Any, Callable
+
 from pydantic import TypeAdapter, ValidationError
-from chunklet.common.validation import validate_input, pretty_errors
+
+from chunklet.common.validation import pretty_errors, validate_input
 from chunklet.exceptions import CallbackError
 
 
@@ -35,6 +37,7 @@ class CustomSplitterRegistry:
         Register a splitter callback for one or more languages.
 
         This method can be used in two ways:
+
         1. As a decorator:
             @registry.register("en", "fr", name="my_splitter")
             def my_splitter(text):
@@ -176,3 +179,7 @@ class CustomSplitterRegistry:
             ) from None
 
         return result, name
+
+
+# Global registry instance
+custom_splitter_registry = CustomSplitterRegistry()
