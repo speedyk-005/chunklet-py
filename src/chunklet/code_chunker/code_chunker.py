@@ -105,179 +105,126 @@ class CodeChunker(BaseChunker):
         self._verbose = value
         self.extractor.verbose = value
 
-    def _merge_tree(self, relations_list: list[list]) -> str:
+    @validate_input
+    def chunk_text(
+        self,
+        code: str,
+        *,
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_lines: Annotated[int | None, Field(ge=5)] = None,
+        max_functions: Annotated[int | None, Field(ge=1)] = None,
+        token_counter: Callable[[str], int] | None = None,
+        include_comments: bool = True,
+        docstring_mode: Literal["summary", "all", "excluded"] = "all",
+        strict: bool = True,
+    ) -> list[Box]:
         """
-        Merges multiple sets of parent-child relation dictionaries into a single tree
-        then returns its string representation.
+        Extract semantic code chunks from source using multi-dimensional analysis.
+        Processes source code by identifying structural boundaries (functions, classes,
+        namespaces) and grouping content based on multiple constraints including
+        tokens, lines, and logical units while preserving semantic coherence.
 
         Args:
-            relations_list (list[list]): A list containing relation lists.
+            code (str | Path): Raw code string or file path to process.
+            max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
+            max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
+            max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
+            token_counter (Callable, optional): Token counting function. Uses instance
+                counter if None. Required for token-based chunking.
+            include_comments (bool): Include comments in output chunks. Default: True.
+            docstring_mode (Literal["summary", "all", "excluded"]): Docstring processing strategy:
+
+                - "summary": Include only first line of docstrings
+                - "all": Include complete docstrings
+                - "excluded": Remove all docstrings
+                Defaults to "all".
+            strict (bool): If True, raise error when structural blocks exceed
+                max_tokens. If False, split oversized blocks. Default: True.
 
         Returns:
-            str: The string representation of the tree
+            list[Box]: List of code chunks with metadata. Each Box contains:
+
+                - content (str): Code content
+                - tree (str): Namespace hierarchy
+                - start_line (int): Starting line in original source
+                - end_line (int): Ending line in original source
+                - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
+                - source_path (str): "N/A"
+
+        Raises:
+            InvalidInputError: Invalid configuration parameters.
+            MissingTokenCounterError: No token counter available.
+            TokenLimitError: Structural block exceeds max_tokens in strict mode.
+            CallbackError: If the token counter fails or returns an invalid type.
         """
-        if not relations_list:
-            return "global"
+        self._validate_constraints(max_tokens, max_lines, max_functions, token_counter)
 
-        # Flatten the set of lists into a single iterable
-        all_relations_flat = chain.from_iterable(relations_list)
+        if max_tokens is None:
+            max_tokens = sys.maxsize
+        if max_lines is None:
+            max_lines = sys.maxsize
+        if max_functions is None:
+            max_functions = sys.maxsize
 
-        # Deduplicate relations
-        def relation_key(relation: dict):
-            return tuple(sorted(relation.items()))
+        token_counter = token_counter or self.token_counter
 
-        unique_relations = list(unique_everseen(all_relations_flat, key=relation_key))
+        if not code.strip():
+            log_info(self.verbose, "Input code is empty. Returning empty list.")
+            return []
 
-        if not unique_relations:
-            return "global"
+        log_info(
+            self.verbose,
+            "Starting chunk processing for code starting with:\n```\n{}...\n```",
+            code[:100],
+        )
 
-        merged_tree = Node.from_relations(unique_relations, root="global")
+        snippet_dicts, cumulative_lengths = self.extractor.extract_code_structure(
+            code, include_comments, docstring_mode, is_python_code(code)
+        )
 
-        return merged_tree.to_string()
+        result_chunks = self._group_by_chunk(
+            snippet_dicts=snippet_dicts,
+            cumulative_lengths=cumulative_lengths,
+            token_counter=token_counter,
+            max_tokens=max_tokens,
+            max_lines=max_lines,
+            max_functions=max_functions,
+            strict=strict,
+            source=code,
+        )
 
-    def _split_oversized(
+        log_info(self.verbose, "Generated {} chunk(s) for the code", len(result_chunks))
+
+        return result_chunks
+
+    def _validate_constraints(
         self,
-        snippet_dict: dict,
-        max_tokens: int,
-        max_lines: int,
-        source: str | Path,
-        token_counter: Callable | None,
-        cumulative_lengths: tuple[int, ...],
+        max_tokens: int | None,
+        max_lines: int | None,
+        max_functions: int | None,
+        token_counter: Callable[[str], int] | None,
     ):
         """
-        Split an oversized structural block into smaller sub-chunks.
-
-        This helper is used when a single code block exceeds the maximum
-        token limit and `strict_mode` is disabled. It divides the block's
-        content into token-bounded fragments while preserving line order
-        and basic metadata.
+        Validates that at least one chunking constraint is provided and sets default values.
 
         Args:
-            snippet_dict (dict): The oversized snippet to split.
-            max_tokens (int): Maximum tokens per sub-chunk.
-            max_lines (int): Maximum lines per sub-chunk.
-            source (str | Path): The source of the code.
-            token_counter (Callable | None): The token counting function.
-            cumulative_lengths (tuple[int, ...]): The cumulative lengths of the lines in the source code.
+            max_tokens (int | None): Maximum number of tokens per chunk.
+            max_lines (int | None): Maximum number of lines per chunk.
+            max_functions (int | None): Maximum number of functions per chunk.
+            token_counter (Callable[[str], int] | None): Function that counts tokens in text.
 
-        Returns:
-            list[Box]: A list of sub-chunks derived from the original block.
+        Raises:
+            InvalidInputError: If no chunking constraints are provided.
+            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
         """
-        sub_boxes = []
-        curr_chunk = []
-        token_count = 0
-        line_count = 0
-
-        # Iterate through each line in the snippet_dict content
-        for line_no, line in enumerate(
-            snippet_dict["content"].splitlines(), start=snippet_dict["start_line"]
-        ):
-            line_tokens = (
-                count_tokens(line, token_counter) if max_tokens != sys.maxsize else 0
+        if not any((max_tokens, max_lines, max_functions)):
+            raise InvalidInputError(
+                "At least one of 'max_tokens', 'max_lines', or 'max_functions' must be provided."
             )
 
-            # If adding this line would exceed either max_tokens or max_lines, commit current chunk
-            if (token_count + line_tokens > max_tokens) or (line_count + 1 > max_lines):
-                start_line = line_no - len(curr_chunk)
-                end_line = line_no - 1
-                start_span = cumulative_lengths[start_line - 1]
-                end_span = cumulative_lengths[end_line]
-                tree = Node.from_relations(snippet_dict["relations"]).to_string()
-                sub_boxes.append(
-                    Box(
-                        {
-                            "content": "\n".join(curr_chunk),
-                            "metadata": {
-                                "tree": tree,
-                                "start_line": start_line,
-                                "end_line": end_line,
-                                "span": (start_span, end_span),
-                                "source": (
-                                    str(source)
-                                    if isinstance(source, Path)
-                                    or (
-                                        isinstance(source, str) and is_path_like(source)
-                                    )
-                                    else "N/A"
-                                ),
-                            },
-                        }
-                    )
-                )
-                curr_chunk = [line]  # Add the overflow line!
-                token_count = 0
-                line_count = 0
-
-            curr_chunk.append(line)
-            token_count += line_tokens
-            line_count += 1
-
-        # Add any remaining chunk at the end
-        if curr_chunk:
-            start_line = snippet_dict["end_line"] - len(curr_chunk) + 1
-            end_line = snippet_dict["end_line"]
-            start_span = cumulative_lengths[start_line - 1]
-            end_span = cumulative_lengths[end_line]
-            tree = Node.from_relations(snippet_dict["relations"]).to_string()
-            sub_boxes.append(
-                Box(
-                    {
-                        "content": "\n".join(curr_chunk),
-                        "metadata": {
-                            "tree": tree,
-                            "start_line": start_line,
-                            "end_line": end_line,
-                            "span": (start_span, end_span),
-                            "source": (
-                                str(source)
-                                if (isinstance(source, Path) or is_path_like(source))
-                                else "N/A"
-                            ),
-                        },
-                    }
-                )
-            )
-
-        return sub_boxes
-
-    def _format_limit_msg(
-        self,
-        box_tokens: int,
-        max_tokens: int,
-        box_lines: int,
-        max_lines: int,
-        function_count: int,
-        max_functions: int,
-        content_preview: str,
-    ) -> str:
-        """
-        Format a limit exceeded error message, only including limits that are not sys.maxsize.
-
-        Args:
-            box_tokens: Actual token count in the block
-            max_tokens: Maximum allowed tokens
-            box_lines: Actual line count in the block
-            max_lines: Maximum allowed lines
-            function_count: Actual function count in the block
-            max_functions: Maximum allowed functions
-            content_preview: Preview of the content that exceeded limits
-
-        Returns:
-            Formatted error message with applicable limits
-        """
-        limits = []
-
-        if max_tokens != sys.maxsize:
-            limits.append(f"tokens: {box_tokens} > {max_tokens}")
-        if max_lines != sys.maxsize:
-            limits.append(f"lines: {box_lines} > {max_lines}")
-        if max_functions != sys.maxsize:
-            limits.append(f"functions: {function_count} > {max_functions}")
-
-        return (
-            f"Limits: {', '.join(limits)}\n"
-            f"Content starting with: \n```\n{content_preview}...\n```"
-        )
+        # If token_counter is required but not provided
+        if max_tokens is not None and not (token_counter or self.token_counter):
+            raise MissingTokenCounterError()
 
     def _group_by_chunk(
         self,
@@ -444,126 +391,179 @@ class CodeChunker(BaseChunker):
 
         return result_chunks
 
-    def _validate_constraints(
+    def _format_limit_msg(
         self,
-        max_tokens: int | None,
-        max_lines: int | None,
-        max_functions: int | None,
-        token_counter: Callable[[str], int] | None,
-    ):
+        box_tokens: int,
+        max_tokens: int,
+        box_lines: int,
+        max_lines: int,
+        function_count: int,
+        max_functions: int,
+        content_preview: str,
+    ) -> str:
         """
-        Validates that at least one chunking constraint is provided and sets default values.
+        Format a limit exceeded error message, only including limits that are not sys.maxsize.
 
         Args:
-            max_tokens (int | None): Maximum number of tokens per chunk.
-            max_lines (int | None): Maximum number of lines per chunk.
-            max_functions (int | None): Maximum number of functions per chunk.
-            token_counter (Callable[[str], int] | None): Function that counts tokens in text.
-
-        Raises:
-            InvalidInputError: If no chunking constraints are provided.
-            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
-        """
-        if not any((max_tokens, max_lines, max_functions)):
-            raise InvalidInputError(
-                "At least one of 'max_tokens', 'max_lines', or 'max_functions' must be provided."
-            )
-
-        # If token_counter is required but not provided
-        if max_tokens is not None and not (token_counter or self.token_counter):
-            raise MissingTokenCounterError()
-
-    @validate_input
-    def chunk_text(
-        self,
-        code: str,
-        *,
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_lines: Annotated[int | None, Field(ge=5)] = None,
-        max_functions: Annotated[int | None, Field(ge=1)] = None,
-        token_counter: Callable[[str], int] | None = None,
-        include_comments: bool = True,
-        docstring_mode: Literal["summary", "all", "excluded"] = "all",
-        strict: bool = True,
-    ) -> list[Box]:
-        """
-        Extract semantic code chunks from source using multi-dimensional analysis.
-        Processes source code by identifying structural boundaries (functions, classes,
-        namespaces) and grouping content based on multiple constraints including
-        tokens, lines, and logical units while preserving semantic coherence.
-
-        Args:
-            code (str | Path): Raw code string or file path to process.
-            max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
-            max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
-            max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
-            token_counter (Callable, optional): Token counting function. Uses instance
-                counter if None. Required for token-based chunking.
-            include_comments (bool): Include comments in output chunks. Default: True.
-            docstring_mode (Literal["summary", "all", "excluded"]): Docstring processing strategy:
-
-                - "summary": Include only first line of docstrings
-                - "all": Include complete docstrings
-                - "excluded": Remove all docstrings
-                Defaults to "all".
-            strict (bool): If True, raise error when structural blocks exceed
-                max_tokens. If False, split oversized blocks. Default: True.
+            box_tokens: Actual token count in the block
+            max_tokens: Maximum allowed tokens
+            box_lines: Actual line count in the block
+            max_lines: Maximum allowed lines
+            function_count: Actual function count in the block
+            max_functions: Maximum allowed functions
+            content_preview: Preview of the content that exceeded limits
 
         Returns:
-            list[Box]: List of code chunks with metadata. Each Box contains:
-
-                - content (str): Code content
-                - tree (str): Namespace hierarchy
-                - start_line (int): Starting line in original source
-                - end_line (int): Ending line in original source
-                - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): "N/A"
-
-        Raises:
-            InvalidInputError: Invalid configuration parameters.
-            MissingTokenCounterError: No token counter available.
-            TokenLimitError: Structural block exceeds max_tokens in strict mode.
-            CallbackError: If the token counter fails or returns an invalid type.
+            Formatted error message with applicable limits
         """
-        self._validate_constraints(max_tokens, max_lines, max_functions, token_counter)
+        limits = []
 
-        if max_tokens is None:
-            max_tokens = sys.maxsize
-        if max_lines is None:
-            max_lines = sys.maxsize
-        if max_functions is None:
-            max_functions = sys.maxsize
+        if max_tokens != sys.maxsize:
+            limits.append(f"tokens: {box_tokens} > {max_tokens}")
+        if max_lines != sys.maxsize:
+            limits.append(f"lines: {box_lines} > {max_lines}")
+        if max_functions != sys.maxsize:
+            limits.append(f"functions: {function_count} > {max_functions}")
 
-        token_counter = token_counter or self.token_counter
-
-        if not code.strip():
-            log_info(self.verbose, "Input code is empty. Returning empty list.")
-            return []
-
-        log_info(
-            self.verbose,
-            "Starting chunk processing for code starting with:\n```\n{}...\n```",
-            code[:100],
+        return (
+            f"Limits: {', '.join(limits)}\n"
+            f"Content starting with: \n```\n{content_preview}...\n```"
         )
 
-        snippet_dicts, cumulative_lengths = self.extractor.extract_code_structure(
-            code, include_comments, docstring_mode, is_python_code(code)
-        )
+    def _split_oversized(
+        self,
+        snippet_dict: dict,
+        max_tokens: int,
+        max_lines: int,
+        source: str | Path,
+        token_counter: Callable | None,
+        cumulative_lengths: tuple[int, ...],
+    ):
+        """
+        Split an oversized structural block into smaller sub-chunks.
 
-        result_chunks = self._group_by_chunk(
-            snippet_dicts=snippet_dicts,
-            cumulative_lengths=cumulative_lengths,
-            token_counter=token_counter,
-            max_tokens=max_tokens,
-            max_lines=max_lines,
-            max_functions=max_functions,
-            strict=strict,
-            source=code,
-        )
+        This helper is used when a single code block exceeds the maximum
+        token limit and `strict_mode` is disabled. It divides the block's
+        content into token-bounded fragments while preserving line order
+        and basic metadata.
 
-        log_info(self.verbose, "Generated {} chunk(s) for the code", len(result_chunks))
+        Args:
+            snippet_dict (dict): The oversized snippet to split.
+            max_tokens (int): Maximum tokens per sub-chunk.
+            max_lines (int): Maximum lines per sub-chunk.
+            source (str | Path): The source of the code.
+            token_counter (Callable | None): The token counting function.
+            cumulative_lengths (tuple[int, ...]): The cumulative lengths of the lines in the source code.
 
-        return result_chunks
+        Returns:
+            list[Box]: A list of sub-chunks derived from the original block.
+        """
+        sub_boxes = []
+        curr_chunk = []
+        token_count = 0
+        line_count = 0
+
+        # Iterate through each line in the snippet_dict content
+        for line_no, line in enumerate(
+            snippet_dict["content"].splitlines(), start=snippet_dict["start_line"]
+        ):
+            line_tokens = (
+                count_tokens(line, token_counter) if max_tokens != sys.maxsize else 0
+            )
+
+            # If adding this line would exceed either max_tokens or max_lines, commit current chunk
+            if (token_count + line_tokens > max_tokens) or (line_count + 1 > max_lines):
+                start_line = line_no - len(curr_chunk)
+                end_line = line_no - 1
+                start_span = cumulative_lengths[start_line - 1]
+                end_span = cumulative_lengths[end_line]
+                tree = Node.from_relations(snippet_dict["relations"]).to_string()
+                sub_boxes.append(
+                    Box(
+                        {
+                            "content": "\n".join(curr_chunk),
+                            "metadata": {
+                                "tree": tree,
+                                "start_line": start_line,
+                                "end_line": end_line,
+                                "span": (start_span, end_span),
+                                "source": (
+                                    str(source)
+                                    if isinstance(source, Path)
+                                    or (
+                                        isinstance(source, str) and is_path_like(source)
+                                    )
+                                    else "N/A"
+                                ),
+                            },
+                        }
+                    )
+                )
+                curr_chunk = [line]  # Add the overflow line!
+                token_count = 0
+                line_count = 0
+
+            curr_chunk.append(line)
+            token_count += line_tokens
+            line_count += 1
+
+        # Add any remaining chunk at the end
+        if curr_chunk:
+            start_line = snippet_dict["end_line"] - len(curr_chunk) + 1
+            end_line = snippet_dict["end_line"]
+            start_span = cumulative_lengths[start_line - 1]
+            end_span = cumulative_lengths[end_line]
+            tree = Node.from_relations(snippet_dict["relations"]).to_string()
+            sub_boxes.append(
+                Box(
+                    {
+                        "content": "\n".join(curr_chunk),
+                        "metadata": {
+                            "tree": tree,
+                            "start_line": start_line,
+                            "end_line": end_line,
+                            "span": (start_span, end_span),
+                            "source": (
+                                str(source)
+                                if (isinstance(source, Path) or is_path_like(source))
+                                else "N/A"
+                            ),
+                        },
+                    }
+                )
+            )
+
+        return sub_boxes
+
+    def _merge_tree(self, relations_list: list[list]) -> str:
+        """
+        Merges multiple sets of parent-child relation dictionaries into a single tree
+        then returns its string representation.
+
+        Args:
+            relations_list (list[list]): A list containing relation lists.
+
+        Returns:
+            str: The string representation of the tree
+        """
+        if not relations_list:
+            return "global"
+
+        # Flatten the set of lists into a single iterable
+        all_relations_flat = chain.from_iterable(relations_list)
+
+        # Deduplicate relations
+        def relation_key(relation: dict):
+            return tuple(sorted(relation.items()))
+
+        unique_relations = list(unique_everseen(all_relations_flat, key=relation_key))
+
+        if not unique_relations:
+            return "global"
+
+        merged_tree = Node.from_relations(unique_relations, root="global")
+
+        return merged_tree.to_string()
 
     @validate_input
     def chunk_file(

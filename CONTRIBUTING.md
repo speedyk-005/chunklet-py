@@ -70,14 +70,14 @@ Brief description of what this PR accomplishes.
 
 ### Method Ordering
 
-Order methods like this:
+Order methods following the "Step-down Rule":
 
 1. Class docstring
 2. Constants/attributes
 3. `__init__`
 4. Properties (`@property`)
-5. Private methods (`_method`)
-6. Public methods (`method`)
+5. Public methods
+6. Private methods (`_method`) - keep them near the public methods that use them.
 
 ```python
 class ExampleClass:
@@ -92,10 +92,10 @@ class ExampleClass:
     def some_property(self):
         return self._value
 
-    def _helper_method(self):
-        pass
-
     def public_method(self):
+        self._helper_method()
+
+    def _helper_method(self):
         pass
 ```
 

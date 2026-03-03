@@ -79,6 +79,69 @@ class PDFProcessor(BaseProcessor):
             line_margin=0.5,
         )
 
+    def extract_text(self) -> Generator[str, None, None]:
+        """Yield cleaned text from each PDF page.
+
+        Extracts text content page by page using pdfminer.high_level.extract_text
+        for efficient processing. Each page is processed individually to avoid
+        memory issues with large PDF files. The extracted text is cleaned using
+        the _cleanup_text method to remove artifacts and normalize formatting.
+
+        Yields:
+            str: Cleaned text content from each PDF page.
+        """
+        from pdfminer.high_level import extract_text
+        from pdfminer.pdfpage import PDFPage
+
+        with open(self.file_path, "rb") as fp:
+            page_count = ilen(PDFPage.get_pages(fp))
+
+            for page_num in range(page_count):
+                # Call extract_text on the file path, specifying the page number.
+                # This is efficient as it avoids repeated file seeks/parsing
+                # within the loop that was present in the old `extract_text_to_fp` approach.
+                raw_text = extract_text(
+                    self.file_path,
+                    page_numbers=[page_num],
+                    laparams=self.laparams,
+                )
+                yield self._cleanup_text(raw_text)
+
+    def extract_metadata(self) -> dict[str, Any]:
+        """Extracts metadata from the PDF document's information dictionary.
+
+        Includes source path, page count, and PDF info fields.
+
+        Returns:
+            dict[str, Any]: A dictionary containing metadata fields:
+                - title
+                - author
+                - creator
+                - producer
+                - publisher
+                - created
+                - modified
+        """
+        from pdfminer.pdfdocument import PDFDocument
+        from pdfminer.pdfpage import PDFPage
+        from pdfminer.pdfparser import PDFParser
+
+        metadata = {"source": str(self.file_path), "page_count": 0}
+        with open(self.file_path, "rb") as f:
+            # Initialize parser on the file stream
+            parser = PDFParser(f)
+
+            # PDFDocument reads file structure, consuming the file pointer
+            doc = PDFDocument(parser)
+
+            # Reset pointer to start of file stream for accurate page counting
+            f.seek(0)
+
+            metadata["page_count"] = ilen(PDFPage.get_pages(f))
+            metadata.update(self._extract_info_metadata(doc))
+
+        return metadata
+
     def _cleanup_text(self, text: str) -> str:
         """Clean and normalize extracted PDF text.
 
@@ -141,69 +204,6 @@ class PDFProcessor(BaseProcessor):
                 v = self._safe_decode(v)
                 if k.lower() in self.METADATA_FIELDS:
                     metadata[k.lower()] = v
-        return metadata
-
-    def extract_text(self) -> Generator[str, None, None]:
-        """Yield cleaned text from each PDF page.
-
-        Extracts text content page by page using pdfminer.high_level.extract_text
-        for efficient processing. Each page is processed individually to avoid
-        memory issues with large PDF files. The extracted text is cleaned using
-        the _cleanup_text method to remove artifacts and normalize formatting.
-
-        Yields:
-            str: Cleaned text content from each PDF page.
-        """
-        from pdfminer.high_level import extract_text
-        from pdfminer.pdfpage import PDFPage
-
-        with open(self.file_path, "rb") as fp:
-            page_count = ilen(PDFPage.get_pages(fp))
-
-            for page_num in range(page_count):
-                # Call extract_text on the file path, specifying the page number.
-                # This is efficient as it avoids repeated file seeks/parsing
-                # within the loop that was present in the old `extract_text_to_fp` approach.
-                raw_text = extract_text(
-                    self.file_path,
-                    page_numbers=[page_num],
-                    laparams=self.laparams,
-                )
-                yield self._cleanup_text(raw_text)
-
-    def extract_metadata(self) -> dict[str, Any]:
-        """Extracts metadata from the PDF document's information dictionary.
-
-        Includes source path, page count, and PDF info fields.
-
-        Returns:
-            dict[str, Any]: A dictionary containing metadata fields:
-                - title
-                - author
-                - creator
-                - producer
-                - publisher
-                - created
-                - modified
-        """
-        from pdfminer.pdfdocument import PDFDocument
-        from pdfminer.pdfpage import PDFPage
-        from pdfminer.pdfparser import PDFParser
-
-        metadata = {"source": str(self.file_path), "page_count": 0}
-        with open(self.file_path, "rb") as f:
-            # Initialize parser on the file stream
-            parser = PDFParser(f)
-
-            # PDFDocument reads file structure, consuming the file pointer
-            doc = PDFDocument(parser)
-
-            # Reset pointer to start of file stream for accurate page counting
-            f.seek(0)
-
-            metadata["page_count"] = ilen(PDFPage.get_pages(f))
-            metadata.update(self._extract_info_metadata(doc))
-
         return metadata
 
 

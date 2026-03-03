@@ -1,8 +1,4 @@
 import warnings
-
-# Suppress pkg_resources deprecation warnings from third-party libraries
-warnings.filterwarnings("ignore", message=".*pkg_resources.*", category=UserWarning)
-
 from pathlib import Path
 
 import regex as re
@@ -25,6 +21,9 @@ from chunklet.sentence_splitter.languages import (
     SENTSPLIT_UNIQUE_LANGUAGES,
 )
 from chunklet.sentence_splitter.registry import custom_splitter_registry
+
+# Suppress pkg_resources deprecation warnings from third-party libraries
+warnings.filterwarnings("ignore", message=".*pkg_resources.*", category=UserWarning)
 
 # Regex pattern to identify strings consisting solely of punctuation or symbols.
 PUNCTUATION_ONLY_PATTERN = re.compile(r"[\p{P}\p{S}]+")
@@ -121,53 +120,6 @@ class SentenceSplitter(BaseSplitter):
             MODEL_FILE, norm_probs=True
         )
 
-    def _filter_sentences(self, sentences: list[str]) -> list[str]:
-        """
-        Post-processes split sentences by filtering empty strings and rejoining stray punctuation.
-
-        Args:
-            sentences (list[str]): Raw list of split sentences.
-
-        Returns:
-            list[str]: Cleaned list of sentences with proper punctuation handling.
-        """
-        processed_sentences = []
-        for sent in sentences:
-            stripped_sent = sent.strip()
-            if stripped_sent:
-                # If sentence is made of stray punctuation only
-                if PUNCTUATION_ONLY_PATTERN.fullmatch(
-                    stripped_sent
-                ) and not THEMATIC_BREAK_PATTERN.match(stripped_sent):
-                    if processed_sentences:
-                        # Limits to the first 5 ones
-                        processed_sentences[-1] += stripped_sent[:5]
-                    else:
-                        processed_sentences.append(stripped_sent[:2])
-                else:
-                    processed_sentences.append(sent.rstrip())
-        return processed_sentences
-
-    @validate_input
-    def detected_top_language(self, text: str) -> tuple[str, float]:
-        """
-        Detects the top language of the given text using py3langid.
-
-        Args:
-            text (str): The input text to detect the language for.
-
-        Returns:
-            tuple[str, float]: A tuple containing the detected language code and its confidence.
-        """
-        lang_detected, confidence = self.identifier.classify(text)
-        log_info(
-            self.verbose,
-            "Language detection: '{}' with confidence {}.",
-            lang_detected,
-            f"{round(confidence) * 10}/10",
-        )
-        return lang_detected, confidence
-
     @validate_input
     def split_text(self, text: str, lang: str = "auto") -> list[str]:
         """
@@ -229,6 +181,26 @@ class SentenceSplitter(BaseSplitter):
 
         return processed_sentences
 
+    @validate_input
+    def detected_top_language(self, text: str) -> tuple[str, float]:
+        """
+        Detects the top language of the given text using py3langid.
+
+        Args:
+            text (str): The input text to detect the language for.
+
+        Returns:
+            tuple[str, float]: A tuple containing the detected language code and its confidence.
+        """
+        lang_detected, confidence = self.identifier.classify(text)
+        log_info(
+            self.verbose,
+            "Language detection: '{}' with confidence {}.",
+            lang_detected,
+            f"{round(confidence) * 10}/10",
+        )
+        return lang_detected, confidence
+
     def split_file(self, path: str | Path, lang: str = "auto") -> list[str]:
         """
         Read and split a file into sentences.
@@ -242,3 +214,30 @@ class SentenceSplitter(BaseSplitter):
         """
         content = read_text_file(path)
         return self.split_text(content, lang)
+
+    def _filter_sentences(self, sentences: list[str]) -> list[str]:
+        """
+        Post-processes split sentences by filtering empty strings and rejoining stray punctuation.
+
+        Args:
+            sentences (list[str]): Raw list of split sentences.
+
+        Returns:
+            list[str]: Cleaned list of sentences with proper punctuation handling.
+        """
+        processed_sentences = []
+        for sent in sentences:
+            stripped_sent = sent.strip()
+            if stripped_sent:
+                # If sentence is made of stray punctuation only
+                if PUNCTUATION_ONLY_PATTERN.fullmatch(
+                    stripped_sent
+                ) and not THEMATIC_BREAK_PATTERN.match(stripped_sent):
+                    if processed_sentences:
+                        # Limits to the first 5 ones
+                        processed_sentences[-1] += stripped_sent[:5]
+                    else:
+                        processed_sentences.append(stripped_sent[:2])
+                else:
+                    processed_sentences.append(sent.rstrip())
+        return processed_sentences

@@ -90,6 +90,35 @@ class Visualizer:
         self.app.get("/")(self._get_index)
         self.app.post("/api/chunk")(self._chunk_file)
 
+    @property
+    def token_counter(self):
+        """Get the current token counter function."""
+        return self._token_counter
+
+    @token_counter.setter
+    @validate_input
+    def token_counter(self, value):
+        """Set the token counter and update both chunkers."""
+        self._token_counter = value
+        self.document_chunker.token_counter = value
+        self.code_chunker.token_counter = value
+
+    def serve(self):
+        """Starts the FastAPI server and prints the server URL."""
+        if uvicorn is None:
+            raise ImportError(
+                "The 'uvicorn' library is not installed. "
+                "Please install it with 'pip install uvicorn>=0.34.0' or install the visualization extras "
+                "with 'pip install 'chunklet-py[visualization]''"
+            )
+
+        print(" =" * 20)
+        print("\nTEXT CHUNK VISUALIZER")
+        print("= " * 20)
+        print(f"URL: http://{self.host}:{self.port}")
+
+        uvicorn.run(self.app, host=self.host, port=self.port)
+
     # Instance endpoint methods
     def _get_token_counter_status(self):
         return {"token_counter_available": self.token_counter is not None}
@@ -179,35 +208,6 @@ class Visualizer:
                 500,
                 f"Chunking failed. Please check the server terminal for specific error details. ({str(e)})",
             ) from None
-
-    @property
-    def token_counter(self):
-        """Get the current token counter function."""
-        return self._token_counter
-
-    @token_counter.setter
-    @validate_input
-    def token_counter(self, value):
-        """Set the token counter and update both chunkers."""
-        self._token_counter = value
-        self.document_chunker.token_counter = value
-        self.code_chunker.token_counter = value
-
-    def serve(self):
-        """Starts the FastAPI server and prints the server URL."""
-        if uvicorn is None:
-            raise ImportError(
-                "The 'uvicorn' library is not installed. "
-                "Please install it with 'pip install uvicorn>=0.34.0' or install the visualization extras "
-                "with 'pip install 'chunklet-py[visualization]''"
-            )
-
-        print(" =" * 20)
-        print("\nTEXT CHUNK VISUALIZER")
-        print("= " * 20)
-        print(f"URL: http://{self.host}:{self.port}")
-
-        uvicorn.run(self.app, host=self.host, port=self.port)
 
 
 if __name__ == "__main__":  # pragma: no cover
