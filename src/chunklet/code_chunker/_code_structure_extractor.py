@@ -259,7 +259,7 @@ class CodeStructureExtractor:
         """
         Extracts a summary from line-prefixed documentation comments.
 
-        Attempts to parse <summary> XML tags; falls back to the first meaningful ine if parsing fails.
+        Attempts to parse <summary> XML tags; falls back to the first meaningful line if parsing fails.
 
         Args:
             match (re.Match): Regex match object for line-based docstring.
