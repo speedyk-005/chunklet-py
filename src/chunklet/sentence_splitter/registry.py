@@ -75,6 +75,45 @@ class CustomSplitterRegistry:
             return decorator
 
     @validate_input
+    def _register_logic(
+        self,
+        langs: tuple[str, ...],
+        callback: Callable[[str], list[str]],
+        name: str | None = None,
+    ):
+        """Helper to perform the actual registration and validation."""
+        sig = inspect.signature(callback)
+        params = list(sig.parameters.values())
+
+        # Exclude 'self' if it's a method
+        if params and params[0].name == "self":
+            params = params[1:]
+
+        # Filter for required parameters (those without a default value)
+        required_params = [p for p in params if p.default is inspect.Parameter.empty]
+
+        if len(required_params) != 1:
+            param_list = ", ".join(p.name for p in params)
+            raise TypeError(
+                f"'{callback.__name__}' has signature ({param_list}).\n"
+                "Expected exactly one required parameter to accept the text.\n"
+                "💡Hint: Optional parameters with default values are allowed."
+            )
+
+        if name is None:
+            if hasattr(callback, "__name__") and callback.__name__ != "<lambda>":
+                splitter_name = callback.__name__
+            else:
+                raise ValueError(
+                    "A name must be provided for the splitter, or the callback must be a named function (not a lambda)."
+                )
+        else:
+            splitter_name = name
+
+        for lang in langs:
+            self._splitters[lang] = (splitter_name, callback)
+
+    @validate_input
     def unregister(self, *langs: str) -> None:
         """
         Remove splitter(s) from the registry.
@@ -140,45 +179,6 @@ class CustomSplitterRegistry:
             ) from None
 
         return result, name
-
-    @validate_input
-    def _register_logic(
-        self,
-        langs: tuple[str, ...],
-        callback: Callable[[str], list[str]],
-        name: str | None = None,
-    ):
-        """Helper to perform the actual registration and validation."""
-        sig = inspect.signature(callback)
-        params = list(sig.parameters.values())
-
-        # Exclude 'self' if it's a method
-        if params and params[0].name == "self":
-            params = params[1:]
-
-        # Filter for required parameters (those without a default value)
-        required_params = [p for p in params if p.default is inspect.Parameter.empty]
-
-        if len(required_params) != 1:
-            param_list = ", ".join(p.name for p in params)
-            raise TypeError(
-                f"'{callback.__name__}' has signature ({param_list}).\n"
-                "Expected exactly one required parameter to accept the text.\n"
-                "💡Hint: Optional parameters with default values are allowed."
-            )
-
-        if name is None:
-            if hasattr(callback, "__name__") and callback.__name__ != "<lambda>":
-                splitter_name = callback.__name__
-            else:
-                raise ValueError(
-                    "A name must be provided for the splitter, or the callback must be a named function (not a lambda)."
-                )
-        else:
-            splitter_name = name
-
-        for lang in langs:
-            self._splitters[lang] = (splitter_name, callback)
 
 
 # Global registry instance

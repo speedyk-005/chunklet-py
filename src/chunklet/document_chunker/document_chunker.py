@@ -426,108 +426,6 @@ class DocumentChunker(BaseChunker):
 
             path_section_counts[curr_path] -= 1
 
-    def _validate_and_get_extension(self, path: Path) -> str:
-        """
-        Validates the file path and returns its lowercased extension.
-
-        This method ensures the path exists and the file type is supported.
-
-        Args:
-            path (Path): The Path object of the document file.
-
-        Returns:
-            str: The lowercased file extension.
-
-        Raises:
-            FileNotFoundError: If provided file path not found.
-            UnsupportedFileTypeError: If the file extension is not supported or is missing.
-        """
-        extension = path.suffix.lower()
-
-        if not extension:
-            raise UnsupportedFileTypeError(
-                f"Invalid path '{path}' provided. Path must have a recognizable extension."
-            )
-
-        if not path.is_file():
-            raise FileNotFoundError(
-                f"The file '{path}' can't be found.\n"
-                "💡 Hint: Check the path for typos, ensure the file exists, and verify it's not a directory."
-            )
-
-        if extension not in self.supported_extensions:
-            raise UnsupportedFileTypeError(
-                f"File type '{extension}' is not supported.\nSupported extensions are: "
-                f"{self.supported_extensions}\n"
-                "💡 Hint: You can add support for other file types by registring a custom processor."
-            )
-
-        return extension
-
-    def _read(self, path: str | Path, ext: str) -> str:
-        """
-        Read text content from a file using charset detection, handling special formats like RTF.
-
-        Args:
-            path (str | Path): Path to the file
-            ext (str): File extension
-
-        Returns:
-            str: The text content of the file
-        """
-        content = read_text_file(path)
-
-        if ext == ".rtf":
-            if rtf_to_text is None:
-                raise ImportError(
-                    "The 'striprtf' library is not installed. "
-                    "Please install it with 'pip install 'striprtf>=0.0.29'' or install the document processing extras "
-                    "with 'pip install chunklet-py[structured-document]'"
-                )
-            return rtf_to_text(content)
-        else:  # For .txt, .md, and others handled by simple read
-            return content
-
-    def _extract_data(
-        self, path: str | Path, ext: str
-    ) -> tuple[str | Generator[str, None, None], dict[str, Any]]:
-        """
-        Extracts data and metadata from a document.
-
-        Args:
-            path (str | Path): The path to the document file.
-            ext (str): The file extension.
-
-        Returns:
-            tuple[str | Generator[str, None, None], dict[str, Any]]: A tuple containing
-            either a string (for simple text files) or a generator of strings (for processed documents)
-            and a dictionary of metadata.
-        """
-        log_info(self.verbose, "Extracting text from file {}", path)
-
-        # Prioritize custom processors from registry
-        if custom_processor_registry.is_registered(ext):
-            texts_and_metadata, processor_name = custom_processor_registry.extract_data(
-                str(path), ext
-            )
-            log_info(self.verbose, "Used registered processor: {}", processor_name)
-            text_or_gen, metadata = texts_and_metadata
-            metadata["source"] = metadata.get("source", str(path))
-            return text_or_gen, metadata
-
-        elif ext in self.processors:
-            processor_class = self.processors[ext]
-            processor = processor_class(path)
-            return processor.extract_text(), processor.extract_metadata()
-
-        elif ext in self.converters:
-            text_content = self.converters[ext](path)
-
-        else:
-            text_content = self._read(path, ext)
-
-        return text_content, {"source": str(path)}
-
     def _gather_all_data(self, paths: Iterable[str | Path], on_errors: str) -> dict:
         """
         Gathers and prepares data from paths for batch processing.
@@ -608,6 +506,108 @@ class DocumentChunker(BaseChunker):
             "all_texts_gen": all_texts_gen,
             "all_metadata": all_metadata,
         }
+
+    def _extract_data(
+        self, path: str | Path, ext: str
+    ) -> tuple[str | Generator[str, None, None], dict[str, Any]]:
+        """
+        Extracts data and metadata from a document.
+
+        Args:
+            path (str | Path): The path to the document file.
+            ext (str): The file extension.
+
+        Returns:
+            tuple[str | Generator[str, None, None], dict[str, Any]]: A tuple containing
+            either a string (for simple text files) or a generator of strings (for processed documents)
+            and a dictionary of metadata.
+        """
+        log_info(self.verbose, "Extracting text from file {}", path)
+
+        # Prioritize custom processors from registry
+        if custom_processor_registry.is_registered(ext):
+            texts_and_metadata, processor_name = custom_processor_registry.extract_data(
+                str(path), ext
+            )
+            log_info(self.verbose, "Used registered processor: {}", processor_name)
+            text_or_gen, metadata = texts_and_metadata
+            metadata["source"] = metadata.get("source", str(path))
+            return text_or_gen, metadata
+
+        elif ext in self.processors:
+            processor_class = self.processors[ext]
+            processor = processor_class(path)
+            return processor.extract_text(), processor.extract_metadata()
+
+        elif ext in self.converters:
+            text_content = self.converters[ext](path)
+
+        else:
+            text_content = self._read(path, ext)
+
+        return text_content, {"source": str(path)}
+
+    def _read(self, path: str | Path, ext: str) -> str:
+        """
+        Read text content from a file using charset detection, handling special formats like RTF.
+
+        Args:
+            path (str | Path): Path to the file
+            ext (str): File extension
+
+        Returns:
+            str: The text content of the file
+        """
+        content = read_text_file(path)
+
+        if ext == ".rtf":
+            if rtf_to_text is None:
+                raise ImportError(
+                    "The 'striprtf' library is not installed. "
+                    "Please install it with 'pip install 'striprtf>=0.0.29'' or install the document processing extras "
+                    "with 'pip install chunklet-py[structured-document]'"
+                )
+            return rtf_to_text(content)
+        else:  # For .txt, .md, and others handled by simple read
+            return content
+
+    def _validate_and_get_extension(self, path: Path) -> str:
+        """
+        Validates the file path and returns its lowercased extension.
+
+        This method ensures the path exists and the file type is supported.
+
+        Args:
+            path (Path): The Path object of the document file.
+
+        Returns:
+            str: The lowercased file extension.
+
+        Raises:
+            FileNotFoundError: If provided file path not found.
+            UnsupportedFileTypeError: If the file extension is not supported or is missing.
+        """
+        extension = path.suffix.lower()
+
+        if not extension:
+            raise UnsupportedFileTypeError(
+                f"Invalid path '{path}' provided. Path must have a recognizable extension."
+            )
+
+        if not path.is_file():
+            raise FileNotFoundError(
+                f"The file '{path}' can't be found.\n"
+                "💡 Hint: Check the path for typos, ensure the file exists, and verify it's not a directory."
+            )
+
+        if extension not in self.supported_extensions:
+            raise UnsupportedFileTypeError(
+                f"File type '{extension}' is not supported.\nSupported extensions are: "
+                f"{self.supported_extensions}\n"
+                "💡 Hint: You can add support for other file types by registring a custom processor."
+            )
+
+        return extension
 
     @deprecated_callable(
         use_instead="chunk_file", deprecated_in="2.2.0", removed_in="3.0.0"

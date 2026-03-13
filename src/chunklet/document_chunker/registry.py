@@ -80,6 +80,49 @@ class CustomProcessorRegistry:
             return decorator
 
     @validate_input
+    def _register_logic(
+        self,
+        exts: tuple[str, ...],
+        callback: Callable[[str], ReturnType],
+        name: str | None = None,
+    ):
+        """Helper to perform the actual registration and validation."""
+        sig = inspect.signature(callback)
+        params = list(sig.parameters.values())
+
+        # Exclude 'self' if it's a method
+        if params and params[0].name == "self":
+            params = params[1:]
+
+        # Filter for required parameters (those without a default value)
+        required_params = [p for p in params if p.default is inspect.Parameter.empty]
+
+        if len(required_params) != 1:
+            param_list = ", ".join(p.name for p in params)
+            raise TypeError(
+                f"'{callback.__name__}' has signature ({param_list}).\n"
+                "Expected exactly one required parameter to accept the file path.\n"
+                "💡Hint: Optional parameters with default values are allowed."
+            )
+
+        if name is None:
+            if hasattr(callback, "__name__") and callback.__name__ != "<lambda>":
+                processor_name = callback.__name__
+            else:
+                raise ValueError(
+                    "A name must be provided for the processor, or the callback must be a named function (not a lambda)."
+                )
+        else:
+            processor_name = name
+
+        for ext in exts:
+            if not isinstance(ext, str) or not ext.startswith("."):
+                raise InvalidInputError(
+                    f"Invalid file extension '{ext}'. Must be a string starting with '.'"
+                )
+            self._processors[ext] = (processor_name, callback)
+
+    @validate_input
     def unregister(self, *exts: str) -> None:
         """
         Remove document processor(s) from the registry.
@@ -152,49 +195,6 @@ class CustomProcessorRegistry:
             ) from None
 
         return result, name
-
-    @validate_input
-    def _register_logic(
-        self,
-        exts: tuple[str, ...],
-        callback: Callable[[str], ReturnType],
-        name: str | None = None,
-    ):
-        """Helper to perform the actual registration and validation."""
-        sig = inspect.signature(callback)
-        params = list(sig.parameters.values())
-
-        # Exclude 'self' if it's a method
-        if params and params[0].name == "self":
-            params = params[1:]
-
-        # Filter for required parameters (those without a default value)
-        required_params = [p for p in params if p.default is inspect.Parameter.empty]
-
-        if len(required_params) != 1:
-            param_list = ", ".join(p.name for p in params)
-            raise TypeError(
-                f"'{callback.__name__}' has signature ({param_list}).\n"
-                "Expected exactly one required parameter to accept the file path.\n"
-                "💡Hint: Optional parameters with default values are allowed."
-            )
-
-        if name is None:
-            if hasattr(callback, "__name__") and callback.__name__ != "<lambda>":
-                processor_name = callback.__name__
-            else:
-                raise ValueError(
-                    "A name must be provided for the processor, or the callback must be a named function (not a lambda)."
-                )
-        else:
-            processor_name = name
-
-        for ext in exts:
-            if not isinstance(ext, str) or not ext.startswith("."):
-                raise InvalidInputError(
-                    f"Invalid file extension '{ext}'. Must be a string starting with '.'"
-                )
-            self._processors[ext] = (processor_name, callback)
 
 
 # Global registry instance

@@ -224,6 +224,30 @@ class CodeStructureExtractor:
 
         return code, cumulative_lengths
 
+    def _replace_with_newlines(self, match: re.Match) -> str:
+        """Replaces the matched content with an equivalent number of newlines."""
+        matched_text = match.group(0)
+
+        # To preserve the line count when replacing a multi-line block,
+        # we need to replace N lines of content with N-1 newline characters.
+        # This is because N-1 newlines create N empty lines in the context of the surrounding text.
+        num_newlines = max(0, len(matched_text.splitlines()) - 1)
+
+        return "\n" * num_newlines
+
+    def _annotate_block(self, tag: str, match: re.Match) -> str:
+        """Prefix each line in a matched block with a tag for tracking.
+
+        Args:
+            tag (str): Tag identifier for the block type.
+            match (re.Match): Regex match object for the block.
+
+        Returns:
+            str: Annotated block with tag prefixes.
+        """
+        lines = match.group(0).splitlines()
+        return "\n".join(f"(-- {tag} -->) {line}" for line in lines)
+
     def _summarize_docstring_style_one(self, match: re.Match) -> str:
         """
         Extracts the first line from a block-style documentation string.
@@ -361,10 +385,10 @@ class CodeStructureExtractor:
         It automatically flushs the buffer.
 
         Args:
-            curr_struct (list[tuple]): Accumulated code lines and metadata,
+            curr_struct (list[CodeLine]): Accumulated code lines and metadata,
                 where each element is a tuple containing:
                 (line_number, line_content, indent_level, func_partial_signature).
-            snippet_boxes (list[Box]): The list to which the newly created Box will be appended.
+            snippet_dicts (list[dict]): The list to which the newly created snippet will be appended.
             buffer (dict[str, list]): Buffer for intermediate processing (default: empty list).
         """
         if not (curr_struct or buffer):
@@ -522,27 +546,3 @@ class CodeStructureExtractor:
             snippet_dict["content"] = re.sub(r"\n{3,}", "\n\n", snippet_dict["content"])
 
         return snippet_dicts
-
-    def _replace_with_newlines(self, match: re.Match) -> str:
-        """Replaces the matched content with an equivalent number of newlines."""
-        matched_text = match.group(0)
-
-        # To preserve the line count when replacing a multi-line block,
-        # we need to replace N lines of content with N-1 newline characters.
-        # This is because N-1 newlines create N empty lines in the context of the surrounding text.
-        num_newlines = max(0, len(matched_text.splitlines()) - 1)
-
-        return "\n" * num_newlines
-
-    def _annotate_block(self, tag: str, match: re.Match) -> str:
-        """Prefix each line in a matched block with a tag for tracking.
-
-        Args:
-            tag (str): Tag identifier for the block type.
-            match (re.Match): Regex match object for the block.
-
-        Returns:
-            str: Annotated block with tag prefixes.
-        """
-        lines = match.group(0).splitlines()
-        return "\n".join(f"(-- {tag} -->) {line}" for line in lines)

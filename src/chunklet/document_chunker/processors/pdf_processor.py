@@ -107,6 +107,30 @@ class PDFProcessor(BaseProcessor):
                 )
                 yield self._cleanup_text(raw_text)
 
+    def _cleanup_text(self, text: str) -> str:
+        """Clean and normalize extracted PDF text.
+
+        Performs:
+            - Collapse multiple newlines
+            - Remove lines containing only numbers (page numbers)
+            - Split concatenated words with punctuation and numbers
+            - Collapse multiple spaces
+            - Remove zero-width / non-breaking characters
+
+        Args:
+            text (str): Raw text extracted from PDF page.
+
+        Returns:
+            str: Cleaned and normalized text.
+        """
+        if not text:
+            return ""
+        text = MULTIPLE_NEWLINE_PATTERN.sub("\n", text)
+        text = HEADING_OR_LIST_PATTERN.sub(r"\1 ", text)
+        text = STANDALONE_NUMBER_PATTERN.sub("", text)
+        text = PAGE_PATTERN.sub("", text)
+        return text
+
     def extract_metadata(self) -> dict[str, Any]:
         """Extracts metadata from the PDF document's information dictionary.
 
@@ -142,44 +166,6 @@ class PDFProcessor(BaseProcessor):
 
         return metadata
 
-    def _cleanup_text(self, text: str) -> str:
-        """Clean and normalize extracted PDF text.
-
-        Performs:
-            - Collapse multiple newlines
-            - Remove lines containing only numbers (page numbers)
-            - Split concatenated words with punctuation and numbers
-            - Collapse multiple spaces
-            - Remove zero-width / non-breaking characters
-
-        Args:
-            text (str): Raw text extracted from PDF page.
-
-        Returns:
-            str: Cleaned and normalized text.
-        """
-        if not text:
-            return ""
-        text = MULTIPLE_NEWLINE_PATTERN.sub("\n", text)
-        text = HEADING_OR_LIST_PATTERN.sub(r"\1 ", text)
-        text = STANDALONE_NUMBER_PATTERN.sub("", text)
-        text = PAGE_PATTERN.sub("", text)
-        return text
-
-    def _safe_decode(self, value: str | bytes):
-        """Utility to decode bytes to str, ignoring errors, otherwise return as-is.
-
-        Args:
-            value (str | bytes): The input value, which may be a string or a byte sequence.
-
-        Returns:
-            str: The decoded string if the input was bytes, or the original string
-                 if the input was already a string.
-        """
-        if isinstance(value, bytes):
-            return value.decode("utf-8", "ignore")
-        return value
-
     def _extract_info_metadata(self, doc: Any) -> dict:
         """Extract metadata from PDF document info dictionary.
 
@@ -205,6 +191,20 @@ class PDFProcessor(BaseProcessor):
                 if k.lower() in self.METADATA_FIELDS:
                     metadata[k.lower()] = v
         return metadata
+
+    def _safe_decode(self, value: str | bytes):
+        """Utility to decode bytes to str, ignoring errors, otherwise return as-is.
+
+        Args:
+            value (str | bytes): The input value, which may be a string or a byte sequence.
+
+        Returns:
+            str: The decoded string if the input was bytes, or the original string
+                 if the input was already a string.
+        """
+        if isinstance(value, bytes):
+            return value.decode("utf-8", "ignore")
+        return value
 
 
 # --- Example usage ---
