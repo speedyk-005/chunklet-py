@@ -7,6 +7,10 @@
 <p align="center">
   “One library to split them all: Sentence, Code, Docs”
 </p>
+> [!WARNING]
+> **Quick heads up!** Version 2 has some breaking changes. No worries though - check our [Migration Guide](https://speedyk-005.github.io/chunklet-py/latest/migration/) for a smooth upgrade!
+
+Hey! Welcome. Let's make some text chunking magic happen.
 
 [![Python Version](https://img.shields.io/badge/Python-3.10%20--%203.14-blue)](https://www.python.org/downloads/)
 [![PyPI](https://img.shields.io/pypi/v/chunklet-py)](https://pypi.org/project/chunklet-py)
