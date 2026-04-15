@@ -13,12 +13,14 @@ from chunklet.common.batch_runner import run_in_batch
 from chunklet.common.logging_utils import log_info
 from chunklet.common.token_utils import count_tokens
 from chunklet.common.validation import restricted_iterable, validate_input
+from chunklet.document_chunker.span_finder import DeterministicSpanFinder
 from chunklet.exceptions import (
     CallbackError,
     InvalidInputError,
     MissingTokenCounterError,
 )
 from chunklet.sentence_splitter import BaseSplitter, SentenceSplitter
+
 
 # Regex to split sentences into individual clauses
 CLAUSE_END_PATTERN = re.compile(r"(?<=[;,’：—)&…])\s")
@@ -95,59 +97,11 @@ class PlainTextChunker:
         self._verbose = value
         self.sentence_splitter.verbose = value
 
-    def _find_span(self, text_portion: str, full_text: str) -> tuple[int, int]:
-        """
-        Find a multi-line substring inside a full text, ignoring separators
-        like whitespace, newlines, and punctuation between lines.
-
-        Args:
-            text_portion: The substring (can be multi-line) to search for.
-            full_text: The text to search within.
-
-        Returns:
-            A tuple (start, end) representing the span in full_text.
-            Returns (-1, -1) if not found.
-        """
-        # Remove continuation marker from the beginning of text_portion first
-        if text_portion.startswith(self.continuation_marker):
-            text_portion = text_portion[len(self.continuation_marker) :].lstrip()
-
-        # Fast path for exact match
-        if text_portion.strip() in full_text:
-            start = full_text.find(text_portion.strip())
-            return start, start + len(text_portion)
-
-        lines = [line.strip() for line in text_portion.splitlines() if line.strip()]
-        if not lines:
-            return -1, -1
-
-        budget = int(
-            max(0, min(len(text_portion) // 5, 60))  # 20 %
-        )
-
-        # Build flexible separator pattern that allows newlines, Unicode separators, and punctuation
-        sep = rf"""
-            [          # character class for allowed artifacts between lines
-                \n     # newline characters
-                \p{{Z}} # Unicode whitespace separators
-                \p{{P}} # punctuation characters
-            ]{{0,{budget}}}?  # bounded (0 to budget), lazy quantifier
-        """
-
-        # Join escaped lines with the separator
-        pattern = sep.join(re.escape(line) for line in lines)
-
-        m = re.search(pattern, full_text, re.M | re.VERBOSE)
-        if m:
-            return m.span()
-
-        return -1, -1
-
     def _create_chunk_boxes(
         self,
         chunks: Iterable[str],
         base_metadata: dict[str, Any],
-        text: str,
+        span_finder: DeterministicSpanFinder,
     ) -> list[Box]:
         """
         Helper to create a list of Box objects for chunks with embedded metadata and auto-assigned chunk numbers.
@@ -158,7 +112,7 @@ class PlainTextChunker:
             base_metadata (dict[str, Any]): A dictionary containing document-level metadata
                 (e.g., 'source' file path, 'page_count' for PDFs) to be embedded
                 into each chunk's metadata.
-            text (str): The full original text to find the span of the chunk within.
+            span_finder (DeterministicSpanFinder): The span finder instance for locating chunks.
 
         Returns:
             list[Box]: A list of `Box` objects. Each `Box` contains:
@@ -173,7 +127,9 @@ class PlainTextChunker:
             chunk_box.content = chunk_str.strip()
             chunk_box.metadata = copy.deepcopy(base_metadata)
             chunk_box.metadata["chunk_num"] = i
-            chunk_box.metadata["span"] = self._find_span(chunk_str, text)
+            chunk_box.metadata["span"] = span_finder.find_span(
+                chunk_str.removeprefix(self.continuation_marker)
+            )
             chunk_boxes.append(chunk_box)
         return chunk_boxes
 
@@ -582,7 +538,10 @@ class PlainTextChunker:
         # Leave the user's original dict untouched
         base_metadata = (base_metadata or {}).copy()
 
-        return self._create_chunk_boxes(chunks, base_metadata, text)
+        # Note: We use DeterministicSpanFinder because sentence splitter may modify text
+        # (e.g., normalize whitespace, fix encoding), making exact span tracking difficult.
+        span_finder = DeterministicSpanFinder(text)
+        return self._create_chunk_boxes(chunks, base_metadata, span_finder)
 
     @validate_input
     def batch_chunk(

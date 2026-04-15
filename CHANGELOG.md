@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.3.0] - - 2026-04-15
+
+### Changed
+- **Performance**: Replaced regex-based `_find_span` with deterministic `DeterministicSpanFinder` for ~2x faster span detection, avoiding regex backtracking
+
+---
+
 ## [2.2.0] - 2026-02-17
 
 ### Changed
