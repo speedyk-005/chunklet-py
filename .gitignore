@@ -16,6 +16,8 @@ build/
 .venv/
 env/
 venv/
+uv/
+uv.lock
 
 # Test artifacts
 htmlcov/
@@ -35,9 +37,6 @@ src/chunklet.egg-info/
 
 # Environments
 .env
-.venv
-env/
-venv/
 ENV/
 env.bak/
 venv.bak/
@@ -60,3 +59,18 @@ Thumbs.db
 temp/
 site/
 .aider*
+
+# Agent files
+.claude/
+.gemini/
+GEMINI.md
+conductor/
+opencode/
+*.skill
+skills/
+.agent/
+agent-log.txt
+*checkpoint.json
+findings.md
+progress.md
+task_plan.md
