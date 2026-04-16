@@ -162,5 +162,10 @@ GLOBAL_SENTENCE_TERMINATORS = (
         # Additional manual entries.
         "。",  # U+3002 IDEOGRAPHIC FULL STOP
         "｡",  # U+FF61 HALFWIDTH IDEOGRAPHIC FULL STOP
+        "¡",  # U+00A1 INVERTED EXCLAMATION MARK (Spanish)
+        "¿",  # U+00BF INVERTED QUESTION MARK (Spanish)
+        "︕",  # U+FE15 VERTICAL EXCLAMATION MARK
+        "︖",  # U+FE16 VERTICAL QUESTION MARK
+        "︒",  # U+FE12 VERTICAL FULL STOP
     ]
 )

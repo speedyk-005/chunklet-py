@@ -7,13 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.3.0] - - 2026-04-15
+## [2.3.0] - 2026-04-16
 
 ### Changed
 - **Performance Overhaul**:
   - Replaced regex-based `_find_span` with deterministic `DeterministicSpanFinder` - ~2x faster span detection, avoiding regex backtracking
   - Switched from `regex` library to stdlib `re` - ~2x faster for simple patterns
   - Replaced `box` library with `dotdict3` - 12x faster (0.467s vs 0.039s per 10k accesses)
+- **Sentence Splitter**:
+  - Renamed `FallbackSplitter` to `UniversalSplitter` (works for 50+ languages)
+  - Fixed regex to support non-Latin scripts (added `\p{Lo}` for other letters)
+  - Added missing terminators: ¡ ¿ ︕ ︖ ︒
 
 ---
 

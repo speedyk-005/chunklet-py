@@ -3,23 +3,23 @@ import regex as re
 from chunklet.sentence_splitter.terminators import GLOBAL_SENTENCE_TERMINATORS
 
 
-class FallbackSplitter:
+class UniversalSplitter:
     """
-    Rule-based, language-agnostic sentence boundary detector.
+    Language-agnostic sentence boundary detector using regex patterns.
 
-    A rule-based, sentence boundary detection tool that doesn't rely on hardcoded lists of
-    abbreviations or sentence terminators, making it adaptable to various text formats and domains.
+    A universal splitter using Unicode-aware regex patterns for any language.
 
-    FallbackSplitter uses regex patterns to split text into sentences, handling:
-      - Common sentence-ending punctuation (., !, ?)
-      - Abbreviations and acronyms (e.g., Dr., Ph.D., U.S.)
+    Handles:
+      - Unicode sentence terminators
       - Numbered lists and headings
-      - Multi-punctuation sequences (e.g., ! ! !, ?!)
-      - Line breaks and whitespace normalization
-      - Decimal numbers and inline numbers
+      - Quoted sentences
+      - Line breaks and whitespace
 
-    Sentences are conservatively segmented, prioritizing context over aggressive splitting,
-    which reduces false splits inside abbreviations, multi-punctuation sequences, or numeric constructs.
+    Use cases:
+      - Primary splitter for languages without dedicated support
+      - Fallback when language-specific splitters unavailable
+
+    Tested: en, fr, de, es, sw, yo, zu, mg, hm, mt, cy, ga, is, am, hi, bn, ta, and more.
     """
 
     def __init__(self):
@@ -37,12 +37,12 @@ class FallbackSplitter:
         # Core sentence split regex
         self.sentence_end_pattern = re.compile(
             rf"""
-            (?<!\b(\p{{Lu}}\p{{Ll}}{{1, 5}}\.)*)   # negative lookbehind for abbreviations
+            (?<!\b(\p{{Lu}}\p{{Ll}}{{1, 4}}\.)*)   # Latin-only abbreviation
             (?<=[{self.sentence_terminators}]        # sentence-ending punctuation
-            [\"'》」\p{{pf}}\p{{pe}}]*)                  # optional quotes or closing chars
-            (?=\s+\p{{Lu}}|\s*\n|\s*$)               # followed by uppercase or end of text
+            [\"'》」\p{{pf}}\p{{pe}}]*)?                 # optional quotes or closing chars
+            (?=\s+[\p{{Lu}}\p{{Lo}}\p{{Lt}}]|\s*\n|\s*$)  # followed by letter (upper or catch-all) or end
             """,
-            re.VERBOSE | re.UNICODE,
+            re.VERBOSE,
         )
 
     def split(self, text: str) -> list[str]:
@@ -59,24 +59,21 @@ class FallbackSplitter:
             - Normalizes numbered lists during splitting and restores them afterward.
             - Handles punctuation, newlines, and common edge cases.
         """
-        # Stage 1: handle flattened numbered lists
+        # handle flattened numbered lists
         text = self.flattened_numbered_list_pattern.sub(r"\n \1", text.strip())
 
-        # Stage 2: normalize numbered lists
+        # normalize numbered lists
         text = self.numbered_list_pattern.sub(r"\1\2<DOT>", text.strip())
 
-        # Stage 3: first pass - punctuation-based split
-        sentences = self.sentence_end_pattern.split(text.strip())
-
-        # Stage 4: remove empty strings and strip whitespace
-        fixed_sentences = [s.strip() for s in sentences if s and s.strip()]
-
-        # Stage 5: second pass - split further on newline (if not at start)
+        # Firstly, split base on punctuation
+        # then split further on newline
         final_sentences = []
-        for sent in fixed_sentences:
-            final_sentences.extend(sent.splitlines())
+        sentences = self.sentence_end_pattern.split(text.strip())
+        for sent in sentences:
+            if sent:
+                final_sentences.extend(sent.strip().splitlines())
 
-        # Stage 6: remove _ in numbered list numbers
+        # remove _ protection in numbered list numbers
         return [
             self.norm_numbered_list_pattern.sub(r"\1\2.", sent).rstrip()
             for sent in final_sentences
@@ -104,7 +101,7 @@ if __name__ == "__main__":  # pragma: no cover
         """
     )
 
-    splitter = FallbackSplitter()
+    splitter = UniversalSplitter()
     sentences = splitter.split(complex_text)
 
     print("\n=== Final Sentences ===")

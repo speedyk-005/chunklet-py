@@ -17,7 +17,7 @@ from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
 from chunklet.common.validation import validate_input
-from chunklet.sentence_splitter._fallback_splitter import FallbackSplitter
+from chunklet.sentence_splitter._universal_splitter import UniversalSplitter
 from chunklet.sentence_splitter.languages import (
     INDIC_NLP_UNIQUE_LANGUAGES,
     PYSBD_SUPPORTED_LANGUAGES,
@@ -114,7 +114,7 @@ class SentenceSplitter(BaseSplitter):
             verbose (bool, optional): If True, enables verbose logging for debugging and informational messages.
         """
         self.verbose = verbose
-        self.fallback_splitter = FallbackSplitter()
+        self.fallback_splitter = UniversalSplitter()
 
         # Create a normalized identifier for language detection
         self.identifier = LanguageIdentifier.from_pickled_model(
