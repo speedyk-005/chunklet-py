@@ -86,18 +86,14 @@ class CodeStructureExtractor:
         Returns:
             str: The summarized docstring line.
         """
-        # HACK: The `DOCSTRING_STYLE_ONE` regex contains multiple alternative patterns,
+        # The `DOCSTRING_STYLE_ONE` regex contains multiple alternative patterns,
         # which results in `None` values for the capturing groups that did not match.
-        # This list comprehension filters out the `None` values to reliably extract
-        # the matched content (indent, delimiters, and docstring text).
+        # filters out the `None` values to reliably extract while preserving the empty string indent
         groups = [g for g in match.groups() if g is not None]
-        indent = groups[0]
-        l_end = groups[1]
-        doc = groups[2].strip()
-        r_end = groups[3]
+        indent, l_end, doc, r_end = groups
 
         first_line = ""
-        for line in doc.splitlines():
+        for line in doc.strip().splitlines():
             stripped_line = line.strip()
             if stripped_line:
                 first_line = stripped_line
