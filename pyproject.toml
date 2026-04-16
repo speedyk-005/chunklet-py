@@ -83,6 +83,7 @@ visualization = [
   "uvicorn>=0.35.0,<1.0",
   "fastapi>=0.116.0,<1.0",
   "python-multipart>=0.0.20,<1.0",
+  "msgspec>=0.19.0,<2.0",
 
   # Major changes happens often
   "aiofiles==25.1.0",
@@ -151,6 +152,7 @@ filterwarnings = [
 
 # disable coverage report to prevent racing with multiprocessing
 # addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --durations=10"
+addopts = "-n 2"
 
 testpaths = ["tests"]
 python_files = "test_*.py"

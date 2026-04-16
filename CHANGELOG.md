@@ -7,17 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.3.0] - 2026-04-16
+## [2.3.0] - Unreleased
+
+### Added
+- **Sentence Splitting**:
+  - Added missing terminators: ¡ ¿ ︕ ︖ ︒
+  - Added regex support for non-Latin scripts (`\p{Lo}` and `\p{Lt}` for other letters)
+- **Visualizer Encoding**:
+  - Added `msgspec` library for MessagePack encoding on server
+  - Added `msgpack-lite` JS library on client for decoding
 
 ### Changed
 - **Performance Overhaul**:
   - Replaced regex-based `_find_span` with deterministic `DeterministicSpanFinder` - ~2x faster span detection, avoiding regex backtracking
   - Switched from `regex` library to stdlib `re` - ~2x faster for simple patterns
   - Replaced `box` library with `dotdict3` - 12x faster (0.467s vs 0.039s per 10k accesses)
-- **Sentence Splitter**:
-  - Renamed `FallbackSplitter` to `UniversalSplitter` (works for 50+ languages)
-  - Fixed regex to support non-Latin scripts (added `\p{Lo}` for other letters)
-  - Added missing terminators: ¡ ¿ ︕ ︖ ︒
+  - Switched from JSON to MessagePack encoding in visualizer (~30-50% smaller payloads, faster encoding)
+- **Fallback Splitter**: Renamed `FallbackSplitter` to `UniversalSplitter` (works for 50+ languages)
 
 ---
 

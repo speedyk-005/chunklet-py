@@ -1,16 +1,27 @@
 """Tests for the visualizer module."""
 
 import json
+import socket
+import pytest
+import requests
 import threading
 import time
 import urllib.error
 import urllib.request
+from contextlib import closing
 from pathlib import Path
 
-import pytest
-import requests
+import msgspec
 
 from chunklet.visualizer import Visualizer
+
+
+def get_free_port() -> int:
+    """Find a free port to use for testing."""
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
 
 
 def wait_for_server(url: str, timeout: float = 10.0) -> bool:
@@ -34,7 +45,7 @@ def wait_for_server(url: str, timeout: float = 10.0) -> bool:
 def visualizer_server():
     """Start visualizer server in daemon thread for testing."""
     host = "127.0.0.1"
-    port = 8001
+    port = get_free_port()
 
     try:
         visualizer = Visualizer(host=host, port=port)
@@ -108,7 +119,7 @@ def test_chunk_file(visualizer_server):
         response = requests.post(url, files=files, data=data)
         assert response.status_code == 200
 
-        result = response.json()
+        result = msgspec.msgpack.decode(response.content)
         assert "text" in result
         assert "chunks" in result
         assert "stats" in result

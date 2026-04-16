@@ -7,14 +7,16 @@ from typing import Callable
 import aiofiles
 
 try:
+    import msgspec
     import uvicorn
     from charset_normalizer import detect
     from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-    from fastapi.responses import HTMLResponse
+    from fastapi.responses import HTMLResponse, Response
     from fastapi.staticfiles import StaticFiles
 except ImportError:  # pragma: no cover
     # Lambda placeholders prevent "None is not callable" errors when imports fail
     # This allows the module to be imported without dependencies, with proper error handling later
+    msgspec = None
     uvicorn = None
     detect = None
     FastAPI = None
@@ -23,6 +25,7 @@ except ImportError:  # pragma: no cover
     Form = lambda x: x  # noqa: E731
     HTTPException = None
     HTMLResponse = lambda x: x  # noqa: E731
+    Response = lambda x: x  # noqa: E731
     StaticFiles = None
 
 from chunklet.code_chunker import CodeChunker
@@ -65,6 +68,13 @@ class Visualizer:
             raise ImportError(
                 "The 'fastapi' library is not installed. "
                 "Please install it with 'pip install fastapi>=0.115.12' or install the visualization extras "
+                "with 'pip install 'chunklet-py[visualization]''"
+            )
+
+        if msgspec is None:
+            raise ImportError(
+                "The 'msgspec' library is not installed. "
+                "Please install it with 'pip install msgspec>=0.18.0' or install the visualization extras "
                 "with 'pip install 'chunklet-py[visualization]''"
             )
 
@@ -117,7 +127,7 @@ class Visualizer:
         file: UploadFile = File(...),
         mode: str = Form("document"),
         params: str = Form("{}"),
-    ) -> dict:
+    ) -> Response:
         """Processes an uploaded file and returns chunked output.
 
         Args:
@@ -127,7 +137,7 @@ class Visualizer:
             params (str): JSON string containing chunking parameters.
 
         Returns:
-            dict: Contains original text, chunked content, and statistics.
+            Response: MessagePack-encoded response with original text, chunks, and stats.
 
         Raises:
             HTTPException: If chunking fails.
@@ -163,7 +173,7 @@ class Visualizer:
                 dict(chunk) for chunk in chunker.chunk_text(text, **chunker_params)
             ]
 
-            return {
+            response_data = {
                 "text": text,
                 "chunks": chunks,
                 "stats": {
@@ -172,6 +182,11 @@ class Visualizer:
                     "mode": mode,
                 },
             }
+
+            return Response(
+                content=msgspec.msgpack.encode(response_data),
+                media_type="application/msgpack",
+            )
 
         except Exception as e:
             traceback.print_exc()
@@ -207,7 +222,13 @@ class Visualizer:
         print("= " * 20)
         print(f"URL: http://{self.host}:{self.port}")
 
-        uvicorn.run(self.app, host=self.host, port=self.port)
+        uvicorn.run(
+            self.app,
+            host=self.host,
+            port=self.port,
+            reload=False,
+            access_log=False,
+        )
 
 
 if __name__ == "__main__":  # pragma: no cover
