@@ -16,8 +16,6 @@ build/
 .venv/
 env/
 venv/
-uv/
-uv.lock
 
 # Test artifacts
 htmlcov/
