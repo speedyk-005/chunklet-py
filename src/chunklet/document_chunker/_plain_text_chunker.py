@@ -1,10 +1,10 @@
 import copy
 import sys
+import re
 from collections.abc import Iterable
 from functools import partial
 from typing import Annotated, Any, Callable, Generator, Literal
 
-import regex as re
 from box import Box
 from loguru import logger
 from pydantic import Field

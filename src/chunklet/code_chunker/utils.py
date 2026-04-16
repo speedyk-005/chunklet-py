@@ -1,7 +1,7 @@
 import ast
+import re
 from pathlib import Path
 
-import regex as re
 from pygments.lexers import guess_lexer
 from pygments.util import ClassNotFound
 

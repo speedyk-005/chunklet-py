@@ -7,11 +7,10 @@ This module is used by CodeChunker to understand code structure before
 splitting into chunks.
 """
 
+import re
 from collections import defaultdict, namedtuple
 from itertools import accumulate
 from pathlib import Path
-
-import regex as re
 
 try:
     import defusedxml.ElementTree as ET

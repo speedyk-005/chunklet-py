@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Performance**: Replaced regex-based `_find_span` with deterministic `DeterministicSpanFinder` for ~2x faster span detection, avoiding regex backtracking
+- **Regex Module Switch**: Switched from `regex` library to stdlib `re` module in code_chunker and document_chunker where possible (~2.2x faster for simple patterns)
 
 ---
 
