@@ -29,7 +29,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Annotated, Any, Callable, Generator, Literal
 
-from box import Box
+from dotdict3 import DotDict
 from more_itertools import unique_everseen
 from pydantic import Field
 
@@ -161,7 +161,7 @@ class CodeChunker(BaseChunker):
             cumulative_lengths (tuple[int, ...]): The cumulative lengths of the lines in the source code.
 
         Returns:
-            list[Box]: A list of sub-chunks derived from the original block.
+            list[DotDict]: A list of sub-chunks derived from the original block.
         """
         sub_boxes = []
         curr_chunk = []
@@ -184,7 +184,7 @@ class CodeChunker(BaseChunker):
                 end_span = cumulative_lengths[end_line]
                 tree = Node.from_relations(snippet_dict["relations"]).to_string()
                 sub_boxes.append(
-                    Box(
+                    DotDict(
                         {
                             "content": "\n".join(curr_chunk),
                             "metadata": {
@@ -220,7 +220,7 @@ class CodeChunker(BaseChunker):
             end_span = cumulative_lengths[end_line]
             tree = Node.from_relations(snippet_dict["relations"]).to_string()
             sub_boxes.append(
-                Box(
+                DotDict(
                     {
                         "content": "\n".join(curr_chunk),
                         "metadata": {
@@ -289,7 +289,7 @@ class CodeChunker(BaseChunker):
         max_functions: int,
         strict: bool,
         source: str | Path,
-    ) -> list[Box]:
+    ) -> list[DotDict]:
         """
         Group code snippets into chunks based on specified constraints.
 
@@ -307,7 +307,7 @@ class CodeChunker(BaseChunker):
             source (str | Path): Original source for metadata.
 
         Returns:
-            list[Box]: List of chunk boxes with content and metadata.
+            list[DotDict]: List of chunk boxes with content and metadata.
         """
         source = (
             str(source) if (isinstance(source, Path) or is_path_like(source)) else "N/A"
@@ -399,7 +399,7 @@ class CodeChunker(BaseChunker):
                 # Flush current merged content as a chunk
                 start_span = cumulative_lengths[start_line - 1]
                 end_span = cumulative_lengths[end_line]
-                merged_chunk = Box(
+                merged_chunk = DotDict(
                     {
                         "content": "\n".join(merged_content),
                         "metadata": {
@@ -427,7 +427,7 @@ class CodeChunker(BaseChunker):
         if merged_content:
             start_span = cumulative_lengths[start_line - 1]
             end_span = cumulative_lengths[end_line]
-            merged_chunk = Box(
+            merged_chunk = DotDict(
                 {
                     "content": "\n".join(merged_content),
                     "metadata": {
@@ -485,7 +485,7 @@ class CodeChunker(BaseChunker):
         include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
         strict: bool = True,
-    ) -> list[Box]:
+    ) -> list[DotDict]:
         """
         Extract semantic code chunks from source using multi-dimensional analysis.
         Processes source code by identifying structural boundaries (functions, classes,
@@ -510,7 +510,7 @@ class CodeChunker(BaseChunker):
                 max_tokens. If False, split oversized blocks. Default: True.
 
         Returns:
-            list[Box]: List of code chunks with metadata. Each Box contains:
+            list[DotDict]: List of code chunks with metadata. Each DotDict contains:
 
                 - content (str): Code content
                 - tree (str): Namespace hierarchy
@@ -577,7 +577,7 @@ class CodeChunker(BaseChunker):
         include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
         strict: bool = True,
-    ) -> list[Box]:
+    ) -> list[DotDict]:
         """
         Extract semantic code chunks from source using multi-dimensional analysis.
         Processes source code by identifying structural boundaries (functions, classes,
@@ -602,7 +602,7 @@ class CodeChunker(BaseChunker):
                 max_tokens. If False, split oversized blocks. Default: True.
 
         Returns:
-            list[Box]: List of code chunks with metadata. Each Box contains:
+            list[DotDict]: List of code chunks with metadata. Each DotDict contains:
 
                 - content (str): Code content
                 - tree (str): Namespace hierarchy
@@ -654,7 +654,7 @@ class CodeChunker(BaseChunker):
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
-    ) -> Generator[Box, None, None]:
+    ) -> Generator[DotDict, None, None]:
         """
         Process multiple source files or code strings in parallel.
         Leverages multiprocessing to efficiently chunk multiple code sources,
@@ -683,7 +683,7 @@ class CodeChunker(BaseChunker):
                 How to handle errors during processing. Defaults to 'raise'.
 
         yields:
-            Box: `Box` object, representing a chunk with its content and metadata.
+            DotDict: `DotDict` object, representing a chunk with its content and metadata.
                 Includes:
 
                 - content (str): Code content
@@ -737,7 +737,7 @@ class CodeChunker(BaseChunker):
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
-    ) -> Generator[Box, None, None]:
+    ) -> Generator[DotDict, None, None]:
         """
         Process multiple source files or code strings in parallel.
         Leverages multiprocessing to efficiently chunk multiple code sources,
@@ -766,7 +766,7 @@ class CodeChunker(BaseChunker):
                 How to handle errors during processing. Defaults to 'raise'.
 
         yields:
-            Box: `Box` object, representing a chunk with its content and metadata.
+            DotDict: `DotDict` object, representing a chunk with its content and metadata.
                 Includes:
 
                 - content (str): Code content
@@ -821,7 +821,7 @@ class CodeChunker(BaseChunker):
         include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
         strict: bool = True,
-    ) -> list[Box]:
+    ) -> list[DotDict]:
         """
         Chunk code into semantic pieces.
 
@@ -872,7 +872,7 @@ class CodeChunker(BaseChunker):
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
-    ) -> Generator[Box, None, None]:
+    ) -> Generator[DotDict, None, None]:
         """
         Batch chunk multiple code sources.
 

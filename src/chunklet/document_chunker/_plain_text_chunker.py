@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from functools import partial
 from typing import Annotated, Any, Callable, Generator, Literal
 
-from box import Box
+from dotdict3 import DotDict
 from loguru import logger
 from pydantic import Field
 
@@ -102,9 +102,9 @@ class PlainTextChunker:
         chunks: Iterable[str],
         base_metadata: dict[str, Any],
         span_finder: DeterministicSpanFinder,
-    ) -> list[Box]:
+    ) -> list[DotDict]:
         """
-        Helper to create a list of Box objects for chunks with embedded metadata and auto-assigned chunk numbers.
+        Helper to create a list of DotDict objects for chunks with embedded metadata and auto-assigned chunk numbers.
 
         Args:
             chunks (Iterable[str]): An iterable (e.g., list or generator) of raw text strings,
@@ -115,7 +115,7 @@ class PlainTextChunker:
             span_finder (DeterministicSpanFinder): The span finder instance for locating chunks.
 
         Returns:
-            list[Box]: A list of `Box` objects. Each `Box` contains:
+            list[DotDict]: A list of `DotDict` objects. Each `DotDict` contains:
 
                 - 'content' (str): The text of the chunk.
                 - 'metadata' (dict): A dictionary including 'chunk_num' (int)
@@ -123,7 +123,7 @@ class PlainTextChunker:
         """
         chunk_boxes = []
         for i, chunk_str in enumerate(chunks, start=1):
-            chunk_box = Box()
+            chunk_box = DotDict()
             chunk_box.content = chunk_str.strip()
             chunk_box.metadata = copy.deepcopy(base_metadata)
             chunk_box.metadata["chunk_num"] = i
@@ -455,7 +455,7 @@ class PlainTextChunker:
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
         base_metadata: dict[str, Any] | None = None,
-    ) -> list[Box]:
+    ) -> list[DotDict]:
         """
         Chunks a single text into smaller pieces based on specified parameters.
         Supports flexible constraint-based chunking, clause-level overlap,
@@ -474,7 +474,7 @@ class PlainTextChunker:
             base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
 
         Returns:
-            list[Box]: A list of `Box` objects, each containing the chunk content and metadata.
+            list[DotDict]: A list of `DotDict` objects, each containing the chunk content and metadata.
 
         Raises:
             InvalidInputError: If any chunking configuration parameter is invalid.
@@ -588,7 +588,7 @@ class PlainTextChunker:
                 Defaults to 'raise'.
 
         Yields:
-            Any: A `Box` object containing the chunk content and metadata, or any separator object.
+            Any: A `DotDict` object containing the chunk content and metadata, or any separator object.
 
         Raises:
             InvalidInputError: If `texts` is not an iterable of strings, or if `n_jobs` is less than 1.

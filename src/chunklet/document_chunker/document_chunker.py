@@ -3,7 +3,7 @@ from itertools import chain, tee
 from pathlib import Path
 from typing import Annotated, Any, Callable, Generator, Iterable, Literal
 
-from box import Box
+from dotdict3 import DotDict
 from loguru import logger
 from more_itertools import ilen, split_at
 from pydantic import Field
@@ -346,7 +346,7 @@ class DocumentChunker(BaseChunker):
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
         base_metadata: dict[str, Any] | None = None,
-    ) -> list[Box]:
+    ) -> list[DotDict]:
         """
         Chunks raw text content.
 
@@ -365,7 +365,7 @@ class DocumentChunker(BaseChunker):
             base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
 
         Returns:
-            list[Box]: A list of `Box` objects, each representing a chunk.
+            list[DotDict]: A list of `DotDict` objects, each representing a chunk.
         """
         params = {k: v for k, v in locals().items() if k != "self"}
         params["token_counter"] = params.get("token_counter") or self.token_counter
@@ -388,7 +388,7 @@ class DocumentChunker(BaseChunker):
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
-    ) -> Generator[Box, None, None]:
+    ) -> Generator[DotDict, None, None]:
         """
         Chunks multiple text contents.
 
@@ -411,7 +411,7 @@ class DocumentChunker(BaseChunker):
             on_errors (str): How to handle errors.
 
         yields:
-            Box: `Box` object, representing a chunk with its content and metadata.
+            DotDict: `DotDict` object, representing a chunk with its content and metadata.
 
         Raises:
             InvalidInputError: If the input arguments aren't valid.
@@ -435,7 +435,7 @@ class DocumentChunker(BaseChunker):
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
-    ) -> list[Box]:
+    ) -> list[DotDict]:
         """
         Chunks a single document from a given path.
 
@@ -457,7 +457,7 @@ class DocumentChunker(BaseChunker):
                 Required if `max_tokens` is provided.
 
         Returns:
-            list[Box]: A list of `Box` objects, each representing
+            list[DotDict]: A list of `DotDict` objects, each representing
             a chunk with its content and metadata.
 
         Raises:
@@ -518,7 +518,7 @@ class DocumentChunker(BaseChunker):
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
-    ) -> Generator[Box, None, None]:
+    ) -> Generator[DotDict, None, None]:
         """
         Chunks multiple documents from a list of file paths.
 
@@ -547,7 +547,7 @@ class DocumentChunker(BaseChunker):
             on_errors: How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
 
         yields:
-            Box: `Box` object, representing a chunk with its content and metadata.
+            DotDict: `DotDict` object, representing a chunk with its content and metadata.
 
         Raises:
             InvalidInputError: If the input arguments aren't valid.
@@ -624,7 +624,7 @@ class DocumentChunker(BaseChunker):
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
-    ) -> list[Box]:
+    ) -> list[DotDict]:
         """
         Chunk a document file into semantic pieces.
 
@@ -653,7 +653,7 @@ class DocumentChunker(BaseChunker):
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
-    ) -> Generator[Box, None, None]:
+    ) -> Generator[DotDict, None, None]:
         """
         Batch chunk multiple document files.
 

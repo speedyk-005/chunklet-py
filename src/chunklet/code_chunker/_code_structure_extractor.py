@@ -301,7 +301,7 @@ class CodeStructureExtractor:
         buffer: dict[str, list],
     ) -> None:
         """
-        Consolidate the current structure and any buffered content into a Box and append it to snippet_boxes.
+        Consolidate the current structure and any buffered content into a DotDict and append it to snippet_boxes.
 
         It automatically flushs the buffer.
 
@@ -309,7 +309,7 @@ class CodeStructureExtractor:
             curr_struct (list[tuple]): Accumulated code lines and metadata,
                 where each element is a tuple containing:
                 (line_number, line_content, indent_level, func_partial_signature).
-            snippet_boxes (list[Box]): The list to which the newly created Box will be appended.
+            snippet_boxes (list[DotDict]): The list to which the newly created DotDict will be appended.
             buffer (dict[str, list]): Buffer for intermediate processing (default: empty list).
         """
         if not (curr_struct or buffer):
