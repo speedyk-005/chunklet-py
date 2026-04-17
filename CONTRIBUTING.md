@@ -12,12 +12,15 @@ Hey! Thanks for thinking about contributing. Bug fixes, features, docs — all w
     ```
 
 2. **Install dependencies:**
-
     ```bash
     python -m venv .venv
     source .venv/bin/activate  # On Windows: .venv\Scripts\activate
     pip install -e ".[dev]"      # basic dev: pytest, ruff
     pip install -e ".[dev-all]" # all optional features
+
+    # Optional: BlingFire for faster sentence splitting
+    pip install blingfire
+    export USE_BLINGFIRE=1  # On Windows: set USE_BLINGFIRE=1
     ```
 
 ## Making Changes

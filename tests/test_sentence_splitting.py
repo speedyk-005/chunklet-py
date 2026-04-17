@@ -1,12 +1,14 @@
 import re
-
+import os
 import pytest
 
 from chunklet import CallbackError
 from chunklet.sentence_splitter import SentenceSplitter, custom_splitter_registry
 
-# --- Fixture ---
+# Ensure we aren't using blingfire
+# os.environ["USE_BLINGFIRE"] = "0"
 
+# --- Fixture ---
 
 @pytest.fixture
 def splitter():
@@ -21,7 +23,6 @@ def registry():
 
 
 # --- Multilingual Splitting Tests ---
-
 
 @pytest.mark.parametrize(
     "text, expected_sentences",
@@ -71,7 +72,6 @@ def test_unsupported_language_fallback(splitter, text, expected_sentences):
 
 
 # --- Custom Splitter Tests ---
-
 
 def test_custom_splitter_usage(registry):
     """Test that the splitter can work a custom splitter without errors."""

@@ -16,14 +16,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Visualizer Encoding**:
   - Added `msgspec` library for MessagePack encoding on server
   - Added `msgpack-lite` JS library on client for decoding
+- **BlingFire Integration**:
+  - Added auto detection + usage of blingfire lib if  env "USE_BLINGFIRE" is set
+  - Added BlingfireMissingError exception
 
 ### Changed
-- **Performance Overhaul**:
-  - Replaced regex-based `_find_span` with deterministic `DeterministicSpanFinder` - ~2x faster span detection, avoiding regex backtracking
+- **Core Performance Overhaul**:
+  - Replaced regex-based `_find_span` with deterministic finder (~2x faster span detection, avoiding regex backtracking)
   - Switched from `regex` library to stdlib `re` - ~2x faster for simple patterns
   - Replaced `box` library with `dotdict3` - 12x faster (0.467s vs 0.039s per 10k accesses)
   - Switched from JSON to MessagePack encoding in visualizer (~30-50% smaller payloads, faster encoding)
-- **Fallback Splitter**: Renamed `FallbackSplitter` to `UniversalSplitter` (works for 50+ languages)
+- **Fallback Splitter**: Renamed `FallbackSplitter` to `_clean_sentences` (works for 50+ languages)
+- **SentenceSplitter Rename**: Renamed `_filter_sentences` method to `split_text`
+- **Lazy Imports**:
+  - Changed from eager imports to lazy imports for splitter libraries
+  - Changed Handler Lookup from dict-based to method-based for more control
 
 ---
 
