@@ -50,7 +50,7 @@ from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import is_path_like, read_text_file
 from chunklet.common.token_utils import count_tokens
-from chunklet.common.validation import restricted_iterable, validate_input
+from chunklet.common.validation import IterableOfStr, IterableOfPath, validate_input
 from chunklet.exceptions import (
     InvalidInputError,
     MissingTokenCounterError,
@@ -641,7 +641,7 @@ class CodeChunker(BaseChunker):
     @validate_input
     def chunk_texts(
         self,
-        codes: "restricted_iterable(str)",  # pyright: ignore
+        codes: IterableOfStr,
         *,
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
         max_lines: Annotated[int | None, Field(ge=5)] = None,
@@ -661,7 +661,7 @@ class CodeChunker(BaseChunker):
         applying consistent chunking rules across all inputs.
 
         Args:
-            codes (restricted_iterable[str]): A restricted iterable of raw code strings.
+            codes (IterableOfStr): A non-string iterable of raw code strings.
             max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
             max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
             max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
@@ -724,7 +724,7 @@ class CodeChunker(BaseChunker):
     @validate_input
     def chunk_files(
         self,
-        paths: "restricted_iterable(str | Path)",  # pyright: ignore
+        paths: IterableOfPath,
         *,
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
         max_lines: Annotated[int | None, Field(ge=5)] = None,
@@ -744,7 +744,7 @@ class CodeChunker(BaseChunker):
         applying consistent chunking rules across all inputs.
 
         Args:
-            paths (restricted_iterable[str | Path]): A restricted iterable of file paths to process.
+            paths (IterableOfPath): A non-string iterable of file paths to process.
             max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
             max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
             max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
@@ -859,7 +859,7 @@ class CodeChunker(BaseChunker):
     )
     def batch_chunk(  # pragma: no cover
         self,
-        sources: "restricted_iterable(str | Path)",  # pyright: ignore
+        sources: IterableOfPath,
         *,
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
         max_lines: Annotated[int | None, Field(ge=5)] = None,

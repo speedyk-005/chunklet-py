@@ -31,6 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy Imports**:
   - Changed from eager imports to lazy imports for splitter libraries
   - Changed Handler Lookup from dict-based to method-based for more control
+- **Validation Refactor**:
+  - Shifted from runtime `restricted_iterable` to static `TypeAlias` (IterableOfStr/Path). Reduces logic (~35 to ~15 lines), improve IDE type inference and static analysis.
+  - Integrated `reprlib` in `pretty_errors` for efficient collection truncation.
 
 ---
 

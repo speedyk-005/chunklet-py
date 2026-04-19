@@ -1,12 +1,36 @@
 from collections.abc import Generator, Iterable, Iterator
 from functools import wraps
 from itertools import tee
-from typing import Annotated, Any, Union
+from pathlib import Path
+import reprlib
+from typing import Annotated, Any, TypeAlias
 
 from more_itertools import ilen
 from pydantic import ConfigDict, PlainValidator, ValidationError, validate_call
 
 from chunklet.exceptions import InvalidInputError
+
+
+def _enforce_non_string(v: Any) -> Any:
+    if isinstance(v, str):
+        # Pydantic-Core is sometimes pickier; using ValueError often works better
+        # with external validators than a raw TypeError
+        # Sliced to avoid overflowing screen
+        input_val = v if len(v) < 500 else v[:500] + "..."
+        raise ValueError(
+            f"Input cannot be a string.\n  Found: (input={input_val!r}, type=str)"
+        )
+    return v
+
+IterableOfStr: TypeAlias = Annotated[(
+    Iterable[str],
+    PlainValidator(_enforce_non_string)
+)]
+
+IterableOfPath: TypeAlias = Annotated[(
+    Iterable[str | Path],
+    PlainValidator(_enforce_non_string)
+)]
 
 
 def pretty_errors(error: ValidationError) -> str:
@@ -26,12 +50,11 @@ def pretty_errors(error: ValidationError) -> str:
         input_value = err["input"]
         input_type = type(input_value).__name__
 
-        # Sliced to avoid overflowing screen
-        input_value = (
-            input_value
-            if len(str(input_value)) < 500
-            else str(input_value)[:500] + "..."
-        )
+        # Use reprlib for auto-truncation on non-strings (faster for lists/dicts/nested)
+        if not isinstance(input_value, str):
+            input_value = reprlib.repr(input_value)
+        else:
+            input_value = input_value if len(input_value) < 500 else input_value[:500] + "..."
 
         lines.append(
             (
@@ -42,37 +65,6 @@ def pretty_errors(error: ValidationError) -> str:
 
     lines.append("  " + getattr(error, "hint", ""))
     return "\n".join(lines)
-
-
-def restricted_iterable(*hints: Any) -> Any:
-    """
-    Creates a Pydantic Annotated type that represents a RestrictedIterable
-    containing the specified hints (*hints), and applies a PlainValidator
-    to reject str input.
-    """
-
-    def enforce_non_string(v: Any) -> Any:
-        if isinstance(v, str):
-            # Pydantic-Core is sometimes pickier; using ValueError often works better
-            # with external validators than a raw TypeError
-            # Sliced to avoid overflowing screen
-            input_val = v if len(v) < 500 else v[:500] + "..."
-            raise ValueError(
-                f"Input cannot be a string.\n  Found: (input={input_val!r}, type=str)"
-            )
-        return v
-
-    item_union = Union[hints] if len(hints) == 1 else hints[0]
-
-    target_type = (
-        list[item_union]
-        | tuple[item_union, ...]
-        | set[item_union]
-        | frozenset[item_union]
-        | Generator[item_union, None, None]
-    )
-
-    return Annotated[target_type, PlainValidator(enforce_non_string)]
 
 
 def validate_input(fn):

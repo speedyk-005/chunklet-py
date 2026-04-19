@@ -12,7 +12,7 @@ from pydantic import Field
 from chunklet.common.batch_runner import run_in_batch
 from chunklet.common.logging_utils import log_info
 from chunklet.common.token_utils import count_tokens
-from chunklet.common.validation import restricted_iterable, validate_input
+from chunklet.common.validation import IterableOfStr, validate_input
 from chunklet.document_chunker.span_finder import DeterministicSpanFinder
 from chunklet.exceptions import (
     CallbackError,
@@ -546,7 +546,7 @@ class PlainTextChunker:
     @validate_input
     def batch_chunk(
         self,
-        texts: "restricted_iterable(str)",  # pyright: ignore
+        texts: IterableOfStr,
         *,
         lang: str = "auto",
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
@@ -569,7 +569,7 @@ class PlainTextChunker:
         of the tasks that completed successfully, preventing wasted work.
 
         Args:
-            texts (restricted_iterable[str]): A restricted iterable of input texts to be chunked.
+            texts (IterableOfStr): A non-string iterable of input texts to be chunked.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
             max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.

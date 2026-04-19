@@ -152,7 +152,7 @@ filterwarnings = [
 
 # disable coverage report to prevent racing with multiprocessing
 # addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --durations=10"
-addopts = "-n 2"
+addopts = "-n 4"
 
 testpaths = ["tests"]
 python_files = "test_*.py"

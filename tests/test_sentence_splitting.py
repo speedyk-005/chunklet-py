@@ -104,7 +104,7 @@ def test_custom_splitter_usage(registry):
         (
             "list_non_string_splitter",
             lambda text: ["hello", 123, "world"],  # List contains non-strings
-            "Input should be a valid string.\n  Found: (input=123, type=int)",
+            "Input should be a valid string.\n  Found: (input='123', type=int)",
         ),
         (
             "failing_splitter",

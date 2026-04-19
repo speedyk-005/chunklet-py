@@ -22,7 +22,7 @@ from chunklet.base_chunker import BaseChunker
 from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
-from chunklet.common.validation import restricted_iterable, validate_input
+from chunklet.common.validation import IterableOfStr, IterableOfPath, validate_input
 from chunklet.document_chunker._plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker.converters import (
     html_2_md,
@@ -374,7 +374,7 @@ class DocumentChunker(BaseChunker):
     @validate_input
     def chunk_texts(
         self,
-        texts: "restricted_iterable(str)",  # noqa: F722
+        texts: IterableOfStr,
         *,
         lang: str = "auto",
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
@@ -393,7 +393,7 @@ class DocumentChunker(BaseChunker):
         Chunks multiple text contents.
 
         Args:
-            texts (restricted_iterable(str)): A restricted iterable of texts to chunk.
+            texts (IterableOfStr): A non-string iterable of texts to chunk.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
             max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
@@ -505,7 +505,7 @@ class DocumentChunker(BaseChunker):
     @validate_input
     def chunk_files(
         self,
-        paths: "restricted_iterable(str | Path)",  # noqa: F722
+        paths: IterableOfPath,
         *,
         lang: str = "auto",
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
@@ -527,7 +527,7 @@ class DocumentChunker(BaseChunker):
         handles various file types.
 
         Args:
-            paths (restricted_iterable[str | Path]): A restricted iterable of paths to the document files.
+            paths (IterableOfPath): A non-string iterable of paths to the document files.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
             max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
@@ -640,7 +640,7 @@ class DocumentChunker(BaseChunker):
     )
     def batch_chunk(  # pragma: no cover
         self,
-        paths: "restricted_iterable(str | Path)",  # noqa: F722
+        paths: IterableOfPath,
         *,
         lang: str = "auto",
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
