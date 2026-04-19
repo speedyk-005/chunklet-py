@@ -17,11 +17,27 @@ Hey! Thanks for thinking about contributing. Bug fixes, features, docs — all w
     source .venv/bin/activate  # On Windows: .venv\Scripts\activate
     pip install -e ".[dev]"      # basic dev: pytest, ruff
     pip install -e ".[dev-all]" # all optional features
-
-    # Optional: BlingFire for faster sentence splitting
-    pip install blingfire
-    export USE_BLINGFIRE=1  # On Windows: set USE_BLINGFIRE=1
     ```
+
+> [!WARNING]
+> #### Termux (Android)
+> Termux doesn't have a rust toolchain by default, so pydantic-core might fail to build (especially for python 3.13).
+> Install pre-built wheels:
+> 
+> ```bash
+> pip install typing-extensions
+> pip install pydantic-core --index-url https://termux-user-repository.github.io/pypi/
+> pip install "pydantic>=2.12.4,<2.13"
+> pip install -e ".[dev-all]"
+> ```
+
+3. **Install BlingFire (Optional)**
+   For faster sentence splitting
+
+   ```bash
+   pip install blingfire
+   export USE_BLINGFIRE=1  # On Windows: set USE_BLINGFIRE=1
+   ```
 
 ## Making Changes
 

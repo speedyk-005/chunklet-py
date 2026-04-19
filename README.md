@@ -92,7 +92,7 @@ Ready to get Chunklet-py running? Awesome! Let's get you set up quickly and pain
 
 > [!NOTE]
 > **chunklet-py (aka chunklet)** — The old `chunklet` package is no longer maintained. Use `chunklet-py` to get the latest version.
-    
+
 ### The Quick & Easy Way
 
 The simplest way to get started is with pip:
@@ -102,6 +102,16 @@ The simplest way to get started is with pip:
 pip install chunklet-py
 chunklet --version
 ```
+
+> [!TIP]
+> #### Termux (Android)
+> No rust toolchain on Termux (especially python 3.13) ? Install pydantic-core pre-built wheels first then retry installing chunklet-py:
+>
+> ```bash
+> pip install typing-extensions
+> pip install pydantic-core --index-url https://termux-user-repository.github.io/pypi/
+> pip install "pydantic>=2.12.4,<2.13"
+> ```
 
 That's it! You're all set to start chunking.
 
