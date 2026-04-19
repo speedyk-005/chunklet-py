@@ -7,7 +7,7 @@ from typing import Callable
 import aiofiles
 
 try:
-    import msgspec
+    import msgpack
     import uvicorn
     from charset_normalizer import detect
     from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -16,7 +16,7 @@ try:
 except ImportError:  # pragma: no cover
     # Lambda placeholders prevent "None is not callable" errors when imports fail
     # This allows the module to be imported without dependencies, with proper error handling later
-    msgspec = None
+    msgpack = None
     uvicorn = None
     detect = None
     FastAPI = None
@@ -71,10 +71,10 @@ class Visualizer:
                 "with 'pip install 'chunklet-py[visualization]''"
             )
 
-        if msgspec is None:
+        if msgpack is None:
             raise ImportError(
-                "The 'msgspec' library is not installed. "
-                "Please install it with 'pip install msgspec>=0.18.0' or install the visualization extras "
+                "The 'msgpack' library is not installed. "
+                "Please install it with 'pip install msgpack>=1.0.8' or install the visualization extras "
                 "with 'pip install 'chunklet-py[visualization]''"
             )
 
@@ -184,7 +184,7 @@ class Visualizer:
             }
 
             return Response(
-                content=msgspec.msgpack.encode(response_data),
+                content=msgpack.packb(response_data, use_bin_type=True),
                 media_type="application/msgpack",
             )
 
@@ -226,7 +226,6 @@ class Visualizer:
             self.app,
             host=self.host,
             port=self.port,
-            reload=False,
             access_log=False,
         )
 

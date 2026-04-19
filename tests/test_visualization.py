@@ -11,7 +11,7 @@ import urllib.request
 from contextlib import closing
 from pathlib import Path
 
-import msgspec
+import msgpack
 
 from chunklet.visualizer import Visualizer
 
@@ -47,25 +47,20 @@ def visualizer_server():
     host = "127.0.0.1"
     port = get_free_port()
 
-    try:
-        visualizer = Visualizer(host=host, port=port)
-        thread = threading.Thread(target=visualizer.serve, daemon=True)
-        thread.start()
+    visualizer = Visualizer(host=host, port=port)
+    thread = threading.Thread(target=visualizer.serve, daemon=True)
+    thread.start()
 
-        url = f"http://{host}:{port}"  # noqa: URLhttp
-        wait_for_server(url)
+    url = f"http://{host}:{port}"  # noqa: URLhttp
+    wait_for_server(url)
 
-        yield {
-            "url": url,
-            "host": host,
-            "port": port,
-            "thread": thread,
-            "visualizer": visualizer,
-        }
-    except ImportError as e:
-        pytest.skip(f"Visualization dependencies not available: {e}")
-    except TimeoutError as e:
-        pytest.skip(f"Visualizer server failed to start: {e}")
+    yield {
+        "url": url,
+        "host": host,
+        "port": port,
+        "thread": thread,
+        "visualizer": visualizer,
+    }
 
 
 # --- API Endpoints Testing---
@@ -119,7 +114,7 @@ def test_chunk_file(visualizer_server):
         response = requests.post(url, files=files, data=data)
         assert response.status_code == 200
 
-        result = msgspec.msgpack.decode(response.content)
+        result = msgpack.unpackb(response.content, raw=False)
         assert "text" in result
         assert "chunks" in result
         assert "stats" in result
