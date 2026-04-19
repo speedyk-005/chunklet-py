@@ -83,7 +83,7 @@ visualization = [
   "uvicorn>=0.35.0,<1.0",
   "fastapi>=0.116.0,<1.0",
   "python-multipart>=0.0.20,<1.0",
-  "msgspec>=0.19.0,<2.0",
+  "msgpack>=1.1.0,<2.0",
 
   # Major changes happens often
   "aiofiles==25.1.0",
