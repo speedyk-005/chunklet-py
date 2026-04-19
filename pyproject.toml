@@ -38,9 +38,9 @@ dependencies = [
   "pysbd>=0.3.4,<1.0",
   "sentsplit>=1.0.8,<2.0",
 
-  # Pinning to the last known working version with a reliable binary/build.
-  # The 1.0.x series has a broken sdist package structure.
-  "sentencex<=0.6.1",
+  # Rust binding (1.0+) for faster performance on supported platforms, legacy for Android.
+  "sentencex>=1.0.0,<2.0; platform_system != 'Android'",
+  "sentencex<=0.6.1; platform_system == 'Android'",
 
   "indic-nlp-library>=0.92,<1.0",
   "py3langid>=0.3.0,<1.0",
