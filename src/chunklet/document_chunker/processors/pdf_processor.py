@@ -1,6 +1,6 @@
 from typing import Any, Generator
 
-import regex as re
+import re
 from more_itertools import ilen
 
 # pdfminer is lazily imported
@@ -10,21 +10,21 @@ from chunklet.document_chunker.processors.base_processor import BaseProcessor
 MULTIPLE_NEWLINE_PATTERN = re.compile(r"(\n\s*){2,}")
 
 # Pattern to remove lines with only numbers
-STANDALONE_NUMBER_PATTERN = re.compile(r"\n\s*\p{N}+\s*\n")
+STANDALONE_NUMBER_PATTERN = re.compile(r"\n\s*\d+\s*\n")
 
 # Pattern to merge single newlines within logical text blocks
 HEADING_OR_LIST_PATTERN = re.compile(
     r"(\n"  # A newline
-    r"[\p{L}\p{N}]"  # A Unicode letter or a Unicode number
+    r"[\w\d]"  # A Unicode letter or number
     r"[.\-)*]"  # Followed by a punctuation
     r")\n",  # The newline character to be replaced
     re.U,
 )
 
 PAGE_PATTERN = re.compile(
-    r"Page \p{N}+ of \p{N}+.*|"  # standalone page number
-    r"-\s*\p{N}+\s*-|"  # Page numbers with dashes
-    r"\s*\|\s*Page\s+\p{N}+\s*\|\s*",  # Boxed page numbers
+    r"Page \d+ of \d+.*|"  # standalone page number
+    r"-\s*\d+\s*-|"  # Page numbers with dashes
+    r"\s*\|\s*Page\s+\d+\s*\|\s*",  # Boxed page numbers
     re.M,
 )
 

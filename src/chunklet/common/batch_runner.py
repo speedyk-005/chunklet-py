@@ -49,7 +49,7 @@ def run_in_batch(
         verbose (bool): Whether to enable verbose logging.
 
     Yields:
-        Any: A `Box` object containing the chunk content and metadata, or any separator object.
+        Any: A `DotDict` object containing the chunk content and metadata, or any separator object.
     """
     from mpire import WorkerPool
 

@@ -7,7 +7,6 @@
 <p align="center">
   “One library to split them all: Sentence, Code, Docs”
 </p>
-
 [![Python Version](https://img.shields.io/badge/Python-3.10%20--%203.14-blue)](https://www.python.org/downloads/)
 [![PyPI](https://img.shields.io/pypi/v/chunklet-py)](https://pypi.org/project/chunklet-py)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/chunklet-py?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=BLUE&left_text=downloads)](https://pepy.tech/projects/chunklet-py)
@@ -93,7 +92,7 @@ Ready to get Chunklet-py running? Awesome! Let's get you set up quickly and pain
 
 > [!NOTE]
 > **chunklet-py (aka chunklet)** — The old `chunklet` package is no longer maintained. Use `chunklet-py` to get the latest version.
-    
+
 ### The Quick & Easy Way
 
 The simplest way to get started is with pip:
@@ -103,6 +102,16 @@ The simplest way to get started is with pip:
 pip install chunklet-py
 chunklet --version
 ```
+
+> [!TIP]
+> #### Termux (Android)
+> No rust toolchain on Termux (especially python 3.13) ? Install pydantic-core pre-built wheels first then retry installing chunklet-py:
+>
+> ```bash
+> pip install typing-extensions
+> pip install pydantic-core --index-url https://termux-user-repository.github.io/pypi/
+> pip install "pydantic>=2.12.4,<2.13"
+> ```
 
 That's it! You're all set to start chunking.
 
@@ -122,9 +131,16 @@ Want to unlock more Chunklet-py superpowers? Add these optional dependencies bas
     ```bash
     pip install "chunklet-py[visualization]"
     ```
-*   **All Extras:** To install all optional dependencies:
+* **All Extras:** To install all optional dependencies:
     ```bash
     pip install "chunklet-py[all]"
+    ```
+* **BlingFire (Optional):** For faster sentence splitting:
+    ```bash
+    pip install blingfire
+
+    # Then set env var before running
+    export USE_BLINGFIRE=1  # On Windows: set USE_BLINGFIRE=1 
     ```
 
 ### The From-Source Way

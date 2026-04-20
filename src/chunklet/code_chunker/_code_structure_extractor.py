@@ -7,11 +7,10 @@ This module is used by CodeChunker to understand code structure before
 splitting into chunks.
 """
 
+import re
 from collections import defaultdict, namedtuple
 from itertools import accumulate
 from pathlib import Path
-
-import regex as re
 
 try:
     import defusedxml.ElementTree as ET
@@ -87,18 +86,14 @@ class CodeStructureExtractor:
         Returns:
             str: The summarized docstring line.
         """
-        # HACK: The `DOCSTRING_STYLE_ONE` regex contains multiple alternative patterns,
+        # The `DOCSTRING_STYLE_ONE` regex contains multiple alternative patterns,
         # which results in `None` values for the capturing groups that did not match.
-        # This list comprehension filters out the `None` values to reliably extract
-        # the matched content (indent, delimiters, and docstring text).
+        # filters out the `None` values to reliably extract while preserving the empty string indent
         groups = [g for g in match.groups() if g is not None]
-        indent = groups[0]
-        l_end = groups[1]
-        doc = groups[2].strip()
-        r_end = groups[3]
+        indent, l_end, doc, r_end = groups
 
         first_line = ""
-        for line in doc.splitlines():
+        for line in doc.strip().splitlines():
             stripped_line = line.strip()
             if stripped_line:
                 first_line = stripped_line
@@ -302,7 +297,7 @@ class CodeStructureExtractor:
         buffer: dict[str, list],
     ) -> None:
         """
-        Consolidate the current structure and any buffered content into a Box and append it to snippet_boxes.
+        Consolidate the current structure and any buffered content into a DotDict and append it to snippet_boxes.
 
         It automatically flushs the buffer.
 
@@ -310,7 +305,7 @@ class CodeStructureExtractor:
             curr_struct (list[tuple]): Accumulated code lines and metadata,
                 where each element is a tuple containing:
                 (line_number, line_content, indent_level, func_partial_signature).
-            snippet_boxes (list[Box]): The list to which the newly created Box will be appended.
+            snippet_boxes (list[DotDict]): The list to which the newly created DotDict will be appended.
             buffer (dict[str, list]): Buffer for intermediate processing (default: empty list).
         """
         if not (curr_struct or buffer):

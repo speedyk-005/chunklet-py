@@ -3,7 +3,7 @@ from itertools import chain, tee
 from pathlib import Path
 from typing import Annotated, Any, Callable, Generator, Iterable, Literal
 
-from box import Box
+from dotdict3 import DotDict
 from loguru import logger
 from more_itertools import ilen, split_at
 from pydantic import Field
@@ -22,7 +22,7 @@ from chunklet.base_chunker import BaseChunker
 from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
-from chunklet.common.validation import restricted_iterable, validate_input
+from chunklet.common.validation import IterableOfStr, IterableOfPath, validate_input
 from chunklet.document_chunker._plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker.converters import (
     html_2_md,
@@ -346,7 +346,7 @@ class DocumentChunker(BaseChunker):
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
         base_metadata: dict[str, Any] | None = None,
-    ) -> list[Box]:
+    ) -> list[DotDict]:
         """
         Chunks raw text content.
 
@@ -365,7 +365,7 @@ class DocumentChunker(BaseChunker):
             base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
 
         Returns:
-            list[Box]: A list of `Box` objects, each representing a chunk.
+            list[DotDict]: A list of `DotDict` objects, each representing a chunk.
         """
         params = {k: v for k, v in locals().items() if k != "self"}
         params["token_counter"] = params.get("token_counter") or self.token_counter
@@ -374,7 +374,7 @@ class DocumentChunker(BaseChunker):
     @validate_input
     def chunk_texts(
         self,
-        texts: "restricted_iterable(str)",  # noqa: F722
+        texts: IterableOfStr,
         *,
         lang: str = "auto",
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
@@ -388,12 +388,12 @@ class DocumentChunker(BaseChunker):
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
-    ) -> Generator[Box, None, None]:
+    ) -> Generator[DotDict, None, None]:
         """
         Chunks multiple text contents.
 
         Args:
-            texts (restricted_iterable(str)): A restricted iterable of texts to chunk.
+            texts (IterableOfStr): A non-string iterable of texts to chunk.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
             max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
@@ -411,7 +411,7 @@ class DocumentChunker(BaseChunker):
             on_errors (str): How to handle errors.
 
         yields:
-            Box: `Box` object, representing a chunk with its content and metadata.
+            DotDict: `DotDict` object, representing a chunk with its content and metadata.
 
         Raises:
             InvalidInputError: If the input arguments aren't valid.
@@ -435,7 +435,7 @@ class DocumentChunker(BaseChunker):
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
-    ) -> list[Box]:
+    ) -> list[DotDict]:
         """
         Chunks a single document from a given path.
 
@@ -457,7 +457,7 @@ class DocumentChunker(BaseChunker):
                 Required if `max_tokens` is provided.
 
         Returns:
-            list[Box]: A list of `Box` objects, each representing
+            list[DotDict]: A list of `DotDict` objects, each representing
             a chunk with its content and metadata.
 
         Raises:
@@ -505,7 +505,7 @@ class DocumentChunker(BaseChunker):
     @validate_input
     def chunk_files(
         self,
-        paths: "restricted_iterable(str | Path)",  # noqa: F722
+        paths: IterableOfPath,
         *,
         lang: str = "auto",
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
@@ -518,7 +518,7 @@ class DocumentChunker(BaseChunker):
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
-    ) -> Generator[Box, None, None]:
+    ) -> Generator[DotDict, None, None]:
         """
         Chunks multiple documents from a list of file paths.
 
@@ -527,7 +527,7 @@ class DocumentChunker(BaseChunker):
         handles various file types.
 
         Args:
-            paths (restricted_iterable[str | Path]): A restricted iterable of paths to the document files.
+            paths (IterableOfPath): A non-string iterable of paths to the document files.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
             max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
@@ -547,7 +547,7 @@ class DocumentChunker(BaseChunker):
             on_errors: How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
 
         yields:
-            Box: `Box` object, representing a chunk with its content and metadata.
+            DotDict: `DotDict` object, representing a chunk with its content and metadata.
 
         Raises:
             InvalidInputError: If the input arguments aren't valid.
@@ -624,7 +624,7 @@ class DocumentChunker(BaseChunker):
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
-    ) -> list[Box]:
+    ) -> list[DotDict]:
         """
         Chunk a document file into semantic pieces.
 
@@ -640,7 +640,7 @@ class DocumentChunker(BaseChunker):
     )
     def batch_chunk(  # pragma: no cover
         self,
-        paths: "restricted_iterable(str | Path)",  # noqa: F722
+        paths: IterableOfPath,
         *,
         lang: str = "auto",
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
@@ -653,7 +653,7 @@ class DocumentChunker(BaseChunker):
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
-    ) -> Generator[Box, None, None]:
+    ) -> Generator[DotDict, None, None]:
         """
         Batch chunk multiple document files.
 

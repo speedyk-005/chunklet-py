@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.3.0] - Unreleased
+
+### Added
+- **Sentence Splitting**:
+  - Added missing terminators: ¡ ¿ ︕ ︖ ︒
+  - Added regex support for non-Latin scripts (`\p{Lo}` and `\p{Lt}` for other letters)
+- **Visualizer Encoding**:
+  - Added `msgpack` library for MessagePack encoding on server
+  - Added `msgpack-lite` JS library on client for decoding
+- **BlingFire Integration**:
+  - Added auto detection + usage of blingfire lib if  env "USE_BLINGFIRE" is set
+  - Added BlingfireMissingError exception
+
+### Changed
+- **Core Performance Overhaul**:
+  - Replaced regex-based `_find_span` with deterministic finder (~2x faster span detection, avoiding regex backtracking)
+  - Switched from `regex` library to stdlib `re` - ~2x faster for simple patterns
+  - Replaced `box` library with `dotdict3` - 12x faster (0.467s vs 0.039s per 10k accesses)
+  - Switched from JSON to MessagePack encoding in visualizer (~30-50% smaller payloads, faster encoding)
+- **Fallback Splitter**: Renamed `FallbackSplitter` to `_clean_sentences` (works for 50+ languages)
+- **SentenceSplitter Rename**: Renamed `_filter_sentences` method to `split_text`
+- **Lazy Imports**:
+  - Changed from eager imports to lazy imports for splitter libraries
+  - Changed Handler Lookup from dict-based to method-based for more control
+- **Validation Refactor**:
+  - Shifted from runtime `restricted_iterable` to static `TypeAlias` (IterableOfStr/Path). Reduces logic (~35 to ~15 lines), improve IDE type inference and static analysis.
+  - Integrated `reprlib` in `pretty_errors` for efficient collection truncation.
+
+---
+
 ## [2.2.0] - 2026-02-17
 
 ### Changed

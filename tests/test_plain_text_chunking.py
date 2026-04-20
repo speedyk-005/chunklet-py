@@ -178,8 +178,37 @@ def test_overlap_behavior(chunker):
         f"Expected second chunk to start with '{expected_overlap}'."
     )
 
+# --- Span Finder Tests ---
+
+
+@pytest.mark.parametrize(
+    "text,query,expected",
+    [
+        # Exact matches
+        ("Hello world", "Hello world", (0, 11)),
+        ("Hello world", "world", (6, 11)),
+
+        # With punctuation variations
+        ("Hello, world! Test.", "Hello world", (0, 11)),
+        ("Test... Python is great.", "Python is great", (8, 23)),
+        ("Yes--no maybe", "Yes no maybe", (0, 11)),
+
+        # Not found
+        ("Hello world", "not found", (-1, -1)),
+    ],
+)
+def test_span_finder(text: str, query: str, expected: tuple[int, int]):
+    """Test DeterministicSpanFinder handles various text patterns."""
+    from chunklet.document_chunker.span_finder import DeterministicSpanFinder
+
+    finder = DeterministicSpanFinder(text)
+    result = finder.find_span(query)
+    assert result == expected
+
 
 # --- Batch chunking Tests---
+
+
 @pytest.mark.parametrize(
     "texts_input, expected_results_len",
     [

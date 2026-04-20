@@ -379,8 +379,9 @@ async function processUploadedFile() {
             }
             throw new Error(errorMessage);
         }
-        
-        const data = await response.json();
+
+        const arrayBuffer = await response.arrayBuffer();
+        const data = msgpack.decode(new Uint8Array(arrayBuffer));
         
         // Update state
         state.originalText = data.text;

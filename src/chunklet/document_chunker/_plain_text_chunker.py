@@ -1,24 +1,26 @@
 import copy
 import sys
+import re
 from collections.abc import Iterable
 from functools import partial
 from typing import Annotated, Any, Callable, Generator, Literal
 
-import regex as re
-from box import Box
+from dotdict3 import DotDict
 from loguru import logger
 from pydantic import Field
 
 from chunklet.common.batch_runner import run_in_batch
 from chunklet.common.logging_utils import log_info
 from chunklet.common.token_utils import count_tokens
-from chunklet.common.validation import restricted_iterable, validate_input
+from chunklet.common.validation import IterableOfStr, validate_input
+from chunklet.document_chunker.span_finder import DeterministicSpanFinder
 from chunklet.exceptions import (
     CallbackError,
     InvalidInputError,
     MissingTokenCounterError,
 )
 from chunklet.sentence_splitter import BaseSplitter, SentenceSplitter
+
 
 # Regex to split sentences into individual clauses
 CLAUSE_END_PATTERN = re.compile(r"(?<=[;,’：—)&…])\s")
@@ -95,62 +97,14 @@ class PlainTextChunker:
         self._verbose = value
         self.sentence_splitter.verbose = value
 
-    def _find_span(self, text_portion: str, full_text: str) -> tuple[int, int]:
-        """
-        Find a multi-line substring inside a full text, ignoring separators
-        like whitespace, newlines, and punctuation between lines.
-
-        Args:
-            text_portion: The substring (can be multi-line) to search for.
-            full_text: The text to search within.
-
-        Returns:
-            A tuple (start, end) representing the span in full_text.
-            Returns (-1, -1) if not found.
-        """
-        # Remove continuation marker from the beginning of text_portion first
-        if text_portion.startswith(self.continuation_marker):
-            text_portion = text_portion[len(self.continuation_marker) :].lstrip()
-
-        # Fast path for exact match
-        if text_portion.strip() in full_text:
-            start = full_text.find(text_portion.strip())
-            return start, start + len(text_portion)
-
-        lines = [line.strip() for line in text_portion.splitlines() if line.strip()]
-        if not lines:
-            return -1, -1
-
-        budget = int(
-            max(0, min(len(text_portion) // 5, 60))  # 20 %
-        )
-
-        # Build flexible separator pattern that allows newlines, Unicode separators, and punctuation
-        sep = rf"""
-            [          # character class for allowed artifacts between lines
-                \n     # newline characters
-                \p{{Z}} # Unicode whitespace separators
-                \p{{P}} # punctuation characters
-            ]{{0,{budget}}}?  # bounded (0 to budget), lazy quantifier
-        """
-
-        # Join escaped lines with the separator
-        pattern = sep.join(re.escape(line) for line in lines)
-
-        m = re.search(pattern, full_text, re.M | re.VERBOSE)
-        if m:
-            return m.span()
-
-        return -1, -1
-
     def _create_chunk_boxes(
         self,
         chunks: Iterable[str],
         base_metadata: dict[str, Any],
-        text: str,
-    ) -> list[Box]:
+        span_finder: DeterministicSpanFinder,
+    ) -> list[DotDict]:
         """
-        Helper to create a list of Box objects for chunks with embedded metadata and auto-assigned chunk numbers.
+        Helper to create a list of DotDict objects for chunks with embedded metadata and auto-assigned chunk numbers.
 
         Args:
             chunks (Iterable[str]): An iterable (e.g., list or generator) of raw text strings,
@@ -158,10 +112,10 @@ class PlainTextChunker:
             base_metadata (dict[str, Any]): A dictionary containing document-level metadata
                 (e.g., 'source' file path, 'page_count' for PDFs) to be embedded
                 into each chunk's metadata.
-            text (str): The full original text to find the span of the chunk within.
+            span_finder (DeterministicSpanFinder): The span finder instance for locating chunks.
 
         Returns:
-            list[Box]: A list of `Box` objects. Each `Box` contains:
+            list[DotDict]: A list of `DotDict` objects. Each `DotDict` contains:
 
                 - 'content' (str): The text of the chunk.
                 - 'metadata' (dict): A dictionary including 'chunk_num' (int)
@@ -169,11 +123,13 @@ class PlainTextChunker:
         """
         chunk_boxes = []
         for i, chunk_str in enumerate(chunks, start=1):
-            chunk_box = Box()
+            chunk_box = DotDict()
             chunk_box.content = chunk_str.strip()
             chunk_box.metadata = copy.deepcopy(base_metadata)
             chunk_box.metadata["chunk_num"] = i
-            chunk_box.metadata["span"] = self._find_span(chunk_str, text)
+            chunk_box.metadata["span"] = span_finder.find_span(
+                chunk_str.removeprefix(self.continuation_marker)
+            )
             chunk_boxes.append(chunk_box)
         return chunk_boxes
 
@@ -499,7 +455,7 @@ class PlainTextChunker:
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
         base_metadata: dict[str, Any] | None = None,
-    ) -> list[Box]:
+    ) -> list[DotDict]:
         """
         Chunks a single text into smaller pieces based on specified parameters.
         Supports flexible constraint-based chunking, clause-level overlap,
@@ -518,7 +474,7 @@ class PlainTextChunker:
             base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
 
         Returns:
-            list[Box]: A list of `Box` objects, each containing the chunk content and metadata.
+            list[DotDict]: A list of `DotDict` objects, each containing the chunk content and metadata.
 
         Raises:
             InvalidInputError: If any chunking configuration parameter is invalid.
@@ -582,12 +538,15 @@ class PlainTextChunker:
         # Leave the user's original dict untouched
         base_metadata = (base_metadata or {}).copy()
 
-        return self._create_chunk_boxes(chunks, base_metadata, text)
+        # Note: We use DeterministicSpanFinder because sentence splitter may modify text
+        # (e.g., normalize whitespace, fix encoding), making exact span tracking difficult.
+        span_finder = DeterministicSpanFinder(text)
+        return self._create_chunk_boxes(chunks, base_metadata, span_finder)
 
     @validate_input
     def batch_chunk(
         self,
-        texts: "restricted_iterable(str)",  # pyright: ignore
+        texts: IterableOfStr,
         *,
         lang: str = "auto",
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
@@ -610,7 +569,7 @@ class PlainTextChunker:
         of the tasks that completed successfully, preventing wasted work.
 
         Args:
-            texts (restricted_iterable[str]): A restricted iterable of input texts to be chunked.
+            texts (IterableOfStr): A non-string iterable of input texts to be chunked.
             lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
             max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
@@ -629,7 +588,7 @@ class PlainTextChunker:
                 Defaults to 'raise'.
 
         Yields:
-            Any: A `Box` object containing the chunk content and metadata, or any separator object.
+            Any: A `DotDict` object containing the chunk content and metadata, or any separator object.
 
         Raises:
             InvalidInputError: If `texts` is not an iterable of strings, or if `n_jobs` is less than 1.

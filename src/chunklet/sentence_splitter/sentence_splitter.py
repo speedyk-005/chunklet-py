@@ -3,21 +3,21 @@ import warnings
 # Suppress pkg_resources deprecation warnings from third-party libraries
 warnings.filterwarnings("ignore", message=".*pkg_resources.*", category=UserWarning)
 
+from os import getenv
 from pathlib import Path
+from typing import Callable
 
 import regex as re
-from indicnlp.tokenize import sentence_tokenize
 from loguru import logger
 from py3langid.langid import MODEL_FILE, LanguageIdentifier
-from pysbd import Segmenter
-from sentencex import segment
-from sentsplit.segment import SentSplit
+
+# pysbd, sentsplit, indicnlp and sentencex are lazy imported
 
 from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
 from chunklet.common.validation import validate_input
-from chunklet.sentence_splitter._fallback_splitter import FallbackSplitter
+from chunklet.sentence_splitter._universal_splitter import UniversalSplitter
 from chunklet.sentence_splitter.languages import (
     INDIC_NLP_UNIQUE_LANGUAGES,
     PYSBD_SUPPORTED_LANGUAGES,
@@ -25,11 +25,13 @@ from chunklet.sentence_splitter.languages import (
     SENTSPLIT_UNIQUE_LANGUAGES,
 )
 from chunklet.sentence_splitter.registry import custom_splitter_registry
+from chunklet.exceptions import BlingfireMissingError
 
-# Regex pattern to identify strings consisting solely of punctuation or symbols.
+
+# To identify strings consisting solely of punctuation or symbols.
 PUNCTUATION_ONLY_PATTERN = re.compile(r"[\p{P}\p{S}]+")
 
-# Regex pattern to identify thematic breaks (e.g., '---', '***', '___')
+# To identify thematic breaks (e.g., '---', '***', '___')
 THEMATIC_BREAK_PATTERN = re.compile(r"^\s*[\-\*_]{2,}\s*$")
 
 
@@ -91,20 +93,6 @@ class SentenceSplitter(BaseSplitter):
     - Intelligent Post-processing: Cleans up split sentences by filtering empty strings and rejoining stray punctuation.
     """
 
-    # Language handler mapping - each library chosen for specific linguistic capabilities
-    LANGUAGE_HANDLERS = {
-        frozenset(PYSBD_SUPPORTED_LANGUAGES): lambda lang, text: Segmenter(
-            language=lang
-        ).segment(text),
-        frozenset(SENTSPLIT_UNIQUE_LANGUAGES): lambda lang, text: SentSplit(
-            lang
-        ).segment(text),
-        frozenset(INDIC_NLP_UNIQUE_LANGUAGES): lambda lang, text: (
-            sentence_tokenize.sentence_split(text, lang)
-        ),
-        frozenset(SENTENCEX_UNIQUE_LANGUAGES): lambda lang, text: segment(lang, text),
-    }
-
     @validate_input
     def __init__(self, verbose: bool = False):
         """
@@ -114,16 +102,36 @@ class SentenceSplitter(BaseSplitter):
             verbose (bool, optional): If True, enables verbose logging for debugging and informational messages.
         """
         self.verbose = verbose
-        self.fallback_splitter = FallbackSplitter()
+        self.fallback_splitter = UniversalSplitter()
 
         # Create a normalized identifier for language detection
         self.identifier = LanguageIdentifier.from_pickled_model(
             MODEL_FILE, norm_probs=True
         )
 
-    def _filter_sentences(self, sentences: list[str]) -> list[str]:
+    def _get_special_lang_handler(self, lang: str) -> Callable | None:  # pragma: no cover
+        if lang in PYSBD_SUPPORTED_LANGUAGES:
+            from pysbd import Segmenter
+            log_info(self.verbose, "Using pysbd")
+            return Segmenter(lang).segment
+        elif lang in SENTSPLIT_UNIQUE_LANGUAGES:
+            from sentsplit.segment import SentSplit
+            log_info(self.verbose, "Using sentsplit")
+            return SentSplit(lang).segment
+        elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
+            from indicnlp.tokenize import sentence_tokenize
+            log_info(self.verbose, "Using indicnlp")
+            return lambda text: sentence_tokenize.sentence_split(text, lang)
+        elif lang in SENTENCEX_UNIQUE_LANGUAGES:
+            from sentencex import segment
+            log_info(self.verbose, "Using sentencex")
+            return lambda text: segment(lang, text)
+
+        return None
+
+    def _clean_sentences(self, sentences: list[str]) -> list[str]:
         """
-        Post-processes split sentences by filtering empty strings and rejoining stray punctuation.
+        Filtering empty strings and rejoining stray punctuation.
 
         Args:
             sentences (list[str]): Raw list of split sentences.
@@ -135,11 +143,10 @@ class SentenceSplitter(BaseSplitter):
         for sent in sentences:
             stripped_sent = sent.strip()
             if stripped_sent:
-                # If sentence is made of stray punctuation only
                 if PUNCTUATION_ONLY_PATTERN.fullmatch(
                     stripped_sent
                 ) and not THEMATIC_BREAK_PATTERN.match(stripped_sent):
-                    if processed_sentences:
+                    if len(processed_sentences) >= 1:
                         # Limits to the first 5 ones
                         processed_sentences[-1] += stripped_sent[:5]
                     else:
@@ -193,23 +200,31 @@ class SentenceSplitter(BaseSplitter):
             log_info(self.verbose, "Input text is empty. Returning empty list.")
             return []
 
-        if lang == "auto":
-            logger.warning(
-                "The language is set to `auto`. Consider setting the `lang` parameter to a specific language to improve reliability."
-            )
-            lang_detected, confidence = self.detected_top_language(text)
-            lang = lang_detected if confidence >= 0.7 else lang
-
-        # Prioritize custom splitters from registry
-        if custom_splitter_registry.is_registered(lang):
-            sentences, splitter_name = custom_splitter_registry.split(text, lang)
-            log_info(self.verbose, "Using registered splitter: {}", splitter_name)
+        if lang == "auto" and getenv("USE_BLINGFIRE") == "1":  # pragma: no cover
+            log_info(self.verbose, "🔥 Using blingfire")
+            try:
+                from blingfire import text_to_sentences
+                # detected sentences are separate by newlines
+                sentences = text_to_sentences(text).split("\n")
+            except ImportError:
+                raise BlingfireMissingError() from None
         else:
+            if lang == "auto":
+                logger.warning(
+                    "The language is set to `auto`. Consider setting the `lang` parameter "
+                    "to a specific language to improve reliability."
+                )
+                lang_detected, confidence = self.detected_top_language(text)
+                lang = lang_detected if confidence >= 0.7 else "any"
+
             sentences = None
-            for lang_set, handler in self.LANGUAGE_HANDLERS.items():
-                if lang in lang_set:
-                    sentences = handler(lang, text)
-                    break
+            if lang != "fallback":
+                # Prioritize custom splitters from registry
+                if custom_splitter_registry.is_registered(lang):
+                    sentences, splitter_name = custom_splitter_registry.split(text, lang)
+                    log_info(self.verbose, "Using registered splitter: {}", splitter_name)
+                elif (handler := self._get_special_lang_handler(lang)) is not None:
+                    sentences = handler(text)
 
             # If no handler found, use fallback
             if sentences is None:
@@ -219,23 +234,21 @@ class SentenceSplitter(BaseSplitter):
                 )
                 sentences = self.fallback_splitter.split(text)
 
-        processed_sentences = self._filter_sentences(sentences)
-
+        cleaned_sentences = self._clean_sentences(sentences)
         log_info(
             self.verbose,
             "Text splitted into sentences. Total sentences detected: {}",
-            len(processed_sentences),
+            len(cleaned_sentences),
         )
-
-        return processed_sentences
+        return cleaned_sentences
 
     def split_file(self, path: str | Path, lang: str = "auto") -> list[str]:
         """
         Read and split a file into sentences.
 
         Args:
-            path: Path to the file to read.
-            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to 'auto'.
+            path (str | Path): Path to the file to read.
+            lang (str, optional): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to 'auto'.
 
         Returns:
             list[str]: A list of sentences extracted from the file.
