@@ -105,7 +105,8 @@ chunklet --version
 ```
 
 > [!TIP]
-> #### Termux (Android)
+> <b>Termux (Android)</b>
+>
 > No rust toolchain on Termux (especially python 3.13) ? Install pydantic-core pre-built wheels first then retry installing chunklet-py:
 >
 > ```bash
