@@ -16,9 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Visualizer Encoding**:
   - Added `msgpack` library for MessagePack encoding on server
   - Added `msgpack-lite` JS library on client for decoding
-- **BlingFire Integration**:
-  - Added auto detection + usage of blingfire lib if  env "USE_BLINGFIRE" is set
-  - Added BlingfireMissingError exception
 
 ### Changed
 - **Core Performance Overhaul**:

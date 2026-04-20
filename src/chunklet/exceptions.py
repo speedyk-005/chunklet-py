@@ -55,18 +55,3 @@ class CallbackError(ChunkletError):
     or splitter fails during execution."""
 
     pass
-
-
-class BlingfireMissingError(ChunkletError):
-    """Raised when blingfire is required but not installed.
-
-    This happens when USE_BLINGFIRE=1 is set but the blingfire
-    package is not installed. Install with: pip install blingfire
-    """
-
-    def __init__(self, msg: str = ""):
-        self.msg = msg or (
-            "blingfire is not installed but was requested via USE_BLINGFIRE=1.\n"
-            "💡 Hint: Install blingfire with 'pip install blingfire'"
-        )
-        super().__init__(self.msg)

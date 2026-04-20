@@ -137,13 +137,6 @@ Want to unlock more Chunklet-py superpowers? Add these optional dependencies bas
     ```bash
     pip install "chunklet-py[all]"
     ```
-* **BlingFire (Optional):** For faster sentence splitting:
-    ```bash
-    pip install blingfire
-
-    # Then set env var before running
-    export USE_BLINGFIRE=1  # On Windows: set USE_BLINGFIRE=1 
-    ```
 
 ### The From-Source Way
 
