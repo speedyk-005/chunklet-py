@@ -31,14 +31,6 @@ Hey! Thanks for thinking about contributing. Bug fixes, features, docs — all w
 > pip install -e ".[dev-all]"
 > ```
 
-3. **Install BlingFire (Optional)**
-   For faster sentence splitting
-
-   ```bash
-   pip install blingfire
-   export USE_BLINGFIRE=1  # On Windows: set USE_BLINGFIRE=1
-   ```
-
 ## Making Changes
 
 1. **Create a new branch:** Use descriptive names like `feature/my-feature-branch` or `bugfix/issue-number-description`

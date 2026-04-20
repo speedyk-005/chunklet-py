@@ -25,7 +25,6 @@ from chunklet.sentence_splitter.languages import (
     SENTSPLIT_UNIQUE_LANGUAGES,
 )
 from chunklet.sentence_splitter.registry import custom_splitter_registry
-from chunklet.exceptions import BlingfireMissingError
 
 
 # To identify strings consisting solely of punctuation or symbols.
@@ -200,39 +199,30 @@ class SentenceSplitter(BaseSplitter):
             log_info(self.verbose, "Input text is empty. Returning empty list.")
             return []
 
-        if lang == "auto" and getenv("USE_BLINGFIRE") == "1":  # pragma: no cover
-            log_info(self.verbose, "🔥 Using blingfire")
-            try:
-                from blingfire import text_to_sentences
-                # detected sentences are separate by newlines
-                sentences = text_to_sentences(text).split("\n")
-            except ImportError:
-                raise BlingfireMissingError() from None
-        else:
-            if lang == "auto":
-                logger.warning(
-                    "The language is set to `auto`. Consider setting the `lang` parameter "
-                    "to a specific language to improve reliability."
-                )
-                lang_detected, confidence = self.detected_top_language(text)
-                lang = lang_detected if confidence >= 0.7 else "any"
+        if lang == "auto":
+            logger.warning(
+                "The language is set to `auto`. Consider setting the `lang` parameter "
+                "to a specific language to improve reliability."
+            )
+            lang_detected, confidence = self.detected_top_language(text)
+            lang = lang_detected if confidence >= 0.7 else "any"
 
-            sentences = None
-            if lang != "fallback":
-                # Prioritize custom splitters from registry
-                if custom_splitter_registry.is_registered(lang):
-                    sentences, splitter_name = custom_splitter_registry.split(text, lang)
-                    log_info(self.verbose, "Using registered splitter: {}", splitter_name)
-                elif (handler := self._get_special_lang_handler(lang)) is not None:
-                    sentences = handler(text)
+        sentences = None
+        if lang != "fallback":
+            # Prioritize custom splitters from registry
+            if custom_splitter_registry.is_registered(lang):
+                sentences, splitter_name = custom_splitter_registry.split(text, lang)
+                log_info(self.verbose, "Using registered splitter: {}", splitter_name)
+            elif (handler := self._get_special_lang_handler(lang)) is not None:
+                sentences = handler(text)
 
-            # If no handler found, use fallback
-            if sentences is None:
-                logger.warning(
-                    "Using a universal rule-based splitter.\n"
-                    "Reason: Language not supported or detected with low confidence."
-                )
-                sentences = self.fallback_splitter.split(text)
+        # If no handler found, use fallback
+        if sentences is None:
+            logger.warning(
+                "Using a universal rule-based splitter.\n"
+                "Reason: Language not supported or detected with low confidence."
+            )
+            sentences = self.fallback_splitter.split(text)
 
         cleaned_sentences = self._clean_sentences(sentences)
         log_info(
