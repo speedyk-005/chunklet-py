@@ -1,6 +1,6 @@
 [project]
 name = "chunklet-py"
-version = "2.2.0"
+version = "2.3.0"
 description = "High-fidelity context-aware chunking and interactive visualization for RAG. Advanced segmentation for code and documents, because your LLM is only as smart as the fragments you feed it."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
@@ -35,6 +35,7 @@ keywords = [
 ]
 
 dependencies = [
+  "loguru>=0.7.3,<1.0",
   "pysbd>=0.3.4,<1.0",
   "sentsplit>=1.0.8,<2.0",
 
