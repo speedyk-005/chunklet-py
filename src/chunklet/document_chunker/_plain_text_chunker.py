@@ -25,12 +25,14 @@ from chunklet.sentence_splitter import BaseSplitter, SentenceSplitter
 # Regex to split sentences into individual clauses
 CLAUSE_END_PATTERN = re.compile(r"(?<=[;,’：—)&…])\s")
 
-# Pattern to detect markdown headings
+# Pattern to detect section breaks (headings, thematic breaks, HTML details, etc.)
 SECTION_BREAK_PATTERN = re.compile(
-    r"^\s*#{1,6}\s*.+?$|"  # heading
-    r"^\s*([\-\*_]\s*)(?:\1){2,}\s*$|"  # thematic Breaks
-    r"\s*<details>",  # collapsed Sections opening
-    re.M,
+    r"^\s*#{1,6}\s+.+?$|"  # markdown headings (# - ######)
+    r"^\s*([-*_])\s*(?:\1){2,}\s*$|"  # thematic breaks (---, ***, ___)
+    r"^\s*<\/?(?:details|summary|section|article)\b[^>]*>|"  # HTML sectioning
+    r"^\s*<hr\s*\/?>|"  # HTML horizontal rule
+    r"^---+$|^\\*\\*\\*+$|^___+$",  # ASCII thematic breaks
+    re.M | re.I,
 )
 
 
