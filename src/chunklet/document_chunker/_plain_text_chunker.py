@@ -199,7 +199,6 @@ class PlainTextChunker:
                 - The remaining unfitted clauses (joined as a string).
         """
         clauses = CLAUSE_END_PATTERN.split(sentence)
-        clauses = [cl for cl in clauses if cl.strip()]
 
         fitted = []
         unfitted = []
