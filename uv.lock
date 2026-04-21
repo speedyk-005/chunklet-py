@@ -487,7 +487,7 @@ requires-dist = [
     { name = "openpyxl", marker = "extra == 'structured-document'", specifier = ">=3.1.5,<4.0" },
     { name = "pdfminer-six", marker = "extra == 'structured-document'", specifier = ">=20250324" },
     { name = "py3langid", specifier = ">=0.3.0,<1.0" },
-    { name = "pydantic", specifier = ">=2.11.0,<3.0" },
+    { name = "pydantic", specifier = ">=2.11.6,<3.0" },
     { name = "pylatexenc", marker = "extra == 'structured-document'", specifier = "==2.10" },
     { name = "pymdown-extensions", marker = "extra == 'docs'", specifier = ">=10.16.1" },
     { name = "pysbd", specifier = ">=0.3.4,<1.0" },
