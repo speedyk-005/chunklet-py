@@ -25,7 +25,7 @@ class DeterministicSpanFinder:
             text: The text to process.
 
         Returns:
-            tuple[str, dict[int, int]] of (cleaned_text, index_map) where
+            A tuple of (cleaned_text, index_map) where
                 index_map maps positions in cleaned_text to positions in original text.
         """
         index_map = {}

@@ -23,7 +23,7 @@ class BaseProcessor(ABC):
         Extracts metadata from the document.
 
         Returns:
-            dict[str, Any] Dictionary containing document metadata.
+            Dictionary containing document metadata.
         """
         pass
 
@@ -33,6 +33,6 @@ class BaseProcessor(ABC):
         Yields text content from the document.
 
         Yields:
-            str Text content chunks from the document.
+            Text content chunks from the document.
         """
         pass

@@ -16,7 +16,7 @@ def rst_to_md(file_path: str | Path) -> str:
         file_path: Path to the rst file.
 
     Returns:
-        str The full text content in Markdown.
+        The full text content in Markdown.
     """
     if publish_string is None:
         raise ImportError(

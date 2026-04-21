@@ -27,7 +27,7 @@ class BaseChunker(ABC):
         Extract chunks from text.
 
         Returns:
-            list[DotDict] List of chunks with content and metadata.
+            List of chunks with content and metadata.
         """
         pass
 
@@ -37,7 +37,7 @@ class BaseChunker(ABC):
         Process multiple texts.
 
         Returns:
-            list[list[DotDict]] List of chunks for each input text.
+            List of chunks for each input text.
         """
         pass
 
@@ -47,7 +47,7 @@ class BaseChunker(ABC):
         Read and chunk a file.
 
         Returns:
-            list[DotDict] List of chunks with content and metadata.
+            List of chunks with content and metadata.
         """
         pass
 
@@ -57,6 +57,6 @@ class BaseChunker(ABC):
         Process multiple files.
 
         Yields:
-            DotDict `DotDict` object, representing a chunk with its content and metadata.
+            `DotDict` object, representing a chunk with its content and metadata.
         """
         pass

@@ -149,7 +149,7 @@ class CustomProcessorRegistry:
             ext: The file extension.
 
         Returns:
-            tuple[ReturnType, str] containing the extracted data and the name of the processor used.
+            A tuple containing the extracted data and the name of the processor used.
 
         Raises:
             CallbackError: If the processor callback fails or returns the wrong type.

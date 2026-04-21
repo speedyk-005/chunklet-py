@@ -15,7 +15,7 @@ def latex_to_md(file_path: str | Path) -> str:
         file_path: Path to the latex file.
 
     Returns:
-        str The full text content in markdown
+        The full text content in markdown
     """
     if LatexNodes2Text is None:
         raise ImportError(

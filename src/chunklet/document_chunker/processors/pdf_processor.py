@@ -93,7 +93,7 @@ class PDFProcessor(BaseProcessor):
             text: Raw text extracted from PDF page.
 
         Returns:
-            str Cleaned and normalized text.
+            Cleaned and normalized text.
         """
         if not text:
             return ""
@@ -110,7 +110,7 @@ class PDFProcessor(BaseProcessor):
             value: The input value, which may be a string or a byte sequence.
 
         Returns:
-            str The decoded string if the input was bytes, or the original string
+            The decoded string if the input was bytes, or the original string
                  if the input was already a string.
         """
         if isinstance(value, bytes):
@@ -127,7 +127,7 @@ class PDFProcessor(BaseProcessor):
             doc: PDFDocument instance with info attribute.
 
         Returns:
-            dict Dictionary of normalized metadata key-value pairs.
+            Dictionary of normalized metadata key-value pairs.
         """
         metadata = {}
         if not (hasattr(doc, "info") and doc.info):
@@ -152,7 +152,7 @@ class PDFProcessor(BaseProcessor):
         the _cleanup_text method to remove artifacts and normalize formatting.
 
         Yields:
-            str Cleaned text content from each PDF page.
+            Cleaned text content from each PDF page.
         """
         from pdfminer.high_level import extract_text
         from pdfminer.pdfpage import PDFPage
@@ -177,7 +177,7 @@ class PDFProcessor(BaseProcessor):
         Includes source path, page count, and PDF info fields.
 
         Returns:
-            dict[str, Any] A dictionary containing metadata fields:
+            A dictionary containing metadata fields:
                 - title
                 - author
                 - creator

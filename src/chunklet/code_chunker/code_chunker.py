@@ -114,7 +114,7 @@ class CodeChunker(BaseChunker):
             relations_list: A list containing relation lists.
 
         Returns:
-            str The string representation of the tree
+            The string representation of the tree
         """
         if not relations_list:
             return "global"
@@ -161,7 +161,7 @@ class CodeChunker(BaseChunker):
             cumulative_lengths: The cumulative lengths of the lines in the source code.
 
         Returns:
-            list[DotDict] of sub-chunks derived from the original block.
+            A list of sub-chunks derived from the original block.
         """
         sub_boxes = []
         curr_chunk = []
@@ -307,7 +307,7 @@ class CodeChunker(BaseChunker):
             source: Original source for metadata.
 
         Returns:
-            list[DotDict] List of chunk boxes with content and metadata.
+            List of chunk boxes with content and metadata.
         """
         source = (
             str(source) if (isinstance(source, Path) or is_path_like(source)) else "N/A"
@@ -510,14 +510,14 @@ class CodeChunker(BaseChunker):
                 max_tokens. If False, split oversized blocks. Default: True.
 
         Returns:
-            list[DotDict] List of code chunks with metadata. Each DotDict contains:
+            List of code chunks with metadata. Each DotDict contains:
 
-                - content (str): Code content
-                - tree (str): Namespace hierarchy
-                - start_line (int): Starting line in original source
-                - end_line (int): Ending line in original source
-                - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): "N/A"
+                - content: Code content
+                - tree: Namespace hierarchy
+                - start_line: Starting line in original source
+                - end_line: Ending line in original source
+                - span: Character-level span (start and end offsets) in the original source.
+                - source_path: "N/A"
 
         Raises:
             InvalidInputError: Invalid configuration parameters.
@@ -602,14 +602,14 @@ class CodeChunker(BaseChunker):
                 max_tokens. If False, split oversized blocks. Default: True.
 
         Returns:
-            list[DotDict] List of code chunks with metadata. Each DotDict contains:
+            List of code chunks with metadata. Each DotDict contains:
 
-                - content (str): Code content
-                - tree (str): Namespace hierarchy
-                - start_line (int): Starting line in original source
-                - end_line (int): Ending line in original source
-                - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): Source file path
+                - content: Code content
+                - tree: Namespace hierarchy
+                - start_line: Starting line in original source
+                - end_line: Ending line in original source
+                - span: Character-level span (start and end offsets) in the original source.
+                - source_path: Source file path
 
         Raises:
             InvalidInputError: Invalid configuration parameters.
@@ -683,15 +683,15 @@ class CodeChunker(BaseChunker):
                 How to handle errors during processing. Defaults to 'raise'.
 
         yields:
-            DotDict `DotDict` object, representing a chunk with its content and metadata.
+            `DotDict` object, representing a chunk with its content and metadata.
                 Includes:
 
-                - content (str): Code content
-                - tree (str): Namespace hierarchy
-                - start_line (int): Starting line in original source
-                - end_line (int): Ending line in original source
-                - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): "N/A"
+                - content: Code content
+                - tree: Namespace hierarchy
+                - start_line: Starting line in original source
+                - end_line: Ending line in original source
+                - span: Character-level span (start and end offsets) in the original source.
+                - source_path: "N/A"
 
         Raises:
             InvalidInputError: Invalid input parameters.
@@ -766,15 +766,15 @@ class CodeChunker(BaseChunker):
                 How to handle errors during processing. Defaults to 'raise'.
 
         yields:
-            DotDict `DotDict` object, representing a chunk with its content and metadata.
+            `DotDict` object, representing a chunk with its content and metadata.
                 Includes:
 
-                - content (str): Code content
-                - tree (str): Namespace hierarchy
-                - start_line (int): Starting line in original source
-                - end_line (int): Ending line in original source
-                - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): Source file path
+                - content: Code content
+                - tree: Namespace hierarchy
+                - start_line: Starting line in original source
+                - end_line: Ending line in original source
+                - span: Character-level span (start and end offsets) in the original source.
+                - source_path: Source file path
 
         Raises:
             InvalidInputError: Invalid input parameters.

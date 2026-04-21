@@ -99,7 +99,7 @@ def safely_count_iterable(name: str, iterable: Iterable) -> tuple[int, Iterable]
         iterable: The iterable or iterator to count and validate.
 
     Returns:
-        tuple[int, Iterable] The element count and the original (or preserved)
+        The element count and the original (or preserved)
 
     Raises:
         InvalidInputError: If any element fails validation during the counting process.

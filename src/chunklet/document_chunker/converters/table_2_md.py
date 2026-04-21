@@ -17,7 +17,7 @@ def table_to_md(file_path: str | Path) -> str:
         file_path: Path to the input file (.csv or .xlsx).
 
     Returns:
-        str Markdown table representation of the file contents.
+        Markdown table representation of the file contents.
     """
     file_path = Path(file_path)
     ext = file_path.suffix.lower()

@@ -117,7 +117,7 @@ class PlainTextChunker:
             span_finder: The span finder instance for locating chunks.
 
         Returns:
-            list[DotDict] of `DotDict` objects. Each `DotDict` contains:
+            A list of `DotDict` objects. Each `DotDict` contains:
 
                 - 'content' (str): The text of the chunk.
                 - 'metadata' (dict): A dictionary including 'chunk_num' (int)
@@ -150,7 +150,7 @@ class PlainTextChunker:
             overlap_percent: Percentage of overlap between chunks (0-75).
 
         Returns:
-            list[str] of clauses as overlap.
+            A list of clauses as overlap.
         """
         detected_clauses = [
             clause for sent in sentences for clause in CLAUSE_END_PATTERN.split(sent)
@@ -193,7 +193,7 @@ class PlainTextChunker:
             token_counter: The function needed for token counting.
 
         Returns:
-            tuple[str, str] containing two strings:
+            A tuple containing two strings:
 
                 - The clauses that fit within the token budget (joined as a string).
                 - The remaining unfitted clauses (joined as a string).
@@ -232,7 +232,7 @@ class PlainTextChunker:
             token_counter: The function used to count tokens.
 
         Returns:
-            str The fitted part of the text, truncated to fit within max_tokens.
+            The fitted part of the text, truncated to fit within max_tokens.
         """
         parts = re.split(r"[ /\\]", text)
         token_count = 0
@@ -270,7 +270,7 @@ class PlainTextChunker:
             state: State dict to update with counts.
 
         Returns:
-            list[str] The prepared next chunk.
+            The prepared next chunk.
         """
         next_chunk = self._get_overlap_clauses(curr_chunk, overlap_percent)
 
@@ -314,7 +314,7 @@ class PlainTextChunker:
             overlap_percent: Percentage of overlap between chunks.
 
         Returns:
-            list[str] of chunk strings.
+            A list of chunk strings.
         """
         chunks = []
         curr_chunk = []
@@ -475,7 +475,7 @@ class PlainTextChunker:
             base_metadata: Optional dictionary to be included with each chunk.
 
         Returns:
-            list[DotDict] of `DotDict` objects, each containing the chunk content and metadata.
+            A list of `DotDict` objects, each containing the chunk content and metadata.
 
         Raises:
             InvalidInputError: If any chunking configuration parameter is invalid.
@@ -589,7 +589,7 @@ class PlainTextChunker:
                 Defaults to 'raise'.
 
         Yields:
-            Any A `DotDict` object containing the chunk content and metadata, or any separator object.
+            A `DotDict` object containing the chunk content and metadata, or any separator object.
 
         Raises:
             InvalidInputError: If `texts` is not an iterable of strings, or if `n_jobs` is less than 1.

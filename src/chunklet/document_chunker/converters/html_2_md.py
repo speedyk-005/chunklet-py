@@ -20,7 +20,7 @@ def html_to_md(
         max_url_length: The maximum length of a URL. Defaults to 150.
 
     Returns:
-        str The full text content in Markdown.
+        The full text content in Markdown.
     """
     if md is None:
         raise ImportError(

@@ -140,7 +140,7 @@ class CustomSplitterRegistry:
             lang: The language of the text.
 
         Returns:
-            tuple[list[str], str] containing a list of sentences and the name of the splitter used.
+            A tuple containing a list of sentences and the name of the splitter used.
 
         Raises:
             CallbackError: If the splitter callback fails.

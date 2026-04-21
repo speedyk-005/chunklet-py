@@ -17,7 +17,7 @@ def count_tokens(text: str, token_counter: Callable[[str], int]) -> int:
         token_counter: Function that returns the number of tokens.
 
     Returns:
-        int Number of tokens.
+        Number of tokens.
 
     Raises:
         CallbackError: If the token counter fails or returns an invalid type.

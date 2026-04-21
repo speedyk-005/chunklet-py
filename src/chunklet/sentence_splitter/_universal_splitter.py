@@ -53,7 +53,7 @@ class UniversalSplitter:
             text: The input text to be segmented into sentences.
 
         Returns:
-            list[str] of sentences after segmentation.
+            A list of sentences after segmentation.
 
         Notes:
             - Normalizes numbered lists during splitting and restores them afterward.

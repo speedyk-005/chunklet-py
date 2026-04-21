@@ -160,7 +160,7 @@ class DocumentChunker(BaseChunker):
             path: The Path object of the document file.
 
         Returns:
-            str The lowercased file extension.
+            The lowercased file extension.
 
         Raises:
             FileNotFoundError: If provided file path not found.
@@ -197,7 +197,7 @@ class DocumentChunker(BaseChunker):
             ext: File extension
 
         Returns:
-            str The text content of the file
+            The text content of the file
         """
         content = read_text_file(path)
 
@@ -223,7 +223,7 @@ class DocumentChunker(BaseChunker):
             ext: The file extension.
 
         Returns:
-            tuple[str | Generator[str, None, None], dict[str, Any]] containing
+            A tuple containing
             either a string (for simple text files) or a generator of strings (for processed documents)
             and a dictionary of metadata.
         """
@@ -268,13 +268,13 @@ class DocumentChunker(BaseChunker):
                 handling strategy for validation or processing failures.
 
         Returns:
-            dict A dictionary containing the prepared data, with the
+            A dictionary containing the prepared data, with the
                 following keys:
-                - "path_section_counts" (dict): A mapping of file paths to the
+                - "path_section_counts" : A mapping of file paths to the
                   number of sections (e.g., pages) within them.
-                - "all_texts_gen" (Generator): A single generator that yields
+                - "all_texts_gen" : A single generator that yields
                   the text content of all documents sequentially.
-                - "all_metadata" (list): A list of metadata dictionaries, one
+                - "all_metadata" : A list of metadata dictionaries, one
                   for each successfully processed document.
         """
         path_section_counts = {}
@@ -365,7 +365,7 @@ class DocumentChunker(BaseChunker):
             base_metadata: Optional dictionary to be included with each chunk.
 
         Returns:
-            list[DotDict] of `DotDict` objects, each representing a chunk.
+            A list of `DotDict` objects, each representing a chunk.
         """
         params = {k: v for k, v in locals().items() if k != "self"}
         params["token_counter"] = params.get("token_counter") or self.token_counter
@@ -411,7 +411,7 @@ class DocumentChunker(BaseChunker):
             on_errors: How to handle errors.
 
         yields:
-            DotDict `DotDict` object, representing a chunk with its content and metadata.
+            `DotDict` object, representing a chunk with its content and metadata.
 
         Raises:
             InvalidInputError: If the input arguments aren't valid.
@@ -457,7 +457,7 @@ class DocumentChunker(BaseChunker):
                 Required if `max_tokens` is provided.
 
         Returns:
-            list[DotDict] of `DotDict` objects, each representing
+            A list of `DotDict` objects, each representing
             a chunk with its content and metadata.
 
         Raises:
@@ -547,7 +547,7 @@ class DocumentChunker(BaseChunker):
             on_errors: How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
 
         yields:
-            DotDict `DotDict` object, representing a chunk with its content and metadata.
+            `DotDict` object, representing a chunk with its content and metadata.
 
         Raises:
             InvalidInputError: If the input arguments aren't valid.

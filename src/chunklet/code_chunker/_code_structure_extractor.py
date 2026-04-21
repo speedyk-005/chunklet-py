@@ -71,7 +71,7 @@ class CodeStructureExtractor:
             match: Regex match object for the block.
 
         Returns:
-            str Annotated block with tag prefixes.
+            Annotated block with tag prefixes.
         """
         lines = match.group(0).splitlines()
         return "\n".join(f"(-- {tag} -->) {line}" for line in lines)
@@ -84,7 +84,7 @@ class CodeStructureExtractor:
             match: Regex match object for the docstring with captured groups.
 
         Returns:
-            str The summarized docstring line.
+            The summarized docstring line.
         """
         # The `DOCSTRING_STYLE_ONE` regex contains multiple alternative patterns,
         # which results in `None` values for the capturing groups that did not match.
@@ -113,7 +113,7 @@ class CodeStructureExtractor:
             match: Regex match object for line-based docstring.
 
         Returns:
-            str The summarized docstring line(s).
+            The summarized docstring line(s).
         """
         if not ET:
             raise ImportError(
@@ -175,7 +175,7 @@ class CodeStructureExtractor:
             docstring_mode: How to handle docstrings.
 
         Returns:
-            tuple[str, tuple[int, ...]] Preprocessed code with annotations and a tuple of cumulative line lengths.
+            Preprocessed code with annotations and a tuple of cumulative line lengths.
                 The `cumulative_lengths` are pre-calculated on the original code because altering the code
                 (e.g., via removal, summary, or annotations) would cause character counts to vary.
         """
@@ -235,7 +235,7 @@ class CodeStructureExtractor:
             snippet_dicts: List of extracted code snippets.
 
         Returns:
-            list[dict] Snippets with attached namespace trees (as relations).
+            Snippets with attached namespace trees (as relations).
         """
         if not Node:
             raise ImportError(
@@ -460,7 +460,7 @@ class CodeStructureExtractor:
             is_python_code: Whether the code is Python.
 
         Returns:
-            tuple[list[dict], tuple[int, ...]] containing the list of extracted code structure boxes and the line lengths.
+            A tuple containing the list of extracted code structure boxes and the line lengths.
         """
         if not code:
             return [], ()

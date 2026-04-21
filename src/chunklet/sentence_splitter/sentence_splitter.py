@@ -63,7 +63,7 @@ class BaseSplitter:
             lang: The language of the text (e.g., 'en', 'fr', 'auto').
 
         Returns:
-            list[str] of sentences extracted from the text.
+            A list of sentences extracted from the text.
         """
         raise NotImplementedError("Subclasses must implement 'split_text'.")
 
@@ -136,7 +136,7 @@ class SentenceSplitter(BaseSplitter):
             sentences: Raw list of split sentences.
 
         Returns:
-            list[str] Cleaned list of sentences with proper punctuation handling.
+            Cleaned list of sentences with proper punctuation handling.
         """
         processed_sentences = []
         for sent in sentences:
@@ -163,7 +163,7 @@ class SentenceSplitter(BaseSplitter):
             text: The input text to detect the language for.
 
         Returns:
-            tuple[str, float] containing the detected language code and its confidence.
+            A tuple containing the detected language code and its confidence.
         """
         lang_detected, confidence = self.identifier.classify(text)
         log_info(
@@ -184,7 +184,7 @@ class SentenceSplitter(BaseSplitter):
             lang: The language of the text (e.g., 'en', 'fr'). Defaults to 'auto'
 
         Returns:
-            list[str] of sentences.
+            A list of sentences.
 
         Examples:
             >>> splitter = SentenceSplitter()
@@ -241,7 +241,7 @@ class SentenceSplitter(BaseSplitter):
             lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to 'auto'.
 
         Returns:
-            list[str] of sentences extracted from the file.
+            A list of sentences extracted from the file.
         """
         content = read_text_file(path)
         return self.split_text(content, lang)

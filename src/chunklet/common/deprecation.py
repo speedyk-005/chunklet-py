@@ -25,7 +25,7 @@ def deprecated_callable(
         removed_in: Version when the function will be removed (e.g., "3.0.0").
 
     Returns:
-        Callable Decorator function that wraps the source function/class.
+        Decorator function that wraps the source function/class.
     """
 
     def decorator(func_or_cls: Callable) -> Callable:

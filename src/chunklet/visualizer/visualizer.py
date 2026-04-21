@@ -112,7 +112,7 @@ class Visualizer:
         """Serves the main HTML interface for the visualizer.
 
         Returns:
-            HTMLResponse The content of index.html if exists, else a default heading.
+            The content of index.html if exists, else a default heading.
         """
         index_path = self.static_dir / "index.html"
         if index_path.exists():
@@ -137,7 +137,7 @@ class Visualizer:
             params: JSON string containing chunking parameters.
 
         Returns:
-            Response MessagePack-encoded response with original text, chunks, and stats.
+            MessagePack-encoded response with original text, chunks, and stats.
 
         Raises:
             HTTPException: If chunking fails.

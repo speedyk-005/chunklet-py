@@ -38,7 +38,7 @@ def _is_binary_file(path: str | Path) -> bool:
         path: Path to the file.
 
     Returns:
-        bool True if the file is likely binary, False if text.
+        True if the file is likely binary, False if text.
     """
     path = Path(path)
     mime_type, _ = mimetypes.guess_type(path)
@@ -64,7 +64,7 @@ def is_path_like(text: str) -> bool:
         text: text to check.
 
     Returns:
-        bool True if string appears to be a filesystem path.
+        True if string appears to be a filesystem path.
 
     Examples:
         >>> is_path_like("/home/user/document.txt")
@@ -111,7 +111,7 @@ def read_text_file(path: str | Path) -> str:
         path: File path to read.
 
     Returns:
-        str File content.
+        File content.
 
     Raises:
         FileProcessingError: If file cannot be read.
