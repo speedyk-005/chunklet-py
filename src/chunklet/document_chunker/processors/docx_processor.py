@@ -37,7 +37,7 @@ class DOCXProcessor(BaseProcessor):
         """Extracts core properties (a mix of OPC and Dublin Core elements) from the DOCX file.
 
         Returns:
-            dict[str, Any]: A dictionary containing metadata fields:
+            dict[str, Any] A dictionary containing metadata fields:
                 - title
                 - author
                 - publisher
@@ -72,7 +72,7 @@ class DOCXProcessor(BaseProcessor):
         Text is yielded in chunks of approximately 4000 characters each to simulate pages and enhance parallel execution.
 
         Yields:
-            str: A chunk of text, approximately 4000 characters each.
+            str A chunk of text, approximately 4000 characters each.
         """
         try:  # Lazy import
             import mammoth

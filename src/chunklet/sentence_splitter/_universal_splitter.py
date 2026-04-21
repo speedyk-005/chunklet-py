@@ -50,10 +50,10 @@ class UniversalSplitter:
         Splits text into sentences using rule-based regex patterns.
 
         Args:
-            text (str): The input text to be segmented into sentences.
+            text: The input text to be segmented into sentences.
 
         Returns:
-            list[str]: A list of sentences after segmentation.
+            list[str] of sentences after segmentation.
 
         Notes:
             - Normalizes numbered lists during splitting and restores them afterward.

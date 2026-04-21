@@ -52,7 +52,7 @@ class CustomProcessorRegistry:
         Args:
             *args: The arguments, which can be either (ext1, ext2, ...) for a decorator
                    or (callback, ext1, ext2, ...) for a direct call.
-            name (str | None): The name of the processor. If None, attempts to use the callback's name.
+            name: The name of the processor. If None, attempts to use the callback's name.
         """
         if not args:
             raise ValueError(
@@ -145,11 +145,11 @@ class CustomProcessorRegistry:
         Processes a file using a processor registered for the given file extension.
 
         Args:
-            file_path (str): The path to the file.
-            ext (str): The file extension.
+            file_path: The path to the file.
+            ext: The file extension.
 
         Returns:
-            tuple[ReturnType, str]: A tuple containing the extracted data and the name of the processor used.
+            tuple[ReturnType, str] containing the extracted data and the name of the processor used.
 
         Raises:
             CallbackError: If the processor callback fails or returns the wrong type.

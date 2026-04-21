@@ -36,20 +36,20 @@ def run_in_batch(
     Splits the iterable into chunks and executes the function on each.
 
     Args:
-        func (Callable): The function to call for each argument.
-        iterable_of_args (Iterable): An iterable of inputs to process.
+        func: The function to call for each argument.
+        iterable_of_args: An iterable of inputs to process.
         iterable_name: Name of the iterable. needed for logging and exception message.
-        n_jobs (int | None): Number of parallel workers to use.
+        n_jobs: Number of parallel workers to use.
             If None, uses all available CPUs. Must be >= 1 if specified.
-        show_progress (bool): Whether to display a progress bar.
-        on_errors (Literal["raise", "skip", "break"]):
+        show_progress: Whether to display a progress bar.
+        on_errors:
             How to handle errors during processing. Defaults to "raise".
-        separator (Any): A value to be yielded after the chunks of each text are processed.
+        separator: A value to be yielded after the chunks of each text are processed.
             Note: None cannot be used as a separator.
         verbose (bool): Whether to enable verbose logging.
 
     Yields:
-        Any: A `DotDict` object containing the chunk content and metadata, or any separator object.
+        Any A `DotDict` object containing the chunk content and metadata, or any separator object.
     """
     from mpire import WorkerPool
 

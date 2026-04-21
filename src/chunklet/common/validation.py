@@ -95,11 +95,11 @@ def safely_count_iterable(name: str, iterable: Iterable) -> tuple[int, Iterable]
     underlying Pydantic item validation.
 
     Args:
-        name (str): Descriptive name for the iterable (used in error context).
-        iterable (Iterable): The iterable or iterator to count and validate.
+        name: Descriptive name for the iterable (used in error context).
+        iterable: The iterable or iterator to count and validate.
 
     Returns:
-        tuple[int, Iterable]: The element count and the original (or preserved)
+        tuple[int, Iterable] The element count and the original (or preserved)
 
     Raises:
         InvalidInputError: If any element fails validation during the counting process.

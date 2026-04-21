@@ -49,7 +49,7 @@ class CustomSplitterRegistry:
         Args:
             *args: The arguments, which can be either (lang1, lang2, ...) for a decorator
                    or (callback, lang1, lang2, ...) for a direct call.
-            name (str, optional): The name of the splitter. If None, attempts to use the callback's name.
+            name: The name of the splitter. If None, attempts to use the callback's name.
         """
         if not args:
             raise ValueError("At least one language or a callback must be provided.")
@@ -136,11 +136,11 @@ class CustomSplitterRegistry:
         Processes a text using a splitter registered for the given language.
 
         Args:
-            text (str): The text to split.
-            lang (str): The language of the text.
+            text: The text to split.
+            lang: The language of the text.
 
         Returns:
-            tuple[list[str], str]: A tuple containing a list of sentences and the name of the splitter used.
+            tuple[list[str], str] containing a list of sentences and the name of the splitter used.
 
         Raises:
             CallbackError: If the splitter callback fails.

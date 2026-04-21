@@ -12,10 +12,10 @@ def latex_to_md(file_path: str | Path) -> str:
     Convert LaTeX code to Markdown-style plain text.
 
     Args:
-        file_path (str | Path): Path to the latex file.
+        file_path: Path to the latex file.
 
     Returns:
-        str: The full text content in markdown
+        str The full text content in markdown
     """
     if LatexNodes2Text is None:
         raise ImportError(

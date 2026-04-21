@@ -13,10 +13,10 @@ def rst_to_md(file_path: str | Path) -> str:
     Converts reStructuredText (RST) content into Markdown.
 
     Args:
-        file_path (str | Path): Path to the rst file.
+        file_path: Path to the rst file.
 
     Returns:
-        str: The full text content in Markdown.
+        str The full text content in Markdown.
     """
     if publish_string is None:
         raise ImportError(

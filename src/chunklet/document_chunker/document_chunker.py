@@ -86,11 +86,11 @@ class DocumentChunker(BaseChunker):
         Initializes the DocumentChunker.
 
         Args:
-            sentence_splitter (BaseSplitter | None): An optional BaseSplitter instance.
+            sentence_splitter: An optional BaseSplitter instance.
                 If None, a default SentenceSplitter will be initialized.
-            verbose (bool): Enable verbose logging.
-            continuation_marker (str): The marker to prepend to unfitted clauses. Defaults to '...'.
-            token_counter (Callable[[str], int] | None): Function that counts tokens in text.
+            verbose: Enable verbose logging.
+            continuation_marker: The marker to prepend to unfitted clauses. Defaults to '...'.
+            token_counter: Function that counts tokens in text.
                 If None, must be provided when calling chunk() methods.
 
         Raises:
@@ -157,10 +157,10 @@ class DocumentChunker(BaseChunker):
         This method ensures the path exists and the file type is supported.
 
         Args:
-            path (Path): The Path object of the document file.
+            path: The Path object of the document file.
 
         Returns:
-            str: The lowercased file extension.
+            str The lowercased file extension.
 
         Raises:
             FileNotFoundError: If provided file path not found.
@@ -193,11 +193,11 @@ class DocumentChunker(BaseChunker):
         Read text content from a file using charset detection, handling special formats like RTF.
 
         Args:
-            path (str | Path): Path to the file
-            ext (str): File extension
+            path: Path to the file
+            ext: File extension
 
         Returns:
-            str: The text content of the file
+            str The text content of the file
         """
         content = read_text_file(path)
 
@@ -219,11 +219,11 @@ class DocumentChunker(BaseChunker):
         Extracts data and metadata from a document.
 
         Args:
-            path (str | Path): The path to the document file.
-            ext (str): The file extension.
+            path: The path to the document file.
+            ext: The file extension.
 
         Returns:
-            tuple[str | Generator[str, None, None], dict[str, Any]]: A tuple containing
+            tuple[str | Generator[str, None, None], dict[str, Any]] containing
             either a string (for simple text files) or a generator of strings (for processed documents)
             and a dictionary of metadata.
         """
@@ -263,12 +263,12 @@ class DocumentChunker(BaseChunker):
         it all into memory.
 
         Args:
-            paths (Iterable[str | Path]): An iterable of file paths to process.
-            on_errors (Literal["raise", "skip", "break"]): Defines the error
+            paths: An iterable of file paths to process.
+            on_errors: Defines the error
                 handling strategy for validation or processing failures.
 
         Returns:
-            dict: A dictionary containing the prepared data, with the
+            dict A dictionary containing the prepared data, with the
                 following keys:
                 - "path_section_counts" (dict): A mapping of file paths to the
                   number of sections (e.g., pages) within them.
@@ -351,21 +351,21 @@ class DocumentChunker(BaseChunker):
         Chunks raw text content.
 
         Args:
-            text (str): The raw text to chunk.
-            lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
-            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
+            text: The raw text to chunk.
+            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
+            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks: Maximum number of section breaks per chunk.
                 Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
                 Must be >= 1.
-            overlap_percent (int | float): Percentage of overlap between chunks (0-85).
-            offset (int): Starting sentence offset for chunking. Defaults to 0.
-            token_counter (callable | None): Optional token counting function.
+            overlap_percent: Percentage of overlap between chunks (0-85).
+            offset: Starting sentence offset for chunking. Defaults to 0.
+            token_counter: Optional token counting function.
                 Required if `max_tokens` is provided.
-            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
+            base_metadata: Optional dictionary to be included with each chunk.
 
         Returns:
-            list[DotDict]: A list of `DotDict` objects, each representing a chunk.
+            list[DotDict] of `DotDict` objects, each representing a chunk.
         """
         params = {k: v for k, v in locals().items() if k != "self"}
         params["token_counter"] = params.get("token_counter") or self.token_counter
@@ -393,25 +393,25 @@ class DocumentChunker(BaseChunker):
         Chunks multiple text contents.
 
         Args:
-            texts (IterableOfStr): A non-string iterable of texts to chunk.
-            lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
-            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
+            texts: A non-string iterable of texts to chunk.
+            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
+            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks: Maximum number of section breaks per chunk.
                 Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
                 Must be >= 1.
-            overlap_percent (int | float): Percentage of overlap between chunks (0-85).
-            offset (int): Starting sentence offset for chunking. Defaults to 0.
-            token_counter (callable | None): Optional token counting function.
+            overlap_percent: Percentage of overlap between chunks (0-85).
+            offset: Starting sentence offset for chunking. Defaults to 0.
+            token_counter: Optional token counting function.
                 Required if `max_tokens` is provided.
-            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
-            separator (Any): A value to be yielded after the chunks of each text are processed.
-            n_jobs (int | None): Number of parallel workers.
-            show_progress (bool): Show progress bar.
-            on_errors (str): How to handle errors.
+            base_metadata: Optional dictionary to be included with each chunk.
+            separator: A value to be yielded after the chunks of each text are processed.
+            n_jobs: Number of parallel workers.
+            show_progress: Show progress bar.
+            on_errors: How to handle errors.
 
         yields:
-            DotDict: `DotDict` object, representing a chunk with its content and metadata.
+            DotDict `DotDict` object, representing a chunk with its content and metadata.
 
         Raises:
             InvalidInputError: If the input arguments aren't valid.
@@ -444,20 +444,20 @@ class DocumentChunker(BaseChunker):
         metadata to each resulting chunk.
 
         Args:
-            path (str | Path): The path to the document file.
-            lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
-            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
+            path: The path to the document file.
+            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
+            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks: Maximum number of section breaks per chunk.
                 Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
                 Must be >= 1.
-            overlap_percent (int | float): Percentage of overlap between chunks (0-85).
-            offset (int): Starting sentence offset for chunking. Defaults to 0.
-            token_counter (callable | None): Optional token counting function.
+            overlap_percent: Percentage of overlap between chunks (0-85).
+            offset: Starting sentence offset for chunking. Defaults to 0.
+            token_counter: Optional token counting function.
                 Required if `max_tokens` is provided.
 
         Returns:
-            list[DotDict]: A list of `DotDict` objects, each representing
+            list[DotDict] of `DotDict` objects, each representing
             a chunk with its content and metadata.
 
         Raises:
@@ -527,18 +527,18 @@ class DocumentChunker(BaseChunker):
         handles various file types.
 
         Args:
-            paths (IterableOfPath): A non-string iterable of paths to the document files.
-            lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
-            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
+            paths: A non-string iterable of paths to the document files.
+            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
+            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks: Maximum number of section breaks per chunk.
                 Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
                 Must be >= 1.
-            overlap_percent (int | float): Percentage of overlap between chunks (0-85).
-            offset (int): Starting sentence offset for chunking. Defaults to 0.
-            token_counter (callable | None): Optional token counting function.
+            overlap_percent: Percentage of overlap between chunks (0-85).
+            offset: Starting sentence offset for chunking. Defaults to 0.
+            token_counter: Optional token counting function.
                 Required if `max_tokens` is provided.
-            separator (Any): A value to be yielded after the chunks of each text are processed.
+            separator: A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
 
             n_jobs (int | None): Number of parallel workers to use. If None, uses all available CPUs.
@@ -547,7 +547,7 @@ class DocumentChunker(BaseChunker):
             on_errors: How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
 
         yields:
-            DotDict: `DotDict` object, representing a chunk with its content and metadata.
+            DotDict `DotDict` object, representing a chunk with its content and metadata.
 
         Raises:
             InvalidInputError: If the input arguments aren't valid.

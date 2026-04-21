@@ -67,11 +67,11 @@ class CodeStructureExtractor:
         """Prefix each line in a matched block with a tag for tracking.
 
         Args:
-            tag (str): Tag identifier for the block type.
-            match (re.Match): Regex match object for the block.
+            tag: Tag identifier for the block type.
+            match: Regex match object for the block.
 
         Returns:
-            str: Annotated block with tag prefixes.
+            str Annotated block with tag prefixes.
         """
         lines = match.group(0).splitlines()
         return "\n".join(f"(-- {tag} -->) {line}" for line in lines)
@@ -81,10 +81,10 @@ class CodeStructureExtractor:
         Extracts the first line from a block-style documentation string.
 
         Args:
-            match (re.Match): Regex match object for the docstring with captured groups.
+            match: Regex match object for the docstring with captured groups.
 
         Returns:
-            str: The summarized docstring line.
+            str The summarized docstring line.
         """
         # The `DOCSTRING_STYLE_ONE` regex contains multiple alternative patterns,
         # which results in `None` values for the capturing groups that did not match.
@@ -110,10 +110,10 @@ class CodeStructureExtractor:
         Attempts to parse <summary> XML tags; falls back to the first meaningful ine if parsing fails.
 
         Args:
-            match (re.Match): Regex match object for line-based docstring.
+            match: Regex match object for line-based docstring.
 
         Returns:
-            str: The summarized docstring line(s).
+            str The summarized docstring line(s).
         """
         if not ET:
             raise ImportError(
@@ -170,12 +170,12 @@ class CodeStructureExtractor:
           - Annotate comments, docstrings, and annotations for later detection
 
         Args:
-            code (str): Source code to preprocess.
-            include_comments (bool): Whether to include comments in output.
-            docstring_mode (str): How to handle docstrings.
+            code: Source code to preprocess.
+            include_comments: Whether to include comments in output.
+            docstring_mode: How to handle docstrings.
 
         Returns:
-            tuple[str, tuple[int, ...]]: Preprocessed code with annotations and a tuple of cumulative line lengths.
+            tuple[str, tuple[int, ...]] Preprocessed code with annotations and a tuple of cumulative line lengths.
                 The `cumulative_lengths` are pre-calculated on the original code because altering the code
                 (e.g., via removal, summary, or annotations) would cause character counts to vary.
         """
@@ -232,10 +232,10 @@ class CodeStructureExtractor:
         Attach a namespace tree structure (as a list of relations) to each snippet incrementally.
 
         Args:
-            snippet_dicts (list[dict]): List of extracted code snippets.
+            snippet_dicts: List of extracted code snippets.
 
         Returns:
-            list[dict]: Snippets with attached namespace trees (as relations).
+            list[dict] Snippets with attached namespace trees (as relations).
         """
         if not Node:
             raise ImportError(
@@ -302,11 +302,11 @@ class CodeStructureExtractor:
         It automatically flushs the buffer.
 
         Args:
-            curr_struct (list[tuple]): Accumulated code lines and metadata,
+            curr_struct: Accumulated code lines and metadata,
                 where each element is a tuple containing:
                 (line_number, line_content, indent_level, func_partial_signature).
-            snippet_boxes (list[DotDict]): The list to which the newly created DotDict will be appended.
-            buffer (dict[str, list]): Buffer for intermediate processing (default: empty list).
+            snippet_boxes: The list to which the newly created DotDict will be appended.
+            buffer: Buffer for intermediate processing (default: empty list).
         """
         if not (curr_struct or buffer):
             return
@@ -352,11 +352,11 @@ class CodeStructureExtractor:
         It automatically flushes the current struct if the current line is the only decorator.
 
         Args:
-            line (str): The annotated line detected.
-            line_no (int): The number of the line based on one index.
+            line: The annotated line detected.
+            line_no: The number of the line based on one index.
             matched(re.Match): Regex match object for the annotated line.
-            buffer (dict): Buffer for intermediate processing.
-            state (dict): The state dictionary that holds info about current structure, last indentation level,
+            buffer: Buffer for intermediate processing.
+            state: The state dictionary that holds info about current structure, last indentation level,
                 function scope, and the snippet dicts (extracted blocks).
         """
         tag = matched.group(1)
@@ -391,14 +391,14 @@ class CodeStructureExtractor:
         Detects top-level namespace or function starts and performs language-aware flushing.
 
         Args:
-            line (str): The annotated line detected.
-            indent_level (int): The level of indentation detected.
-            buffer (dict): Buffer for intermediate processing.
-            state (dict): The state dictionary that holds info about current structure, last indentation level,
+            line: The annotated line detected.
+            indent_level: The level of indentation detected.
+            buffer: Buffer for intermediate processing.
+            state: The state dictionary that holds info about current structure, last indentation level,
                 function scope, and the snippet dicts (extracted blocks).
-            code (str | Path): Raw code string or Path to code file.
-            func_start (str, optional): Line corresponds to a function partial signature
-            is_python_code (bool): Whether the code is Python.
+            code: Raw code string or Path to code file.
+            func_start: Line corresponds to a function partial signature
+            is_python_code: Whether the code is Python.
         """
         is_namespace = bool(NAMESPACE_DECLARATION.match(line))
         func_count = sum(
@@ -454,13 +454,13 @@ class CodeStructureExtractor:
         while implicitly handling other structures within the function context.
 
         Args:
-            code (str): Raw code string.
-            include_comments (bool): Whether to include comments in output.
-            docstring_mode (Literal["summary", "all", "excluded"]): How to handle docstrings.
-            is_python_code (bool): Whether the code is Python.
+            code: Raw code string.
+            include_comments: Whether to include comments in output.
+            docstring_mode: How to handle docstrings.
+            is_python_code: Whether the code is Python.
 
         Returns:
-            tuple[list[dict], tuple[int, ...]]: A tuple containing the list of extracted code structure boxes and the line lengths.
+            tuple[list[dict], tuple[int, ...]] containing the list of extracted code structure boxes and the line lengths.
         """
         if not code:
             return [], ()

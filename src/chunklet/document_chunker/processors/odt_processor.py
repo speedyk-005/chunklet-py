@@ -28,7 +28,7 @@ class ODTProcessor(BaseProcessor):
         """Initialize the ODTProcessor.
 
         Args:
-            file_path (str): Path to the ODT file.
+            file_path: Path to the ODT file.
         """
         try:
             from odf.opendocument import load
@@ -52,7 +52,7 @@ class ODTProcessor(BaseProcessor):
         Only present fields are included in the returned dictionary.
 
         Returns:
-            dict[str, Any]: A dictionary containing metadata fields:
+            dict[str, Any] A dictionary containing metadata fields:
                  - title
                  - creator
                  - initial_creator
@@ -96,7 +96,7 @@ class ODTProcessor(BaseProcessor):
         processing of large documents by yielding text blocks that simulate pages and enhance parallel execution.
 
         Yields:
-            str: A chunk of text, approximately 4000 characters each.
+            str A chunk of text, approximately 4000 characters each.
         """
         from odf import text
 

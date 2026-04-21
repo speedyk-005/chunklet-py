@@ -20,12 +20,12 @@ def deprecated_callable(
     This decorator marks a function or class as deprecated.
 
     Args:
-        use_instead (str): Replacement name (e.g., "split_text", "DocumentChunker", or "chunk_text or chunk_file").
-        deprecated_in (str): Version when the function was deprecated (e.g., "2.2.0").
-        removed_in (str): Version when the function will be removed (e.g., "3.0.0").
+        use_instead: Replacement name (e.g., "split_text", "DocumentChunker", or "chunk_text or chunk_file").
+        deprecated_in: Version when the function was deprecated (e.g., "2.2.0").
+        removed_in: Version when the function will be removed (e.g., "3.0.0").
 
     Returns:
-        Callable: Decorator function that wraps the source function/class.
+        Callable Decorator function that wraps the source function/class.
     """
 
     def decorator(func_or_cls: Callable) -> Callable:
