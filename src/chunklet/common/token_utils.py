@@ -45,6 +45,9 @@ def count_tokens(text: str, token_counter: Callable[[str], int]) -> int:
         💡 Hint: Please ensure the token counter function handles all edge cases and returns an integer.
         Details: Something went wrong!
     """
+    if not text.strip():
+        return 0
+
     try:
         token_count = token_counter(text)
         if isinstance(token_count, (int, float)):
