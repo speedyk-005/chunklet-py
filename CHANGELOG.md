@@ -34,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Validation Refactor**:
   - Shifted from runtime `restricted_iterable` to static `TypeAlias` (IterableOfStr/Path). Reduces logic (~35 to ~15 lines), improve IDE type inference and static analysis.
   - Integrated `reprlib` in `pretty_errors` for efficient collection truncation.
+- **Naming and Code Quality**:
+  - Renamed internal methods and variables for clarity
+  - Added `ExtractionState` TypedDict in `_code_structure_extractor.py` for type safety
+  - Simplified logic with early returns and `next()`
+  - Cleaned up stale and obvious comments
 
 ---
 

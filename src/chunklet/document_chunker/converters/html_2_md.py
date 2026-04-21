@@ -50,18 +50,16 @@ def html_to_md(
     return re.sub(r"(!?\[[^\]]*\])\((.*?)\)", truncate_url, markdown_content)
 
 
-# Example usage
+# --- Example usage ---
 if __name__ == "__main__":  # pragma: no cover
     import textwrap
 
-    html_sample = textwrap.dedent(
-        """
+    html_sample = textwrap.dedent("""
         <h2>Examples</h2>
         <p>Visit <a href="https://example.com/some/very/very/very/very/very/long/link/that/should/be/truncated/because/it/is/humongous.html">Example</a>.</p>
         <img
         src="https://example.com/image/with/a/really/really/really/long/path/that/needs/truncating.png" alt="Long Image">
-    """
-    )
+    """)
 
     markdown_output = html_to_md(raw_text=html_sample)
     print(markdown_output)

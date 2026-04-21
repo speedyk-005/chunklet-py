@@ -7,10 +7,9 @@ from os import getenv
 from pathlib import Path
 from typing import Callable
 
-import regex as re
+import re
 from loguru import logger
 from py3langid.langid import MODEL_FILE, LanguageIdentifier
-
 # pysbd, sentsplit, indicnlp and sentencex are lazy imported
 
 from chunklet.common.deprecation import deprecated_callable
@@ -29,10 +28,34 @@ from chunklet.exceptions import BlingfireMissingError
 
 
 # To identify strings consisting solely of punctuation or symbols.
-PUNCTUATION_ONLY_PATTERN = re.compile(r"[\p{P}\p{S}]+")
+PUNCTUATION_ONLY_PATTERN = re.compile(r"\W+")
 
 # To identify thematic breaks (e.g., '---', '***', '___')
-THEMATIC_BREAK_PATTERN = re.compile(r"^\s*[\-\*_]{2,}\s*$")
+THEMATIC_BREAK_PATTERN = re.compile(r"\s*([-*_])\s*\1{2,}\s*")
+
+
+def _get_special_lang_handler(lang: str, verbose: bool) -> Callable | None:  # pragma: no cover
+    if lang in PYSBD_SUPPORTED_LANGUAGES:
+        from pysbd import Segmenter
+        log_info(verbose, "Using pysbd")
+        return Segmenter(lang).segment
+
+    elif lang in SENTSPLIT_UNIQUE_LANGUAGES:
+        from sentsplit.segment import SentSplit
+        log_info(verbose, "Using sentsplit")
+        return SentSplit(lang).segment
+
+    elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
+        from indicnlp.tokenize import sentence_tokenize
+        log_info(verbose, "Using indicnlp")
+        return lambda text: sentence_tokenize.sentence_split(text, lang)
+
+    elif lang in SENTENCEX_UNIQUE_LANGUAGES:
+        from sentencex import segment
+        log_info(verbose, "Using sentencex")
+        return lambda text: segment(lang, text)
+
+    return None
 
 
 class BaseSplitter:
@@ -109,26 +132,6 @@ class SentenceSplitter(BaseSplitter):
             MODEL_FILE, norm_probs=True
         )
 
-    def _get_special_lang_handler(self, lang: str) -> Callable | None:  # pragma: no cover
-        if lang in PYSBD_SUPPORTED_LANGUAGES:
-            from pysbd import Segmenter
-            log_info(self.verbose, "Using pysbd")
-            return Segmenter(lang).segment
-        elif lang in SENTSPLIT_UNIQUE_LANGUAGES:
-            from sentsplit.segment import SentSplit
-            log_info(self.verbose, "Using sentsplit")
-            return SentSplit(lang).segment
-        elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
-            from indicnlp.tokenize import sentence_tokenize
-            log_info(self.verbose, "Using indicnlp")
-            return lambda text: sentence_tokenize.sentence_split(text, lang)
-        elif lang in SENTENCEX_UNIQUE_LANGUAGES:
-            from sentencex import segment
-            log_info(self.verbose, "Using sentencex")
-            return lambda text: segment(lang, text)
-
-        return None
-
     def _clean_sentences(self, sentences: list[str]) -> list[str]:
         """
         Filtering empty strings and rejoining stray punctuation.
@@ -145,7 +148,7 @@ class SentenceSplitter(BaseSplitter):
             if stripped_sent:
                 if PUNCTUATION_ONLY_PATTERN.fullmatch(
                     stripped_sent
-                ) and not THEMATIC_BREAK_PATTERN.match(stripped_sent):
+                ) and not THEMATIC_BREAK_PATTERN.fullmatch(stripped_sent):
                     if len(processed_sentences) >= 1:
                         # Limits to the first 5 ones
                         processed_sentences[-1] += stripped_sent[:5]

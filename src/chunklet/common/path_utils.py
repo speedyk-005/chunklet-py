@@ -4,14 +4,12 @@ import sys
 from pathlib import Path
 
 import regex as re
-
 # charset_normalizer is lazy imported
 
 from chunklet.common.validation import validate_input
 from chunklet.exceptions import FileProcessingError
 
 
-# Pattern to check if source args provided in the chunk method is a path
 PATH_PATTERN = re.compile(
     r"""
     ^                                   # start of string

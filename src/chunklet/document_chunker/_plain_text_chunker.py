@@ -22,16 +22,12 @@ from chunklet.exceptions import (
 from chunklet.sentence_splitter import BaseSplitter, SentenceSplitter
 
 
-# Regex to split sentences into individual clauses
 CLAUSE_END_PATTERN = re.compile(r"(?<=[;,’：—)&…])\s")
-
-# Pattern to detect section breaks (headings, thematic breaks, HTML details, etc.)
 SECTION_BREAK_PATTERN = re.compile(
     r"^\s*#{1,6}\s+.+?$|"  # markdown headings (# - ######)
     r"^\s*([-*_])\s*(?:\1){2,}\s*$|"  # thematic breaks (---, ***, ___)
     r"^\s*<\/?(?:details|summary|section|article)\b[^>]*>|"  # HTML sectioning
-    r"^\s*<hr\s*\/?>|"  # HTML horizontal rule
-    r"^---+$|^\\*\\*\\*+$|^___+$",  # ASCII thematic breaks
+    r"^\s*<hr\s*\/?>",  # HTML horizontal rule
     re.M | re.I,
 )
 
@@ -84,7 +80,6 @@ class PlainTextChunker:
                 f"but got {type(sentence_splitter).__name__}."
             )
 
-        # Initialize SentenceSplitter
         self.sentence_splitter = sentence_splitter or SentenceSplitter()
         self.sentence_splitter.verbose = self._verbose
 
@@ -99,7 +94,7 @@ class PlainTextChunker:
         self._verbose = value
         self.sentence_splitter.verbose = value
 
-    def _create_chunk_boxes(
+    def _create_chunks(
         self,
         chunks: Iterable[str],
         base_metadata: dict[str, Any],
@@ -123,17 +118,17 @@ class PlainTextChunker:
                 - 'metadata' (dict): A dictionary including 'chunk_num' (int)
                     and all key-value pairs from `base_metadata`.
         """
-        chunk_boxes = []
+        chunks_out = []
         for i, chunk_str in enumerate(chunks, start=1):
-            chunk_box = DotDict()
-            chunk_box.content = chunk_str.strip()
-            chunk_box.metadata = copy.deepcopy(base_metadata)
-            chunk_box.metadata["chunk_num"] = i
-            chunk_box.metadata["span"] = span_finder.find_span(
+            chunk = DotDict()
+            chunk.content = chunk_str.strip()
+            chunk.metadata = copy.deepcopy(base_metadata)
+            chunk.metadata["chunk_num"] = i
+            chunk.metadata["span"] = span_finder.find_span(
                 chunk_str.removeprefix(self.continuation_marker)
             )
-            chunk_boxes.append(chunk_box)
-        return chunk_boxes
+            chunks_out.append(chunk)
+        return chunks_out
 
     def _get_overlap_clauses(
         self,
@@ -152,16 +147,16 @@ class PlainTextChunker:
         Returns:
             list[str]: A list of clauses as overlap.
         """
-        detected_clauses = [
+        clauses = [
             clause for sent in sentences for clause in CLAUSE_END_PATTERN.split(sent)
         ]
 
-        overlap_num = round(len(detected_clauses) * overlap_percent / 100)
+        overlap_num = round(len(clauses) * overlap_percent / 100)
 
         if overlap_num == 0:
             return []
 
-        overlapped_clauses = detected_clauses[-overlap_num:]
+        overlapped_clauses = clauses[-overlap_num:]
 
         # The Condition to add the continuation marker
         if (
@@ -235,10 +230,9 @@ class PlainTextChunker:
         Returns:
             str: The fitted part of the text, truncated to fit within max_tokens.
         """
-        parts = re.split(r"[ /\\]", text)
         token_count = 0
         fitted_parts = []
-        for part in parts:
+        for part in re.split(r"[ /\\]", text):
             part_tokens = count_tokens(part + "...", token_counter)
             if token_count + part_tokens > max_tokens:
                 break
@@ -253,7 +247,7 @@ class PlainTextChunker:
         max_sentences: int,
         max_section_breaks: int,
         token_counter: Callable[[str], int] | None,
-        state: dict,
+        constraint_counter: dict,
     ) -> list[str]:
         """
         Prepare data for the next chunk after splitting.
@@ -268,30 +262,31 @@ class PlainTextChunker:
             token_counter (Callable[[str], int], optional): Function to count tokens.
             max_sentences (int): Maximum sentences per chunk.
             max_section_breaks (int): Maximum section breaks per chunk.
-            state (dict): State dict to update with counts.
+            constraint_counter (dict): State dict to update with counts.
 
         Returns:
             list[str]: The prepared next chunk.
         """
-        next_chunk = self._get_overlap_clauses(curr_chunk, overlap_percent)
+        overlap_clauses = self._get_overlap_clauses(curr_chunk, overlap_percent)
 
-        state["token_count"] = 0
+        constraint_counter["token_count"] = 0
         if max_tokens != sys.maxsize:
-            state["token_count"] = sum(
-                count_tokens(s, token_counter) for s in next_chunk
+            constraint_counter["token_count"] = sum(
+                count_tokens(s, token_counter) for s in overlap_clauses
             )
 
-        state["sentence_count"] = 0
+        constraint_counter["sentence_count"] = 0
         if max_sentences != sys.maxsize:
-            state["sentence_count"] = len(next_chunk)
+            # Consider clause as sentence
+            constraint_counter["sentence_count"] = len(overlap_clauses)
 
-        state["heading_count"] = 0
+        constraint_counter["heading_count"] = 0
         if max_section_breaks != sys.maxsize:
-            state["heading_count"] = sum(
-                1 for s in next_chunk if SECTION_BREAK_PATTERN.match(s)
+            constraint_counter["heading_count"] = sum(
+                1 for s in overlap_clauses if SECTION_BREAK_PATTERN.match(s)
             )
 
-        return next_chunk
+        return overlap_clauses
 
     def _group_by_chunk(
         self,
@@ -319,7 +314,7 @@ class PlainTextChunker:
         """
         chunks = []
         curr_chunk = []
-        state = {
+        constraint_counter = {
             "token_count": 0,
             "sentence_count": 0,
             "heading_count": 0,
@@ -341,19 +336,19 @@ class PlainTextChunker:
                 else 0
             )
 
-            sentence_limit_reached = state["sentence_count"] + 1 > max_sentences
+            sentence_limit_reached = constraint_counter["sentence_count"] + 1 > max_sentences
             heading_limit_reached = (
-                is_heading and state["heading_count"] + 1 > max_section_breaks
+                is_heading and constraint_counter["heading_count"] + 1 > max_section_breaks
             )
             token_limit_reached = (
                 max_tokens != sys.maxsize
-                and state["token_count"] + sentence_tokens > max_tokens
+                and constraint_counter["token_count"] + sentence_tokens > max_tokens
             )
 
             if token_limit_reached or sentence_limit_reached or heading_limit_reached:
                 # for token-based mode, try splitting further
                 if token_limit_reached:
-                    remaining_tokens = max_tokens - state["token_count"]
+                    remaining_tokens = max_tokens - constraint_counter["token_count"]
                     fitted, unfitted = self._find_clauses_that_fit(
                         sentence,
                         remaining_tokens,
@@ -394,15 +389,15 @@ class PlainTextChunker:
                     max_sentences=max_sentences,
                     max_section_breaks=max_section_breaks,
                     token_counter=token_counter,
-                    state=state,
+                    constraint_counter=constraint_counter,
                 )
 
             else:
                 curr_chunk.append(sentence)
-                state["token_count"] += sentence_tokens
-                state["sentence_count"] += 1
+                constraint_counter["token_count"] += sentence_tokens
+                constraint_counter["sentence_count"] += 1
                 if is_heading:
-                    state["heading_count"] += 1
+                    constraint_counter["heading_count"] += 1
                 index += 1
 
         # Add the last chunk if it exists
@@ -537,13 +532,10 @@ class PlainTextChunker:
             overlap_percent=overlap_percent,
         )
 
-        # Leave the user's original dict untouched
-        base_metadata = (base_metadata or {}).copy()
-
         # Note: We use DeterministicSpanFinder because sentence splitter may modify text
         # (e.g., normalize whitespace, fix encoding), making exact span tracking difficult.
         span_finder = DeterministicSpanFinder(text)
-        return self._create_chunk_boxes(chunks, base_metadata, span_finder)
+        return self._create_chunks(chunks, base_metadata or {}, span_finder)
 
     @validate_input
     def batch_chunk(

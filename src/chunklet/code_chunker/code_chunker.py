@@ -96,12 +96,12 @@ class CodeChunker(BaseChunker):
 
     @property
     def verbose(self) -> bool:
-        """Get the verbose setting."""
+        """Get the verbosity status."""
         return self._verbose
 
     @verbose.setter
     def verbose(self, value: bool) -> None:
-        """Set the verbose setting and propagate to the extractor."""
+        """Set the verbosity and propagate to the extractor."""
         self._verbose = value
         self.extractor.verbose = value
 
@@ -125,7 +125,6 @@ class CodeChunker(BaseChunker):
         # Deduplicate relations
         def relation_key(relation: dict):
             return tuple(sorted(relation.items()))
-
         unique_relations = list(unique_everseen(all_relations_flat, key=relation_key))
 
         if not unique_relations:
@@ -163,7 +162,7 @@ class CodeChunker(BaseChunker):
         Returns:
             list[DotDict]: A list of sub-chunks derived from the original block.
         """
-        sub_boxes = []
+        sub_chunks = []
         curr_chunk = []
         token_count = 0
         line_count = 0
@@ -183,7 +182,7 @@ class CodeChunker(BaseChunker):
                 start_span = cumulative_lengths[start_line - 1]
                 end_span = cumulative_lengths[end_line]
                 tree = Node.from_relations(snippet_dict["relations"]).to_string()
-                sub_boxes.append(
+                sub_chunks.append(
                     DotDict(
                         {
                             "content": "\n".join(curr_chunk),
@@ -219,7 +218,7 @@ class CodeChunker(BaseChunker):
             start_span = cumulative_lengths[start_line - 1]
             end_span = cumulative_lengths[end_line]
             tree = Node.from_relations(snippet_dict["relations"]).to_string()
-            sub_boxes.append(
+            sub_chunks.append(
                 DotDict(
                     {
                         "content": "\n".join(curr_chunk),
@@ -238,7 +237,7 @@ class CodeChunker(BaseChunker):
                 )
             )
 
-        return sub_boxes
+        return sub_chunks
 
     def _format_limit_msg(
         self,
@@ -307,7 +306,7 @@ class CodeChunker(BaseChunker):
             source (str | Path): Original source for metadata.
 
         Returns:
-            list[DotDict]: List of chunk boxes with content and metadata.
+            list[DotDict]: List of chunks with content and metadata.
         """
         source = (
             str(source) if (isinstance(source, Path) or is_path_like(source)) else "N/A"

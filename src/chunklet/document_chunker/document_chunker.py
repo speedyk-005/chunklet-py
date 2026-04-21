@@ -212,11 +212,11 @@ class DocumentChunker(BaseChunker):
         else:  # For .txt, .md, and others handled by simple read
             return content
 
-    def _extract_data(
+    def _extract_text_and_metadata(
         self, path: str | Path, ext: str
     ) -> tuple[str | Generator[str, None, None], dict[str, Any]]:
         """
-        Extracts data and metadata from a document.
+        Extracts text content and metadata from a document.
 
         Args:
             path (str | Path): The path to the document file.
@@ -252,9 +252,9 @@ class DocumentChunker(BaseChunker):
 
         return text_content, {"source": str(path)}
 
-    def _gather_all_data(self, paths: Iterable[str | Path], on_errors: str) -> dict:
+    def _prepare_batch_documents(self, paths: Iterable[str | Path], on_errors: str) -> dict:
         """
-        Gathers and prepares data from paths for batch processing.
+        Prepares documents for batch processing by extracting text and metadata from multiple paths.
 
         This method iterates through a list of file paths,
         validates each path, handles any validation or processing errors,
@@ -277,29 +277,29 @@ class DocumentChunker(BaseChunker):
                 - "all_metadata" (list): A list of metadata dictionaries, one
                   for each successfully processed document.
         """
-        path_section_counts = {}
+        sections_per_path = {}
         all_metadata = []
-        text_gens_to_chain = []
+        texts_to_chain = []
 
         for i, path in enumerate(paths):
             try:
                 path = Path(path)
                 ext = self._validate_and_get_extension(path)
 
-                text_content_or_generator, document_metadata = self._extract_data(
+                text_content_or_generator, document_metadata = self._extract_text_and_metadata(
                     path, ext
                 )
                 all_metadata.append(document_metadata)
 
                 if isinstance(text_content_or_generator, Generator):
                     g1, g2 = tee(text_content_or_generator)
-                    path_section_counts[str(path)] = ilen(g1)
-                    text_gens_to_chain.append(g2)
+                    sections_per_path[str(path)] = ilen(g1)
+                    texts_to_chain.append(g2)
                 else:
-                    path_section_counts[str(path)] = 1
+                    sections_per_path[str(path)] = 1
 
                     # Wrap in a list to prevent breakking the str into chars
-                    text_gens_to_chain.append([text_content_or_generator])
+                    texts_to_chain.append([text_content_or_generator])
             except Exception as e:
                 if on_errors == "raise":
                     logger.error(
@@ -325,11 +325,9 @@ class DocumentChunker(BaseChunker):
                     )
                     continue
 
-        all_texts_gen = chain.from_iterable(text_gens_to_chain)
-
         return {
-            "path_section_counts": path_section_counts,
-            "all_texts_gen": all_texts_gen,
+            "path_to_section_counts": sections_per_path,
+            "all_texts_gen": chain.from_iterable(texts_to_chain),
             "all_metadata": all_metadata,
         }
 
@@ -470,9 +468,9 @@ class DocumentChunker(BaseChunker):
         path = Path(path)
         ext = self._validate_and_get_extension(path)
 
-        text_content_or_generator, document_metadata = self._extract_data(path, ext)
+        text_content, document_metadata = self._extract_text_and_metadata(path, ext)
 
-        if not isinstance(text_content_or_generator, str):
+        if not isinstance(text_content, str):
             raise UnsupportedFileTypeError(
                 f"File type '{ext}' is not supported by the general chunk method.\n"
                 "Reason: The processor for this file returns iterable, "
@@ -482,9 +480,7 @@ class DocumentChunker(BaseChunker):
 
         log_info(self.verbose, "Starting chunk processing for path: {}.", path)
 
-        text_content = text_content_or_generator
-
-        chunk_boxes = self.plain_text_chunker.chunk(
+        chunks_out = self.plain_text_chunker.chunk(
             text=text_content,
             lang=lang,
             max_tokens=max_tokens,
@@ -495,12 +491,12 @@ class DocumentChunker(BaseChunker):
             token_counter=token_counter or self.token_counter,
         )
 
-        for chunk in chunk_boxes:
+        for chunk in chunks_out:
             chunk.metadata.update(document_metadata)
 
-        log_info(self.verbose, "Generated {} chunks for {}.", len(chunk_boxes), path)
+        log_info(self.verbose, "Generated {} chunks for {}.", len(chunks_out), path)
 
-        return chunk_boxes
+        return chunks_out
 
     @validate_input
     def chunk_files(
@@ -558,10 +554,10 @@ class DocumentChunker(BaseChunker):
         """
         sentinel = object()
 
-        gathered_data = self._gather_all_data(paths, on_errors)
+        batch_documents = self._prepare_batch_documents(paths, on_errors)
 
         all_chunks_gen = self.plain_text_chunker.batch_chunk(
-            texts=list(gathered_data["all_texts_gen"]),
+            texts=list(batch_documents["all_texts_gen"]),
             lang=lang,
             max_tokens=max_tokens,
             max_sentences=max_sentences,
@@ -576,22 +572,22 @@ class DocumentChunker(BaseChunker):
         )
 
         all_chunk_groups = split_at(all_chunks_gen, lambda x: x is sentinel)
-        path_section_counts = gathered_data["path_section_counts"]
-        all_metadata = gathered_data["all_metadata"]
+        sections_per_path = batch_documents["path_to_section_counts"]
+        all_metadata = batch_documents["all_metadata"]
 
         # HACK: Since a sentinel is always at the end of the gen,
         # the last list of the groups will be an empty one.
         # The only work-around to add a sentinel at paths
-        paths = list(path_section_counts.keys()) + [None]
+        paths = list(sections_per_path.keys()) + [None]
 
         # If no files were successfully processed, return empty
-        if not path_section_counts:
+        if not sections_per_path:
             return
 
         doc_count = 0
         curr_path = paths[0]
         for chunks in all_chunk_groups:
-            if path_section_counts.get(curr_path, 0) == 0:
+            if sections_per_path.get(curr_path, 0) == 0:
                 if separator is not None:
                     yield separator
 
@@ -602,13 +598,13 @@ class DocumentChunker(BaseChunker):
 
             for i, ch in enumerate(chunks, start=1):
                 doc_metadata = all_metadata[doc_count]
-                doc_metadata["section_count"] = path_section_counts[curr_path]
+                doc_metadata["section_count"] = sections_per_path[curr_path]
                 doc_metadata["curr_section"] = i
 
                 ch["metadata"].update(doc_metadata)
                 yield ch
 
-            path_section_counts[curr_path] -= 1
+            sections_per_path[curr_path] -= 1
 
     @deprecated_callable(
         use_instead="chunk_file", deprecated_in="2.2.0", removed_in="3.0.0"

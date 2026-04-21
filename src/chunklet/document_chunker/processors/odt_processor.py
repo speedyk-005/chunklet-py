@@ -1,6 +1,7 @@
 from typing import Any, Generator
 
 # odfpy is lazy imported
+
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
 
@@ -129,11 +130,11 @@ class ODTProcessor(BaseProcessor):
             yield "\n".join(curr_chunk)
 
 
+# --- Example usage ---
 if __name__ == "__main__":  # pragma: no cover
     file_path = "samples/file-sample_100kB.odt"
     processor = ODTProcessor(file_path)
 
-    # Extract metadata
     metadata = processor.extract_metadata()
     print("Metadata:")
     for key, value in metadata.items():

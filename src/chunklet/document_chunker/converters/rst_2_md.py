@@ -32,13 +32,10 @@ def rst_to_md(file_path: str | Path) -> str:
     html_content = publish_string(source=rst_content, writer="html").decode(
         "utf-8"
     )
-
-    # Now we can convert it to markdown
-    markdown_content = html_to_md(raw_text=html_content)
-    return markdown_content
+    return html_to_md(raw_text=html_content)
 
 
-# Example usage
+# --- Example usage ---
 if __name__ == "__main__":  # pragma: no cover
     markdown_result = rst_to_md("samples/What_is_rst.rst")
     print(markdown_result)

@@ -90,8 +90,8 @@ def test_constraint_based_chunking(
     assert hasattr(first_chunk.metadata, "span")
 
     # Verify limits are respected for each chunk
-    for chunk_box in chunks:
-        content = chunk_box.content
+    for chunk in chunks:
+        content = chunk.content
 
         if max_sentences is not None:
             # Split by sentence and check count

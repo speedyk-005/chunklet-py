@@ -151,7 +151,7 @@ class Visualizer:
                 400, f"Invalid chunking parameters JSON: {params}"
             ) from None
 
-        # Use Python mimetypes instead of browser content_type
+        # Use Python mimetypes instead of browser content_type for accuracy
         mimetype, _ = mimetypes.guess_type(file.filename or "")
         if not mimetype or not mimetype.startswith("text/"):
             raise HTTPException(400, "Only text files are supported.")

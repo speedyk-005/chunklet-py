@@ -39,19 +39,18 @@ def is_python_code(source: str | Path) -> bool:
         path = Path(source)
         return path.suffix.lower() in {".py", ".pyi", ".pyx", ".pyw"}
 
-    if isinstance(source, str):
-        # Shebang line check
-        if re.match(r"#!/usr/bin/(env\s+)?python", source.strip()):
-            return True
+    # Shebang line check
+    if re.match(r"#!/usr/bin/(env\s+)?python", source.strip()):
+        return True
 
-        # Definitive syntactic check (Highest confidence)
-        try:
-            ast.parse(source)
-            # If parsing succeeds, it's definitely Python code
-            return True
-        except Exception:  # noqa: S110
-            # If fails, it might still be Python code (e.g., incomplete snippet), so continue with heuristics
-            pass
+    # Definitive syntactic check
+    # If parsing succeeds, it's definitely Python code
+    try:
+        ast.parse(source)
+        return True
+    except Exception:  # noqa: S110
+        # If fails, it might still be Python code (e.g., incomplete snippet), so continue with heuristics
+        pass
 
     # Pygments heuristic (Lowest confidence, last resort)
     try:

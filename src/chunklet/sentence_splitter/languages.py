@@ -1,6 +1,9 @@
 """
 This module contains the language sets for the supported sentence splitters.
 Each set is filtered to contain only the languages truly unique to that library.
+
+Note: For languages not explicitly listed below, a universal, 
+regex-based sentence splitter is used as a fallback to ensure broad compatibility.
 """
 
 # Complete set of languages supported by pysbd (Python Sentence Boundary Disambiguation) (23)
@@ -88,5 +91,3 @@ SUPPORTED_LANGUAGES = (
     | INDIC_NLP_UNIQUE_LANGUAGES
     | SENTENCEX_UNIQUE_LANGUAGES
 )
-
-# For languages not explicitly listed above, a universal, regex-based sentence splitter is used as a fallback to ensure broad compatibility.

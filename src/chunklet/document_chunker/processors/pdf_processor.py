@@ -4,12 +4,11 @@ import re
 from more_itertools import ilen
 
 # pdfminer is lazily imported
+
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
-# Pattern to normalize consecutive newlines
-MULTIPLE_NEWLINE_PATTERN = re.compile(r"(\n\s*){2,}")
 
-# Pattern to remove lines with only numbers
+MULTIPLE_NEWLINE_PATTERN = re.compile(r"(\n\s*){2,}")
 STANDALONE_NUMBER_PATTERN = re.compile(r"\n\s*\d+\s*\n")
 
 # Pattern to merge single newlines within logical text blocks
