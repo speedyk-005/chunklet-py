@@ -226,7 +226,7 @@ class SentenceSplitter(BaseSplitter):
                 if custom_splitter_registry.is_registered(lang):
                     sentences, splitter_name = custom_splitter_registry.split(text, lang)
                     log_info(self.verbose, "Using registered splitter: {}", splitter_name)
-                elif (handler := self._get_special_lang_handler(lang)) is not None:
+                elif (handler := _get_special_lang_handler(lang, self.verbose)) is not None:
                     sentences = handler(text)
 
             # If no handler found, use fallback
