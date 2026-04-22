@@ -34,17 +34,19 @@ jobs:
         pip install "setuptools<81"  # sentsplit depends on deprecated pkg_resources removed in setuptools 81.0.0
         pip install -e .[dev,all] coveralls
 
-    - name: Test with Pytest & Generate Coverage
+    - name: Test with Pytest
       run: |
-        # We target src/chunklet to keep the report focused
+        pytest tests
+
+    - name: Generate Coverage
+      if: matrix.python-version == '3.12'
+      run: |
         pytest --cov=src/chunklet --cov-report=xml tests
 
     - name: Upload coverage to Coveralls
+      if: matrix.python-version == '3.12'
       env:
-        # The Secret Sauce: Use the built-in token
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # No need for manual flags, coveralls-python detects 
-        # GitHub Actions environment automatically
         coveralls
         

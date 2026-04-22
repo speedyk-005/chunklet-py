@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BlingFire Integration**:
   - Added auto detection + usage of blingfire lib if  env "USE_BLINGFIRE" is set
   - Added BlingfireMissingError exception
+- **CI**:
+  - Added dependabot configuration for GitHub Actions and pip dependencies
+  - Optimized CI to run coverage only on Python 3.12 (reduces CI time for other versions)
 
 ### Changed
 - **Core Performance Overhaul**:
