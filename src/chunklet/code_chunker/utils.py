@@ -29,29 +29,28 @@ def is_python_code(source: str | Path) -> bool:
         ambiguous code snippets that fail AST parsing.
 
     Args:
-        source (str | Path): raw code string or Path to source file to check.
+        source: raw code string or Path to source file to check.
 
     Returns:
-        bool: True if the source is written in Python.
+        True if the source is written in Python.
     """
     # Path-based check
     if isinstance(source, Path) or (isinstance(source, str) and is_path_like(source)):
         path = Path(source)
         return path.suffix.lower() in {".py", ".pyi", ".pyx", ".pyw"}
 
-    if isinstance(source, str):
-        # Shebang line check
-        if re.match(r"#!/usr/bin/(env\s+)?python", source.strip()):
-            return True
+    # Shebang line check
+    if re.match(r"#!/usr/bin/(env\s+)?python", source.strip()):
+        return True
 
-        # Definitive syntactic check (Highest confidence)
-        try:
-            ast.parse(source)
-            # If parsing succeeds, it's definitely Python code
-            return True
-        except Exception:  # noqa: S110
-            # If fails, it might still be Python code (e.g., incomplete snippet), so continue with heuristics
-            pass
+    # Definitive syntactic check
+    # If parsing succeeds, it's definitely Python code
+    try:
+        ast.parse(source)
+        return True
+    except Exception:  # noqa: S110
+        # If fails, it might still be Python code (e.g., incomplete snippet), so continue with heuristics
+        pass
 
     # Pygments heuristic (Lowest confidence, last resort)
     try:

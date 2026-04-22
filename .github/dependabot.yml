@@ -1,0 +1,38 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+    groups:
+      testing:
+        patterns:
+          - "pytest*"
+      linting:
+        patterns:
+          - "ruff*"
+      docs:
+        patterns:
+          - "mkdocs*"
+      main:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "pytest*"
+          - "ruff*"
+          - "mkdocs*"

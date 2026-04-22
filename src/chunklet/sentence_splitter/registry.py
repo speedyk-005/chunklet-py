@@ -32,48 +32,6 @@ class CustomSplitterRegistry:
         """
         return lang in self._splitters
 
-    def register(self, *args: Any, name: str | None = None):
-        """
-        Register a splitter callback for one or more languages.
-
-        This method can be used in two ways:
-
-        1. As a decorator:
-            @registry.register("en", "fr", name="my_splitter")
-            def my_splitter(text):
-                ...
-
-        2. As a direct function call:
-            registry.register(my_splitter, "en", "fr", name="my_splitter")
-
-        Args:
-            *args: The arguments, which can be either (lang1, lang2, ...) for a decorator
-                   or (callback, lang1, lang2, ...) for a direct call.
-            name (str, optional): The name of the splitter. If None, attempts to use the callback's name.
-        """
-        if not args:
-            raise ValueError("At least one language or a callback must be provided.")
-
-        if callable(args[0]):
-            # Direct call: register(callback, lang1, lang2, ...)
-            callback = args[0]
-            langs = args[1:]
-            if not langs:
-                raise ValueError(
-                    "At least one language must be provided for the callback."
-                )
-            self._register_logic(langs, callback, name)
-            return callback
-        else:
-            # Decorator: @register(lang1, lang2, ...)
-            langs = args
-
-            def decorator(cb: Callable):
-                self._register_logic(langs, cb, name)
-                return cb
-
-            return decorator
-
     @validate_input
     def _register_logic(
         self,
@@ -113,6 +71,48 @@ class CustomSplitterRegistry:
         for lang in langs:
             self._splitters[lang] = (splitter_name, callback)
 
+    def register(self, *args: Any, name: str | None = None):
+        """
+        Register a splitter callback for one or more languages.
+
+        This method can be used in two ways:
+
+        1. As a decorator:
+            @registry.register("en", "fr", name="my_splitter")
+            def my_splitter(text):
+                ...
+
+        2. As a direct function call:
+            registry.register(my_splitter, "en", "fr", name="my_splitter")
+
+        Args:
+            *args: The arguments, which can be either (lang1, lang2, ...) for a decorator
+                   or (callback, lang1, lang2, ...) for a direct call.
+            name: The name of the splitter. If None, attempts to use the callback's name.
+        """
+        if not args:
+            raise ValueError("At least one language or a callback must be provided.")
+
+        if callable(args[0]):
+            # Direct call: register(callback, lang1, lang2, ...)
+            callback = args[0]
+            langs = args[1:]
+            if not langs:
+                raise ValueError(
+                    "At least one language must be provided for the callback."
+                )
+            self._register_logic(langs, callback, name)
+            return callback
+        else:
+            # Decorator: @register(lang1, lang2, ...)
+            langs = args
+
+            def decorator(cb: Callable):
+                self._register_logic(langs, cb, name)
+                return cb
+
+            return decorator
+
     @validate_input
     def unregister(self, *langs: str) -> None:
         """
@@ -136,11 +136,11 @@ class CustomSplitterRegistry:
         Processes a text using a splitter registered for the given language.
 
         Args:
-            text (str): The text to split.
-            lang (str): The language of the text.
+            text: The text to split.
+            lang: The language of the text.
 
         Returns:
-            tuple[list[str], str]: A tuple containing a list of sentences and the name of the splitter used.
+            A tuple containing a list of sentences and the name of the splitter used.
 
         Raises:
             CallbackError: If the splitter callback fails.

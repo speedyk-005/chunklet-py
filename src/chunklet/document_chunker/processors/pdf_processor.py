@@ -4,12 +4,11 @@ import re
 from more_itertools import ilen
 
 # pdfminer is lazily imported
+
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
-# Pattern to normalize consecutive newlines
-MULTIPLE_NEWLINE_PATTERN = re.compile(r"(\n\s*){2,}")
 
-# Pattern to remove lines with only numbers
+MULTIPLE_NEWLINE_PATTERN = re.compile(r"(\n\s*){2,}")
 STANDALONE_NUMBER_PATTERN = re.compile(r"\n\s*\d+\s*\n")
 
 # Pattern to merge single newlines within logical text blocks
@@ -64,7 +63,7 @@ class PDFProcessor(BaseProcessor):
         """Initialize the PDFProcessor.
 
         Args:
-            file_path (str): Path to the PDF file.
+            file_path: Path to the PDF file.
         """
         try:
             from pdfminer.layout import LAParams
@@ -90,10 +89,10 @@ class PDFProcessor(BaseProcessor):
             - Remove zero-width / non-breaking characters
 
         Args:
-            text (str): Raw text extracted from PDF page.
+            text: Raw text extracted from PDF page.
 
         Returns:
-            str: Cleaned and normalized text.
+            Cleaned and normalized text.
         """
         if not text:
             return ""
@@ -107,10 +106,10 @@ class PDFProcessor(BaseProcessor):
         """Utility to decode bytes to str, ignoring errors, otherwise return as-is.
 
         Args:
-            value (str | bytes): The input value, which may be a string or a byte sequence.
+            value: The input value, which may be a string or a byte sequence.
 
         Returns:
-            str: The decoded string if the input was bytes, or the original string
+            The decoded string if the input was bytes, or the original string
                  if the input was already a string.
         """
         if isinstance(value, bytes):
@@ -124,10 +123,10 @@ class PDFProcessor(BaseProcessor):
         defined in METADATA_FIELDS.
 
         Args:
-            doc (Any): PDFDocument instance with info attribute.
+            doc: PDFDocument instance with info attribute.
 
         Returns:
-            dict: Dictionary of normalized metadata key-value pairs.
+            Dictionary of normalized metadata key-value pairs.
         """
         metadata = {}
         if not (hasattr(doc, "info") and doc.info):
@@ -152,7 +151,7 @@ class PDFProcessor(BaseProcessor):
         the _cleanup_text method to remove artifacts and normalize formatting.
 
         Yields:
-            str: Cleaned text content from each PDF page.
+            Cleaned text content from each PDF page.
         """
         from pdfminer.high_level import extract_text
         from pdfminer.pdfpage import PDFPage
@@ -177,7 +176,7 @@ class PDFProcessor(BaseProcessor):
         Includes source path, page count, and PDF info fields.
 
         Returns:
-            dict[str, Any]: A dictionary containing metadata fields:
+            A dictionary containing metadata fields:
                 - title
                 - author
                 - creator

@@ -22,16 +22,12 @@ from chunklet.exceptions import (
 from chunklet.sentence_splitter import BaseSplitter, SentenceSplitter
 
 
-# Regex to split sentences into individual clauses
 CLAUSE_END_PATTERN = re.compile(r"(?<=[;,’：—)&…])\s")
-
-# Pattern to detect section breaks (headings, thematic breaks, HTML details, etc.)
 SECTION_BREAK_PATTERN = re.compile(
     r"^\s*#{1,6}\s+.+?$|"  # markdown headings (# - ######)
     r"^\s*([-*_])\s*(?:\1){2,}\s*$|"  # thematic breaks (---, ***, ___)
     r"^\s*<\/?(?:details|summary|section|article)\b[^>]*>|"  # HTML sectioning
-    r"^\s*<hr\s*\/?>|"  # HTML horizontal rule
-    r"^---+$|^\\*\\*\\*+$|^___+$",  # ASCII thematic breaks
+    r"^\s*<hr\s*\/?>",  # HTML horizontal rule
     re.M | re.I,
 )
 
@@ -62,11 +58,11 @@ class PlainTextChunker:
         Initialize The PlainTextChunker.
 
         Args:
-            sentence_splitter (BaseSplitter, optional): An optional BaseSplitter instance.
+            sentence_splitter: An optional BaseSplitter instance.
                 If None, a default SentenceSplitter will be initialized.
-            verbose (bool): Enable verbose logging.
-            continuation_marker (str): The marker to prepend to unfitted clauses. Defaults to '...'.
-            token_counter (Callable[[str], int], optional): Function that counts tokens in text.
+            verbose: Enable verbose logging.
+            continuation_marker: The marker to prepend to unfitted clauses. Defaults to '...'.
+            token_counter: Function that counts tokens in text.
                 If None, must be provided when calling chunk() methods.
 
         Raises:
@@ -84,7 +80,6 @@ class PlainTextChunker:
                 f"but got {type(sentence_splitter).__name__}."
             )
 
-        # Initialize SentenceSplitter
         self.sentence_splitter = sentence_splitter or SentenceSplitter()
         self.sentence_splitter.verbose = self._verbose
 
@@ -99,7 +94,7 @@ class PlainTextChunker:
         self._verbose = value
         self.sentence_splitter.verbose = value
 
-    def _create_chunk_boxes(
+    def _create_chunks(
         self,
         chunks: Iterable[str],
         base_metadata: dict[str, Any],
@@ -109,31 +104,31 @@ class PlainTextChunker:
         Helper to create a list of DotDict objects for chunks with embedded metadata and auto-assigned chunk numbers.
 
         Args:
-            chunks (Iterable[str]): An iterable (e.g., list or generator) of raw text strings,
+            chunks: An iterable (e.g., list or generator) of raw text strings,
                 each representing a chunk of content.
-            base_metadata (dict[str, Any]): A dictionary containing document-level metadata
+            base_metadata: A dictionary containing document-level metadata
                 (e.g., 'source' file path, 'page_count' for PDFs) to be embedded
                 into each chunk's metadata.
-            span_finder (DeterministicSpanFinder): The span finder instance for locating chunks.
+            span_finder: The span finder instance for locating chunks.
 
         Returns:
-            list[DotDict]: A list of `DotDict` objects. Each `DotDict` contains:
+            A list of `DotDict` objects. Each `DotDict` contains:
 
                 - 'content' (str): The text of the chunk.
                 - 'metadata' (dict): A dictionary including 'chunk_num' (int)
                     and all key-value pairs from `base_metadata`.
         """
-        chunk_boxes = []
+        chunks_out = []
         for i, chunk_str in enumerate(chunks, start=1):
-            chunk_box = DotDict()
-            chunk_box.content = chunk_str.strip()
-            chunk_box.metadata = copy.deepcopy(base_metadata)
-            chunk_box.metadata["chunk_num"] = i
-            chunk_box.metadata["span"] = span_finder.find_span(
+            chunk = DotDict()
+            chunk.content = chunk_str.strip()
+            chunk.metadata = copy.deepcopy(base_metadata)
+            chunk.metadata["chunk_num"] = i
+            chunk.metadata["span"] = span_finder.find_span(
                 chunk_str.removeprefix(self.continuation_marker)
             )
-            chunk_boxes.append(chunk_box)
-        return chunk_boxes
+            chunks_out.append(chunk)
+        return chunks_out
 
     def _get_overlap_clauses(
         self,
@@ -146,22 +141,22 @@ class PlainTextChunker:
         It optionally prepends a continuation marker in some cases.
 
         Args:
-            sentences (List): A list of sentences to be chunked.
-            overlap_percent (Union[int, float]): Percentage of overlap between chunks (0-75).
+            sentences: A list of sentences to be chunked.
+            overlap_percent: Percentage of overlap between chunks (0-75).
 
         Returns:
-            list[str]: A list of clauses as overlap.
+            A list of clauses as overlap.
         """
-        detected_clauses = [
+        clauses = [
             clause for sent in sentences for clause in CLAUSE_END_PATTERN.split(sent)
         ]
 
-        overlap_num = round(len(detected_clauses) * overlap_percent / 100)
+        overlap_num = round(len(clauses) * overlap_percent / 100)
 
         if overlap_num == 0:
             return []
 
-        overlapped_clauses = detected_clauses[-overlap_num:]
+        overlapped_clauses = clauses[-overlap_num:]
 
         # The Condition to add the continuation marker
         if (
@@ -188,12 +183,12 @@ class PlainTextChunker:
         and unfitted portions as joined strings.
 
         Args:
-            sentence (str): The input string to be split into clauses.
-            remaining_tokens (int): The number of tokens available to fit clauses into.
-            token_counter (Callable): The function needed for token counting.
+            sentence: The input string to be split into clauses.
+            remaining_tokens: The number of tokens available to fit clauses into.
+            token_counter: The function needed for token counting.
 
         Returns:
-            tuple[str, str]: A tuple containing two strings:
+            A tuple containing two strings:
 
                 - The clauses that fit within the token budget (joined as a string).
                 - The remaining unfitted clauses (joined as a string).
@@ -228,17 +223,16 @@ class PlainTextChunker:
         to a 'fitted' part until the max_tokens limit is reached.
 
         Args:
-            text (str): The input string to be processed.
-            max_tokens (int): The maximum number of tokens allowed in the fitted part.
-            token_counter (Callable): The function used to count tokens.
+            text: The input string to be processed.
+            max_tokens: The maximum number of tokens allowed in the fitted part.
+            token_counter: The function used to count tokens.
 
         Returns:
-            str: The fitted part of the text, truncated to fit within max_tokens.
+            The fitted part of the text, truncated to fit within max_tokens.
         """
-        parts = re.split(r"[ /\\]", text)
         token_count = 0
         fitted_parts = []
-        for part in parts:
+        for part in re.split(r"[ /\\]", text):
             part_tokens = count_tokens(part + "...", token_counter)
             if token_count + part_tokens > max_tokens:
                 break
@@ -253,7 +247,7 @@ class PlainTextChunker:
         max_sentences: int,
         max_section_breaks: int,
         token_counter: Callable[[str], int] | None,
-        state: dict,
+        constraint_counter: dict,
     ) -> list[str]:
         """
         Prepare data for the next chunk after splitting.
@@ -262,36 +256,37 @@ class PlainTextChunker:
         based on the provided constraints, updating the state dict.
 
         Args:
-            curr_chunk (list[str]): The current chunk sentences.
-            overlap_percent (float): Percentage of overlap to apply.
-            max_tokens (int): Maximum tokens per chunk.
-            token_counter (Callable[[str], int], optional): Function to count tokens.
-            max_sentences (int): Maximum sentences per chunk.
-            max_section_breaks (int): Maximum section breaks per chunk.
-            state (dict): State dict to update with counts.
+            curr_chunk: The current chunk sentences.
+            overlap_percent: Percentage of overlap to apply.
+            max_tokens: Maximum tokens per chunk.
+            token_counter: Function to count tokens.
+            max_sentences: Maximum sentences per chunk.
+            max_section_breaks: Maximum section breaks per chunk.
+            constraint_counter: State dict to update with counts.
 
         Returns:
-            list[str]: The prepared next chunk.
+            The prepared next chunk.
         """
-        next_chunk = self._get_overlap_clauses(curr_chunk, overlap_percent)
+        overlap_clauses = self._get_overlap_clauses(curr_chunk, overlap_percent)
 
-        state["token_count"] = 0
+        constraint_counter["token_count"] = 0
         if max_tokens != sys.maxsize:
-            state["token_count"] = sum(
-                count_tokens(s, token_counter) for s in next_chunk
+            constraint_counter["token_count"] = sum(
+                count_tokens(s, token_counter) for s in overlap_clauses
             )
 
-        state["sentence_count"] = 0
+        constraint_counter["sentence_count"] = 0
         if max_sentences != sys.maxsize:
-            state["sentence_count"] = len(next_chunk)
+            # Consider clause as sentence
+            constraint_counter["sentence_count"] = len(overlap_clauses)
 
-        state["heading_count"] = 0
+        constraint_counter["heading_count"] = 0
         if max_section_breaks != sys.maxsize:
-            state["heading_count"] = sum(
-                1 for s in next_chunk if SECTION_BREAK_PATTERN.match(s)
+            constraint_counter["heading_count"] = sum(
+                1 for s in overlap_clauses if SECTION_BREAK_PATTERN.match(s)
             )
 
-        return next_chunk
+        return overlap_clauses
 
     def _group_by_chunk(
         self,
@@ -307,19 +302,19 @@ class PlainTextChunker:
         Applies overlap logic between consecutive chunks.
 
         Args:
-            sentences (list[str]): A list of sentences to be chunked.
-            token_counter (Callable, optional): The token counting function.
-            max_tokens (int): Maximum number of tokens per chunk.
-            max_sentences (int): Maximum number of sentences per chunk.
-            max_section_breaks (int, optional): Maximum number of section breaks per chunk.
-            overlap_percent (int | float): Percentage of overlap between chunks.
+            sentences: A list of sentences to be chunked.
+            token_counter: The token counting function.
+            max_tokens: Maximum number of tokens per chunk.
+            max_sentences: Maximum number of sentences per chunk.
+            max_section_breaks: Maximum number of section breaks per chunk.
+            overlap_percent: Percentage of overlap between chunks.
 
         Returns:
-            list[str]: A list of chunk strings.
+            A list of chunk strings.
         """
         chunks = []
         curr_chunk = []
-        state = {
+        constraint_counter = {
             "token_count": 0,
             "sentence_count": 0,
             "heading_count": 0,
@@ -341,19 +336,19 @@ class PlainTextChunker:
                 else 0
             )
 
-            sentence_limit_reached = state["sentence_count"] + 1 > max_sentences
+            sentence_limit_reached = constraint_counter["sentence_count"] + 1 > max_sentences
             heading_limit_reached = (
-                is_heading and state["heading_count"] + 1 > max_section_breaks
+                is_heading and constraint_counter["heading_count"] + 1 > max_section_breaks
             )
             token_limit_reached = (
                 max_tokens != sys.maxsize
-                and state["token_count"] + sentence_tokens > max_tokens
+                and constraint_counter["token_count"] + sentence_tokens > max_tokens
             )
 
             if token_limit_reached or sentence_limit_reached or heading_limit_reached:
                 # for token-based mode, try splitting further
                 if token_limit_reached:
-                    remaining_tokens = max_tokens - state["token_count"]
+                    remaining_tokens = max_tokens - constraint_counter["token_count"]
                     fitted, unfitted = self._find_clauses_that_fit(
                         sentence,
                         remaining_tokens,
@@ -394,15 +389,15 @@ class PlainTextChunker:
                     max_sentences=max_sentences,
                     max_section_breaks=max_section_breaks,
                     token_counter=token_counter,
-                    state=state,
+                    constraint_counter=constraint_counter,
                 )
 
             else:
                 curr_chunk.append(sentence)
-                state["token_count"] += sentence_tokens
-                state["sentence_count"] += 1
+                constraint_counter["token_count"] += sentence_tokens
+                constraint_counter["sentence_count"] += 1
                 if is_heading:
-                    state["heading_count"] += 1
+                    constraint_counter["heading_count"] += 1
                 index += 1
 
         # Add the last chunk if it exists
@@ -425,10 +420,10 @@ class PlainTextChunker:
         is available when token-based limits are used.
 
         Args:
-            max_tokens (int | None): Maximum tokens per chunk.
-            max_sentences (int | None): Maximum sentences per chunk.
-            max_section_breaks (int | None): Maximum section breaks per chunk.
-            token_counter (Callable[[str], int] | None): Token counting function.
+            max_tokens: Maximum tokens per chunk.
+            max_sentences: Maximum sentences per chunk.
+            max_section_breaks: Maximum section breaks per chunk.
+            token_counter: Token counting function.
 
         Raises:
             InvalidInputError: If no chunking limits are provided.
@@ -464,19 +459,19 @@ class PlainTextChunker:
         and custom token counters.
 
         Args:
-            text (str): The input text to chunk.
-            lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
-            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
-            overlap_percent (int | float): Percentage of overlap between chunks (0-75). Defaults to 20
-            offset (int): Starting sentence offset for chunking. Defaults to 0.
-            token_counter (callable, optional): Optional token counting function.
+            text: The input text to chunk.
+            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
+            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks: Maximum number of section breaks per chunk. Must be >= 1.
+            overlap_percent: Percentage of overlap between chunks (0-75). Defaults to 20
+            offset: Starting sentence offset for chunking. Defaults to 0.
+            token_counter: Optional token counting function.
                 Required for token-based modes only.
-            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
+            base_metadata: Optional dictionary to be included with each chunk.
 
         Returns:
-            list[DotDict]: A list of `DotDict` objects, each containing the chunk content and metadata.
+            A list of `DotDict` objects, each containing the chunk content and metadata.
 
         Raises:
             InvalidInputError: If any chunking configuration parameter is invalid.
@@ -537,13 +532,10 @@ class PlainTextChunker:
             overlap_percent=overlap_percent,
         )
 
-        # Leave the user's original dict untouched
-        base_metadata = (base_metadata or {}).copy()
-
         # Note: We use DeterministicSpanFinder because sentence splitter may modify text
         # (e.g., normalize whitespace, fix encoding), making exact span tracking difficult.
         span_finder = DeterministicSpanFinder(text)
-        return self._create_chunk_boxes(chunks, base_metadata, span_finder)
+        return self._create_chunks(chunks, base_metadata or {}, span_finder)
 
     @validate_input
     def batch_chunk(
@@ -571,26 +563,26 @@ class PlainTextChunker:
         of the tasks that completed successfully, preventing wasted work.
 
         Args:
-            texts (IterableOfStr): A non-string iterable of input texts to be chunked.
-            lang (str): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            max_tokens (int, optional): Maximum number of tokens per chunk. Must be >= 12.
-            max_sentences (int, optional): Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks (int, optional): Maximum number of section breaks per chunk. Must be >= 1.
-            overlap_percent (int | float): Percentage of overlap between chunks (0-85).
-            offset (int): Starting sentence offset for chunking. Defaults to 0.
-            token_counter (callable, optional): The token counting function.
+            texts: A non-string iterable of input texts to be chunked.
+            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
+            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks: Maximum number of section breaks per chunk. Must be >= 1.
+            overlap_percent: Percentage of overlap between chunks (0-85).
+            offset: Starting sentence offset for chunking. Defaults to 0.
+            token_counter: The token counting function.
                 Required if `max_tokens` is set.
-            separator (Any): A value to be yielded after the chunks of each text are processed.
+            separator: A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
-            base_metadata (dict[str, Any], optional): Optional dictionary to be included with each chunk.
-            n_jobs (int | None): Number of parallel workers to use. If None, uses all available CPUs.
+            base_metadata: Optional dictionary to be included with each chunk.
+            n_jobs: Number of parallel workers to use. If None, uses all available CPUs.
                 Must be >= 1 if specified.
-            show_progress (bool): Flag to show or disable the loading bar.
-            on_errors (Literal["raise", "skip", "break"]): How to handle errors during processing.
+            show_progress: Flag to show or disable the loading bar.
+            on_errors: How to handle errors during processing.
                 Defaults to 'raise'.
 
         Yields:
-            Any: A `DotDict` object containing the chunk content and metadata, or any separator object.
+            A `DotDict` object containing the chunk content and metadata, or any separator object.
 
         Raises:
             InvalidInputError: If `texts` is not an iterable of strings, or if `n_jobs` is less than 1.

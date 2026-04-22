@@ -18,12 +18,9 @@ class UniversalSplitter:
     Use cases:
       - Primary splitter for languages without dedicated support
       - Fallback when language-specific splitters unavailable
-
-    Tested: en, fr, de, es, sw, yo, zu, mg, hm, mt, cy, ga, is, am, hi, bn, ta, and more.
     """
 
     def __init__(self):
-        """Initializes regex patterns for sentence splitting."""
         self.sentence_terminators = "".join(GLOBAL_SENTENCE_TERMINATORS)
 
         # Patterns for handling numbered lists
@@ -50,10 +47,10 @@ class UniversalSplitter:
         Splits text into sentences using rule-based regex patterns.
 
         Args:
-            text (str): The input text to be segmented into sentences.
+            text: The input text to be segmented into sentences.
 
         Returns:
-            list[str]: A list of sentences after segmentation.
+            A list of sentences after segmentation.
 
         Notes:
             - Normalizes numbered lists during splitting and restores them afterward.
@@ -81,13 +78,13 @@ class UniversalSplitter:
         ]
 
 
-# Example usage
+# --- Example usage ---
 if __name__ == "__main__":  # pragma: no cover
     import textwrap
 
-    complex_text = textwrap.dedent(
-        """
+    complex_text = textwrap.dedent("""
         Dr. Smith, the lead researcher at the U.S.A. I want 1. He want to talk to Dr. Smith. Space Agency, said: "We've reached 123.45 light-years… incredible!"  OK.
+        My email addresses is pierrot1234@gmail.com. Could you guess it?
         He added, Consider the following points (They are special.):
             1. All systems are operational.
             2. No anomalies detected. like 3.14 gram.
@@ -98,8 +95,7 @@ if __name__ == "__main__":  # pragma: no cover
           - Video: Mars landing
           - Image: Satellite view
           - Music: Space-themed track
-        """
-    )
+    """)
 
     splitter = UniversalSplitter()
     sentences = splitter.split(complex_text)

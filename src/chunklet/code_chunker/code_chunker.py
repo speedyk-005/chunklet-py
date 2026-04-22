@@ -86,8 +86,8 @@ class CodeChunker(BaseChunker):
         Initialize the CodeChunker with optional token counter and verbosity control.
 
         Args:
-            verbose (bool): Enable verbose logging.
-            token_counter (Callable[[str], int] | None): Function that counts tokens in text.
+            verbose: Enable verbose logging.
+            token_counter: Function that counts tokens in text.
                 If None, must be provided when calling chunk() methods.
         """
         self.token_counter = token_counter
@@ -96,12 +96,12 @@ class CodeChunker(BaseChunker):
 
     @property
     def verbose(self) -> bool:
-        """Get the verbose setting."""
+        """Get the verbosity status."""
         return self._verbose
 
     @verbose.setter
     def verbose(self, value: bool) -> None:
-        """Set the verbose setting and propagate to the extractor."""
+        """Set the verbosity and propagate to the extractor."""
         self._verbose = value
         self.extractor.verbose = value
 
@@ -111,10 +111,10 @@ class CodeChunker(BaseChunker):
         then returns its string representation.
 
         Args:
-            relations_list (list[list]): A list containing relation lists.
+            relations_list: A list containing relation lists.
 
         Returns:
-            str: The string representation of the tree
+            The string representation of the tree
         """
         if not relations_list:
             return "global"
@@ -125,7 +125,6 @@ class CodeChunker(BaseChunker):
         # Deduplicate relations
         def relation_key(relation: dict):
             return tuple(sorted(relation.items()))
-
         unique_relations = list(unique_everseen(all_relations_flat, key=relation_key))
 
         if not unique_relations:
@@ -153,17 +152,17 @@ class CodeChunker(BaseChunker):
         and basic metadata.
 
         Args:
-            snippet_dict (dict): The oversized snippet to split.
-            max_tokens (int): Maximum tokens per sub-chunk.
-            max_lines (int): Maximum lines per sub-chunk.
-            source (str | Path): The source of the code.
-            token_counter (Callable | None): The token counting function.
-            cumulative_lengths (tuple[int, ...]): The cumulative lengths of the lines in the source code.
+            snippet_dict: The oversized snippet to split.
+            max_tokens: Maximum tokens per sub-chunk.
+            max_lines: Maximum lines per sub-chunk.
+            source: The source of the code.
+            token_counter: The token counting function.
+            cumulative_lengths: The cumulative lengths of the lines in the source code.
 
         Returns:
-            list[DotDict]: A list of sub-chunks derived from the original block.
+            A list of sub-chunks derived from the original block.
         """
-        sub_boxes = []
+        sub_chunks = []
         curr_chunk = []
         token_count = 0
         line_count = 0
@@ -183,7 +182,7 @@ class CodeChunker(BaseChunker):
                 start_span = cumulative_lengths[start_line - 1]
                 end_span = cumulative_lengths[end_line]
                 tree = Node.from_relations(snippet_dict["relations"]).to_string()
-                sub_boxes.append(
+                sub_chunks.append(
                     DotDict(
                         {
                             "content": "\n".join(curr_chunk),
@@ -219,7 +218,7 @@ class CodeChunker(BaseChunker):
             start_span = cumulative_lengths[start_line - 1]
             end_span = cumulative_lengths[end_line]
             tree = Node.from_relations(snippet_dict["relations"]).to_string()
-            sub_boxes.append(
+            sub_chunks.append(
                 DotDict(
                     {
                         "content": "\n".join(curr_chunk),
@@ -238,7 +237,7 @@ class CodeChunker(BaseChunker):
                 )
             )
 
-        return sub_boxes
+        return sub_chunks
 
     def _format_limit_msg(
         self,
@@ -297,17 +296,17 @@ class CodeChunker(BaseChunker):
         Handles oversized snippets by splitting them if strict mode is disabled.
 
         Args:
-            snippet_dicts (list[dict]): List of extracted code snippet dictionaries.
-            cumulative_lengths (tuple[int, ...]): Cumulative character lengths for span calculation.
-            token_counter (Callable[[str], int] | None): Function to count tokens in text.
-            max_tokens (int): Maximum tokens per chunk.
-            max_lines (int): Maximum lines per chunk.
-            max_functions (int): Maximum functions per chunk.
-            strict (bool): If True, raise error on oversized snippets; if False, split them.
-            source (str | Path): Original source for metadata.
+            snippet_dicts: List of extracted code snippet dictionaries.
+            cumulative_lengths: Cumulative character lengths for span calculation.
+            token_counter: Function to count tokens in text.
+            max_tokens: Maximum tokens per chunk.
+            max_lines: Maximum lines per chunk.
+            max_functions: Maximum functions per chunk.
+            strict: If True, raise error on oversized snippets; if False, split them.
+            source: Original source for metadata.
 
         Returns:
-            list[DotDict]: List of chunk boxes with content and metadata.
+            List of chunks with content and metadata.
         """
         source = (
             str(source) if (isinstance(source, Path) or is_path_like(source)) else "N/A"
@@ -455,10 +454,10 @@ class CodeChunker(BaseChunker):
         Validates that at least one chunking constraint is provided and sets default values.
 
         Args:
-            max_tokens (int | None): Maximum number of tokens per chunk.
-            max_lines (int | None): Maximum number of lines per chunk.
-            max_functions (int | None): Maximum number of functions per chunk.
-            token_counter (Callable[[str], int] | None): Function that counts tokens in text.
+            max_tokens: Maximum number of tokens per chunk.
+            max_lines: Maximum number of lines per chunk.
+            max_functions: Maximum number of functions per chunk.
+            token_counter: Function that counts tokens in text.
 
         Raises:
             InvalidInputError: If no chunking constraints are provided.
@@ -493,31 +492,31 @@ class CodeChunker(BaseChunker):
         tokens, lines, and logical units while preserving semantic coherence.
 
         Args:
-            code (str | Path): Raw code string or file path to process.
-            max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
-            max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
-            max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
-            token_counter (Callable, optional): Token counting function. Uses instance
+            code: Raw code string or file path to process.
+            max_tokens: Maximum tokens per chunk. Must be >= 12.
+            max_lines: Maximum number of lines per chunk. Must be >= 5.
+            max_functions: Maximum number of functions per chunk. Must be >= 1.
+            token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
-            include_comments (bool): Include comments in output chunks. Default: True.
-            docstring_mode (Literal["summary", "all", "excluded"]): Docstring processing strategy:
+            include_comments: Include comments in output chunks. Default: True.
+            docstring_mode: Docstring processing strategy:
 
                 - "summary": Include only first line of docstrings
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
                 Defaults to "all".
-            strict (bool): If True, raise error when structural blocks exceed
+            strict: If True, raise error when structural blocks exceed
                 max_tokens. If False, split oversized blocks. Default: True.
 
         Returns:
-            list[DotDict]: List of code chunks with metadata. Each DotDict contains:
+            List of code chunks with metadata. Each DotDict contains:
 
-                - content (str): Code content
-                - tree (str): Namespace hierarchy
-                - start_line (int): Starting line in original source
-                - end_line (int): Ending line in original source
-                - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): "N/A"
+                - content: Code content
+                - tree: Namespace hierarchy
+                - start_line: Starting line in original source
+                - end_line: Ending line in original source
+                - span: Character-level span (start and end offsets) in the original source.
+                - source_path: "N/A"
 
         Raises:
             InvalidInputError: Invalid configuration parameters.
@@ -585,31 +584,31 @@ class CodeChunker(BaseChunker):
         tokens, lines, and logical units while preserving semantic coherence.
 
         Args:
-            path (str | Path): File path to process.
-            max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
-            max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
-            max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
-            token_counter (Callable, optional): Token counting function. Uses instance
+            path: File path to process.
+            max_tokens: Maximum tokens per chunk. Must be >= 12.
+            max_lines: Maximum number of lines per chunk. Must be >= 5.
+            max_functions: Maximum number of functions per chunk. Must be >= 1.
+            token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
-            include_comments (bool): Include comments in output chunks. Default: True.
-            docstring_mode (Literal["summary", "all", "excluded"]): Docstring processing strategy:
+            include_comments: Include comments in output chunks. Default: True.
+            docstring_mode: Docstring processing strategy:
 
                 - "summary": Include only first line of docstrings
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
                 Defaults to "all".
-            strict (bool): If True, raise error when structural blocks exceed
+            strict: If True, raise error when structural blocks exceed
                 max_tokens. If False, split oversized blocks. Default: True.
 
         Returns:
-            list[DotDict]: List of code chunks with metadata. Each DotDict contains:
+            List of code chunks with metadata. Each DotDict contains:
 
-                - content (str): Code content
-                - tree (str): Namespace hierarchy
-                - start_line (int): Starting line in original source
-                - end_line (int): Ending line in original source
-                - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): Source file path
+                - content: Code content
+                - tree: Namespace hierarchy
+                - start_line: Starting line in original source
+                - end_line: Ending line in original source
+                - span: Character-level span (start and end offsets) in the original source.
+                - source_path: Source file path
 
         Raises:
             InvalidInputError: Invalid configuration parameters.
@@ -661,37 +660,37 @@ class CodeChunker(BaseChunker):
         applying consistent chunking rules across all inputs.
 
         Args:
-            codes (IterableOfStr): A non-string iterable of raw code strings.
-            max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
-            max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
-            max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
-            token_counter (Callable | None): Token counting function. Uses instance
+            codes: A non-string iterable of raw code strings.
+            max_tokens: Maximum tokens per chunk. Must be >= 12.
+            max_lines: Maximum number of lines per chunk. Must be >= 5.
+            max_functions: Maximum number of functions per chunk. Must be >= 1.
+            token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
-            separator (Any): A value to be yielded after the chunks of each text are processed.
+            separator: A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
-            include_comments (bool): Include comments in output chunks. Default: True.
+            include_comments: Include comments in output chunks. Default: True.
             docstring_mode(Literal["summary", "all", "excluded"]): Docstring processing strategy:
 
                 - "summary": Include only first line of docstrings
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
                 Defaults to "all"
-            strict (bool): If True, raise error when structural blocks exceed max_tokens. If False, split oversized blocks. Default: True.
-            n_jobs (int | None): Number of parallel workers. Uses all available CPUs if None.
-            show_progress (bool): Display progress bar during processing. Defaults to True.
-            on_errors (Literal["raise", "skip", "break"]):
+            strict: If True, raise error when structural blocks exceed max_tokens. If False, split oversized blocks. Default: True.
+            n_jobs: Number of parallel workers. Uses all available CPUs if None.
+            show_progress: Display progress bar during processing. Defaults to True.
+            on_errors:
                 How to handle errors during processing. Defaults to 'raise'.
 
         yields:
-            DotDict: `DotDict` object, representing a chunk with its content and metadata.
+            `DotDict` object, representing a chunk with its content and metadata.
                 Includes:
 
-                - content (str): Code content
-                - tree (str): Namespace hierarchy
-                - start_line (int): Starting line in original source
-                - end_line (int): Ending line in original source
-                - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): "N/A"
+                - content: Code content
+                - tree: Namespace hierarchy
+                - start_line: Starting line in original source
+                - end_line: Ending line in original source
+                - span: Character-level span (start and end offsets) in the original source.
+                - source_path: "N/A"
 
         Raises:
             InvalidInputError: Invalid input parameters.
@@ -744,37 +743,37 @@ class CodeChunker(BaseChunker):
         applying consistent chunking rules across all inputs.
 
         Args:
-            paths (IterableOfPath): A non-string iterable of file paths to process.
-            max_tokens (int, optional): Maximum tokens per chunk. Must be >= 12.
-            max_lines (int, optional): Maximum number of lines per chunk. Must be >= 5.
-            max_functions (int, optional): Maximum number of functions per chunk. Must be >= 1.
-            token_counter (Callable | None): Token counting function. Uses instance
+            paths: A non-string iterable of file paths to process.
+            max_tokens: Maximum tokens per chunk. Must be >= 12.
+            max_lines: Maximum number of lines per chunk. Must be >= 5.
+            max_functions: Maximum number of functions per chunk. Must be >= 1.
+            token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
-            separator (Any): A value to be yielded after the chunks of each text are processed.
+            separator: A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
-            include_comments (bool): Include comments in output chunks. Default: True.
+            include_comments: Include comments in output chunks. Default: True.
             docstring_mode(Literal["summary", "all", "excluded"]): Docstring processing strategy:
 
                 - "summary": Include only first line of docstrings
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
                 Defaults to "all"
-            strict (bool): If True, raise error when structural blocks exceed max_tokens. If False, split oversized blocks. Default: True.
-            n_jobs (int | None): Number of parallel workers. Uses all available CPUs if None.
-            show_progress (bool): Display progress bar during processing. Defaults to True.
-            on_errors (Literal["raise", "skip", "break"]):
+            strict: If True, raise error when structural blocks exceed max_tokens. If False, split oversized blocks. Default: True.
+            n_jobs: Number of parallel workers. Uses all available CPUs if None.
+            show_progress: Display progress bar during processing. Defaults to True.
+            on_errors:
                 How to handle errors during processing. Defaults to 'raise'.
 
         yields:
-            DotDict: `DotDict` object, representing a chunk with its content and metadata.
+            `DotDict` object, representing a chunk with its content and metadata.
                 Includes:
 
-                - content (str): Code content
-                - tree (str): Namespace hierarchy
-                - start_line (int): Starting line in original source
-                - end_line (int): Ending line in original source
-                - span (tuple[int, int]): Character-level span (start and end offsets) in the original source.
-                - source_path (str): Source file path
+                - content: Code content
+                - tree: Namespace hierarchy
+                - start_line: Starting line in original source
+                - end_line: Ending line in original source
+                - span: Character-level span (start and end offsets) in the original source.
+                - source_path: Source file path
 
         Raises:
             InvalidInputError: Invalid input parameters.

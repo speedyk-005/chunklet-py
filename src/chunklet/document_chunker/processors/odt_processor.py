@@ -1,6 +1,7 @@
 from typing import Any, Generator
 
 # odfpy is lazy imported
+
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
 
@@ -28,7 +29,7 @@ class ODTProcessor(BaseProcessor):
         """Initialize the ODTProcessor.
 
         Args:
-            file_path (str): Path to the ODT file.
+            file_path: Path to the ODT file.
         """
         try:
             from odf.opendocument import load
@@ -52,7 +53,7 @@ class ODTProcessor(BaseProcessor):
         Only present fields are included in the returned dictionary.
 
         Returns:
-            dict[str, Any]: A dictionary containing metadata fields:
+            A dictionary containing metadata fields:
                  - title
                  - creator
                  - initial_creator
@@ -96,7 +97,7 @@ class ODTProcessor(BaseProcessor):
         processing of large documents by yielding text blocks that simulate pages and enhance parallel execution.
 
         Yields:
-            str: A chunk of text, approximately 4000 characters each.
+            A chunk of text, approximately 4000 characters each.
         """
         from odf import text
 
@@ -129,11 +130,11 @@ class ODTProcessor(BaseProcessor):
             yield "\n".join(curr_chunk)
 
 
+# --- Example usage ---
 if __name__ == "__main__":  # pragma: no cover
     file_path = "samples/file-sample_100kB.odt"
     processor = ODTProcessor(file_path)
 
-    # Extract metadata
     metadata = processor.extract_metadata()
     print("Metadata:")
     for key, value in metadata.items():

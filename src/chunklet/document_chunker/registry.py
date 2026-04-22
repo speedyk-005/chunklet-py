@@ -35,50 +35,6 @@ class CustomProcessorRegistry:
         """
         return ext in self._processors
 
-    def register(self, *args: Any, name: str | None = None):
-        """
-        Register a document processor callback for one or more file extensions.
-
-        This method can be used in two ways:
-
-        1. As a decorator:
-            @registry.register(".json", ".xml", name="my_processor")
-            def my_processor(file_path):
-                ...
-
-        2. As a direct function call:
-            registry.register(my_processor, ".json", ".xml", name="my_processor")
-
-        Args:
-            *args: The arguments, which can be either (ext1, ext2, ...) for a decorator
-                   or (callback, ext1, ext2, ...) for a direct call.
-            name (str | None): The name of the processor. If None, attempts to use the callback's name.
-        """
-        if not args:
-            raise ValueError(
-                "At least one file extension or a callback must be provided."
-            )
-
-        if callable(args[0]):
-            # Direct call: register(callback, ext1, ext2, ...)
-            callback = args[0]
-            exts = args[1:]
-            if not exts:
-                raise ValueError(
-                    "At least one file extension must be provided for the callback."
-                )
-            self._register_logic(exts, callback, name)
-            return callback
-        else:
-            # Decorator: @register(ext1, ext2, ...)
-            exts = args
-
-            def decorator(cb: Callable):
-                self._register_logic(exts, cb, name)
-                return cb
-
-            return decorator
-
     @validate_input
     def _register_logic(
         self,
@@ -122,6 +78,50 @@ class CustomProcessorRegistry:
                 )
             self._processors[ext] = (processor_name, callback)
 
+    def register(self, *args: Any, name: str | None = None):
+        """
+        Register a document processor callback for one or more file extensions.
+
+        This method can be used in two ways:
+
+        1. As a decorator:
+            @registry.register(".json", ".xml", name="my_processor")
+            def my_processor(file_path):
+                ...
+
+        2. As a direct function call:
+            registry.register(my_processor, ".json", ".xml", name="my_processor")
+
+        Args:
+            *args: The arguments, which can be either (ext1, ext2, ...) for a decorator
+                   or (callback, ext1, ext2, ...) for a direct call.
+            name: The name of the processor. If None, attempts to use the callback's name.
+        """
+        if not args:
+            raise ValueError(
+                "At least one file extension or a callback must be provided."
+            )
+
+        if callable(args[0]):
+            # Direct call: register(callback, ext1, ext2, ...)
+            callback = args[0]
+            exts = args[1:]
+            if not exts:
+                raise ValueError(
+                    "At least one file extension must be provided for the callback."
+                )
+            self._register_logic(exts, callback, name)
+            return callback
+        else:
+            # Decorator: @register(ext1, ext2, ...)
+            exts = args
+
+            def decorator(cb: Callable):
+                self._register_logic(exts, cb, name)
+                return cb
+
+            return decorator
+
     @validate_input
     def unregister(self, *exts: str) -> None:
         """
@@ -145,11 +145,11 @@ class CustomProcessorRegistry:
         Processes a file using a processor registered for the given file extension.
 
         Args:
-            file_path (str): The path to the file.
-            ext (str): The file extension.
+            file_path: The path to the file.
+            ext: The file extension.
 
         Returns:
-            tuple[ReturnType, str]: A tuple containing the extracted data and the name of the processor used.
+            A tuple containing the extracted data and the name of the processor used.
 
         Raises:
             CallbackError: If the processor callback fails or returns the wrong type.

@@ -13,11 +13,11 @@ def count_tokens(text: str, token_counter: Callable[[str], int]) -> int:
     value is numeric and converts it to an integer.
 
     Args:
-        text (str): Text to count tokens in.
-        token_counter (Callable[[str], int]): Function that returns the number of tokens.
+        text: Text to count tokens in.
+        token_counter: Function that returns the number of tokens.
 
     Returns:
-        int: Number of tokens.
+        Number of tokens.
 
     Raises:
         CallbackError: If the token counter fails or returns an invalid type.

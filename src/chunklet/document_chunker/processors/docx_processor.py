@@ -1,8 +1,8 @@
 from typing import Any, Generator
 
-from chunklet.document_chunker.converters.html_2_md import html_to_md
-
 # mammoth and docx are lazily imported
+
+from chunklet.document_chunker.converters.html_2_md import html_to_md
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
 
@@ -37,7 +37,7 @@ class DOCXProcessor(BaseProcessor):
         """Extracts core properties (a mix of OPC and Dublin Core elements) from the DOCX file.
 
         Returns:
-            dict[str, Any]: A dictionary containing metadata fields:
+            A dictionary containing metadata fields:
                 - title
                 - author
                 - publisher
@@ -72,7 +72,7 @@ class DOCXProcessor(BaseProcessor):
         Text is yielded in chunks of approximately 4000 characters each to simulate pages and enhance parallel execution.
 
         Yields:
-            str: A chunk of text, approximately 4000 characters each.
+            A chunk of text, approximately 4000 characters each.
         """
         try:  # Lazy import
             import mammoth
@@ -84,9 +84,8 @@ class DOCXProcessor(BaseProcessor):
             ) from e
 
         count = 0
-
         def placeholder_images(image):
-            """Replace all images with a placeholder text."""
+            """Replace all images data with a placeholder text."""
             nonlocal count
             count += 1
             return [mammoth.html.text(f"[Image - {count}]")]
@@ -120,11 +119,11 @@ class DOCXProcessor(BaseProcessor):
             yield "\n\n".join(curr_chunk)
 
 
+# --- Example usage ---
 if __name__ == "__main__":  # pragma: no cover
     file_path = "samples/Lorem Ipsum.docx"
     processor = DOCXProcessor(file_path)
 
-    # Extract metadata
     metadata = processor.extract_metadata()
     print("Metadata:")
     for key, value in metadata.items():

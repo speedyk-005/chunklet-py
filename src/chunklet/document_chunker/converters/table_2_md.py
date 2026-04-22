@@ -14,20 +14,17 @@ def table_to_md(file_path: str | Path) -> str:
     Convert a CSV or XLSX file into a Markdown-formatted table string.
 
     Args:
-        file_path (str | Path): Path to the input file (.csv or .xlsx).
+        file_path: Path to the input file (.csv or .xlsx).
 
     Returns:
-        str: Markdown table representation of the file contents.
+        Markdown table representation of the file contents.
     """
     file_path = Path(file_path)
     ext = file_path.suffix.lower()
 
-    # Read CSV
     if ext == ".csv":
         with open(file_path, newline="", encoding="utf-8") as f:
             data = list(csv.reader(f))
-
-    # Read Excel (.xlsx)
     elif ext == ".xlsx":
         try:
             from openpyxl import load_workbook
@@ -42,7 +39,6 @@ def table_to_md(file_path: str | Path) -> str:
         sheet = wb.active
         data = list(sheet.iter_rows(values_only=True))
         wb.close()
-
     else:
         raise ValueError(f"Unsupported file type: {ext}")
 
@@ -60,9 +56,8 @@ def table_to_md(file_path: str | Path) -> str:
     return tabulate(rows, headers=headers, tablefmt="pipe")
 
 
-# Exemple usage
+# --- Example usage ---
 if __name__ == "__main__":  # pragma: no cover
-    # Convert sample Excel file to Markdown
     sample_file = "samples/example.xlsx"
     md_table = table_to_md(sample_file)
     print(f"\nMarkdown output for {sample_file}:\n")

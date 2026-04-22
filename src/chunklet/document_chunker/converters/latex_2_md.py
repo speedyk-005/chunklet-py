@@ -12,10 +12,10 @@ def latex_to_md(file_path: str | Path) -> str:
     Convert LaTeX code to Markdown-style plain text.
 
     Args:
-        file_path (str | Path): Path to the latex file.
+        file_path: Path to the latex file.
 
     Returns:
-        str: The full text content in markdown
+        The full text content in markdown
     """
     if LatexNodes2Text is None:
         raise ImportError(
@@ -27,7 +27,6 @@ def latex_to_md(file_path: str | Path) -> str:
     with open(file_path, encoding="utf-8", errors="ignore") as f:
         latex_code = f.read()
 
-    # Convert to text
     latex_node = LatexNodes2Text()
     text = latex_node.latex_to_text(latex_code)
 
@@ -38,32 +37,30 @@ def latex_to_md(file_path: str | Path) -> str:
     return re.sub(r"\n{2,}", "\n\n", markdown_content.strip())
 
 
-# Example usage
+# --- Example usage ---
 if __name__ == "__main__":  # pragma: no cover
     import tempfile
     import textwrap
 
-    latex_code = textwrap.dedent(
-        r"""
+    latex_code = textwrap.dedent(r"""
         \section{Data Analysis}
         We performed a series of experiments on the dataset.
 
-    \subsection{Setup}
-    The system parameters were set as follows:
-    \begin{itemize}
-      \item Learning rate: 0.01
-      \item Epochs: 50
-      \item Batch size: 32
-    \end{itemize}
+        \subsection{Setup}
+        The system parameters were set as follows:
+        \begin{itemize}
+          \item Learning rate: 0.01
+          \item Epochs: 50
+          \item Batch size: 32
+        \end{itemize}
 
-    \subsection{Results}
-    The results showed a significant improvement over the baseline.
-    Mathematical expression:
-    \[
-    \text{Accuracy} = \frac{\text{Correct predictions}}{\text{Total predictions}} \times 100\%
-    \]
-    """
-    )
+        \subsection{Results}
+        The results showed a significant improvement over the baseline.
+        Mathematical expression:
+        \[
+        \text{Accuracy} = \frac{\text{Correct predictions}}{\text{Total predictions}} \times 100\%
+        \]
+    """)
 
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".tex", encoding="utf-8"
