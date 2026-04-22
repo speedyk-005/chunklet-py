@@ -52,9 +52,8 @@ class DeterministicSpanFinder:
             text: The query substring.
 
         Returns:
-            tuple[int, int]
-                - (start_index, end_index) in the original text.
-                - (-1, -1) if no match is found.
+            A tuple consists of start and end indexes in the original text.
+            (-1, -1) is returned if no match is found.
         """
         stripped = text.strip()
 
