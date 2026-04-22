@@ -34,6 +34,14 @@ jobs:
         pip install "setuptools<81"  # sentsplit depends on deprecated pkg_resources removed in setuptools 81.0.0
         pip install -e .[dev,all] coveralls
 
+    - name: Run Ruff Check
+      run: |
+        ruff check src/ tests/
+
+    - name: Run SSort Check
+      run: |
+        ssort --check --diff src/ tests/
+
     - name: Test with Pytest & Generate Coverage
       run: |
         # We target src/chunklet to keep the report focused

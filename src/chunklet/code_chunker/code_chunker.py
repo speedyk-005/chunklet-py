@@ -50,7 +50,7 @@ from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import is_path_like, read_text_file
 from chunklet.common.token_utils import count_tokens
-from chunklet.common.validation import IterableOfStr, IterableOfPath, validate_input
+from chunklet.common.validation import IterableOfPath, IterableOfStr, validate_input
 from chunklet.exceptions import (
     InvalidInputError,
     MissingTokenCounterError,

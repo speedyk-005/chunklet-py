@@ -12,11 +12,11 @@ from loguru import logger
 from py3langid.langid import MODEL_FILE, LanguageIdentifier
 
 # pysbd, sentsplit, indicnlp and sentencex are lazy imported
-
 from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
 from chunklet.common.validation import validate_input
+from chunklet.exceptions import BlingfireMissingError
 from chunklet.sentence_splitter._universal_splitter import UniversalSplitter
 from chunklet.sentence_splitter.languages import (
     INDIC_NLP_UNIQUE_LANGUAGES,
@@ -25,8 +25,6 @@ from chunklet.sentence_splitter.languages import (
     SENTSPLIT_UNIQUE_LANGUAGES,
 )
 from chunklet.sentence_splitter.registry import custom_splitter_registry
-from chunklet.exceptions import BlingfireMissingError
-
 
 # To identify strings consisting solely of punctuation or symbols.
 PUNCTUATION_ONLY_PATTERN = re.compile(r"[\p{P}\p{S}]+")

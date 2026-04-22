@@ -8,16 +8,6 @@ class DeterministicSpanFinder:
 
     __slots__ = ("full_text", "cleaned_full_text", "index_map")
 
-    def __init__(self, text: str):
-        """
-        Initialize the span finder.
-
-        Args:
-            text (str): The full text to search within.
-        """
-        self.full_text = text
-        self.cleaned_full_text, self.index_map = self._build_index_map(text)
-
     def _build_index_map(self, text: str) -> tuple[str, dict[int, int]]:
         """Build a cleaned text string and index map for fast searching.
 
@@ -39,6 +29,16 @@ class DeterministicSpanFinder:
                 curr_idx += 1
 
         return "".join(chars), index_map
+
+    def __init__(self, text: str):
+        """
+        Initialize the span finder.
+
+        Args:
+            text (str): The full text to search within.
+        """
+        self.full_text = text
+        self.cleaned_full_text, self.index_map = self._build_index_map(text)
 
     def find_span(self, text: str) -> tuple[int, int]:
         """

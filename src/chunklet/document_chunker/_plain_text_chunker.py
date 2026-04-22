@@ -1,6 +1,6 @@
 import copy
-import sys
 import re
+import sys
 from collections.abc import Iterable
 from functools import partial
 from typing import Annotated, Any, Callable, Generator, Literal
@@ -20,7 +20,6 @@ from chunklet.exceptions import (
     MissingTokenCounterError,
 )
 from chunklet.sentence_splitter import BaseSplitter, SentenceSplitter
-
 
 # Regex to split sentences into individual clauses
 CLAUSE_END_PATTERN = re.compile(r"(?<=[;,’：—)&…])\s")

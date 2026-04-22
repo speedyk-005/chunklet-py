@@ -49,57 +49,6 @@ class Visualizer:
         app (FastAPI): FastAPI application instance.
     """
 
-    @validate_input
-    def __init__(
-        self,
-        host: str = "127.0.0.1",
-        port: int = 8000,
-        token_counter: Callable[[str], int] | None = None,
-    ):
-        """Initializes the Visualizer server and configures chunkers.
-
-        Args:
-            host (str): Host IP to run the server. Defaults to "127.0.0.1".
-            port (int): Port number to run the server. Defaults to 8000.
-            token_counter (Optional[Callable[[str], int]]): Function to count tokens
-                in text/code. Required for chunkers if used with `max_tokens`.
-        """
-        if FastAPI is None:
-            raise ImportError(
-                "The 'fastapi' library is not installed. "
-                "Please install it with 'pip install fastapi>=0.115.12' or install the visualization extras "
-                "with 'pip install 'chunklet-py[visualization]''"
-            )
-
-        if msgpack is None:
-            raise ImportError(
-                "The 'msgpack' library is not installed. "
-                "Please install it with 'pip install msgpack>=1.0.8' or install the visualization extras "
-                "with 'pip install 'chunklet-py[visualization]''"
-            )
-
-        self.host = host
-        self.port = port
-        self._token_counter = token_counter
-
-        self.app = FastAPI()
-
-        # Initialize chunkers
-        self.document_chunker = DocumentChunker(token_counter=token_counter)
-        self.code_chunker = CodeChunker(token_counter=token_counter)
-
-        self.static_dir = Path(__file__).parent / "static"
-
-        self.app.mount(
-            "/static", StaticFiles(directory=str(self.static_dir)), name="static"
-        )
-
-        # API endpoints
-        self.app.get("/api/token_counter_status")(self._get_token_counter_status)
-        self.app.get("/health")(self._get_health_check)
-        self.app.get("/")(self._get_index)
-        self.app.post("/api/chunk")(self._chunk_file)
-
     # Instance endpoint methods
     def _get_token_counter_status(self):
         return {"token_counter_available": self.token_counter is not None}
@@ -194,6 +143,57 @@ class Visualizer:
                 500,
                 f"Chunking failed. Please check the server terminal for specific error details. ({str(e)})",
             ) from None
+
+    @validate_input
+    def __init__(
+        self,
+        host: str = "127.0.0.1",
+        port: int = 8000,
+        token_counter: Callable[[str], int] | None = None,
+    ):
+        """Initializes the Visualizer server and configures chunkers.
+
+        Args:
+            host (str): Host IP to run the server. Defaults to "127.0.0.1".
+            port (int): Port number to run the server. Defaults to 8000.
+            token_counter (Optional[Callable[[str], int]]): Function to count tokens
+                in text/code. Required for chunkers if used with `max_tokens`.
+        """
+        if FastAPI is None:
+            raise ImportError(
+                "The 'fastapi' library is not installed. "
+                "Please install it with 'pip install fastapi>=0.115.12' or install the visualization extras "
+                "with 'pip install 'chunklet-py[visualization]''"
+            )
+
+        if msgpack is None:
+            raise ImportError(
+                "The 'msgpack' library is not installed. "
+                "Please install it with 'pip install msgpack>=1.0.8' or install the visualization extras "
+                "with 'pip install 'chunklet-py[visualization]''"
+            )
+
+        self.host = host
+        self.port = port
+        self._token_counter = token_counter
+
+        self.app = FastAPI()
+
+        # Initialize chunkers
+        self.document_chunker = DocumentChunker(token_counter=token_counter)
+        self.code_chunker = CodeChunker(token_counter=token_counter)
+
+        self.static_dir = Path(__file__).parent / "static"
+
+        self.app.mount(
+            "/static", StaticFiles(directory=str(self.static_dir)), name="static"
+        )
+
+        # API endpoints
+        self.app.get("/api/token_counter_status")(self._get_token_counter_status)
+        self.app.get("/health")(self._get_health_check)
+        self.app.get("/")(self._get_index)
+        self.app.post("/api/chunk")(self._chunk_file)
 
     @property
     def token_counter(self):

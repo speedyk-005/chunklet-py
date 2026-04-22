@@ -98,6 +98,7 @@ dev = [
   "pytest-xdist>=3.6.1",
   "pytest-mock>=3.14.1",
   "ruff>=0.14.14",
+  "ssort>=0.13,<1",
 ]
 
 docs = [
@@ -189,6 +190,8 @@ ignore = ["E501", "E203"]
 
 # Ignore warnings about File(...)
 "src/chunklet/visualizer/visualizer.py" = ["B008"]
+
+"src/chunklet/sentence_splitter/sentence_splitter.py" = ["E402"]
 
 [tool.ruff.format]
 # Replaces Black exclude logic

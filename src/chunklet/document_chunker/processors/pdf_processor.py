@@ -1,6 +1,6 @@
+import re
 from typing import Any, Generator
 
-import re
 from more_itertools import ilen
 
 # pdfminer is lazily imported

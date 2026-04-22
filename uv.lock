@@ -387,6 +387,7 @@ dev = [
     { name = "pytest-mock" },
     { name = "pytest-xdist" },
     { name = "ruff" },
+    { name = "ssort" },
 ]
 dev-all = [
     { name = "aiofiles" },
@@ -414,6 +415,7 @@ dev-all = [
     { name = "python-docx" },
     { name = "python-multipart" },
     { name = "ruff" },
+    { name = "ssort" },
     { name = "striprtf" },
     { name = "tabulate2" },
     { name = "uvicorn" },
@@ -487,7 +489,7 @@ requires-dist = [
     { name = "openpyxl", marker = "extra == 'structured-document'", specifier = ">=3.1.5,<4.0" },
     { name = "pdfminer-six", marker = "extra == 'structured-document'", specifier = ">=20250324" },
     { name = "py3langid", specifier = ">=0.3.0,<1.0" },
-    { name = "pydantic", specifier = ">=2.11.6,<3.0" },
+    { name = "pydantic", specifier = ">=2.11.0,<3.0" },
     { name = "pylatexenc", marker = "extra == 'structured-document'", specifier = "==2.10" },
     { name = "pymdown-extensions", marker = "extra == 'docs'", specifier = ">=10.16.1" },
     { name = "pysbd", specifier = ">=0.3.4,<1.0" },
@@ -502,6 +504,7 @@ requires-dist = [
     { name = "sentencex", marker = "sys_platform != 'android'", specifier = ">=1.0.0,<2.0" },
     { name = "sentencex", marker = "sys_platform == 'android'", specifier = "<=0.6.1" },
     { name = "sentsplit", specifier = ">=1.0.8,<2.0" },
+    { name = "ssort", marker = "extra == 'dev'", specifier = ">=0.13,<1" },
     { name = "striprtf", marker = "extra == 'structured-document'", specifier = ">=0.0.29,<1.0" },
     { name = "tabulate2", marker = "extra == 'structured-document'", specifier = ">=1.10.2,<2.0" },
     { name = "typer", specifier = ">=0.19.0,<1.0" },
@@ -2811,6 +2814,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/3b/44/6716b257b0aa6bfd51a1b31665d1c205fb12cb5ad56de752dfa15657de2f/sphinxcontrib_serializinghtml-2.0.0.tar.gz", hash = "sha256:e9d912827f872c029017a53f0ef2180b327c3f7fd23c87229f7a8e8b70031d4d", size = 16080, upload-time = "2024-07-29T01:10:09.332Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/52/a7/d2782e4e3f77c8450f727ba74a8f12756d5ba823d81b941f1b04da9d033a/sphinxcontrib_serializinghtml-2.0.0-py3-none-any.whl", hash = "sha256:6e2cb0eef194e10c27ec0023bfeb25badbbb5868244cf5bc5bdc04e4464bf331", size = 92072, upload-time = "2024-07-29T01:10:08.203Z" },
+]
+
+[[package]]
+name = "ssort"
+version = "0.16.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pathspec" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7a/c0/696b3c20b58f4a536845bbfded3be1d7a2b99e622ac51755e402c43729f0/ssort-0.16.0.tar.gz", hash = "sha256:1e7222cf7ffbbb0523d88fe1931a36b0bbd7f478d2964feb25be3621c52a981f", size = 23252, upload-time = "2025-12-07T02:20:00.092Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/45/a23b1c13f2416e060af4d90e8407a350d5da7ad1ccf33e6eb9cbaaf7b363/ssort-0.16.0-py3-none-any.whl", hash = "sha256:013d57d4a0e4bde896afbcaa1e9e98a6829bf1b63ddcccecfcb7e64336921bba", size = 27683, upload-time = "2025-12-07T02:19:59.139Z" },
 ]
 
 [[package]]

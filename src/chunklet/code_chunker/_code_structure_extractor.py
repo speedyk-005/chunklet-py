@@ -18,7 +18,6 @@ try:
 except ImportError:  # pragma: no cover
     Node, ET = None, None
 
-from loguru import logger
 
 from chunklet.code_chunker.patterns import (
     ALL_SINGLE_LINE_COMM,
@@ -33,8 +32,8 @@ from chunklet.code_chunker.patterns import (
     NAMESPACE_DECLARATION,
     OPENER,
 )
-from chunklet.common.validation import validate_input
 from chunklet.common.logging_utils import log_info
+from chunklet.common.validation import validate_input
 
 CodeLine = namedtuple(
     "CodeLine", ["line_number", "content", "indent_level", "func_partial_signature"]

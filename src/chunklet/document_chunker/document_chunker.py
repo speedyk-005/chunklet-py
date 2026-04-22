@@ -1,4 +1,3 @@
-import warnings
 from itertools import chain, tee
 from pathlib import Path
 from typing import Annotated, Any, Callable, Generator, Iterable, Literal
@@ -22,7 +21,7 @@ from chunklet.base_chunker import BaseChunker
 from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
-from chunklet.common.validation import IterableOfStr, IterableOfPath, validate_input
+from chunklet.common.validation import IterableOfPath, IterableOfStr, validate_input
 from chunklet.document_chunker._plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker.converters import (
     html_2_md,

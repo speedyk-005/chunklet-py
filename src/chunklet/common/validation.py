@@ -1,8 +1,8 @@
-from collections.abc import Generator, Iterable, Iterator
+import reprlib
+from collections.abc import Iterable, Iterator
 from functools import wraps
 from itertools import tee
 from pathlib import Path
-import reprlib
 from typing import Annotated, Any, TypeAlias
 
 from more_itertools import ilen

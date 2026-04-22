@@ -1,5 +1,5 @@
 import re
-import os
+
 import pytest
 
 from chunklet import CallbackError
