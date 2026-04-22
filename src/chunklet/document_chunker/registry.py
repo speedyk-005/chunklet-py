@@ -97,14 +97,6 @@ class CustomProcessorRegistry:
         # Filter for required parameters (those without a default value)
         required_params = [p for p in params if p.default is inspect.Parameter.empty]
 
-        if len(required_params) != 1:
-            param_list = ", ".join(p.name for p in params)
-            raise TypeError(
-                f"'{callback.__name__}' has signature ({param_list}).\n"
-                "Expected exactly one required parameter to accept the file path.\n"
-                "💡Hint: Optional parameters with default values are allowed."
-            )
-
         if name is None:
             if hasattr(callback, "__name__") and callback.__name__ != "<lambda>":
                 processor_name = callback.__name__
@@ -114,6 +106,14 @@ class CustomProcessorRegistry:
                 )
         else:
             processor_name = name
+
+        if len(required_params) != 1:
+            param_list = ", ".join(p.name for p in params)
+            raise TypeError(
+                f"'{processor_name}' has signature ({param_list}).\n"
+                "Expected exactly one required parameter to accept the file path.\n"
+                "💡Hint: Optional parameters with default values are allowed."
+            )
 
         for ext in exts:
             if not isinstance(ext, str) or not ext.startswith("."):

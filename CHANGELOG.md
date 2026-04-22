@@ -35,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Shifted from runtime `restricted_iterable` to static `TypeAlias` (IterableOfStr/Path). Reduces logic (~35 to ~15 lines), improve IDE type inference and static analysis.
   - Integrated `reprlib` in `pretty_errors` for efficient collection truncation.
 
+### Fixed
+- **Registry Error Messages**: Fixed TypeError when registering callables without `__name__` (e.g., `functools.partial`) by moving the params check after the resolved processor/splitter name.
+
 ---
 
 ## [2.2.0] - 2026-02-17
