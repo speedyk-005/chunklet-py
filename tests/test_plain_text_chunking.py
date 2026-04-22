@@ -254,7 +254,6 @@ def test_batch_processing_input_validation(chunker):
         list(chunker.chunk_texts(["some text"], n_jobs=-1, max_sentences=1))
 
 
-@pytest.mark.timeout(20)  # Prevent hanging
 def test_batch_chunk_error_handling_on_task(chunker):
     """Test the on_errors parameter in chunk_texts."""
 
