@@ -191,6 +191,9 @@ ignore = ["E501", "E203"]
 # Ignore warnings about File(...)
 "src/chunklet/visualizer/visualizer.py" = ["B008"]
 
+# Ignore E402 - warnings.filterwarnings() must be called before imports to suppress pkg_resources
+"src/chunklet/sentence_splitter/sentence_splitter.py" = ["E402"]
+
 [tool.ruff.format]
 # Replaces Black exclude logic
 exclude = [
