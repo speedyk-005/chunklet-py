@@ -59,9 +59,9 @@ class Visualizer:
         """Initializes the Visualizer server and configures chunkers.
 
         Args:
-            host (str): Host IP to run the server. Defaults to "127.0.0.1".
-            port (int): Port number to run the server. Defaults to 8000.
-            token_counter (Optional[Callable[[str], int]]): Function to count tokens
+            host: Host IP to run the server. Defaults to "127.0.0.1".
+            port: Port number to run the server. Defaults to 8000.
+            token_counter: Function to count tokens
                 in text/code. Required for chunkers if used with `max_tokens`.
         """
         if FastAPI is None:
@@ -112,7 +112,7 @@ class Visualizer:
         """Serves the main HTML interface for the visualizer.
 
         Returns:
-            HTMLResponse: The content of index.html if exists, else a default heading.
+            The content of index.html if exists, else a default heading.
         """
         index_path = self.static_dir / "index.html"
         if index_path.exists():
@@ -132,12 +132,12 @@ class Visualizer:
 
         Args:
             self: The Visualizer instance.
-            file (UploadFile): File uploaded by the client.
-            mode (str): Determines which chunker to use ("document" or "code").
-            params (str): JSON string containing chunking parameters.
+            file: File uploaded by the client.
+            mode: Determines which chunker to use ("document" or "code").
+            params: JSON string containing chunking parameters.
 
         Returns:
-            Response: MessagePack-encoded response with original text, chunks, and stats.
+            MessagePack-encoded response with original text, chunks, and stats.
 
         Raises:
             HTTPException: If chunking fails.

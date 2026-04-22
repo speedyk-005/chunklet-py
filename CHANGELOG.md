@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `ExtractionState` TypedDict in `_code_structure_extractor.py` for type safety
   - Simplified logic with early returns and `next()`
   - Cleaned up stale and obvious comments
+  - Removed redundant type hints from docstrings (type info already in function signatures)
 
 ---
 

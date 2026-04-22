@@ -83,11 +83,11 @@ class BaseSplitter:
         """Splits the given text into a list of sentences.
 
         Args:
-            text (str): The input text to be split.
-            lang (str): The language of the text (e.g., 'en', 'fr', 'auto').
+            text: The input text to be split.
+            lang: The language of the text (e.g., 'en', 'fr', 'auto').
 
         Returns:
-            list[str]: A list of sentences extracted from the text.
+            A list of sentences extracted from the text.
         """
         raise NotImplementedError("Subclasses must implement 'split_text'.")
 
@@ -122,7 +122,7 @@ class SentenceSplitter(BaseSplitter):
         Initializes the SentenceSplitter.
 
         Args:
-            verbose (bool, optional): If True, enables verbose logging for debugging and informational messages.
+            verbose: If True, enables verbose logging for debugging and informational messages.
         """
         self.verbose = verbose
         self.fallback_splitter = UniversalSplitter()
@@ -137,10 +137,10 @@ class SentenceSplitter(BaseSplitter):
         Filtering empty strings and rejoining stray punctuation.
 
         Args:
-            sentences (list[str]): Raw list of split sentences.
+            sentences: Raw list of split sentences.
 
         Returns:
-            list[str]: Cleaned list of sentences with proper punctuation handling.
+            Cleaned list of sentences with proper punctuation handling.
         """
         processed_sentences = []
         for sent in sentences:
@@ -164,10 +164,10 @@ class SentenceSplitter(BaseSplitter):
         Detects the top language of the given text using py3langid.
 
         Args:
-            text (str): The input text to detect the language for.
+            text: The input text to detect the language for.
 
         Returns:
-            tuple[str, float]: A tuple containing the detected language code and its confidence.
+            A tuple containing the detected language code and its confidence.
         """
         lang_detected, confidence = self.identifier.classify(text)
         log_info(
@@ -184,11 +184,11 @@ class SentenceSplitter(BaseSplitter):
         Splits a given text into a list of sentences.
 
         Args:
-            text (str): The input text to be split.
-            lang (str, optional): The language of the text (e.g., 'en', 'fr'). Defaults to 'auto'
+            text: The input text to be split.
+            lang: The language of the text (e.g., 'en', 'fr'). Defaults to 'auto'
 
         Returns:
-            list[str]: A list of sentences.
+            A list of sentences.
 
         Examples:
             >>> splitter = SentenceSplitter()
@@ -250,11 +250,11 @@ class SentenceSplitter(BaseSplitter):
         Read and split a file into sentences.
 
         Args:
-            path (str | Path): Path to the file to read.
-            lang (str, optional): The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to 'auto'.
+            path: Path to the file to read.
+            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to 'auto'.
 
         Returns:
-            list[str]: A list of sentences extracted from the file.
+            A list of sentences extracted from the file.
         """
         content = read_text_file(path)
         return self.split_text(content, lang)

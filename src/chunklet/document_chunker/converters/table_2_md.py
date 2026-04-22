@@ -14,10 +14,10 @@ def table_to_md(file_path: str | Path) -> str:
     Convert a CSV or XLSX file into a Markdown-formatted table string.
 
     Args:
-        file_path (str | Path): Path to the input file (.csv or .xlsx).
+        file_path: Path to the input file (.csv or .xlsx).
 
     Returns:
-        str: Markdown table representation of the file contents.
+        Markdown table representation of the file contents.
     """
     file_path = Path(file_path)
     ext = file_path.suffix.lower()

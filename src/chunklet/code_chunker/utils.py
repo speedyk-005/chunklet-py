@@ -29,10 +29,10 @@ def is_python_code(source: str | Path) -> bool:
         ambiguous code snippets that fail AST parsing.
 
     Args:
-        source (str | Path): raw code string or Path to source file to check.
+        source: raw code string or Path to source file to check.
 
     Returns:
-        bool: True if the source is written in Python.
+        True if the source is written in Python.
     """
     # Path-based check
     if isinstance(source, Path) or (isinstance(source, str) and is_path_like(source)):

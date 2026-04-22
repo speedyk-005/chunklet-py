@@ -13,7 +13,7 @@ class DeterministicSpanFinder:
         Initialize the span finder.
 
         Args:
-            text (str): The full text to search within.
+            text: The full text to search within.
         """
         self.full_text = text
         self.cleaned_full_text, self.index_map = self._build_index_map(text)
@@ -22,10 +22,10 @@ class DeterministicSpanFinder:
         """Build a cleaned text string and index map for fast searching.
 
         Args:
-            text (str): The text to process.
+            text: The text to process.
 
         Returns:
-            tuple[str, dict[int, int]]: A tuple of (cleaned_text, index_map) where
+            A tuple of (cleaned_text, index_map) where
                 index_map maps positions in cleaned_text to positions in original text.
         """
         index_map = {}
@@ -49,12 +49,11 @@ class DeterministicSpanFinder:
         2. Normalized alphanumeric match if exact match fails.
 
         Args:
-            text (str): The query substring.
+            text: The query substring.
 
         Returns:
-            tuple[int, int]:
-                - (start_index, end_index) in the original text.
-                - (-1, -1) if no match is found.
+            A tuple consists of start and end indexes in the original text.
+            (-1, -1) is returned if no match is found.
         """
         stripped = text.strip()
 

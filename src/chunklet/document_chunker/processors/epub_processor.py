@@ -42,7 +42,7 @@ class EPUBProcessor(BaseProcessor):
         and reads the EPUB book into memory.
 
         Args:
-            file_path (str): Path to the EPUB file.
+            file_path: Path to the EPUB file.
         """
         if not epub:
             raise ImportError(
@@ -58,7 +58,7 @@ class EPUBProcessor(BaseProcessor):
         Extracts Dublin Core metadata from the EPUB file.
 
         Returns:
-            dict[str, Any]: A dictionary containing metadata fields.
+            A dictionary containing metadata fields.
                 - title
                 - creator
                 - contributor
@@ -78,7 +78,7 @@ class EPUBProcessor(BaseProcessor):
         Yields Markdown-converted text from all document items in the EPUB file.
 
         Yields:
-            str: Markdown-formatted text of each document item.
+            Markdown-formatted text of each document item.
         """
         for idref, _ in self.book.spine:
             item = self.book.get_item_with_id(idref)
