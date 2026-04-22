@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Visualizer Encoding**:
   - Added `msgpack` library for MessagePack encoding on server
   - Added `msgpack-lite` JS library on client for decoding
+- **Optimized CI**: Run coverage only on Python 3.12 (reduces CI time for other versions)
 
 ### Changed
 - **Core Performance Overhaul**:
