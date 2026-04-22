@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added regex support for non-Latin scripts (`\p{Lo}` and `\p{Lt}` for other letters)
 - **Visualizer Encoding**:
   - Added `msgpack` library for MessagePack encoding on server
-  - Added `msgpack-lite` JS library on client for decoding
+  - Added `@msgpack/msgpack` JS library (3.1.3) on client with SRI for secure decoding
 - **CI**:
   - Added dependabot configuration for GitHub Actions and pip dependencies
   - Optimized CI to run coverage only on Python 3.12 (reduces CI time for other versions)

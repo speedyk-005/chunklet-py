@@ -381,7 +381,7 @@ async function processUploadedFile() {
         }
 
         const arrayBuffer = await response.arrayBuffer();
-        const data = msgpack.decode(new Uint8Array(arrayBuffer));
+        const data = MessagePack.decode(new Uint8Array(arrayBuffer));
         
         // Update state
         state.originalText = data.text;
