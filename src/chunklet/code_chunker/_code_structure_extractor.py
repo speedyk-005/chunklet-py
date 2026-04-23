@@ -260,6 +260,11 @@ class CodeStructureExtractor:
         namespaces_stack = [(tree_root, -1)]  # [ (node_reference, indent_level) ]
 
         for snippet_dict in snippet_dicts:
+            # Skip empty snippets to preserve tree hierarchy
+            if not snippet_dict.get("content", "").strip():
+                snippet_dict["relations"] = list(tree_root.to_relations())
+                continue
+
             # Remove namespaces until we find the appropriate parent level
             while (
                 namespaces_stack
