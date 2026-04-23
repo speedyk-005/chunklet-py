@@ -24,6 +24,7 @@ Inspired by:
 """
 
 import sys
+import warnings
 from functools import partial
 from itertools import chain
 from pathlib import Path
@@ -376,9 +377,10 @@ class CodeChunker(BaseChunker):
                         "refactoring the oversized block, or setting 'strict=False' to allow automatic splitting of oversized blocks."
                     )
                 else:  # Else split further
-                    logger.warning(
-                        "Splitting oversized block into sub-chunks.\n(%s)",
-                        limit_msg,
+                    warnings.warn(
+                        f"Splitting oversized block into sub-chunks.\n({limit_msg})",
+                        UserWarning,
+                        stacklevel=2,
                     )
 
                     sub_chunks = self._split_oversized(

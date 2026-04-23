@@ -1,3 +1,4 @@
+import warnings
 from collections.abc import Generator, Iterable
 from typing import Any, Callable, Literal
 
@@ -93,7 +94,11 @@ def run_in_batch(
                         break
 
                     #  Else: skip
-                    logger.warning("Skipping a failed task.\nReason: {}", error)
+                    warnings.warn(
+                        f"Skipping a failed task.\nReason: {error}",
+                        UserWarning,
+                        stacklevel=2,
+                    )
                     continue
 
                 yield from res

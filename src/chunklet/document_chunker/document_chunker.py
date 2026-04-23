@@ -317,11 +317,10 @@ class DocumentChunker(BaseChunker):
                     )
                     break
                 else:  # skip
-                    logger.warning(
-                        "Skipping document '{}' at paths[{}] due to validation failure.\nReason: {}.",
-                        path,
-                        i,
-                        e,
+                    warnings.warn(
+                        f"Skipping document '{path}' at paths[{i}] due to validation failure.\nReason: {e}.",
+                        UserWarning,
+                        stacklevel=2,
                     )
                     continue
 

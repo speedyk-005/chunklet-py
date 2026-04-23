@@ -1,6 +1,7 @@
 import copy
 import sys
 import re
+import warnings
 from collections.abc import Iterable
 from functools import partial
 from typing import Annotated, Any, Callable, Generator, Literal
@@ -515,10 +516,10 @@ class PlainTextChunker:
 
         offset = round(offset)
         if offset >= len(sentences):
-            logger.warning(
-                "Offset {} >= total sentences {}. Returning empty list.",
-                offset,
-                len(sentences),
+            warnings.warn(
+                f"Offset {offset} >= total sentences {len(sentences)}. Returning empty list.",
+                UserWarning,
+                stacklevel=2,
             )
             return []
 

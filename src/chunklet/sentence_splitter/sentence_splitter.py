@@ -203,9 +203,11 @@ class SentenceSplitter(BaseSplitter):
             return []
 
         if lang == "auto":
-            logger.warning(
+            warnings.warn(
                 "The language is set to `auto`. Consider setting the `lang` parameter "
-                "to a specific language to improve reliability."
+                "to a specific language to improve reliability.",
+                UserWarning,
+                stacklevel=2,
             )
             lang_detected, confidence = self.detected_top_language(text)
             lang = lang_detected if confidence >= 0.7 else "any"
@@ -221,9 +223,11 @@ class SentenceSplitter(BaseSplitter):
 
         # If no handler found, use fallback
         if sentences is None:
-            logger.warning(
+            warnings.warn(
                 "Using a universal rule-based splitter.\n"
-                "Reason: Language not supported or detected with low confidence."
+                "Reason: Language not supported or detected with low confidence.",
+                UserWarning,
+                stacklevel=2,
             )
             sentences = self.fallback_splitter.split(text)
 
