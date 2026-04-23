@@ -44,6 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Registry Error Messages**: Fixed TypeError when registering callables without `__name__` (e.g., `functools.partial`) by moving the params check after the resolved processor/splitter name.
 
+### Removed
+
+- **Python 3.10 Support:** Dropped official support for Python 3.10 due to recurring CI hangs related to multiprocessing. Anyway Python 3.10 is approaching end-of-life.
+
 ---
 
 ## [2.2.0] - 2026-02-17
