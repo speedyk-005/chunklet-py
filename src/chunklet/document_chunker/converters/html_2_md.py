@@ -11,13 +11,14 @@ def html_to_md(
     file_path: str | Path = None, raw_text: str | None = None, max_url_length: int = 150
 ) -> str:
     """
-    Convert HTML content to Markdown, remove hrefs from links, and truncate long URLs.
+    Convert HTML content to Markdown and truncate long URLs.
 
     Args:
         file_path: Path to the html file.
         raw_text: Raw HTML text. If both file_path and raw_text is provided,
             then raw_text will be used instead.
-        max_url_length: The maximum length of a URL. Defaults to 150.
+        max_url_length: The maximum length of a URL. URLs longer than this
+            will be truncated with "...". Defaults to 150.
 
     Returns:
         The full text content in Markdown.
