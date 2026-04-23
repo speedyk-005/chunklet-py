@@ -11,7 +11,7 @@ from chunklet.common.validation import safely_count_iterable
 def capture_result_and_exception(func):
     """Decorator to capture result and exception from a function call."""
 
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs):  # pragma: no cover
         try:
             res = func(*args, **kwargs)
             return res, None
