@@ -39,14 +39,14 @@ dependencies = [
   "sentsplit>=1.0.8,<2.0",
 
   # Rust binding (1.0+) for faster performance on supported platforms, legacy for Android.
-  "sentencex>=1.0.0,<2.0; platform_system != 'Android'",
+  "sentencex<=1.0.20; platform_system != 'Android'",
   "sentencex<=0.6.1; platform_system == 'Android'",
 
   "indic-nlp-library>=0.92,<1.0",
   "py3langid>=0.3.0,<1.0",
   "mpire>=2.10.2,<3.0",
   "dotdict3>=1.1.0,<2.0",
-  "more-itertools>=10.6.0,<11.0",
+  "more-itertools>=10.6.0,<12.0",
   "regex>=2025.7.29",
   "pydantic>=2.11.0,<3.0",
   "typer>=0.19.0,<1.0",
