@@ -95,7 +95,6 @@ all = ["chunklet-py[structured-document,code,visualization]"]
 dev = [
   "pytest>=8.3.5",
   "pytest-cov>=6.2.1",
-  "pytest-xdist>=3.6.1",
   "pytest-mock>=3.14.1",
   "pytest-timeout>=2.3.1",
   "ruff>=0.14.14",
@@ -154,7 +153,7 @@ filterwarnings = [
 
 # disable coverage report to prevent racing with multiprocessing
 # addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --durations=10"
-addopts = "-n 4 --timeout=60"
+addopts = "--timeout=60"
 
 testpaths = ["tests"]
 python_files = "test_*.py"
