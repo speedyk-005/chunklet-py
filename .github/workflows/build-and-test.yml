@@ -36,7 +36,7 @@ jobs:
 
     - name: Test with Pytest
       run: |
-        pytest tests
+        pytest tests -v --tb=short
 
     - name: Generate Coverage
       if: matrix.python-version == '3.12'
