@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Registry Error Messages**: Fixed TypeError when registering callables without `__name__` (e.g., `functools.partial`) by moving the params check after the resolved processor/splitter name.
 - **CodeChunker Tree Hierarchy**: Fixed regression where methods in classes appeared under "global" instead of their class. Empty snippets were incorrectly popping namespaces from the tree.
 - **SentenceSplitter Log Spam**: Fixed repeated warnings when lang='auto' is used repeatedly by tracking `_last_lang_used`.
+- **sentsplit Support**: Added `setuptools>=64,<81` to build-system (was only in CI). Fixes `ModuleNotFoundError: No module named 'pkg_resources'`.
 
 ### Removed
 

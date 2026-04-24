@@ -121,7 +121,7 @@ chunklet = "chunklet.cli:app"
 
 [build-system]
 requires = [
-    "setuptools>=64", 
+    "setuptools>=64,<81",  # <81 required for sentsplit (uses deprecated pkg_resources)
     "wheel", # Essential for building dependencies that use legacy setup.py (like odfpy)
 ]
 build-backend = "setuptools.build_meta"
