@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CodeChunker Tree Hierarchy**: Fixed regression where methods in classes appeared under "global" instead of their class. Empty snippets were incorrectly popping namespaces from the tree.
 - **SentenceSplitter Log Spam**: Fixed repeated warnings when lang='auto' is used repeatedly by tracking `_last_lang_used`.
 - **sentsplit Support**: Added `setuptools>=64,<81` to build-system (was only in CI). Fixes `ModuleNotFoundError: No module named 'pkg_resources'`.
+- **UniversalSplitter Quote/Paren Protection**: Preserves quoted text, parenthesized content, and numbered lists as single sentences with hash-based masking.
 
 ### Removed
 
