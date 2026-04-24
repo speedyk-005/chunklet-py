@@ -86,8 +86,6 @@ class UniversalSplitter:
             if sent:
                 final_sentences.extend(sent.strip().splitlines())
 
-        print(norm_map)
-
         # Restore the normalization
         return [
             self.hashed_pattern.sub(lambda m: unmask(m, norm_map), sent)
