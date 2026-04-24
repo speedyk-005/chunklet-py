@@ -28,7 +28,8 @@ class UniversalSplitter:
 
         self.quote_or_paren_pattern = re.compile(
             r"(\p{Pi}|['\"]).+?(\p{Pf}|\1)|"
-            r"\p{Ps}.+?\p{Pe}"
+            r"\p{Ps}.+?\p{Pe}",
+            re.DOTALL,
         )
 
         self.hashed_pattern = re.compile(r"##-?\d+##")
