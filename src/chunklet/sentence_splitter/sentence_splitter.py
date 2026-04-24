@@ -221,7 +221,7 @@ class SentenceSplitter(BaseSplitter):
                 "to a specific language to improve reliability."
             )
             lang_detected, confidence = self.detected_top_language(text)
-            lang = lang_detected if confidence >= 0.7 else "any"
+            lang = lang_detected if confidence >= 0.7 else "fallback"
 
         sentences = None
         if lang != "fallback":
