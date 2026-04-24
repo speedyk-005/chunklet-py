@@ -33,7 +33,18 @@ PUNCTUATION_ONLY_PATTERN = re.compile(r"\W+")
 THEMATIC_BREAK_PATTERN = re.compile(r"\s*([-*_])\s*\1{2,}\s*")
 
 
-def _get_special_lang_handler(lang: str, verbose: bool) -> Callable | None:  # pragma: no cover
+def _get_special_lang_handler(lang: str, verbose: bool) -> Callable | None:
+    """
+    Get language-specific sentence splitting handler.
+
+    Args:
+        lang: Language code (e.g., 'en', 'ja', 'hi').
+        verbose: If True, logs which splitter library is being used.
+
+    Returns:
+        A callable that takes text (str) and returns list[str], or None if no
+        special handler exists for the language.
+    """
     if lang in PYSBD_SUPPORTED_LANGUAGES:
         from pysbd import Segmenter
         log_info(verbose, "Using pysbd")
@@ -127,7 +138,7 @@ class SentenceSplitter(BaseSplitter):
         self.fallback_splitter = UniversalSplitter()
 
         # Create a normalized identifier for language detection
-        self.identifier = LanguageIdentifier.from_pickled_model(
+        self._identifier = LanguageIdentifier.from_pickled_model(
             MODEL_FILE, norm_probs=True
         )
 
@@ -168,7 +179,7 @@ class SentenceSplitter(BaseSplitter):
         Returns:
             A tuple containing the detected language code and its confidence.
         """
-        lang_detected, confidence = self.identifier.classify(text)
+        lang_detected, confidence = self._identifier.classify(text)
         log_info(
             self.verbose,
             "Language detection: '{}' with confidence {}.",
