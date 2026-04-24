@@ -112,7 +112,7 @@ class SentenceSplitter(BaseSplitter):
         self._last_lang_used = None
 
     @staticmethod
-    @lru_cache(maxsize=2)
+    @lru_cache(maxsize=52)
     def _get_special_lang_handler(lang: str, verbose: bool) -> Callable | None:
         """
         Get language-specific sentence splitting handler.
