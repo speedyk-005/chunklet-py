@@ -6,6 +6,7 @@ warnings.filterwarnings("ignore", message=".*pkg_resources.*", category=UserWarn
 from os import getenv
 from pathlib import Path
 from typing import Callable
+from functools import lru_cache
 
 import re
 from loguru import logger
@@ -31,41 +32,6 @@ PUNCTUATION_ONLY_PATTERN = re.compile(r"\W+")
 
 # To identify thematic breaks (e.g., '---', '***', '___')
 THEMATIC_BREAK_PATTERN = re.compile(r"\s*([-*_])\s*\1{2,}\s*")
-
-
-def _get_special_lang_handler(lang: str, verbose: bool) -> Callable | None:
-    """
-    Get language-specific sentence splitting handler.
-
-    Args:
-        lang: Language code (e.g., 'en', 'ja', 'hi').
-        verbose: If True, logs which splitter library is being used.
-
-    Returns:
-        A callable that takes text (str) and returns list[str], or None if no
-        special handler exists for the language.
-    """
-    if lang in PYSBD_SUPPORTED_LANGUAGES:
-        from pysbd import Segmenter
-        log_info(verbose, "Using pysbd")
-        return Segmenter(lang).segment
-
-    elif lang in SENTSPLIT_UNIQUE_LANGUAGES:
-        from sentsplit.segment import SentSplit
-        log_info(verbose, "Using sentsplit")
-        return SentSplit(lang).segment
-
-    elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
-        from indicnlp.tokenize import sentence_tokenize
-        log_info(verbose, "Using indicnlp")
-        return lambda text: sentence_tokenize.sentence_split(text, lang)
-
-    elif lang in SENTENCEX_UNIQUE_LANGUAGES:
-        from sentencex import segment
-        log_info(verbose, "Using sentencex")
-        return lambda text: segment(lang, text)
-
-    return None
 
 
 class BaseSplitter:
@@ -141,6 +107,42 @@ class SentenceSplitter(BaseSplitter):
         self._identifier = LanguageIdentifier.from_pickled_model(
             MODEL_FILE, norm_probs=True
         )
+
+    @staticmethod
+    @lru_cache(maxsize=2)
+    def _get_special_lang_handler(lang: str, verbose: bool) -> Callable | None:
+        """
+        Get language-specific sentence splitting handler.
+
+        Args:
+            lang: Language code (e.g., 'en', 'ja', 'hi').
+            verbose: If True, logs which splitter library is being used.
+
+        Returns:
+            A callable that takes text (str) and returns list[str], or None if no
+            special handler exists for the language.
+        """
+        if lang in PYSBD_SUPPORTED_LANGUAGES:
+            from pysbd import Segmenter
+            log_info(verbose, "Using pysbd")
+            return Segmenter(lang).segment
+
+        elif lang in SENTSPLIT_UNIQUE_LANGUAGES:
+            from sentsplit.segment import SentSplit
+            log_info(verbose, "Using sentsplit")
+            return SentSplit(lang).segment
+
+        elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
+            from indicnlp.tokenize import sentence_tokenize
+            log_info(verbose, "Using indicnlp")
+            return lambda text: sentence_tokenize.sentence_split(text, lang)
+
+        elif lang in SENTENCEX_UNIQUE_LANGUAGES:
+            from sentencex import segment
+            log_info(verbose, "Using sentencex")
+            return lambda text: segment(lang, text)
+
+        return None
 
     def _clean_sentences(self, sentences: list[str]) -> list[str]:
         """
@@ -227,7 +229,7 @@ class SentenceSplitter(BaseSplitter):
             if custom_splitter_registry.is_registered(lang):
                 sentences, splitter_name = custom_splitter_registry.split(text, lang)
                 log_info(self.verbose, "Using registered splitter: {}", splitter_name)
-            elif (handler := _get_special_lang_handler(lang, self.verbose)) is not None:
+            elif (handler := self._get_special_lang_handler(lang, self.verbose)) is not None:
                 sentences = handler(text)
 
         # If no handler found, use fallback
