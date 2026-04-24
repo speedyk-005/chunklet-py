@@ -108,6 +108,9 @@ class SentenceSplitter(BaseSplitter):
             MODEL_FILE, norm_probs=True
         )
 
+        # Tracked to reduce log spamming about language detection
+        self._last_lang_used = None
+
     @staticmethod
     @lru_cache(maxsize=2)
     def _get_special_lang_handler(lang: str, verbose: bool) -> Callable | None:
@@ -216,12 +219,15 @@ class SentenceSplitter(BaseSplitter):
             return []
 
         if lang == "auto":
-            logger.warning(
-                "The language is set to `auto`. Consider setting the `lang` parameter "
-                "to a specific language to improve reliability."
-            )
+            if self._last_lang_used is None:
+                logger.warning(
+                    "The language is set to `auto`. Consider setting the `lang` parameter "
+                    "to a specific language to improve reliability."
+                )
             lang_detected, confidence = self.detected_top_language(text)
             lang = lang_detected if confidence >= 0.7 else "fallback"
+
+        self._last_lang_used = lang
 
         sentences = None
         if lang != "fallback":
