@@ -51,6 +51,9 @@ dependencies = [
   "pydantic>=2.11.0,<3.0",
   "typer>=0.19.0,<1.0",
   "charset-normalizer>=3.4.2,<4.0",
+
+  # sentsplit depends on deprecated pkg_resources removed in setuptools 81.0.0
+  "setuptools<81",
 ]
 
 [project.optional-dependencies]
@@ -121,7 +124,7 @@ chunklet = "chunklet.cli:app"
 
 [build-system]
 requires = [
-    "setuptools>=64", 
+    "setuptools>=64",
     "wheel", # Essential for building dependencies that use legacy setup.py (like odfpy)
 ]
 build-backend = "setuptools.build_meta"

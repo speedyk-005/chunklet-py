@@ -22,21 +22,24 @@ class UniversalSplitter:
 
     def __init__(self):
         self.sentence_terminators = "".join(GLOBAL_SENTENCE_TERMINATORS)
-
-        # Patterns for handling numbered lists
         self.flattened_numbered_list_pattern = re.compile(
             rf"(?<=[{self.sentence_terminators}:])\s+(\p{{N}}\.)+"
         )
 
-        self.numbered_list_pattern = re.compile(r"([\n:]\s*)(\p{N})\.")
-        self.norm_numbered_list_pattern = re.compile(r"(\s*)(\p{N})<DOT>")
+        self.quote_or_paren_pattern = re.compile(
+            r"(\p{Pi}|['\"]).+?(\p{Pf}|\1)|"
+            r"\p{Ps}.+?\p{Pe}",
+            re.DOTALL,
+        )
+
+        self.hashed_pattern = re.compile(r"##-?\d+##")
+        self.numbered_list_pattern = re.compile(r"[\n:]\s*\p{N}\.")
 
         # Core sentence split regex
         self.sentence_end_pattern = re.compile(
             rf"""
             (?<!\b(\p{{Lu}}\p{{Ll}}{{1, 4}}\.)*)   # Latin-only abbreviation
-            (?<=[{self.sentence_terminators}]        # sentence-ending punctuation
-            [\"'》」\p{{pf}}\p{{pe}}]*)?                 # optional quotes or closing chars
+            (?<=[{self.sentence_terminators}])       # sentence-ending punctuation
             (?=\s+[\p{{Lu}}\p{{Lo}}\p{{Lt}}]|\s*\n|\s*$)  # followed by letter (upper or catch-all) or end
             """,
             re.VERBOSE,
@@ -51,16 +54,30 @@ class UniversalSplitter:
 
         Returns:
             A list of sentences after segmentation.
-
-        Notes:
-            - Normalizes numbered lists during splitting and restores them afterward.
-            - Handles punctuation, newlines, and common edge cases.
         """
-        # handle flattened numbered lists
+        def mask(match: re.Match, norm_map: dict):
+            # Generate the integer hash and Convert to string 
+            # because re.sub MUST return a string
+            # Also fence them for easy detection
+            hashed_str = f"##{hash(match.group())}##"
+    
+            # Store the mapping for later reconstruction
+            norm_map[hashed_str] = match.group()
+            return hashed_str
+
+        def unmask(match: re.Match, norm_map: dict):
+            return norm_map.get(match.group(), match.group())
+
         text = self.flattened_numbered_list_pattern.sub(r"\n \1", text.strip())
 
-        # normalize numbered lists
-        text = self.numbered_list_pattern.sub(r"\1\2<DOT>", text.strip())
+        # Normalize to protect them 
+        norm_map = {}
+        text = self.quote_or_paren_pattern.sub(
+            lambda m: mask(m, norm_map), text
+        )
+        text = self.numbered_list_pattern.sub(
+            lambda m: mask(m, norm_map), text
+        )
 
         # Firstly, split base on punctuation
         # then split further on newline
@@ -70,11 +87,10 @@ class UniversalSplitter:
             if sent:
                 final_sentences.extend(sent.strip().splitlines())
 
-        # remove _ protection in numbered list numbers
+        # Restore the normalization
         return [
-            self.norm_numbered_list_pattern.sub(r"\1\2.", sent).rstrip()
-            for sent in final_sentences
-            if sent.strip()
+            self.hashed_pattern.sub(lambda m: unmask(m, norm_map), sent)
+            for sent in final_sentences if sent.strip()
         ]
 
 

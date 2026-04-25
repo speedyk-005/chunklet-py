@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Switched from `regex` library to stdlib `re` - ~2x faster for simple patterns
   - Replaced `box` library with `dotdict3` - 12x faster (0.467s vs 0.039s per 10k accesses)
   - Switched from JSON to MessagePack encoding in visualizer (~30-50% smaller payloads, faster encoding)
+  - Added `@lru_cache(maxsize=52)` on `_get_special_lang_handler` for caching handler lookups
 - **Fallback Splitter**: Renamed `FallbackSplitter` to `_clean_sentences` (works for 50+ languages)
 - **SentenceSplitter Rename**: Renamed `_filter_sentences` method to `split_text`
 - **Lazy Imports**:
@@ -44,6 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Registry Error Messages**: Fixed TypeError when registering callables without `__name__` (e.g., `functools.partial`) by moving the params check after the resolved processor/splitter name.
 - **CodeChunker Tree Hierarchy**: Fixed regression where methods in classes appeared under "global" instead of their class. Empty snippets were incorrectly popping namespaces from the tree.
+- **SentenceSplitter Log Spam**: Fixed repeated warnings when lang='auto' is used repeatedly by tracking `_last_lang_used`.
+- **sentsplit Support**: Added `setuptools>=64,<81` to build-system (was only in CI). Fixes `ModuleNotFoundError: No module named 'pkg_resources'`.
+- **UniversalSplitter Quote/Paren Protection**: Preserves quoted text, parenthesized content, and numbered lists as single sentences with hash-based masking.
 
 ### Removed
 
