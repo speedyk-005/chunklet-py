@@ -10,9 +10,9 @@ SCRIPT_NAME = Path(__file__).name
 
 console = Console()
 
-CHUNKER_CLASSES = {"Chunklet", "PlainTextChunker", "DocumentChunker", "CodeChunker"}
+DEPRECATED_ARGUMENTS = {"use_cache": "Remove it.", "custom_splitters": "Remove it."}
 
-V1_ARGS = {"use_cache": "Remove it.", "custom_splitters": "Remove it."}
+CHUNKER_CLASS_NAMES = {"Chunklet", "PlainTextChunker", "DocumentChunker", "CodeChunker"}
 
 LEGACY_IMPORTS = {
     "chunklet.utils.detect_text_language": "Use 'SentenceSplitter.detected_top_language()' instead.",
@@ -36,20 +36,26 @@ class MigrationAuditor:
     """
 
     def __init__(self):
-        self._found_any = False
+        self._has_legacy_issues = False
         self._console = console
 
-    def audit(self, directory="."):
+    def audit(self, path="."):
         """
-        Public method to audit a directory for legacy v1 patterns.
+        Public method to audit a file or directory for legacy v1 patterns.
         """
-        self._found_any = False
-        directory = Path(directory)
+        self._has_legacy_issues = False
+        path = Path(path)
 
         self._print_header()
 
-        for file_path in directory.rglob("*.py"):
+        # Handle single file or directory
+        targets = [path] if path.is_file() else path.rglob("*.py")
+
+        for file_path in targets:
+            # Skip the audit script itself and virtual environments
             if file_path.name == SCRIPT_NAME:
+                continue
+            if ".venv" in file_path.parts or "site-packages" in file_path.parts:
                 continue
 
             try:
@@ -71,7 +77,7 @@ class MigrationAuditor:
         )
 
     def _print_summary(self):
-        if not self._found_any:
+        if not self._has_legacy_issues:
             self._console.print(
                 "[bold green]✓ No legacy v1 patterns found. Code is up to date![/bold green]"
             )
@@ -86,37 +92,83 @@ class MigrationAuditor:
         except SyntaxError:
             return
 
-        tracked_instances = self._get_chunklet_instances(tree)
+        lines = content.splitlines()
+        tracked_instances = self._get_chunker_instances(tree)
 
-        self._audit_imports(file_path, tree)
-        self._audit_class_instantiation(file_path, tree, tracked_instances)
-        self._audit_calls(file_path, tree, tracked_instances)
-        self._audit_exceptions(file_path, tree)
+        self._audit_imports(file_path, tree, lines)
+        self._audit_class_instantiation(file_path, tree, tracked_instances, lines)
+        self._audit_calls(file_path, tree, tracked_instances, lines)
+        self._audit_exceptions(file_path, tree, lines)
 
-    def _get_chunklet_instances(self, tree: ast.AST) -> set:
-        instances = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Assign):
-                for target in node.targets:
-                    if isinstance(target, ast.Name):
-                        if isinstance(node.value, ast.Call):
-                            if isinstance(node.value.func, ast.Name):
-                                if node.value.func.id in CHUNKER_CLASSES:
-                                    instances.add(target.id)
-        return instances
+    def _get_line(self, lines: list[str], line_no: int) -> str:
+        try:
+            return lines[line_no - 1]
+        except IndexError:
+            return ""
 
-    def _audit_imports(self, file_path: Path, tree: ast.AST):
+    def _is_chunker_call(self, node: ast.AST) -> bool:
+        """Check if a node is a call to a known chunker class."""
+        if not isinstance(node, ast.Call):
+            return False
+        if not isinstance(node.func, ast.Name):
+            return False
+        return node.func.id in CHUNKER_CLASS_NAMES
+
+    def _get_chunker_instances(self, tree: ast.AST) -> set:
+        """Find all chunker class instantiations in the AST."""
+        return {
+            target.id
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Assign)
+            and isinstance(node.value, ast.Call)
+            and self._is_chunker_call(node.value)
+            for target in node.targets
+            if isinstance(target, ast.Name)
+        }
+
+    def _audit_imports(self, file_path: Path, tree: ast.AST, lines: list[str]):
+        """Check if a node is a call to a known chunker class."""
+        if not isinstance(node, ast.Call):
+            return False
+        if not isinstance(node.func, ast.Name):
+            return False
+        return node.func.id in CHUNKER_CLASS_NAMES
+
+    def _get_chunker_instances(self, tree: ast.AST) -> set:
+        """Find all chunker class instantiations in the AST."""
+        return {
+            target.id
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Assign)
+            and isinstance(node.value, ast.Call)
+            and self._is_chunker_call(node.value)
+            for target in node.targets
+            if isinstance(target, ast.Name)
+        }
+
+    def _get_chunker_instance_target(self, node: ast.Assign) -> str | None:
+        """Get the target name if this is an assignment to a Chunklet() call."""
+        if not isinstance(node.value, ast.Call):
+            return None
+        if not isinstance(node.value.func, ast.Name):
+            return None
+        if node.value.func.id not in CHUNKER_CLASS_NAMES:
+            return None
+        if not node.targets or not isinstance(node.targets[0], ast.Name):
+            return None
+        return node.targets[0].id
+
+    def _audit_imports(self, file_path: Path, tree: ast.AST, lines: list[str]):
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 if node.module:
                     for legacy_module, fix_msg in LEGACY_IMPORTS.items():
                         if legacy_module in node.module:
-                            self._found_any = True
-                            line_no = node.lineno
+                            self._has_legacy_issues = True
                             self._print_issue(
                                 file_path,
-                                line_no,
-                                self._get_line(file_path, line_no),
+                                node.lineno,
+                                self._get_line(lines, node.lineno),
                                 f"Import '{node.module}'. {fix_msg}",
                                 "bold red",
                             )
@@ -125,96 +177,98 @@ class MigrationAuditor:
                 for alias in node.names:
                     for legacy_module, fix_msg in LEGACY_IMPORTS.items():
                         if legacy_module.split(".")[-1] == alias.name:
-                            self._found_any = True
-                            line_no = node.lineno
+                            self._has_legacy_issues = True
                             self._print_issue(
                                 file_path,
-                                line_no,
-                                self._get_line(file_path, line_no),
+                                node.lineno,
+                                self._get_line(lines, node.lineno),
                                 f"Import '{alias.name}'. {fix_msg}",
                                 "bold red",
                             )
 
     def _audit_class_instantiation(
-        self, file_path: Path, tree: ast.AST, tracked_instances: set
+        self, file_path: Path, tree: ast.AST, tracked_instances: set, lines: list[str]
     ):
+        # Find "Chunklet" instantiations specifically (not all chunker classes)
         for node in ast.walk(tree):
-            if isinstance(node, ast.Assign):
-                for target in node.targets:
-                    if isinstance(target, ast.Name):
-                        if isinstance(node.value, ast.Call):
-                            if isinstance(node.value.func, ast.Name):
-                                if node.value.func.id == "Chunklet":
-                                    tracked_instances.add(target.id)
-                                    self._found_any = True
-                                    line_no = node.lineno
-                                    self._print_issue(
-                                        file_path,
-                                        line_no,
-                                        self._get_line(file_path, line_no),
-                                        "Rename 'Chunklet' to 'DocumentChunker'.",
-                                        "bold red",
-                                    )
+            if not isinstance(node, ast.Assign):
+                continue
+            if not isinstance(node.value, ast.Call):
+                continue
+            if not isinstance(node.value.func, ast.Name):
+                continue
+            if node.value.func.id != "Chunklet":
+                continue
+            if not node.targets or not isinstance(node.targets[0], ast.Name):
+                continue
 
-    def _audit_calls(self, file_path: Path, tree: ast.AST, tracked_instances: set):
+            target = node.targets[0].id
+            tracked_instances.add(target)
+            self._has_legacy_issues = True
+            self._print_issue(
+                file_path,
+                node.lineno,
+                self._get_line(lines, node.lineno),
+                "Rename 'Chunklet' to 'DocumentChunker'.",
+                "bold red",
+            )
+
+    def _audit_calls(self, file_path: Path, tree: ast.AST, tracked_instances: set, lines: list[str]):
         for node in ast.walk(tree):
-            if isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Attribute):
-                    if isinstance(node.func.value, ast.Name):
-                        inst_name = node.func.value.id
+            if not isinstance(node, ast.Call):
+                continue
+            if not isinstance(node.func, ast.Attribute):
+                continue
+            if not isinstance(node.func.value, ast.Name):
+                continue
 
-                        if inst_name not in tracked_instances:
-                            continue
+            inst_name = node.func.value.id
+            if inst_name not in tracked_instances:
+                continue
 
-                        method_name = node.func.attr
+            method_name = node.func.attr
 
-                        if method_name in LEGACY_METHODS:
-                            style = (
-                                "bold red"
-                                if method_name in ("preview_sentences",)
-                                else "yellow"
-                            )
-                            self._found_any = True
-                            self._print_issue(
-                                file_path,
-                                node.lineno,
-                                self._get_line(file_path, node.lineno),
-                                f"'{inst_name}.{method_name}()' - {LEGACY_METHODS[method_name]}",
-                                style,
-                            )
+            if method_name in LEGACY_METHODS:
+                style = (
+                    "bold red"
+                    if method_name in ("preview_sentences",)
+                    else "yellow"
+                )
+                self._has_legacy_issues = True
+                self._print_issue(
+                    file_path,
+                    node.lineno,
+                    self._get_line(lines, node.lineno),
+                    f"'{inst_name}.{method_name}()' - {LEGACY_METHODS[method_name]}",
+                    style,
+                )
 
-                        for arg, fix_msg in V1_ARGS.items():
-                            for kw in node.keywords:
-                                if kw.arg == arg:
-                                    self._found_any = True
-                                    self._print_issue(
-                                        file_path,
-                                        node.lineno,
-                                        self._get_line(file_path, node.lineno),
-                                        f"Argument '{arg}' is no longer supported. {fix_msg}",
-                                        "bold red",
-                                    )
-
-    def _audit_exceptions(self, file_path: Path, tree: ast.AST):
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Name):
-                for old_name, fix_msg in LEGACY_EXCEPTIONS.items():
-                    if node.id == old_name:
-                        self._found_any = True
-                        line_no = node.lineno
+            for arg, fix_msg in DEPRECATED_ARGUMENTS.items():
+                for kw in node.keywords:
+                    if kw.arg == arg:
+                        self._has_legacy_issues = True
                         self._print_issue(
                             file_path,
-                            line_no,
-                            self._get_line(file_path, line_no),
-                            f"'{old_name}' - {fix_msg}",
+                            node.lineno,
+                            self._get_line(lines, node.lineno),
+                            f"Argument '{arg}' is no longer supported. {fix_msg}",
                             "bold red",
                         )
 
-    def _get_line(self, file_path: Path, line_no: int) -> str:
-        try:
-            return file_path.read_text(encoding="utf-8").splitlines()[line_no - 1]
-        except (IndexError, IOError):
-            return ""
+    def _audit_exceptions(self, file_path: Path, tree: ast.AST, lines: list[str]):
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Name):
+                continue
+            if node.id not in LEGACY_EXCEPTIONS:
+                continue
+            self._has_legacy_issues = True
+            self._print_issue(
+                file_path,
+                node.lineno,
+                self._get_line(lines, node.lineno),
+                f"'{node.id}' - {LEGACY_EXCEPTIONS[node.id]}",
+                "bold red",
+            )
 
     def _print_issue(self, file_path, line_no, line_content, message, style):
         msg = Text()
