@@ -18,6 +18,15 @@ pip install chunklet-py
 chunklet --version
 ```
 
+!!! tip "Termux (Android)"
+    No rust toolchain on Termux (especially python 3.13)? Install pydantic-core pre-built wheels first then retry installing chunklet-py:
+    
+    ```bash
+    pip install typing-extensions
+    pip install pydantic-core --index-url https://termux-user-repository.github.io/pypi/
+    pip install "pydantic>=2.12.4,<2.13"
+    ```
+
 And that's all there is to it! You're now ready to start using Chunklet-py.
 
 ## Optional Dependencies
@@ -51,7 +60,7 @@ cd chunklet-py
 pip install .[all]
 ```
 
-But why would you want to do that? The easy way is so much easier.
+But why would you want to do that? The pip way is so much easier.
 
 ## Contributing to Chunklet-py
 

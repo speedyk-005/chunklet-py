@@ -3,6 +3,39 @@
 
 ---
 
+## Chunklet v2.3.0
+
+### 🧩 Smarter Sentence Splitting
+
+The universal fallback splitter finally learned some new tricks:
+
+- **Non-Latin scripts** — Arabic, Chinese, and friends now get treated right
+- **Quoted text and parens** — "this (and this)" stay together as one sentence
+- **Numbered lists** — 1. 2. 3. now behave instead of getting split apart
+
+### 📄 Document Chunker Improvements
+
+- Better markdown heading detection — we finally read your headers right
+
+### 🎨 Visualizer Gets Sleeker
+
+- MessagePack instead of JSON (~30-50% smaller payloads) — because we care about your bandwidth
+
+### 🐛 The Fixes
+
+- **pkg_resources** — finally fixed that annoying ModuleNotFoundError (long story)
+- **Registration** — no more TypeError with `functools.partial` when registering custom splitters
+- **Auto-lang** — stopped spamming you with repeated warnings when `lang='auto'`
+- **Code output** — methods now appear under their class, not "global" (we know, it was annoying)
+
+### 🔧 The Boring Stuff
+
+- Lazy imports for splitter libraries (faster startup)
+- Added `viz` as shorthand for `visualization` extra
+- Dropped Python 3.10 support (anyway Python 3.10 is approaching end-of-life)
+
+---
+
 ## Chunklet v2.2.0
 
 ### ✨ Simpler Chunking API

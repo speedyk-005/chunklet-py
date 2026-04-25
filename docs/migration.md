@@ -3,6 +3,15 @@
 !!! warning "Python Version Bump"
     v2.x.x dropped Python 3.8 and 3.9. Minimum is now **3.10**. Update your env if you're stuck on ancient Python.
 
+### Automated migration checker
+
+I wrote a script that scans your code for old v1 patterns. It'll point out exactly what needs changing.
+
+```bash
+curl -O https://raw.githubusercontent.com/speedyk-005/chunklet-py/main/audit_migration.py
+python audit_migration.py /path/to/your/project
+```
+
 So you upgraded to v2 and things broke. That's normal. Let me walk you through what changed and how to fix it.
 
 ## The Breaking Stuff
@@ -208,15 +217,6 @@ The CLI got a new structure. Instead of just `chunklet "text"`, you now use `chu
     chunklet chunk --source your_text.txt --max-sentences 5
     ```
 
-See [CLI docs](getting-started/cli.md) for the full breakdown.
-
-### Automated migration checker
-
-I wrote a script that scans your code for old v1 patterns. It'll point out exactly what needs changing.
-
-```bash
-curl -O https://raw.githubusercontent.com/speedyk-005/chunklet-py/main/audit_migration.py
-python audit_migration.py /path/to/your/project
-```
-
 That's it. Go forth and migrate.
+
+See [CLI docs](getting-started/cli.md) for the full breakdown.

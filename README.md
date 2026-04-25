@@ -107,7 +107,7 @@ chunklet --version
 > [!TIP]
 > <b>Termux (Android)</b>
 >
-> No rust toolchain on Termux (especially python 3.13) ? Install pydantic-core pre-built wheels first then retry installing chunklet-py:
+> No rust toolchain on Termux (especially python 3.13)? Install pydantic-core pre-built wheels first then retry installing chunklet-py:
 >
 > ```bash
 > pip install typing-extensions
@@ -121,11 +121,11 @@ That's it! You're all set to start chunking.
 
 Want to unlock more Chunklet-py superpowers? Add these optional dependencies based on what you need:
 
-*   **Document Processing:** For handling `.pdf`, `.docx`, `.epub`, and other document formats:
+*   **Structured Documents:** For handling `.pdf`, `.docx`, `.epub`, and other document formats:
     ```bash
     pip install "chunklet-py[structured-document]"
     ```
-*   **Code Chunking:** For advanced code analysis and chunking features:
+*   **Code Chunking:** For Language-agnostic code chunking features:
     ```bash
     pip install "chunklet-py[code]"
     ```
