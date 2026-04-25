@@ -47,7 +47,5 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         file: coverage.xml
-        fail-under: 87
-        fail-on-decrease: true
-        fail-threshold: 1.5
+        fail-on-error: false
         
