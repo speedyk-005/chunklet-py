@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CI**:
   - Added dependabot configuration for GitHub Actions and pip dependencies
   - Optimized CI to run coverage only on Python 3.12 (reduces CI time for other versions)
+- **Installation**: Added `viz` as alias for `visualization` extra
 
 ### Changed
 - **Core Performance Overhaul**:

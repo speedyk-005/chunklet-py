@@ -92,6 +92,8 @@ visualization = [
   "aiofiles==25.1.0",
 ]
 
+viz = ["chunklet-py[visualization]"]
+
 all = ["chunklet-py[structured-document,code,visualization]"]
 
 dev = [
