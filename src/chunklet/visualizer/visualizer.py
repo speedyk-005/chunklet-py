@@ -196,7 +196,7 @@ class Visualizer:
                 )
 
             return Response(
-                content=json.dumps(response_data),
+                content=json.dumps(response_data, ensure_ascii=False),
                 media_type="application/json",
             )
 
