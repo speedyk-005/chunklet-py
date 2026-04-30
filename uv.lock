@@ -295,6 +295,7 @@ dependencies = [
     { name = "sentencex", version = "0.6.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'android'" },
     { name = "sentencex", version = "1.0.20", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'android'" },
     { name = "sentsplit" },
+    { name = "setuptools" },
     { name = "typer" },
 ]
 
@@ -400,6 +401,13 @@ visualization = [
     { name = "python-multipart" },
     { name = "uvicorn" },
 ]
+viz = [
+    { name = "aiofiles" },
+    { name = "fastapi" },
+    { name = "msgpack" },
+    { name = "python-multipart" },
+    { name = "uvicorn" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -408,6 +416,7 @@ requires-dist = [
     { name = "chunklet-py", extras = ["dev", "docs", "structured-document", "code", "visualization"], marker = "extra == 'dev-all'" },
     { name = "chunklet-py", extras = ["structured-document"], marker = "extra == 'document'" },
     { name = "chunklet-py", extras = ["structured-document", "code", "visualization"], marker = "extra == 'all'" },
+    { name = "chunklet-py", extras = ["visualization"], marker = "extra == 'viz'" },
     { name = "defusedxml", marker = "extra == 'code'", specifier = ">=0.7.1,<1.0" },
     { name = "docutils", marker = "extra == 'structured-document'", specifier = ">=0.21.2,<1.0" },
     { name = "dotdict3", specifier = ">=1.1.0,<2.0" },
@@ -444,12 +453,13 @@ requires-dist = [
     { name = "sentencex", marker = "sys_platform != 'android'", specifier = ">=1.0.0,<2.0" },
     { name = "sentencex", marker = "sys_platform == 'android'", specifier = "<=0.6.1" },
     { name = "sentsplit", specifier = ">=1.0.8,<2.0" },
+    { name = "setuptools", specifier = "<81" },
     { name = "striprtf", marker = "extra == 'structured-document'", specifier = ">=0.0.29,<1.0" },
     { name = "tabulate2", marker = "extra == 'structured-document'", specifier = ">=1.10.2,<2.0" },
     { name = "typer", specifier = ">=0.19.0,<1.0" },
     { name = "uvicorn", marker = "extra == 'visualization'", specifier = ">=0.35.0,<1.0" },
 ]
-provides-extras = ["structured-document", "document", "code", "visualization", "all", "dev", "docs", "dev-all"]
+provides-extras = ["structured-document", "document", "code", "visualization", "viz", "all", "dev", "docs", "dev-all"]
 
 [[package]]
 name = "click"
@@ -2145,6 +2155,15 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c7/59/bce2ff6f41c75752038e6dc76d1281ba91982cf05b6ff30e4b6173d0e972/sentsplit-1.0.8.tar.gz", hash = "sha256:1c96da09b75e61aa07a991faada6a7f6a46007f83cd1de1aedeaaf9db20e0f1e", size = 1692650, upload-time = "2024-02-26T17:20:50.873Z" }
+
+[[package]]
+name = "setuptools"
+version = "80.10.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/76/95/faf61eb8363f26aa7e1d762267a8d602a1b26d4f3a1e758e92cb3cb8b054/setuptools-80.10.2.tar.gz", hash = "sha256:8b0e9d10c784bf7d262c4e5ec5d4ec94127ce206e8738f29a437945fbc219b70", size = 1200343, upload-time = "2026-01-25T22:38:17.252Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/94/b8/f1f62a5e3c0ad2ff1d189590bfa4c46b4f3b6e49cef6f26c6ee4e575394d/setuptools-80.10.2-py3-none-any.whl", hash = "sha256:95b30ddfb717250edb492926c92b5221f7ef3fbcc2b07579bcd4a27da21d0173", size = 1064234, upload-time = "2026-01-25T22:38:15.216Z" },
+]
 
 [[package]]
 name = "shellingham"
