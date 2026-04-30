@@ -19,9 +19,10 @@ The universal fallback splitter finally learned some new tricks:
 
 ### 🎨 Visualizer Gets Sleeker
 
-- **API Content Negotiation** — `/api/chunk` now defaults to JSON for backward compatibility with v2.2.0 clients. Add `Accept: application/msgpack` header for ~30-50% smaller payloads
-- Browser visualizer requests MessagePack automatically for performance
-- Programmatic clients can choose: JSON (default) or MessagePack (opt-in)
+Now serving both JSON and MessagePack — because one format was never enough:
+
+- Browser visualizer requests MessagePack automatically for performance (~30-50%)
+- Programmatic clients can choose: JSON (default) or MessagePack (opt-in via `Accept: application/msgpack` header)
 - MessagePack encoding — because we care about your bandwidth
 
 ### 🐛 The Fixes

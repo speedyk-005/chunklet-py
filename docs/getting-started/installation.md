@@ -3,7 +3,7 @@
 Ready to get Chunklet-py up and running? Fantastic! This guide will walk you through the installation process, making it as smooth as possible.
 
 !!! info "Requirements"
-    Chunklet-py requires **Python 3.10 or newer**. We recommend using Python 3.11+ for the best experience.
+    Chunklet-py requires **Python 3.11 or newer**. We recommend using Python 3.12+ for the best experience.
 
 !!! note "chunklet-py (aka chunklet)"
     The old `chunklet` package is no longer maintained. Use `chunklet-py` to get the latest version.

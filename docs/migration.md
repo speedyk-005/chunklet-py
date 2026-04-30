@@ -1,7 +1,7 @@
 # Migrating from v1 to v2: Everything Changed (But You'll Be Fine)
 
 !!! warning "Python Version Bump"
-    v2.x.x dropped Python 3.8 and 3.9. Minimum is now **3.10**. Update your env if you're stuck on ancient Python.
+    v2.x.x dropped Python 3.8, 3.9, and 3.10. Minimum is now **3.11**. Update your env if you're stuck on ancient Python.
 
 ### Automated migration checker
 
