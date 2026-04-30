@@ -22,12 +22,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Installation**: Added `viz` as alias for `visualization` extra
 
 ### Changed
+- **Visualizer API Content Negotiation**:
+  - Added HTTP Accept header content negotiation to `/api/chunk` endpoint
+  - Clients can request MessagePack via `Accept: application/msgpack` header
 - **Core Performance Overhaul**:
   - Replaced regex-based `_find_span` with deterministic finder (~2x faster span detection, avoiding regex backtracking)
   - Switched from `regex` library to stdlib `re` - ~2x faster for simple patterns
   - Replaced `box` library with `dotdict3` - 12x faster (0.467s vs 0.039s per 10k accesses)
   - Switched from JSON to MessagePack encoding in visualizer (~30-50% smaller payloads, faster encoding)
   - Added `@lru_cache(maxsize=52)` on `_get_special_lang_handler` for caching handler lookups
+  - Added explicitly MessagePack requests for visualizer when triggered via cli (~30-50% smaller payloads, faster encoding)
 - **Fallback Splitter**: Renamed `FallbackSplitter` to `_clean_sentences` (works for 50+ languages)
 - **SentenceSplitter Rename**: Renamed `_filter_sentences` method to `split_text`
 - **Lazy Imports**:

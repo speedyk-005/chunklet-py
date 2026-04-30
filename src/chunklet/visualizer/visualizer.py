@@ -10,7 +10,7 @@ try:
     import msgpack
     import uvicorn
     from charset_normalizer import detect
-    from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+    from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
     from fastapi.responses import HTMLResponse, Response
     from fastapi.staticfiles import StaticFiles
 except ImportError:  # pragma: no cover
@@ -127,6 +127,7 @@ class Visualizer:
         file: UploadFile = File(...),
         mode: str = Form("document"),
         params: str = Form("{}"),
+        request: Request = None,
     ) -> Response:
         """Processes an uploaded file and returns chunked output.
 
@@ -135,9 +136,13 @@ class Visualizer:
             file: File uploaded by the client.
             mode: Determines which chunker to use ("document" or "code").
             params: JSON string containing chunking parameters.
+            request: Optional Request object for content negotiation.
 
         Returns:
-            MessagePack-encoded response with original text, chunks, and stats.
+            MessagePack or JSON response with original text, chunks, and stats.
+            Uses content negotiation: client can request MessagePack via
+            Accept: application/msgpack header. Defaults to JSON for backward
+            compatibility.
 
         Raises:
             HTTPException: If chunking fails.
@@ -183,9 +188,16 @@ class Visualizer:
                 },
             }
 
+            accept = request.headers.get("Accept", "") if request else ""
+            if "application/msgpack" in accept:
+                return Response(
+                    content=msgpack.packb(response_data, use_bin_type=True),
+                    media_type="application/msgpack",
+                )
+
             return Response(
-                content=msgpack.packb(response_data, use_bin_type=True),
-                media_type="application/msgpack",
+                content=json.dumps(response_data),
+                media_type="application/json",
             )
 
         except Exception as e:

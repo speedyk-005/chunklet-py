@@ -101,7 +101,7 @@ def test_chunk_file(visualizer_server):
     sample_file_path = Path(__file__).parent.parent / "samples" / "sample_text.txt"
     assert sample_file_path.exists(), f"Sample file not found: {sample_file_path}"
 
-    # Test
+    # Test with MessagePack format (explicit request)
     with open(sample_file_path, "rb") as f:
         files = {"file": ("sample_text.txt", f, "text/plain")}
         data = {
@@ -110,8 +110,9 @@ def test_chunk_file(visualizer_server):
                 {"max_sentences": 3, "overlap_percent": 20}  # Chunk by 3 sentences
             ),
         }
+        headers = {"Accept": "application/msgpack"}
 
-        response = requests.post(url, files=files, data=data)
+        response = requests.post(url, files=files, data=data, headers=headers)
         assert response.status_code == 200
 
         result = msgpack.unpackb(response.content, raw=False)
@@ -127,6 +128,32 @@ def test_chunk_file(visualizer_server):
         for chunk in result["chunks"]:
             assert "content" in chunk
             assert "metadata" in chunk
+
+
+def test_chunk_file_json_backward_compatible(visualizer_server):
+    """Test that JSON response works for backward compatibility."""
+    url = f"{visualizer_server['url']}/api/chunk"
+
+    sample_file_path = Path(__file__).parent.parent / "samples" / "sample_text.txt"
+    assert sample_file_path.exists(), f"Sample file not found: {sample_file_path}"
+
+    # Test JSON (default - backward compatible)
+    with open(sample_file_path, "rb") as f:
+        files = {"file": ("sample_text.txt", f, "text/plain")}
+        data = {
+            "mode": "document",
+            "params": json.dumps({"max_sentences": 2}),
+        }
+        # No Accept header = JSON default
+
+        response = requests.post(url, files=files, data=data)
+        assert response.status_code == 200
+
+        result = response.json()
+        assert "text" in result
+        assert "chunks" in result
+        assert "stats" in result
+        assert result["stats"]["chunk_count"] > 1
 
 
 def test_chunk_file_invalid_format(visualizer_server):
