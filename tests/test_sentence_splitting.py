@@ -71,6 +71,24 @@ def test_unsupported_language_fallback(splitter, text, expected_sentences):
     assert sentences == expected_sentences
 
 
+@pytest.mark.parametrize(
+    "lang",
+    [
+        "en",  # pysbd
+        "ko",  # sentsplit
+        "bn",  # indicnlp
+        "ca",  # sentencex
+    ],
+)
+def test_special_handler_exists(splitter, lang):
+    """Each library should return a non-None handler that produces non-empty output."""
+    handler = splitter._get_special_lang_handler(lang, verbose=False)
+    assert handler is not None, f"No handler for language: {lang}"
+
+    result = handler("Hello world. This is a test.")
+    assert result, f"Handler for '{lang}' returned empty result"
+
+
 # --- Custom Splitter Tests ---
 
 def test_custom_splitter_usage(registry):

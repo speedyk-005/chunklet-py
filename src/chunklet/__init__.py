@@ -60,9 +60,11 @@ __all__ = [
 
 
 # Map the public names to their sub-module locations
+_PLAIN_TEXT_CHUNKER_MODULE = "chunklet.plain_text_chunker"
+
 _LOOKUP = {
     "SentenceSplitter": "chunklet.sentence_splitter",
-    "PlainTextChunker": "chunklet.plain_text_chunker",
+    "PlainTextChunker": _PLAIN_TEXT_CHUNKER_MODULE,
     "DocumentChunker": "chunklet.document_chunker",
     "CodeChunker": "chunklet.code_chunker",
     "Visualizer": "chunklet.visualizer",
@@ -77,7 +79,7 @@ class _PlainTextChunkerModuleProxy(types.ModuleType):
     """
 
     def __init__(self):
-        super().__init__("chunklet.plain_text_chunker")
+        super().__init__(_PLAIN_TEXT_CHUNKER_MODULE)
         self._PlainTextChunker: typing.Any = None
 
     def _get_deprecated_class(self):
@@ -99,7 +101,7 @@ class _PlainTextChunkerModuleProxy(types.ModuleType):
 
 
 # Register proxy in sys.modules for backward compatibility
-sys.modules["chunklet.plain_text_chunker"] = _PlainTextChunkerModuleProxy()
+sys.modules[_PLAIN_TEXT_CHUNKER_MODULE] = _PlainTextChunkerModuleProxy()
 
 
 def __getattr__(name: str) -> typing.Any:

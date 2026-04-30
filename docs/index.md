@@ -1,7 +1,7 @@
 # Chunklet-py Docs
 
 <p align="center">
-  <img src="img/logo_with_tagline.png" alt="Chunklet-py Logo" width="300"/>
+  <img src="img/logo_with_tagline.svg" alt="Chunklet-py Logo" width="300"/>
 </p>
 
 “One library to split them all: Sentence, Code, Docs.”

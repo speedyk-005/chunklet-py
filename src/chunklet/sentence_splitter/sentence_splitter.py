@@ -6,6 +6,7 @@ warnings.filterwarnings("ignore", message=".*pkg_resources.*", category=UserWarn
 from os import getenv
 from pathlib import Path
 from typing import Callable
+from functools import lru_cache
 
 import re
 from loguru import logger
@@ -31,30 +32,6 @@ PUNCTUATION_ONLY_PATTERN = re.compile(r"\W+")
 
 # To identify thematic breaks (e.g., '---', '***', '___')
 THEMATIC_BREAK_PATTERN = re.compile(r"\s*([-*_])\s*\1{2,}\s*")
-
-
-def _get_special_lang_handler(lang: str, verbose: bool) -> Callable | None:  # pragma: no cover
-    if lang in PYSBD_SUPPORTED_LANGUAGES:
-        from pysbd import Segmenter
-        log_info(verbose, "Using pysbd")
-        return Segmenter(lang).segment
-
-    elif lang in SENTSPLIT_UNIQUE_LANGUAGES:
-        from sentsplit.segment import SentSplit
-        log_info(verbose, "Using sentsplit")
-        return SentSplit(lang).segment
-
-    elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
-        from indicnlp.tokenize import sentence_tokenize
-        log_info(verbose, "Using indicnlp")
-        return lambda text: sentence_tokenize.sentence_split(text, lang)
-
-    elif lang in SENTENCEX_UNIQUE_LANGUAGES:
-        from sentencex import segment
-        log_info(verbose, "Using sentencex")
-        return lambda text: segment(lang, text)
-
-    return None
 
 
 class BaseSplitter:
@@ -127,9 +104,48 @@ class SentenceSplitter(BaseSplitter):
         self.fallback_splitter = UniversalSplitter()
 
         # Create a normalized identifier for language detection
-        self.identifier = LanguageIdentifier.from_pickled_model(
+        self._identifier = LanguageIdentifier.from_pickled_model(
             MODEL_FILE, norm_probs=True
         )
+
+        # Tracked to reduce log spamming about language detection
+        self._last_lang_used = None
+
+    @staticmethod
+    @lru_cache(maxsize=52)
+    def _get_special_lang_handler(lang: str, verbose: bool) -> Callable | None:
+        """
+        Get language-specific sentence splitting handler.
+
+        Args:
+            lang: Language code (e.g., 'en', 'ja', 'hi').
+            verbose: If True, logs which splitter library is being used.
+
+        Returns:
+            A callable that takes text (str) and returns list[str], or None if no
+            special handler exists for the language.
+        """
+        if lang in PYSBD_SUPPORTED_LANGUAGES:
+            from pysbd import Segmenter
+            log_info(verbose, "Using pysbd")
+            return Segmenter(lang).segment
+
+        elif lang in SENTSPLIT_UNIQUE_LANGUAGES:
+            from sentsplit.segment import SentSplit
+            log_info(verbose, "Using sentsplit")
+            return SentSplit(lang).segment
+
+        elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
+            from indicnlp.tokenize import sentence_tokenize
+            log_info(verbose, "Using indicnlp")
+            return lambda text: sentence_tokenize.sentence_split(text, lang)
+
+        elif lang in SENTENCEX_UNIQUE_LANGUAGES:
+            from sentencex import segment
+            log_info(verbose, "Using sentencex")
+            return lambda text: segment(lang, text)
+
+        return None
 
     def _clean_sentences(self, sentences: list[str]) -> list[str]:
         """
@@ -168,7 +184,7 @@ class SentenceSplitter(BaseSplitter):
         Returns:
             A tuple containing the detected language code and its confidence.
         """
-        lang_detected, confidence = self.identifier.classify(text)
+        lang_detected, confidence = self._identifier.classify(text)
         log_info(
             self.verbose,
             "Language detection: '{}' with confidence {}.",
@@ -203,12 +219,15 @@ class SentenceSplitter(BaseSplitter):
             return []
 
         if lang == "auto":
-            logger.warning(
-                "The language is set to `auto`. Consider setting the `lang` parameter "
-                "to a specific language to improve reliability."
-            )
+            if self._last_lang_used is None:
+                logger.warning(
+                    "The language is set to `auto`. Consider setting the `lang` parameter "
+                    "to a specific language to improve reliability."
+                )
             lang_detected, confidence = self.detected_top_language(text)
-            lang = lang_detected if confidence >= 0.7 else "any"
+            lang = lang_detected if confidence >= 0.7 else "fallback"
+
+        self._last_lang_used = lang
 
         sentences = None
         if lang != "fallback":
@@ -216,7 +235,7 @@ class SentenceSplitter(BaseSplitter):
             if custom_splitter_registry.is_registered(lang):
                 sentences, splitter_name = custom_splitter_registry.split(text, lang)
                 log_info(self.verbose, "Using registered splitter: {}", splitter_name)
-            elif (handler := _get_special_lang_handler(lang, self.verbose)) is not None:
+            elif (handler := self._get_special_lang_handler(lang, self.verbose)) is not None:
                 sentences = handler(text)
 
         # If no handler found, use fallback
