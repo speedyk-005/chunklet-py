@@ -127,38 +127,6 @@ class MigrationAuditor:
         }
 
     def _audit_imports(self, file_path: Path, tree: ast.AST, lines: list[str]):
-        """Check if a node is a call to a known chunker class."""
-        if not isinstance(node, ast.Call):
-            return False
-        if not isinstance(node.func, ast.Name):
-            return False
-        return node.func.id in CHUNKER_CLASS_NAMES
-
-    def _get_chunker_instances(self, tree: ast.AST) -> set:
-        """Find all chunker class instantiations in the AST."""
-        return {
-            target.id
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Assign)
-            and isinstance(node.value, ast.Call)
-            and self._is_chunker_call(node.value)
-            for target in node.targets
-            if isinstance(target, ast.Name)
-        }
-
-    def _get_chunker_instance_target(self, node: ast.Assign) -> str | None:
-        """Get the target name if this is an assignment to a Chunklet() call."""
-        if not isinstance(node.value, ast.Call):
-            return None
-        if not isinstance(node.value.func, ast.Name):
-            return None
-        if node.value.func.id not in CHUNKER_CLASS_NAMES:
-            return None
-        if not node.targets or not isinstance(node.targets[0], ast.Name):
-            return None
-        return node.targets[0].id
-
-    def _audit_imports(self, file_path: Path, tree: ast.AST, lines: list[str]):
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 if node.module:
