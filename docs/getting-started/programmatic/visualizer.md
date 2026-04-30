@@ -201,64 +201,108 @@ python server.py
 
 Use this Python client to chunk files programmatically:
 
-``` py linenums="1"
-import requests
+=== "JSON (Default - Backward Compatible)"
 
-# Connect to your running server
-base_url = "http://127.0.0.1:8000"
+    ``` py linenums="1"
+    import requests
 
-# Check if token counter is available
-response = requests.get(f"{base_url}/api/token_counter_status")
-print(response.json())  # {"token_counter_available": false}
+    # Connect to your running server
+    base_url = "http://127.0.0.1:8000"
 
-# Chunk a file
-with open("my_document.txt", "rb") as f:
-    files = {"file": ("my_document.txt", f, "text/plain")}
-    data = {
-        "mode": "document",  # or "code"
-        "params": '{"max_sentences": 3, "overlap_percent": 20}'
-    }
+    # Check if token counter is available
+    response = requests.get(f"{base_url}/api/token_counter_status")
+    print(response.json())  # {"token_counter_available": false}
 
-    response = requests.post(f"{base_url}/api/chunk", files=files, data=data)
+    # Chunk a file
+    with open("my_document.txt", "rb") as f:
+        files = {"file": ("my_document.txt", f, "text/plain")}
+        data = {
+            "mode": "document",  # or "code"
+            "params": '{"max_sentences": 3, "overlap_percent": 20}'
+        }
 
-if response.status_code == 200:
-    result = response.json()
-    print(f"Created {result['stats']['chunk_count']} chunks")
+        response = requests.post(f"{base_url}/api/chunk", files=files, data=data)
 
-    # Access chunks
-    for chunk in result["chunks"]:
-        print(f"Chunk content: {chunk['content']}")
-        print(f"Metadata: {chunk['metadata']}")
-else:
-    print(f"Error: {response.status_code} - {response.text}")
-```
+    if response.status_code == 200:
+        result = response.json()
+        print(f"Created {result['stats']['chunk_count']} chunks")
+
+        # Access chunks
+        for chunk in result["chunks"]:
+            print(f"Chunk content: {chunk['content']}")
+            print(f"Metadata: {chunk['metadata']}")
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+    ```
+
+=== "MessagePack (Faster - ~30-50% smaller payloads)"
+
+    ``` py linenums="1"
+    import requests
+    import msgpack
+
+    # Connect to your running server
+    base_url = "http://127.0.0.1:8000"
+
+    # Request MessagePack response using Accept header
+    headers = {"Accept": "application/msgpack"}
+
+    with open("my_document.txt", "rb") as f:
+        files = {"file": ("my_document.txt", f, "text/plain")}
+        data = {
+            "mode": "document",
+            "params": '{"max_sentences": 3, "overlap_percent": 20}'
+        }
+
+        response = requests.post(f"{base_url}/api/chunk", files=files, data=data, headers=headers)
+
+    if response.status_code == 200:
+        result = msgpack.unpackb(response.content, raw=False)
+        print(f"Created {result['stats']['chunk_count']} chunks")
+
+        for chunk in result["chunks"]:
+            print(f"Chunk content: {chunk['content']}")
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+    ```
 
 
 
 #### Response Format
 
-The `/api/chunk` endpoint returns:
+The `/api/chunk` endpoint supports content negotiation:
 
-```json
-{
-  "text": "Original file content...",
-  "chunks": [
+- **JSON (default)**: Returns JSON response - backward compatible with v2.2.0 and earlier
+- **MessagePack**: Add `Accept: application/msgpack` header for ~30-50% smaller payloads
+
+=== "JSON Response"
+
+    ```json
     {
-      "content": "Chunk text content...",
-      "metadata": {
-        "source": "filename.txt",
-        "chunk_num": 1,
-        "span": [0, 150],
-        // ... additional metadata
+      "text": "Original file content...",
+      "chunks": [
+        {
+          "content": "Chunk text content...",
+          "metadata": {
+            "source": "filename.txt",
+            "chunk_num": 1,
+            "span": [0, 150],
+            // ... additional metadata
+          }
+        }
+      ],
+      "stats": {
+        "text_length": 696,
+        "chunk_count": 3,
+        "mode": "document"
       }
     }
-  ],
-  "stats": {
-    "text_length": 696,
-    "chunk_count": 3,
-    "mode": "document"
-  }
-}
+    ```
+
+=== "MessagePack Response"
+
+    Same structure as JSON, but encoded in MessagePack binary format for smaller payloads.
+    Decode using: `msgpack.unpackb(response.content, raw=False)`
 ```
 
 !!! tip "Perfect for Integration"
