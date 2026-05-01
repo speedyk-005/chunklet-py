@@ -3310,7 +3310,7 @@
 <li>The file has no extension, so we don't know how to handle it</li>
 </ul>
 <p>The list of supported formats includes things like <code>.txt</code>, <code>.md</code>, <code>.pdf</code>, <code>.docx</code>, <code>.epub</code>, <code>.html</code>, <code>.rst</code>, <code>.rtf</code>, <code>.tex</code>, <code>.odt</code>, <code>.csv</code>, and <code>.xlsx</code>. If your file isn't one of these, you'll see this error.</p>
-<p><strong>Fix:</strong> Use a supported format, register a <a href="../getting-started/programmatic/document_chunker/#custom-document-processors">custom processor</a>, or use <code>chunk_files([path])</code> for formats that require batch processing.</p>
+<p><strong>Fix:</strong> Use a supported format, register a <a href="../getting-started/programmatic/document_chunker/#custom-processors-build-your-own-document-wizards">custom processor</a>, or use <code>chunk_files([path])</code> for formats that require batch processing.</p>
 <hr />
 <h3 id="tokenlimiterror"><code>TokenLimitError</code> 📏</h3>
 <p>A code block is too fat for <code>max_tokens</code> and you're in <code>strict</code> mode. We refuse to split it because that would break the code. This happens in <code>CodeChunker</code> when a function or class is larger than your token limit — splitting it would result in broken, unrunnable code, so we error instead.</p>
