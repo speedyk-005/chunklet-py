@@ -114,7 +114,7 @@ The **Fallback Splitter** is my "when in doubt" solution. It's a rule-based rege
 Think of it as that friend at the karaoke bar who doesn't know the song but will still give it their best shot. 🥤
 
 !!! info "API Reference"
-    For the nerds who want the full details, check out the [`FallbackSplitter` API docs](reference/chunklet/sentence_splitter/_fallback_splitter.md).
+    For the nerds who want the full details, check out the [`_universal_splitter` API docs](reference/chunklet/sentence_splitter/_universal_splitter.md).
 
 ---
 

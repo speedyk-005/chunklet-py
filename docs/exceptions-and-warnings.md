@@ -49,7 +49,7 @@ We don't support that file extension. We checked our list of supported formats a
 
 The list of supported formats includes things like `.txt`, `.md`, `.pdf`, `.docx`, `.epub`, `.html`, `.rst`, `.rtf`, `.tex`, `.odt`, `.csv`, and `.xlsx`. If your file isn't one of these, you'll see this error.
 
-**Fix:** Use a supported format, register a [custom processor](./getting-started/programmatic/document_chunker.md#custom-document-processors), or use `chunk_files([path])` for formats that require batch processing.
+**Fix:** Use a supported format, register a [custom processor](./getting-started/programmatic/document_chunker.md#custom-processors-build-your-own-document-wizards), or use `chunk_files([path])` for formats that require batch processing.
 
 ---
 
