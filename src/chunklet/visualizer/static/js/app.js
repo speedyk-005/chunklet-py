@@ -365,6 +365,9 @@ async function processUploadedFile() {
         // Send POST with FormData
         const response = await fetch('/api/chunk', {
             method: 'POST',
+            headers: {
+                'Accept': 'application/msgpack'
+            },
             body: formData
         });
         

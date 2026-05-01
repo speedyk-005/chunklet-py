@@ -10,7 +10,7 @@ try:
     import msgpack
     import uvicorn
     from charset_normalizer import detect
-    from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+    from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
     from fastapi.responses import HTMLResponse, Response
     from fastapi.staticfiles import StaticFiles
 except ImportError:  # pragma: no cover
@@ -24,6 +24,7 @@ except ImportError:  # pragma: no cover
     File = lambda x: x  # noqa: E731
     Form = lambda x: x  # noqa: E731
     HTTPException = None
+    Request = None
     HTMLResponse = lambda x: x  # noqa: E731
     Response = lambda x: x  # noqa: E731
     StaticFiles = None
@@ -124,6 +125,7 @@ class Visualizer:
     @validate_input
     async def _chunk_file(
         self,
+        request: Request,
         file: UploadFile = File(...),
         mode: str = Form("document"),
         params: str = Form("{}"),
@@ -135,9 +137,13 @@ class Visualizer:
             file: File uploaded by the client.
             mode: Determines which chunker to use ("document" or "code").
             params: JSON string containing chunking parameters.
+            request: Optional Request object for content negotiation.
 
         Returns:
-            MessagePack-encoded response with original text, chunks, and stats.
+            MessagePack or JSON response with original text, chunks, and stats.
+            Uses content negotiation: client can request MessagePack via
+            Accept: application/msgpack header. Defaults to JSON for backward
+            compatibility.
 
         Raises:
             HTTPException: If chunking fails.
@@ -183,9 +189,16 @@ class Visualizer:
                 },
             }
 
+            accept = request.headers.get("Accept", "") if request else ""
+            if "application/msgpack" in accept:
+                return Response(
+                    content=msgpack.packb(response_data, use_bin_type=True),
+                    media_type="application/msgpack",
+                )
+
             return Response(
-                content=msgpack.packb(response_data, use_bin_type=True),
-                media_type="application/msgpack",
+                content=json.dumps(response_data, ensure_ascii=False),
+                media_type="application/json",
             )
 
         except Exception as e:
