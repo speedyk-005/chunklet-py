@@ -1,6 +1,7 @@
 from typing import Any, Generator
 
 # mammoth and docx are lazily imported
+
 from chunklet.document_chunker.converters.html_2_md import html_to_md
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
@@ -83,7 +84,6 @@ class DOCXProcessor(BaseProcessor):
             ) from e
 
         count = 0
-
         def placeholder_images(image):
             """Replace all images data with a placeholder text."""
             nonlocal count

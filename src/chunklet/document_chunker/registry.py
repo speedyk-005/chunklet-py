@@ -173,9 +173,7 @@ class CustomProcessorRegistry:
             err = InvalidInputError(
                 f"No document processor registered for file extension '{ext}'."
             )
-            err.add_note(
-                f"💡Hint: Use `register('{ext}', callback=your_function)` first."
-            )
+            err.add_note(f"💡Hint: Use `register('{ext}', callback=your_function)` first.")
             raise err
 
         name, callback = processor_info

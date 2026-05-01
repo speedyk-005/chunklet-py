@@ -29,7 +29,9 @@ def rst_to_md(file_path: str | Path) -> str:
         rst_content = f.read()
 
     # Convert the rst content to HTML first
-    html_content = publish_string(source=rst_content, writer="html").decode("utf-8")
+    html_content = publish_string(source=rst_content, writer="html").decode(
+        "utf-8"
+    )
     return html_to_md(raw_text=html_content)
 
 

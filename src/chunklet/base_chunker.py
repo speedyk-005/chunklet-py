@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Generator
 
 from dotdict3 import DotDict
+from loguru import logger
 
 
 class BaseChunker(ABC):

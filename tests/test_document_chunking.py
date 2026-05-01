@@ -95,7 +95,7 @@ def test_chunk_method_unsupported_iterable_processor(chunker):
         chunker.chunk_file("samples/sample-pdf-a4-size.pdf", max_sentences=5)
 
     assert any(
-        "💡 Hint: use `chunker.chunk_files([file..pdf])` for this file type." in note
+        "💡 Hint: use `chunker.chunk_files([file.pdf])` for this file type." in note
         for note in getattr(exc_info.value, "__notes__", [])
     )
 

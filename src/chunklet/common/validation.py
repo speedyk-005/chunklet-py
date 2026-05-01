@@ -1,8 +1,8 @@
-import reprlib
-from collections.abc import Iterable, Iterator
+from collections.abc import Generator, Iterable, Iterator
 from functools import wraps
 from itertools import tee
 from pathlib import Path
+import reprlib
 from typing import Annotated, Any, TypeAlias
 
 from more_itertools import ilen
@@ -22,14 +22,15 @@ def _enforce_non_string(v: Any) -> Any:
         )
     return v
 
+IterableOfStr: TypeAlias = Annotated[(
+    Iterable[str],
+    PlainValidator(_enforce_non_string)
+)]
 
-IterableOfStr: TypeAlias = Annotated[
-    (Iterable[str], PlainValidator(_enforce_non_string))
-]
-
-IterableOfPath: TypeAlias = Annotated[
-    (Iterable[str | Path], PlainValidator(_enforce_non_string))
-]
+IterableOfPath: TypeAlias = Annotated[(
+    Iterable[str | Path],
+    PlainValidator(_enforce_non_string)
+)]
 
 
 def pretty_errors(error: ValidationError) -> str:
@@ -53,9 +54,7 @@ def pretty_errors(error: ValidationError) -> str:
         if not isinstance(input_value, str):
             input_value = reprlib.repr(input_value)
         else:
-            input_value = (
-                input_value if len(input_value) < 500 else input_value[:500] + "..."
-            )
+            input_value = input_value if len(input_value) < 500 else input_value[:500] + "..."
 
         lines.append(
             (

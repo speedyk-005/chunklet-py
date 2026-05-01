@@ -55,7 +55,6 @@ class UniversalSplitter:
         Returns:
             A list of sentences after segmentation.
         """
-
         def mask(match: re.Match, norm_map: dict):
             # Generate the integer hash and Convert to string
             # because re.sub MUST return a string
@@ -73,8 +72,12 @@ class UniversalSplitter:
 
         # Normalize to protect them
         norm_map = {}
-        text = self.quote_or_paren_pattern.sub(lambda m: mask(m, norm_map), text)
-        text = self.numbered_list_pattern.sub(lambda m: mask(m, norm_map), text)
+        text = self.quote_or_paren_pattern.sub(
+            lambda m: mask(m, norm_map), text
+        )
+        text = self.numbered_list_pattern.sub(
+            lambda m: mask(m, norm_map), text
+        )
 
         # Firstly, split base on punctuation
         # then split further on newline
@@ -87,8 +90,7 @@ class UniversalSplitter:
         # Restore the normalization
         return [
             self.hashed_pattern.sub(lambda m: unmask(m, norm_map), sent)
-            for sent in final_sentences
-            if sent.strip()
+            for sent in final_sentences if sent.strip()
         ]
 
 

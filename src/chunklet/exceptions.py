@@ -17,12 +17,15 @@ class MissingTokenCounterError(InvalidInputError):
     provided."""
 
     def __init__(self, msg: str = ""):
-        self.msg = msg or (
-            "A token_counter is required for token-based chunking.\n"
-            "💡 Hint: Pass a token counting function to the chunking method, like `chunker.chunk_text(..., token_counter=tk)`\n"
+        main_msg = msg or "A token_counter is required for token-based chunking."
+        super().__init__(main_msg)
+        self.add_note(
+            "💡 Hint: Pass a token counting function to the chunking method, "
+            "like `chunker.chunk_text(..., token_counter=tk)`"
+        )
+        self.add_note(
             "or configure it in the class initialization: `.*Chunker(token_counter=tk)`"
         )
-        super().__init__(self.msg)
 
 
 class FileProcessingError(ChunkletError):
