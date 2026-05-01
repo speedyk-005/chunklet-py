@@ -24,6 +24,7 @@ except ImportError:  # pragma: no cover
     File = lambda x: x  # noqa: E731
     Form = lambda x: x  # noqa: E731
     HTTPException = None
+    Request = None
     HTMLResponse = lambda x: x  # noqa: E731
     Response = lambda x: x  # noqa: E731
     StaticFiles = None
@@ -124,10 +125,10 @@ class Visualizer:
     @validate_input
     async def _chunk_file(
         self,
+        request: Request,
         file: UploadFile = File(...),
         mode: str = Form("document"),
         params: str = Form("{}"),
-        request: Request = None,
     ) -> Response:
         """Processes an uploaded file and returns chunked output.
 
@@ -196,7 +197,7 @@ class Visualizer:
                 )
 
             return Response(
-                content=json.dumps(response_data),
+                content=json.dumps(response_data, ensure_ascii=False),
                 media_type="application/json",
             )
 
