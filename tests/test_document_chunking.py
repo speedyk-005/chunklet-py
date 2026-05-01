@@ -89,11 +89,15 @@ def test_chunk_method_unsupported_iterable_processor(chunker):
         match=re.escape(
             "File type '.pdf' is not supported by the general chunk method.\n"
             "Reason: The processor for this file returns iterable, "
-            "so it must be processed in parallel for efficiency.\n"
-            "💡 Hint: use `chunker.chunk_files([file.ext])` for this file type."
+            "so it must be processed in parallel for efficiency."
         ),
-    ):
+    ) as exc_info:
         chunker.chunk_file("samples/sample-pdf-a4-size.pdf", max_sentences=5)
+
+    assert any(
+        "💡 Hint: use `chunker.chunk_files([file..pdf])` for this file type." in note
+        for note in getattr(exc_info.value, "__notes__", [])
+    )
 
 
 # --- Custom Processor Tests ---

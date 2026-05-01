@@ -1,12 +1,10 @@
+import re
 from typing import Any, Generator
 
-import re
 from more_itertools import ilen
 
 # pdfminer is lazily imported
-
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
-
 
 MULTIPLE_NEWLINE_PATTERN = re.compile(r"(\n\s*){2,}")
 STANDALONE_NUMBER_PATTERN = re.compile(r"\n\s*\d+\s*\n")

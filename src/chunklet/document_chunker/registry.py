@@ -65,11 +65,12 @@ class CustomProcessorRegistry:
 
         if len(required_params) != 1:
             param_list = ", ".join(p.name for p in params)
-            raise TypeError(
+            err = TypeError(
                 f"'{processor_name}' has signature ({param_list}).\n"
-                "Expected exactly one required parameter to accept the file path.\n"
-                "💡Hint: Optional parameters with default values are allowed."
+                "Expected exactly one required parameter to accept the file path."
             )
+            err.add_note("💡Hint: Optional parameters with default values are allowed.")
+            raise err
 
         for ext in exts:
             if not isinstance(ext, str) or not ext.startswith("."):
@@ -169,10 +170,13 @@ class CustomProcessorRegistry:
         """
         processor_info = self._processors.get(ext)
         if not processor_info:
-            raise InvalidInputError(
-                f"No document processor registered for file extension '{ext}'.\n"
+            err = InvalidInputError(
+                f"No document processor registered for file extension '{ext}'."
+            )
+            err.add_note(
                 f"💡Hint: Use `register('{ext}', callback=your_function)` first."
             )
+            raise err
 
         name, callback = processor_info
 
@@ -183,12 +187,12 @@ class CustomProcessorRegistry:
             validator.validate_python(result)
         except ValidationError as e:
             e.subtitle = f"{name} result"
-            e.hint = (
+            err = CallbackError(f"{pretty_errors(e)}.\n")
+            err.add_note(
                 "💡Hint: Make sure your processor returns a tuple of (text/texts, metadata_dict)."
                 " An empty dict can be provided if there's no metadata."
             )
-
-            raise CallbackError(f"{pretty_errors(e)}.\n") from None
+            raise err from None
         except Exception as e:
             raise CallbackError(
                 f"Processor '{name}' for extension '{ext}' raised an exception.\nDetails: {e}"

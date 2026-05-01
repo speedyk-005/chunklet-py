@@ -2,8 +2,6 @@
 
 import json
 import socket
-import pytest
-import requests
 import threading
 import time
 import urllib.error
@@ -12,6 +10,8 @@ from contextlib import closing
 from pathlib import Path
 
 import msgpack
+import pytest
+import requests
 
 from chunklet.visualizer import Visualizer
 

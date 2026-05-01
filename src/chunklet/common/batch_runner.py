@@ -82,18 +82,27 @@ def run_in_batch(
             for res, error in task_iter:
                 if error:
                     failed_count += 1
+
+                    # Extract notes from exception
+                    notes = getattr(error, "__notes__", [])
+                    notes_str = "\n".join(notes) if notes else ""
+                    if notes_str:
+                        error_msg = f"{error}\n{notes_str}"
+                    else:
+                        error_msg = str(error)
+
                     if on_errors == "raise":
                         raise error
                     elif on_errors == "break":
                         logger.error(
                             "A task for {} failed. Returning partial results.\nReason: {}",
                             iterable_name,
-                            error,
+                            error_msg,
                         )
                         break
 
                     #  Else: skip
-                    logger.warning("Skipping a failed task.\nReason: {}", error)
+                    logger.warning("Skipping a failed task.\nReason: {}", error_msg)
                     continue
 
                 yield from res

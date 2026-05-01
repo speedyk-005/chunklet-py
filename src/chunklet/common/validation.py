@@ -1,8 +1,8 @@
-from collections.abc import Generator, Iterable, Iterator
+import reprlib
+from collections.abc import Iterable, Iterator
 from functools import wraps
 from itertools import tee
 from pathlib import Path
-import reprlib
 from typing import Annotated, Any, TypeAlias
 
 from more_itertools import ilen
@@ -22,15 +22,14 @@ def _enforce_non_string(v: Any) -> Any:
         )
     return v
 
-IterableOfStr: TypeAlias = Annotated[(
-    Iterable[str],
-    PlainValidator(_enforce_non_string)
-)]
 
-IterableOfPath: TypeAlias = Annotated[(
-    Iterable[str | Path],
-    PlainValidator(_enforce_non_string)
-)]
+IterableOfStr: TypeAlias = Annotated[
+    (Iterable[str], PlainValidator(_enforce_non_string))
+]
+
+IterableOfPath: TypeAlias = Annotated[
+    (Iterable[str | Path], PlainValidator(_enforce_non_string))
+]
 
 
 def pretty_errors(error: ValidationError) -> str:
@@ -54,7 +53,9 @@ def pretty_errors(error: ValidationError) -> str:
         if not isinstance(input_value, str):
             input_value = reprlib.repr(input_value)
         else:
-            input_value = input_value if len(input_value) < 500 else input_value[:500] + "..."
+            input_value = (
+                input_value if len(input_value) < 500 else input_value[:500] + "..."
+            )
 
         lines.append(
             (
@@ -63,7 +64,6 @@ def pretty_errors(error: ValidationError) -> str:
             )
         )
 
-    lines.append("  " + getattr(error, "hint", ""))
     return "\n".join(lines)
 
 
@@ -80,7 +80,10 @@ def validate_input(fn):
         try:
             return validated_fn(*args, **kwargs)
         except ValidationError as e:
-            raise InvalidInputError(pretty_errors(e)) from None
+            err = InvalidInputError(pretty_errors(e))
+            if hint := getattr(e, "hint", None):
+                err.add_note(hint)
+            raise err from None
 
     return wrapper
 
@@ -131,7 +134,8 @@ def safely_count_iterable(name: str, iterable: Iterable) -> tuple[int, Iterable]
             count = len(iterable)
     except ValidationError as e:
         e.subtitle = name  # to be less generic
-        e.hint = "💡 Hint: Ensure all elements in the iterable are valid."
-        raise InvalidInputError(pretty_errors(e)) from None
+        err = InvalidInputError(pretty_errors(e))
+        err.add_note("💡 Hint: Ensure all elements in the iterable are valid.")
+        raise err from None
 
     return count, iterable

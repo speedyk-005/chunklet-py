@@ -178,6 +178,7 @@ def test_overlap_behavior(chunker):
         f"Expected second chunk to start with '{expected_overlap}'."
     )
 
+
 # --- Span Finder Tests ---
 
 
@@ -187,12 +188,10 @@ def test_overlap_behavior(chunker):
         # Exact matches
         ("Hello world", "Hello world", (0, 11)),
         ("Hello world", "world", (6, 11)),
-
         # With punctuation variations
         ("Hello, world! Test.", "Hello world", (0, 11)),
         ("Test... Python is great.", "Python is great", (8, 23)),
         ("Yes--no maybe", "Yes no maybe", (0, 11)),
-
         # Not found
         ("Hello world", "not found", (-1, -1)),
     ],

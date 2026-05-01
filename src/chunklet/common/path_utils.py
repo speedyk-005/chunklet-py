@@ -4,11 +4,10 @@ import sys
 from pathlib import Path
 
 import regex as re
-# charset_normalizer is lazy imported
 
+# charset_normalizer is lazy imported
 from chunklet.common.validation import validate_input
 from chunklet.exceptions import FileProcessingError
-
 
 PATH_PATTERN = re.compile(
     r"""

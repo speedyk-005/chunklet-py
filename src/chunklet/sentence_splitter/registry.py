@@ -62,11 +62,12 @@ class CustomSplitterRegistry:
 
         if len(required_params) != 1:
             param_list = ", ".join(p.name for p in params)
-            raise TypeError(
+            err = TypeError(
                 f"'{splitter_name}' has signature ({param_list}).\n"
-                "Expected exactly one required parameter to accept the text.\n"
-                "💡Hint: Optional parameters with default values are allowed."
+                "Expected exactly one required parameter to accept the text."
             )
+            err.add_note("💡Hint: Optional parameters with default values are allowed.")
+            raise err
 
         for lang in langs:
             self._splitters[lang] = (splitter_name, callback)
@@ -157,10 +158,9 @@ class CustomSplitterRegistry:
         """
         splitter_info = self._splitters.get(lang)
         if not splitter_info:
-            raise CallbackError(
-                f"No splitter registered for language '{lang}'.\n"
-                f"💡Hint: Use `.register('{lang}', fn=your_function)` first."
-            )
+            err = CallbackError(f"No splitter registered for language '{lang}'.")
+            err.add_note(f"💡Hint: Use `.register('{lang}', fn=your_function)` first.")
+            raise err
 
         name, callback = splitter_info
 
@@ -171,8 +171,9 @@ class CustomSplitterRegistry:
             validator.validate_python(result)
         except ValidationError as e:
             e.subtitle = f"{name} result"
-            e.hint = "💡Hint: Make sure your splitter returns a list of strings."
-            raise CallbackError(f"{pretty_errors(e)}.\n") from None
+            err = CallbackError(f"{pretty_errors(e)}.\n")
+            err.add_note("💡Hint: Make sure your splitter returns a list of strings.")
+            raise err from None
         except Exception as e:
             raise CallbackError(
                 f"Splitter '{name}' for lang '{lang}' raised an exception.\nDetails: {e}"

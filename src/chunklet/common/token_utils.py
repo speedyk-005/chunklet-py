@@ -57,8 +57,12 @@ def count_tokens(text: str, token_counter: Callable[[str], int]) -> int:
             f"for text starting with: '{text[:100]}'"
         )
     except Exception as e:
-        raise CallbackError(
+        err = CallbackError(
             f"Token counter failed while processing text starting with: '{text[:100]}...'.\n"
+            f"Details: {e}"
+        )
+        err.add_note(
             "💡 Hint: Please ensure the token counter function handles "
-            f"all edge cases and returns an integer. \nDetails: {e}"
-        ) from e
+            "all edge cases and returns an integer."
+        )
+        raise err from e

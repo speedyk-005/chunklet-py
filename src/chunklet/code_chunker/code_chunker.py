@@ -50,7 +50,7 @@ from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import is_path_like, read_text_file
 from chunklet.common.token_utils import count_tokens
-from chunklet.common.validation import IterableOfStr, IterableOfPath, validate_input
+from chunklet.common.validation import IterableOfPath, IterableOfStr, validate_input
 from chunklet.exceptions import (
     InvalidInputError,
     MissingTokenCounterError,
@@ -125,6 +125,7 @@ class CodeChunker(BaseChunker):
         # Deduplicate relations
         def relation_key(relation: dict):
             return tuple(sorted(relation.items()))
+
         unique_relations = list(unique_everseen(all_relations_flat, key=relation_key))
 
         if not unique_relations:
@@ -369,12 +370,17 @@ class CodeChunker(BaseChunker):
                     snippet_dict["content"][:100],
                 )
                 if strict:
-                    raise TokenLimitError(
+                    err = TokenLimitError(
                         f"Structural block exceeds maximum limit.\n{limit_msg}\n"
-                        "Reason: Prevent splitting inside interest points (function, class, region, ...)\n"
-                        "💡Hint: Consider increasing 'max_tokens', 'max_lines', or 'max_functions', "
-                        "refactoring the oversized block, or setting 'strict=False' to allow automatic splitting of oversized blocks."
+                        "Reason: Prevent splitting inside interest points "
+                        "(function, class, region, ...)"
                     )
+                    err.add_note(
+                        "💡Hint: Consider increasing 'max_tokens', 'max_lines', or 'max_functions', "
+                        "refactoring the oversized block, or setting 'strict=False' to allow "
+                        "automatic splitting of oversized blocks."
+                    )
+                    raise err
                 else:  # Else split further
                     logger.warning(
                         "Splitting oversized block into sub-chunks.\n(%s)",

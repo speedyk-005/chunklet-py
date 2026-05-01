@@ -1,4 +1,3 @@
-import warnings
 from itertools import chain, tee
 from pathlib import Path
 from typing import Annotated, Any, Callable, Generator, Iterable, Literal
@@ -22,7 +21,7 @@ from chunklet.base_chunker import BaseChunker
 from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
-from chunklet.common.validation import IterableOfStr, IterableOfPath, validate_input
+from chunklet.common.validation import IterableOfPath, IterableOfStr, validate_input
 from chunklet.document_chunker._plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker.converters import (
     html_2_md,
@@ -174,17 +173,21 @@ class DocumentChunker(BaseChunker):
             )
 
         if not path.is_file():
-            raise FileNotFoundError(
-                f"The file '{path}' can't be found.\n"
+            fnf_err = FileNotFoundError(f"The file '{path}' can't be found.")
+            fnf_err.add_note(
                 "💡 Hint: Check the path for typos, ensure the file exists, and verify it's not a directory."
             )
+            raise fnf_err
 
         if extension not in self.supported_extensions:
-            raise UnsupportedFileTypeError(
-                f"File type '{extension}' is not supported.\nSupported extensions are: "
-                f"{self.supported_extensions}\n"
+            unsupported_err = UnsupportedFileTypeError(
+                f"File type '{extension}' is not supported.\n"
+                f"Supported extensions are: {self.supported_extensions}"
+            )
+            unsupported_err.add_note(
                 "💡 Hint: You can add support for other file types by registring a custom processor."
             )
+            raise unsupported_err
 
         return extension
 
@@ -252,7 +255,9 @@ class DocumentChunker(BaseChunker):
 
         return text_content, {"source": str(path)}
 
-    def _prepare_batch_documents(self, paths: Iterable[str | Path], on_errors: str) -> dict:
+    def _prepare_batch_documents(
+        self, paths: Iterable[str | Path], on_errors: str
+    ) -> dict:
         """
         Prepares documents for batch processing by extracting text and metadata from multiple paths.
 
@@ -286,8 +291,8 @@ class DocumentChunker(BaseChunker):
                 path = Path(path)
                 ext = self._validate_and_get_extension(path)
 
-                text_content_or_generator, document_metadata = self._extract_text_and_metadata(
-                    path, ext
+                text_content_or_generator, document_metadata = (
+                    self._extract_text_and_metadata(path, ext)
                 )
                 all_metadata.append(document_metadata)
 
@@ -471,12 +476,15 @@ class DocumentChunker(BaseChunker):
         text_content, document_metadata = self._extract_text_and_metadata(path, ext)
 
         if not isinstance(text_content, str):
-            raise UnsupportedFileTypeError(
+            unsupported_err = UnsupportedFileTypeError(
                 f"File type '{ext}' is not supported by the general chunk method.\n"
                 "Reason: The processor for this file returns iterable, "
-                "so it must be processed in parallel for efficiency.\n"
-                "💡 Hint: use `chunker.chunk_files([file.ext])` for this file type."
+                "so it must be processed in parallel for efficiency."
             )
+            unsupported_err.add_note(
+                f"💡 Hint: use `chunker.chunk_files([file.{ext}])` for this file type."
+            )
+            raise unsupported_err
 
         log_info(self.verbose, "Starting chunk processing for path: {}.", path)
 

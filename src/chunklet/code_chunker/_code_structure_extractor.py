@@ -19,7 +19,6 @@ try:
 except ImportError:  # pragma: no cover
     Node, ET = None, None
 
-from loguru import logger
 
 from chunklet.code_chunker.patterns import (
     ALL_SINGLE_LINE_COMM,
@@ -34,9 +33,8 @@ from chunklet.code_chunker.patterns import (
     NAMESPACE_DECLARATION,
     OPENER,
 )
-from chunklet.common.validation import validate_input
 from chunklet.common.logging_utils import log_info
-
+from chunklet.common.validation import validate_input
 
 CodeLine = namedtuple(
     "CodeLine", ["line_number", "content", "indent_level", "func_partial_signature"]
@@ -316,7 +314,9 @@ class CodeStructureExtractor:
         if not (curr_struct or annotated_lines_buffer):
             return
 
-        candidates = [entry for v in annotated_lines_buffer.values() for entry in v] + curr_struct
+        candidates = [
+            entry for v in annotated_lines_buffer.values() for entry in v
+        ] + curr_struct
         sorted_candidates = sorted(candidates, key=lambda x: x.line_number)
 
         if not sorted_candidates:
@@ -372,13 +372,18 @@ class CodeStructureExtractor:
         indent_level = len(deannotated_line) - len(deannotated_line.lstrip())
         first_metadata = tag == "META" and not annotated_lines_buffer["META"]
         consecutive_docstrings = (
-            annotated_lines_buffer["DOC"] and annotated_lines_buffer["DOC"][-1].line_number == line_no - 1
+            annotated_lines_buffer["DOC"]
+            and annotated_lines_buffer["DOC"][-1].line_number == line_no - 1
         )
 
         if first_metadata or not consecutive_docstrings:
-            self._flush_snippet(state["curr_struct"], state["snippet_dicts"], annotated_lines_buffer)
+            self._flush_snippet(
+                state["curr_struct"], state["snippet_dicts"], annotated_lines_buffer
+            )
 
-        annotated_lines_buffer[tag].append(CodeLine(line_no, deannotated_line, indent_level, None))
+        annotated_lines_buffer[tag].append(
+            CodeLine(line_no, deannotated_line, indent_level, None)
+        )
 
     def _handle_block_start(
         self,
@@ -431,12 +436,16 @@ class CodeStructureExtractor:
             if state["curr_struct"]:
                 if is_python_code:
                     self._flush_snippet(
-                        state["curr_struct"], state["snippet_dicts"], annotated_lines_buffer
+                        state["curr_struct"],
+                        state["snippet_dicts"],
+                        annotated_lines_buffer,
                     )
                 else:
                     doc = annotated_lines_buffer.pop("DOC", [])
                     self._flush_snippet(
-                        state["curr_struct"], state["snippet_dicts"], annotated_lines_buffer
+                        state["curr_struct"],
+                        state["snippet_dicts"],
+                        annotated_lines_buffer,
                     )
                     annotated_lines_buffer.clear()
                     annotated_lines_buffer["doc"] = doc
@@ -536,7 +545,9 @@ class CodeStructureExtractor:
 
         # Append last snippet
         if state["curr_struct"]:
-            self._flush_snippet(state["curr_struct"], state["snippet_dicts"], annotated_lines_buffer)
+            self._flush_snippet(
+                state["curr_struct"], state["snippet_dicts"], annotated_lines_buffer
+            )
 
         snippet_dicts = self._post_processing(state["snippet_dicts"])
         log_info(
