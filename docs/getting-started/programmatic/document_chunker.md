@@ -411,7 +411,7 @@ for i, chunk in enumerate(chunks):
 !!! note "Special Handling for Streaming Processors"
     Some processors work differently due to their streaming nature - they yield content page by page or in blocks rather than all at once. This means they require special care:
 
-    **Streaming processors** (PDF, EPUB, DOCX, ODT): These beauties process content as they go, so they're designed for `chunk_files` method. Using them with `chunk_file` will throw a [`FileProcessingError`](../../exceptions-and-warnings.md#fileprocessingerror) since `chunk_file` expects all content upfront.
+    **Streaming processors** (PDF, EPUB, DOCX, ODT): These beauties process content as they go, so they're designed for `chunk_files` method. Using them with `chunk_file` will throw an [`UnsupportedFileTypeError`](../../exceptions-and-warnings.md#unsupportedfiletypeerror) since `chunk_file` expects all content upfront.
 
     **Regular processors** work fine with both `chunk_file` and `chunk_files` methods.
 

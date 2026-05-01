@@ -3,7 +3,7 @@
 Ready to get Chunklet-py up and running? Fantastic! This guide will walk you through the installation process, making it as smooth as possible.
 
 !!! info "Requirements"
-    Chunklet-py requires **Python 3.10 or newer**. We recommend using Python 3.11+ for the best experience.
+    Chunklet-py requires **Python 3.11 or newer**. We recommend using Python 3.12+ for the best experience.
 
 !!! note "chunklet-py (aka chunklet)"
     The old `chunklet` package is no longer maintained. Use `chunklet-py` to get the latest version.
@@ -17,6 +17,15 @@ The most straightforward method to install Chunklet-py is by using `pip`:
 pip install chunklet-py
 chunklet --version
 ```
+
+!!! tip "Termux (Android)"
+    No rust toolchain on Termux (especially python 3.13)? Install pydantic-core pre-built wheels first then retry installing chunklet-py:
+    
+    ```bash
+    pip install typing-extensions
+    pip install pydantic-core --index-url https://termux-user-repository.github.io/pypi/
+    pip install "pydantic>=2.12.4,<2.13"
+    ```
 
 And that's all there is to it! You're now ready to start using Chunklet-py.
 
@@ -51,7 +60,7 @@ cd chunklet-py
 pip install .[all]
 ```
 
-But why would you want to do that? The easy way is so much easier.
+But why would you want to do that? The pip way is so much easier.
 
 ## Contributing to Chunklet-py
 

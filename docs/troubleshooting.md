@@ -37,6 +37,19 @@ Things break. Here's how to fix them.
     # pool is closed once list is built
     ```
 
+    **Option 3: Use contextlib.closing**
+
+    ```py
+    from contextlib import closing
+
+    with closing(chunker.chunk_files(paths)) as chunks:
+        for chunk in chunks:
+            if some_condition:
+                break
+            print(chunk.content)
+    # pool is closed automatically
+    ```
+
     Simple tradeoff: memory vs peace of mind.
 
 ## Visualizer Showing Old/Cached Stuff
