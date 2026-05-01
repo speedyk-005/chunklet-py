@@ -39,7 +39,7 @@ dependencies = [
   "sentsplit>=1.0.8,<2.0",
 
   # Rust binding (1.0+) for faster performance on supported platforms, legacy for Android.
-  "sentencex>=1.0.0,<2.0; platform_system != 'Android'",
+  "sentencex<=1.0.23; platform_system != 'Android'",
   "sentencex<=0.6.1; platform_system == 'Android'",
 
   "indic-nlp-library>=0.92,<1.0",
@@ -53,7 +53,7 @@ dependencies = [
   "charset-normalizer>=3.4.2,<4.0",
 
   # sentsplit depends on deprecated pkg_resources removed in setuptools 81.0.0
-  "setuptools<81",
+  "setuptools<83",
 ]
 
 [project.optional-dependencies]
