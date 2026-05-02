@@ -120,7 +120,7 @@ class PlainTextChunker:
         """
         chunks_out = []
         for i, chunk_str in enumerate(chunks, start=1):
-            chunk = DotDict()
+            chunk = DotDict({})
             chunk.content = chunk_str.strip()
             chunk.metadata = copy.deepcopy(base_metadata)
             chunk.metadata["chunk_num"] = i
