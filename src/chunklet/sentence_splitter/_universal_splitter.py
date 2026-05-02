@@ -36,6 +36,11 @@ class UniversalSplitter:
         self.numbered_list_pattern = re.compile(r"[\n:]\s*\p{N}\.")
 
         # Core sentence split regex
+        # NOTE: Acronyms like "U.S.A" are protected primarily by the lookahead (?=\s+...).
+        # Since "U.S.A," has no space after it (just punctuation), the lookahead fails
+        # and no split occurs. The negative lookbehind handles other abbreviations like "Dr."
+        # This means acronym protection is *not* dependent on masking—it's explicit in the
+        # lookahead requirement for whitespace or newline before the next uppercase letter.
         self.sentence_end_pattern = re.compile(
             rf"""
             (?<!\b(\p{{Lu}}\p{{Ll}}{{1, 4}}\.)*)   # Latin-only abbreviation
