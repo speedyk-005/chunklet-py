@@ -607,7 +607,7 @@ class DocumentChunker(BaseChunker):
             sections_per_path[curr_path] -= 1
 
     @deprecated_callable(
-        use_instead="chunk_file", deprecated_in="2.2.0", removed_in="3.0.0"
+        use_instead="chunk_file or chunk_text", deprecated_in="2.2.0", removed_in="3.0.0"
     )
     def chunk(  # pragma: no cover
         self,
@@ -632,7 +632,7 @@ class DocumentChunker(BaseChunker):
         return self.chunk_file(**params)
 
     @deprecated_callable(
-        use_instead="chunk_files", deprecated_in="2.2.0", removed_in="3.0.0"
+        use_instead="chunk_files or chunk_texts", deprecated_in="2.2.0", removed_in="3.0.0"
     )
     def batch_chunk(  # pragma: no cover
         self,
