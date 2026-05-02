@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.3.1] - Unreleased
+
+### Fixed
+- **Dependencies**: Fixed `sentencex` platform markers for Android detection (`sys_platform` + `platform_machine`). ARM Linux devices (Raspberry Pi, etc.) also get legacy `sentencex<=0.6.1` without Rust bindings as a side effect (temporary).
+
+---
+
 ## [2.3.0] - Unreleased
 
 ### Added

@@ -4,13 +4,16 @@ requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
     "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.14' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "(python_full_version >= '3.14' and platform_machine == 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.14' and platform_machine == 'armv7l' and sys_platform == 'linux')",
+    "(python_full_version >= '3.14' and platform_machine != 'aarch64' and platform_machine != 'armv7l' and sys_platform == 'linux') or (python_full_version >= '3.14' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'win32'",
     "python_full_version < '3.12' and sys_platform == 'win32'",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
     "python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version < '3.12' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "(python_full_version >= '3.12' and python_full_version < '3.14' and platform_machine == 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.12' and python_full_version < '3.14' and platform_machine == 'armv7l' and sys_platform == 'linux')",
+    "(python_full_version >= '3.12' and python_full_version < '3.14' and platform_machine != 'aarch64' and platform_machine != 'armv7l' and sys_platform == 'linux') or (python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "(python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.12' and platform_machine == 'armv7l' and sys_platform == 'linux')",
+    "(python_full_version < '3.12' and platform_machine != 'aarch64' and platform_machine != 'armv7l' and sys_platform == 'linux') or (python_full_version < '3.12' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
     "python_full_version >= '3.14' and sys_platform == 'android'",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'android'",
     "python_full_version < '3.12' and sys_platform == 'android'",
@@ -279,7 +282,7 @@ wheels = [
 
 [[package]]
 name = "chunklet-py"
-version = "2.3.0"
+version = "2.3.1"
 source = { editable = "." }
 dependencies = [
     { name = "charset-normalizer" },
@@ -292,8 +295,8 @@ dependencies = [
     { name = "pydantic" },
     { name = "pysbd" },
     { name = "regex" },
-    { name = "sentencex", version = "0.6.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'android'" },
-    { name = "sentencex", version = "1.0.20", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'android'" },
+    { name = "sentencex", version = "0.6.1", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'armv7l' and sys_platform == 'linux')" },
+    { name = "sentencex", version = "1.0.20", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine != 'aarch64' and platform_machine != 'armv7l') or sys_platform != 'linux'" },
     { name = "sentsplit" },
     { name = "setuptools" },
     { name = "typer" },
@@ -450,8 +453,8 @@ requires-dist = [
     { name = "python-multipart", marker = "extra == 'visualization'", specifier = ">=0.0.20,<1.0" },
     { name = "regex", specifier = ">=2025.7.29" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.14.14" },
-    { name = "sentencex", marker = "sys_platform != 'android'", specifier = ">=1.0.0,<2.0" },
-    { name = "sentencex", marker = "sys_platform == 'android'", specifier = "<=0.6.1" },
+    { name = "sentencex", marker = "(platform_machine != 'aarch64' and platform_machine != 'armv7l') or sys_platform != 'linux'", specifier = ">=1.0.0,<2.0" },
+    { name = "sentencex", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'armv7l' and sys_platform == 'linux')", specifier = "<=0.6.1" },
     { name = "sentsplit", specifier = ">=1.0.8,<2.0" },
     { name = "setuptools", specifier = "<81" },
     { name = "striprtf", marker = "extra == 'structured-document'", specifier = ">=0.0.29,<1.0" },
@@ -2087,9 +2090,9 @@ name = "sentencex"
 version = "0.6.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.14' and sys_platform == 'android'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'android'",
-    "python_full_version < '3.12' and sys_platform == 'android'",
+    "(python_full_version >= '3.14' and platform_machine == 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.14' and platform_machine == 'armv7l' and sys_platform == 'linux')",
+    "(python_full_version >= '3.12' and python_full_version < '3.14' and platform_machine == 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.12' and python_full_version < '3.14' and platform_machine == 'armv7l' and sys_platform == 'linux')",
+    "(python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.12' and platform_machine == 'armv7l' and sys_platform == 'linux')",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b3/d5/b18a15aba0ea95e7745ddf87ecab4ed87b5f1ad8cc6f63d1219dcc03d9c1/sentencex-0.6.1.tar.gz", hash = "sha256:4765ece009760f63d0f8c3c2aef08f573880e5d0dc4a5fce60f62219d1ab42cb", size = 68960, upload-time = "2023-11-14T06:58:58.65Z" }
 wheels = [
@@ -2103,13 +2106,16 @@ source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
     "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.14' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "(python_full_version >= '3.14' and platform_machine != 'aarch64' and platform_machine != 'armv7l' and sys_platform == 'linux') or (python_full_version >= '3.14' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'win32'",
     "python_full_version < '3.12' and sys_platform == 'win32'",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
     "python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version < '3.12' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "(python_full_version >= '3.12' and python_full_version < '3.14' and platform_machine != 'aarch64' and platform_machine != 'armv7l' and sys_platform == 'linux') or (python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "(python_full_version < '3.12' and platform_machine != 'aarch64' and platform_machine != 'armv7l' and sys_platform == 'linux') or (python_full_version < '3.12' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version >= '3.14' and sys_platform == 'android'",
+    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'android'",
+    "python_full_version < '3.12' and sys_platform == 'android'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/5d/68/e440cae2503596de0a4965698a63c367ed3ab2c46c98399dc624c2378604/sentencex-1.0.20.tar.gz", hash = "sha256:ddac1febfdaeb060fc1e71cec18904fb7ce2041ee7a9f57f782c333594c7c7e4", size = 174124, upload-time = "2026-04-10T07:18:33.073Z" }
 wheels = [
@@ -2208,7 +2214,8 @@ source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version < '3.12' and sys_platform == 'win32'",
     "python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.12' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "(python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.12' and platform_machine == 'armv7l' and sys_platform == 'linux')",
+    "(python_full_version < '3.12' and platform_machine != 'aarch64' and platform_machine != 'armv7l' and sys_platform == 'linux') or (python_full_version < '3.12' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
     "python_full_version < '3.12' and sys_platform == 'android'",
 ]
 dependencies = [
@@ -2242,10 +2249,12 @@ source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
     "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.14' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "(python_full_version >= '3.14' and platform_machine == 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.14' and platform_machine == 'armv7l' and sys_platform == 'linux')",
+    "(python_full_version >= '3.14' and platform_machine != 'aarch64' and platform_machine != 'armv7l' and sys_platform == 'linux') or (python_full_version >= '3.14' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'win32'",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "(python_full_version >= '3.12' and python_full_version < '3.14' and platform_machine == 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.12' and python_full_version < '3.14' and platform_machine == 'armv7l' and sys_platform == 'linux')",
+    "(python_full_version >= '3.12' and python_full_version < '3.14' and platform_machine != 'aarch64' and platform_machine != 'armv7l' and sys_platform == 'linux') or (python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'android' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
     "python_full_version >= '3.14' and sys_platform == 'android'",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'android'",
 ]

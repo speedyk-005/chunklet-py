@@ -3,6 +3,14 @@
 
 ---
 
+## Chunklet v2.3.1
+
+### 🤖 Android Detection, Fixed (Kinda)
+
+v2.3.0 shipped with `platform_system` markers to detect Android. The problem? Android reports as `'Linux'`, not `'Android'` — so literally nobody was getting the right `sentencex` version. Fixed now with `sys_platform` + `platform_machine` markers. Downside: ARM Linux (Raspberry Pi, etc.) also gets the legacy `sentencex<=0.6.1` without Rust bindings. Temporary, we swear.
+
+---
+
 ## Chunklet v2.3.0
 
 ### 🧩 Smarter Sentence Splitting
