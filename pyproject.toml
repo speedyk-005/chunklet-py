@@ -156,9 +156,8 @@ filterwarnings = [
 
 # disable coverage report to prevent racing with multiprocessing
 # addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --durations=10"
-addopts = "--timeout=60"
-
-testpaths = ["tests"]
+addopts = "--doctest-modules --timeout=60"
+testpaths = ["tests", "src/chunklet/common/dotdict.py"]
 python_files = "test_*.py"
 
 [tool.coverage.run]

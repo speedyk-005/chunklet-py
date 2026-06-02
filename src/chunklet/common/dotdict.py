@@ -15,6 +15,40 @@ import json
 
 
 class DotDict(dict):
+    """A dict subclass with dot-notation access and automatic nested conversion.
+
+    Basic usage::
+
+        >>> d = DotDict({"name": "John", "age": 30})
+        >>> d.name
+        'John'
+        >>> d.age
+        30
+
+    Nested dicts auto-convert::
+
+        >>> d = DotDict({"user": {"name": "Bob", "age": 25}})
+        >>> d.user.name
+        'Bob'
+        >>> d.user.age
+        25
+
+    Lists auto-convert to DotList::
+
+        >>> d = DotDict({"users": [{"name": "Alice"}, {"name": "Bob"}]})
+        >>> d.users[0].name
+        'Alice'
+        >>> isinstance(d.users, DotList)
+        True
+
+    Dot notation assignment::
+
+        >>> d = DotDict()
+        >>> d.name = "Alice"
+        >>> d.name
+        'Alice'
+    """
+
     def __init__(self, data=None):
         if data is not None:
             for key, value in data.items():
@@ -29,9 +63,20 @@ class DotDict(dict):
     __setattr__ = __setitem__
 
     def to_dict(self):
+        """Recursively convert back to a plain dict.
+
+        >>> d = DotDict({"a": {"b": 1}, "c": [{"d": 2}]})
+        >>> d.to_dict()
+        {'a': {'b': 1}, 'c': [{'d': 2}]}
+        """
         return {k: _to_plain(v) for k, v in self.items()}
 
     def to_json(self, filename=None, **kwargs):
+        """Serialize to a JSON string, or write to a file if *filename* is given.
+
+        >>> DotDict({"content": "Hello", "count": 3}).to_json()
+        '{"content": "Hello", "count": 3}'
+        """
         if filename:
             with open(filename, "w", encoding="utf-8") as f:
                 json.dump(self.to_dict(), f, ensure_ascii=False, **kwargs)
@@ -61,6 +106,13 @@ class DotDict(dict):
             return toml.dumps(self.to_dict())
 
     def to_msgpack(self, filename=None, **kwargs):
+        """Serialize to MessagePack bytes, or write to a file if *filename* is given.
+
+        >>> import msgpack
+        >>> d = DotDict({"a": 1, "b": [2, 3]})
+        >>> msgpack.unpackb(d.to_msgpack())
+        {'a': 1, 'b': [2, 3]}
+        """
         try:
             import msgpack
         except ImportError:
@@ -73,6 +125,15 @@ class DotDict(dict):
 
 
 class DotList(list):
+    """A list subclass with automatic nested dict/list conversion.
+
+    >>> l = DotList([{"a": 1}, {"b": 2}])
+    >>> l[0].a
+    1
+    >>> l[1].b
+    2
+    """
+
     def __init__(self, items=None):
         if items is not None:
             for item in items:
@@ -85,6 +146,11 @@ class DotList(list):
         return super().insert(index, _convert(items))
 
     def to_dict(self):
+        """Recursively convert back to a plain list.
+
+        >>> DotList([DotDict({"a": 1}), DotDict({"b": 2})]).to_dict()
+        [{'a': 1}, {'b': 2}]
+        """
         return [_to_plain(v) for v in self]
 
 
