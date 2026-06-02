@@ -1,6 +1,6 @@
 [project]
 name = "chunklet-py"
-version = "2.3.1"
+version = "2.3.2"
 description = "High-fidelity context-aware chunking and interactive visualization for RAG. Advanced segmentation for code and documents, because your LLM is only as smart as the fragments you feed it."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }

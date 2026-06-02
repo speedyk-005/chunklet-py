@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.3.2] - Unreleased
+## [2.3.2] - 2026-06-02
 
 ### Added
 - **DotDict Serialization**: Vendored `dotdict3` as `chunklet.common.dotdict` with Box-compatible `to_dict()`, `to_json()`, `to_yaml()`, `to_toml()`, and `to_msgpack()` methods. Fixes `.to_dict()` crash in CLI (`#40`).
