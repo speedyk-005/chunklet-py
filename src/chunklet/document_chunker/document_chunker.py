@@ -3,7 +3,7 @@ from itertools import chain, tee
 from pathlib import Path
 from typing import Annotated, Any, Callable, Generator, Iterable, Literal
 
-from dotdict3 import DotDict
+from chunklet.common.dotdict import DotDict
 from loguru import logger
 from more_itertools import ilen, split_at
 from pydantic import Field

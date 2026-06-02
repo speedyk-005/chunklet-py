@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from functools import partial
 from typing import Annotated, Any, Callable, Generator, Literal
 
-from dotdict3 import DotDict
+from chunklet.common.dotdict import DotDict
 from loguru import logger
 from pydantic import Field
 

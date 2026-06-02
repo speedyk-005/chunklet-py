@@ -29,7 +29,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Annotated, Any, Callable, Generator, Literal
 
-from dotdict3 import DotDict
+from chunklet.common.dotdict import DotDict
 from more_itertools import unique_everseen
 from pydantic import Field
 

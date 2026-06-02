@@ -286,7 +286,6 @@ version = "2.3.1"
 source = { editable = "." }
 dependencies = [
     { name = "charset-normalizer" },
-    { name = "dotdict3" },
     { name = "indic-nlp-library" },
     { name = "loguru" },
     { name = "more-itertools" },
@@ -422,7 +421,6 @@ requires-dist = [
     { name = "chunklet-py", extras = ["visualization"], marker = "extra == 'viz'" },
     { name = "defusedxml", marker = "extra == 'code'", specifier = ">=0.7.1,<1.0" },
     { name = "docutils", marker = "extra == 'structured-document'", specifier = ">=0.21.2,<1.0" },
-    { name = "dotdict3", specifier = ">=1.1.0,<2.0" },
     { name = "ebooklib", marker = "extra == 'structured-document'", specifier = ">=0.19,<1.0" },
     { name = "fastapi", marker = "extra == 'visualization'", specifier = ">=0.116.0,<1.0" },
     { name = "indic-nlp-library", specifier = ">=0.92,<1.0" },
@@ -673,15 +671,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/ae/b6/03bb70946330e88ffec97aefd3ea75ba575cb2e762061e0e62a213befee8/docutils-0.22.4.tar.gz", hash = "sha256:4db53b1fde9abecbb74d91230d32ab626d94f6badfc575d6db9194a49df29968", size = 2291750, upload-time = "2025-12-18T19:00:26.443Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/02/10/5da547df7a391dcde17f59520a231527b8571e6f46fc8efb02ccb370ab12/docutils-0.22.4-py3-none-any.whl", hash = "sha256:d0013f540772d1420576855455d050a2180186c91c15779301ac2ccb3eeb68de", size = 633196, upload-time = "2025-12-18T19:00:18.077Z" },
-]
-
-[[package]]
-name = "dotdict3"
-version = "1.4.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/cc/71/8c73213b8756b2b43b4a66fb02f960444c05270a4a5b8945c70beca6f662/dotdict3-1.4.2.tar.gz", hash = "sha256:69eddb61917f6eaeb716f587fc76bed8fa8e9048047242677bc976bdc778197d", size = 7100, upload-time = "2026-03-18T19:37:57.534Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fb/3e/4be6af44b2e93153d53c750a82a473ab8d9ef54c068071304a16be19ddfa/dotdict3-1.4.2-py3-none-any.whl", hash = "sha256:21dc1432a9d5625df531b2e87af4120fb040df1fb6a88d77835bb677cf0bb1ea", size = 5718, upload-time = "2026-03-18T19:37:58.457Z" },
 ]
 
 [[package]]
