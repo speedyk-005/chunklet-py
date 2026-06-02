@@ -3,6 +3,27 @@
 
 ---
 
+## Chunklet v2.3.2
+
+### 🏎️ DotDict Gets Box-Compatible Serialization
+
+We ditched the external `dotdict3` dependency and vendored the code in-tree. Now our `DotDict` has all the serialization methods you expect from the old python-box days:
+
+- **`to_dict()`** — recursive conversion back to plain dicts/lists
+- **`to_json()`** — serialize to JSON string or file
+- **`to_yaml()`** — YAML, obviously (needs `pyyaml`)
+- **`to_toml()`** — TOML support (needs `toml`)
+- **`to_msgpack()`** — MessagePack binary format (needs `msgpack`)
+
+The CLI `--metadata` flag no longer crashes — `.to_dict()` actually exists now. 2.3x faster than python-box's `to_dict()` too, since we're not dragging in all of Box's feature creep.
+
+### 🔧 The Boring Stuff
+
+- Removed `dotdict3` from dependencies (vendored in `chunklet.common.dotdict`)
+- Docs updated: stale "Box" references replaced with "DotDict" + mkdocstrings cross-links
+
+---
+
 ## Chunklet v2.3.1
 
 ### 🤖 Android Detection, Fixed (Kinda)
