@@ -2,7 +2,7 @@
 
 Ever wondered where your chunks come from and what makes them tick? 🤔 Chunklet-py's metadata system tells the whole story! Each chunk comes with rich contextual information about its origin, location, and characteristics. Think of metadata as your chunk's detailed biography - the who, what, when, and where of your text.
 
-Every chunk is wrapped in a handy [`Box`](https://pypi.org/project/python-box/#:~:text=Overview,strings%_or_files.) object with a `metadata` attribute. This metadata dictionary is your treasure trove of chunk insights. Access it easily with dot notation (`chunk.metadata`) or dictionary-style (`chunk["metadata"]`) - your choice!
+Every chunk is wrapped in a handy [`DotDict`][chunklet.common.dotdict.DotDict] object with a `metadata` attribute. This metadata dictionary is your treasure trove of chunk insights. Access it easily with dot notation (`chunk.metadata`) or dictionary-style (`chunk["metadata"]`) - your choice!
 
 ## Common Metadata: The Essentials 📋 {#common-metadata}
 
@@ -53,7 +53,7 @@ The `CodeChunker` provides code-specific insights beyond basic metadata. It help
 *   **`start_line`** (int): Line number where this chunk begins in the original file
 *   **`end_line`** (int): Line number where this chunk ends in the original file
 
-Automatically included in every `Box` object when chunking code, helping you understand which functions, classes, or code blocks are in each chunk.
+Automatically included in every [`DotDict`][chunklet.common.dotdict.DotDict] object when chunking code, helping you understand which functions, classes, or code blocks are in each chunk.
 
 ## CLI Metadata Output: Command Line Insights 🖥️
 

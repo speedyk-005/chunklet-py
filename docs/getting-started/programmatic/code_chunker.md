@@ -46,7 +46,7 @@ The `CodeChunker` comes packed with smart features for your coding adventures:
     You must specify at least one limit (`max_tokens`, `max_lines`, or `max_functions`) when using `chunk_text`, `chunk_file`, `chunk_texts`, or `chunk_files`. Skip this and you'll get an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror) - rules are rules!
 
 
-The `CodeChunker` has four main methods: `chunk_text`, `chunk_file`, `chunk_texts`, and `chunk_files`. `chunk_text` and `chunk_file` return a list of [`Box`](https://pypi.org/project/python-box/) objects, while `chunk_texts` and `chunk_files` are memory-friendly generators that yield chunks one by one. Each `Box` has `content` (str) and `metadata` (dict). For metadata details, see the [Metadata guide](../metadata.md#codechunker-metadata).
+The `CodeChunker` has four main methods: `chunk_text`, `chunk_file`, `chunk_texts`, and `chunk_files`. `chunk_text` and `chunk_file` return a list of [`DotDict`][chunklet.common.dotdict.DotDict] objects, while `chunk_texts` and `chunk_files` are memory-friendly generators that yield chunks one by one. Each `DotDict` has `content` (str) and `metadata` (dict). For metadata details, see the [Metadata guide](../metadata.md#codechunker-metadata).
 
 ## Single Run: 
 

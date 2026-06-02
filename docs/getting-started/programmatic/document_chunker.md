@@ -56,7 +56,7 @@ The `DocumentChunker` comes packed with smart features that make it your go-to t
 !!! note "Quick Note: Constraints Required!"
     You must specify at least one limit (`max_sentences`, `max_tokens`, or `max_section_breaks`) when using chunking methods. Forget to add one? You'll get an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror)!
 
-The `DocumentChunker` has four main methods: `chunk_text`, `chunk_file`, `chunk_texts`, and `chunk_files`. `chunk_text` and `chunk_file` return a list of [`Box`](https://pypi.org/project/python-box/) objects, while `chunk_texts` and `chunk_files` are memory-friendly generators that yield chunks one by one. Each `Box` has `content` (the actual text) and `metadata` (all the juicy details). Check the [Metadata guide](../metadata.md#documentchunker-metadata) for the full scoop!
+The `DocumentChunker` has four main methods: `chunk_text`, `chunk_file`, `chunk_texts`, and `chunk_files`. `chunk_text` and `chunk_file` return a list of [`DotDict`][chunklet.common.dotdict.DotDict] objects, while `chunk_texts` and `chunk_files` are memory-friendly generators that yield chunks one by one. Each `DotDict` has `content` (the actual text) and `metadata` (all the juicy details). Check the [Metadata guide](../metadata.md#documentchunker-metadata) for the full scoop!
 
 
 ## Single: Chunk One Text! 📝
