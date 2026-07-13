@@ -52,7 +52,7 @@ dependencies = [
   "charset-normalizer>=3.4.2,<4.0",
 
   # sentsplit depends on deprecated pkg_resources removed in setuptools 81.0.0
-  "setuptools<81",
+  "setuptools<84",
 ]
 
 [project.optional-dependencies]
