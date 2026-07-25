@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.4.0] - Unreleased
+
+### Changed
+- **Sentence splitting**: Replaced `pysbd` and `sentsplit` with `yasbd-lib` — our own from-scratch SBD library. 39 built-in languages vs pysbd's 23, ~8× faster, higher accuracy. Total supported languages went from 53 to 62.
+- **Dependencies**: Removed `pysbd` and `sentsplit`; added `yasbd-lib>=0.12.0,<2.0`.
+
+---
+
 ## [2.3.2] - 2026-06-02
 
 ### Added
