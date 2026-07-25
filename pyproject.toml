@@ -49,9 +49,6 @@ dependencies = [
   "pydantic>=2.11.0,<3.0",
   "typer>=0.19.0,<1.0",
   "charset-normalizer>=3.4.2,<4.0",
-
-  # sentsplit depends on deprecated pkg_resources removed in setuptools 81.0.0
-  "setuptools<81",
 ]
 
 [project.optional-dependencies]
@@ -150,7 +147,6 @@ chunklet = ["visualizer/static/**/*"]
 minversion = "7.4"
 filterwarnings = [
     "ignore::DeprecationWarning:websockets.*",
-    "ignore::DeprecationWarning:pkg_resources.*",
 ]
 
 # disable coverage report to prevent racing with multiprocessing
@@ -166,7 +162,6 @@ omit = [
     "src/chunklet/base_chunker.py",
     "src/chunklet/**/__init__.py",
 ]
-
 
 [tool.ruff]
 target-version = "py310"
@@ -190,9 +185,6 @@ ignore = ["E501", "E203"]
 
 # Ignore warnings about File(...)
 "src/chunklet/visualizer/visualizer.py" = ["B008"]
-
-# Ignore E402 - warnings.filterwarnings() must be called before imports to suppress pkg_resources
-"src/chunklet/sentence_splitter/sentence_splitter.py" = ["E402"]
 
 [tool.ruff.format]
 # Replaces Black exclude logic

@@ -1,8 +1,4 @@
 import warnings
-
-# Suppress pkg_resources deprecation warnings from third-party libraries
-warnings.filterwarnings("ignore", message=".*pkg_resources.*", category=UserWarning)
-
 from os import getenv
 from pathlib import Path
 from typing import Callable
