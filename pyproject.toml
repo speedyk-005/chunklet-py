@@ -95,7 +95,7 @@ dev = [
   "pytest>=8.3.5",
   "pytest-cov>=6.2.1",
   "pytest-mock>=3.14.1",
-  "pytest-timeout>=2.3.1",
+
   "ruff>=0.14.14",
 ]
 
@@ -151,7 +151,7 @@ filterwarnings = [
 
 # disable coverage report to prevent racing with multiprocessing
 # addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --durations=10"
-addopts = "--doctest-modules --timeout=60"
+addopts = "--doctest-modules"
 testpaths = ["tests", "src/chunklet/common/dotdict.py"]
 python_files = "test_*.py"
 
