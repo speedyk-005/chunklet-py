@@ -1,8 +1,4 @@
 import warnings
-
-# Suppress pkg_resources deprecation warnings from third-party libraries
-warnings.filterwarnings("ignore", message=".*pkg_resources.*", category=UserWarning)
-
 from os import getenv
 from pathlib import Path
 from typing import Callable
@@ -20,9 +16,8 @@ from chunklet.common.validation import validate_input
 from chunklet.sentence_splitter._universal_splitter import UniversalSplitter
 from chunklet.sentence_splitter.languages import (
     INDIC_NLP_UNIQUE_LANGUAGES,
-    PYSBD_SUPPORTED_LANGUAGES,
     SENTENCEX_UNIQUE_LANGUAGES,
-    SENTSPLIT_UNIQUE_LANGUAGES,
+    YASBD_SUPPORTED_LANGUAGES,
 )
 from chunklet.sentence_splitter.registry import custom_splitter_registry
 
@@ -125,15 +120,10 @@ class SentenceSplitter(BaseSplitter):
             A callable that takes text (str) and returns list[str], or None if no
             special handler exists for the language.
         """
-        if lang in PYSBD_SUPPORTED_LANGUAGES:
-            from pysbd import Segmenter
-            log_info(verbose, "Using pysbd")
-            return Segmenter(lang).segment
-
-        elif lang in SENTSPLIT_UNIQUE_LANGUAGES:
-            from sentsplit.segment import SentSplit
-            log_info(verbose, "Using sentsplit")
-            return SentSplit(lang).segment
+        if lang in YASBD_SUPPORTED_LANGUAGES:
+            from yasbd.boundary_detector import BoundaryDetector
+            log_info(verbose, "Using yasbd")
+            return BoundaryDetector(lang=lang).segment
 
         elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
             from indicnlp.tokenize import sentence_tokenize

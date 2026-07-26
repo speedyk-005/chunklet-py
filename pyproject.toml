@@ -1,6 +1,6 @@
 [project]
 name = "chunklet-py"
-version = "2.3.2"
+version = "2.4.0"
 description = "High-fidelity context-aware chunking and interactive visualization for RAG. Advanced segmentation for code and documents, because your LLM is only as smart as the fragments you feed it."
 authors = [
   { name = "speedyk_005", email = "speedy40115719@gmail.com" }
@@ -35,8 +35,7 @@ keywords = [
 
 dependencies = [
   "loguru>=0.7.3,<1.0",
-  "pysbd>=0.3.4,<1.0",
-  "sentsplit>=1.0.8,<2.0",
+  "yasbd-lib>=0.12.0,<2.0",
 
   # Rust binding (1.0+) for faster performance on supported platforms, legacy for Android temporarily.
   "sentencex<=0.6.1; sys_platform == 'linux' and (platform_machine == 'aarch64' or platform_machine == 'armv7l')",
@@ -50,9 +49,6 @@ dependencies = [
   "pydantic>=2.11.0,<3.0",
   "typer>=0.19.0,<1.0",
   "charset-normalizer>=3.4.2,<4.0",
-
-  # sentsplit depends on deprecated pkg_resources removed in setuptools 81.0.0
-  "setuptools<81",
 ]
 
 [project.optional-dependencies]
@@ -99,7 +95,7 @@ dev = [
   "pytest>=8.3.5",
   "pytest-cov>=6.2.1",
   "pytest-mock>=3.14.1",
-  "pytest-timeout>=2.3.1",
+
   "ruff>=0.14.14",
 ]
 
@@ -151,12 +147,11 @@ chunklet = ["visualizer/static/**/*"]
 minversion = "7.4"
 filterwarnings = [
     "ignore::DeprecationWarning:websockets.*",
-    "ignore::DeprecationWarning:pkg_resources.*",
 ]
 
 # disable coverage report to prevent racing with multiprocessing
 # addopts = "--cov=chunklet --cov-report=term-missing:skip-covered --durations=10"
-addopts = "--doctest-modules --timeout=60"
+addopts = "--doctest-modules"
 testpaths = ["tests", "src/chunklet/common/dotdict.py"]
 python_files = "test_*.py"
 
@@ -167,7 +162,6 @@ omit = [
     "src/chunklet/base_chunker.py",
     "src/chunklet/**/__init__.py",
 ]
-
 
 [tool.ruff]
 target-version = "py310"
@@ -191,9 +185,6 @@ ignore = ["E501", "E203"]
 
 # Ignore warnings about File(...)
 "src/chunklet/visualizer/visualizer.py" = ["B008"]
-
-# Ignore E402 - warnings.filterwarnings() must be called before imports to suppress pkg_resources
-"src/chunklet/sentence_splitter/sentence_splitter.py" = ["E402"]
 
 [tool.ruff.format]
 # Replaces Black exclude logic

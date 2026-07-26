@@ -89,7 +89,7 @@ The language is set to `auto`. Consider setting `lang` explicitly.
 Using universal rule-based splitter. Language not supported or detected with low confidence.
 ```
 
-**What it means:** No specialized splitter for your language exists in pysbd. We're using the generic regex fallback instead. Some languages have complex punctuation rules that the specialized splitters handle — the fallback is a one-size-fits-all that works okay but isn't great for anything.
+**What it means:** No specialized splitter for your language exists in yasbd or the other backends. We're using the generic regex fallback instead. Some languages have complex punctuation rules that the specialized splitters handle — the fallback is a one-size-fits-all that works okay but isn't great for anything.
 
 **Fix:** Either provide a [custom splitter](./getting-started/programmatic/sentence_splitter.md#custom-sentence-splitter), or don't worry — the fallback is decent enough.
 

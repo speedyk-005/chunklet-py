@@ -2,7 +2,7 @@
 
 So you want to know if Chunklet-py speaks your language? Short answer: probably yes. Long answer: keep reading!
 
-I've built Chunklet-py to be quite the polyglot. Thanks to some fantastic third-party libraries, it can handle over **50** languages out of the box. And if your language isn't on the list? Don't sweat it — I've got a fallback splitter that's like that friend who kind of understands every language at the party.
+I've built Chunklet-py to be quite the polyglot. Thanks to **yasbd** (our own from-scratch SBD library) plus the Indic NLP Library and Sentencex, it can handle **62** languages out of the box. And if your language isn't on the list? Don't sweat it, the fallback splitter's got you covered. Think of it as that friend who kind of understands every language at the party.
 
 We use [ISO 639-1](https://en.wikipedia.org/wiki/ISO_639-1) codes (those handy two-letter shortcuts like `en`, `fr`, `es`). Check out Wikipedia's [full list](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes) if you're hunting for a specific code.
 
@@ -16,46 +16,51 @@ And if it's not? No worries — the [Fallback Splitter](#the-universal-translato
 
 Let me introduce you to the libraries making this magic happen:
 
-### The Headliner: `pysbd`
+### The Headliner: `yasbd`
 
-This is our workhorse. `pysbd` (Python Sentence Boundary Detection) is incredibly good at figuring out where sentences end — even in tricky situations. It's the reason we can handle 40+ languages without making a mess of your text.
+This is our workhorse. **yasbd** (Yet Another Sentence Boundary Detector) is our own from-scratch library. Read about why we built it and how it compares to pysbd here: [yasbd-lib vs pysbd: Two Philosophies of Sentence Boundary Detection](https://dev.to/speed_k_7e1b449706e59e433/yasbd-lib-vs-pysbd-two-philosophies-of-sentence-boundary-detection-i88)
 
 | Language Code | Language Name | Flag |
 |:--------------|:--------------|:----:|
-| en            | English       | 🇬🇧 |
-| mr            | Marathi       | 🇮🇳 |
-| hi            | Hindi         | 🇮🇳 |
-| bg            | Bulgarian     | 🇧🇬 |
-| es            | Spanish       | 🇪🇸 |
-| ru            | Russian       | 🇷🇺 |
-| ar            | Arabic        | 🇸🇦 |
+| af            | Afrikaans     | 🇿🇦 |
 | am            | Amharic       | 🇪🇹 |
-| hy            | Armenian      | 🇦🇲 |
-| fa            | Persian (Farsi)| 🇮🇷 |
-| ur            | Urdu          | 🇵🇰 |
-| pl            | Polish        | 🇵🇱 |
-| zh            | Chinese (Mandarin)| 🇨🇳 |
-| nl            | Dutch         | 🇳🇱 |
+| ar            | Arabic        | 🇸🇦 |
+| bg            | Bulgarian     | 🇧🇬 |
+| bn            | Bengali       | 🇧🇩 |
+| cs            | Czech         | 🇨🇿 |
 | da            | Danish        | 🇩🇰 |
-| fr            | French        | 🇫🇷 |
-| it            | Italian       | 🇮🇹 |
-| el            | Greek         | 🇬🇷 |
-| my            | Burmese (Myanmar)| 🇲🇲 |
-| ja            | Japanese      | 🇯🇵 |
 | de            | German        | 🇩🇪 |
+| el            | Greek         | 🇬🇷 |
+| en            | English       | 🇬🇧 |
+| es            | Spanish       | 🇪🇸 |
+| fa            | Persian (Farsi)| 🇮🇷 |
+| fr            | French        | 🇫🇷 |
+| hi            | Hindi         | 🇮🇳 |
+| ht            | Haitian Creole| 🇭🇹 |
+| hy            | Armenian      | 🇦🇲 |
+| id            | Indonesian    | 🇮🇩 |
+| it            | Italian       | 🇮🇹 |
+| ja            | Japanese      | 🇯🇵 |
 | kk            | Kazakh        | 🇰🇿 |
-| sk            | Slovak        | 🇸🇰 |
-
-### Special Guest: `sentsplit`
-
-A few more languages needed a home, so `sentsplit` stepped in. Think of these as the opening act — still great, just a smaller crowd.
-
-| Language Code | Language Name | Flag |
-|:--------------|:--------------|:----:|
 | ko            | Korean        | 🇰🇷 |
 | lt            | Lithuanian    | 🇱🇹 |
+| ml            | Malayalam     | 🇮🇳 |
+| mr            | Marathi       | 🇮🇳 |
+| my            | Burmese (Myanmar)| 🇲🇲 |
+| nl            | Dutch         | 🇳🇱 |
+| pl            | Polish        | 🇵🇱 |
 | pt            | Portuguese    | 🇵🇹 |
+| ro            | Romanian      | 🇷🇴 |
+| ru            | Russian       | 🇷🇺 |
+| sk            | Slovak        | 🇸🇰 |
+| sv            | Swedish       | 🇸🇪 |
+| sw            | Swahili       | 🇹🇿 |
+| th            | Thai          | 🇹🇭 |
 | tr            | Turkish       | 🇹🇷 |
+| uk            | Ukrainian     | 🇺🇦 |
+| ur            | Urdu          | 🇵🇰 |
+| vi            | Vietnamese    | 🇻🇳 |
+| zh            | Chinese (Mandarin)| 🇨🇳 |
 
 ### The Indian Subcontinent Squad: `Indic NLP Library`
 
@@ -89,7 +94,6 @@ The [`Indic NLP Library`](https://github.com/anoopkunchukuttan/indic_nlp_library
 | an            | Aragonese     | 🇪🇸 |
 | ca            | Catalan       | 🇪🇸 |
 | co            | Corsican      | 🇫🇷 |
-| cs            | Czech         | 🇨🇿 |
 | fi            | Finnish       | 🇫🇮 |
 | gl            | Galician      | 🇪🇸 |
 | io            | Ido           | 🏳️ |

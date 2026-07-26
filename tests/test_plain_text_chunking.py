@@ -95,7 +95,8 @@ def test_constraint_based_chunking(
 
         if max_sentences is not None:
             # Split by sentence and check count
-            sentences_in_chunk = SentenceSplitter().split_text(content)
+            # Remove continuation marker before splitting to avoid counting it as a sentence
+            sentences_in_chunk = SentenceSplitter().split_text(content.removeprefix("... "))
             assert len(sentences_in_chunk) <= max_sentences, (
                 f"Chunk exceeded max_sentences: {len(sentences_in_chunk)} > {max_sentences}"
             )
