@@ -67,7 +67,6 @@ structured-document = [
   
   "odfpy>=1.4.1,<2.0",
   "openpyxl>=3.1.5,<4.0",
-  "tabulate2>=1.10.2,<2.0",
 ]
 
 # Kept for compatibility
