@@ -1,12 +1,13 @@
-def build_md_table(data: list[list[str]]) -> str:
+def build_md_table(data: list[list[object]]) -> str:
     """
     Build a pipe-formatted Markdown table from a list of rows.
 
-    The first row is treated as the header. Each cell's content is escaped
-    so that literal pipe characters (``|``) do not break the table layout.
+    The first row is treated as the header. Each cell's content is converted
+    to a string and escaped so that literal pipe characters (``|``) do not
+    break the table layout.
 
     Args:
-        data: List of rows, where each row is a list of cell strings.
+        data: List of rows, where each row is a list of cell values.
               The first element is the header row.
 
     Returns:
@@ -21,8 +22,8 @@ def build_md_table(data: list[list[str]]) -> str:
     if any(not row for row in data):
         raise ValueError("Every row must contain at least one cell.")
 
-    def _escape(cell: str) -> str:
-        return cell.replace("|", "\\|")
+    def _escape(cell: object) -> str:
+        return str(cell).replace("|", "\\|")
 
     header = [_escape(c) for c in data[0]]
     sep = ["---"] * len(header)
