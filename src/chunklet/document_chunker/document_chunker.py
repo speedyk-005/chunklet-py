@@ -36,6 +36,7 @@ from chunklet.document_chunker.processors import (
     epub_processor,
     odt_processor,
     pdf_processor,
+    pptx_processor,
 )
 from chunklet.document_chunker.registry import custom_processor_registry
 from chunklet.exceptions import InvalidInputError, UnsupportedFileTypeError
@@ -65,6 +66,7 @@ class DocumentChunker(BaseChunker):
         ".docx",
         ".eml",
         ".epub",
+        ".pptx",
         ".hml",
         ".html",
         ".md",
@@ -124,6 +126,7 @@ class DocumentChunker(BaseChunker):
             ".epub": epub_processor.EPUBProcessor,
             ".docx": docx_processor.DOCXProcessor,
             ".odt": odt_processor.ODTProcessor,
+            ".pptx": pptx_processor.PPTXProcessor,
         }
         self.converters = {
             ".html": html_2_md.html_to_md,
