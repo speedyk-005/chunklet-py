@@ -21,6 +21,19 @@ class EmlProcessor(BaseProcessor):
     https://nodemailer.com/extras/mailparser/#returned-mail-object
     """
 
+    METADATA_FIELDS = [
+        "subject",
+        "from",
+        "to",
+        "cc",
+        "date",
+        "message_id",
+        "in_reply_to",
+        "references",
+        "attachment_names",
+        "inline_names",
+    ]
+
     def __init__(self, file_path: str):
         """
         Initializes the EmlProcessor with a path to the EML file
@@ -35,7 +48,8 @@ class EmlProcessor(BaseProcessor):
         except ImportError as e:  # pragma: no cover
             raise ImportError(
                 "The 'mailparse' library is not installed. "
-                "Please install it with 'pip install mailparse>=1.0.1'."
+                "Please install it with 'pip install mailparse>=1.0.1'. or install the document processing extras "
+                "with 'pip install 'chunklet-py[structured-document]'"
             ) from e
         self._parsed = EmailDecode.open(self.file_path)
 
@@ -57,27 +71,20 @@ class EmlProcessor(BaseProcessor):
                 - attachment_names
                 - inline_names
         """
-        return {
-            "source": str(self.file_path),
-            "subject": self._parsed.get("subject"),
-            "from": self._parsed.get("from"),
-            "to": self._parsed.get("to", []),
-            "cc": self._parsed.get("cc", []),
-            "date": self._parsed.get("date"),
-            "message_id": self._parsed.get("message-id"),
-            "in_reply_to": self._parsed.get("in-reply-to"),
-            "references": self._parsed.get("references", []),
-            "attachment_names": [
-                attachment["name"]
-                for attachment in self._parsed.get("attachments", [])
-                if attachment.get("name")
-            ],
-            "inline_names": [
-                inline["name"]
-                for inline in self._parsed.get("inlines", [])
-                if inline.get("name")
-            ],
-        }
+        metadata = {"source": str(self.file_path)}
+        for field in self.METADATA_FIELDS:
+            if field in {"attachment_names", "inline_names"}:
+                field_prefix = field.split("_")[0]
+                names = [
+                    attachment["name"]
+                    for attachment in self._parsed.get(field_prefix, [])
+                ]
+                if names:
+                    metadata[field] = names
+            if val := self._parsed.get(field):
+                metadata[field] = val
+
+            return metadata
 
     def extract_text(self) -> Generator[str, None, None]:
         """
