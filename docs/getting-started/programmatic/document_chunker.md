@@ -35,7 +35,7 @@ The `DocumentChunker` comes packed with smart features that make it your go-to t
 -  **Extensive Multilingual Support:** Speaks over 50 languages fluently, thanks to our trusty sentence splitter. Global domination through better text chunking! 🌍
 -  **Customizable Token Counting:** Plug in your own token counter for perfect alignment with different LLMs. Because one size definitely doesn't fit all models!
 -  **Memory-Conscious Operation:** Handles massive documents efficiently by yielding chunks one at a time. Your RAM will thank you later! 💾
--  **Multi-Format Maestro:** From corporate DOCX boardrooms to academic PDF libraries, this chunker speaks every file language fluently! Handles `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx` files like a pro. 🌍
+-  **Multi-Format Maestro:** From corporate DOCX boardrooms to academic PDF libraries, this chunker speaks every file language fluently! Handles `.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx` files like a pro. 🌍
 -  **Metadata Magician:** Not just text - it automatically enriches your chunks with valuable metadata. Your chunks come with bonus context! 📊
 -  **Bulk Processing Powerhouse:** Got a mountain of documents to conquer? No problem! This powerhouse efficiently processes multiple documents in parallel. 📚⚡
 -  **Pluggable Processor Power:** Have a mysterious file format that's one-of-a-kind? Plug in your own custom processors - `DocumentChunker` is ready for any challenge you throw at it! 🔌🛠️

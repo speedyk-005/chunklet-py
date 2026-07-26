@@ -82,7 +82,7 @@ The `chunk` command is where the real magic happens! It's your versatile tool fo
 This is your bread-and-butter chunking for everyday text and diverse document types.
 
 *   **Default Behavior:** If neither `--doc` nor `--code` is specified, `chunklet` uses the [DocumentChunker](programmatic/document_chunker.md) for direct text input. The `DocumentChunker` is designed to transform unruly text into perfectly sized, context-aware chunks.
-*   **Document Power-Up:** Activate the [DocumentChunker](programmatic/document_chunker.md) with the `--doc` flag to process `.pdf`, `.docx`, `.odt`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.csv`, '.xlsx' and `.rtf` files! It intelligently extracts text and then applies the same robust chunking logic.
+*   **Document Power-Up:** Activate the [DocumentChunker](programmatic/document_chunker.md) with the `--doc` flag to process `.pdf`, `.docx`, `.odt`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.csv`, `.xlsx` and `.rtf` files! It intelligently extracts text and then applies the same robust chunking logic.
 
 #### Key Flags for Document Power-Up
 

@@ -3,10 +3,7 @@ from pathlib import Path
 
 # openpyxyl is lazy imported
 
-try:
-    from tabulate2 import tabulate
-except ImportError:  # pragma: no cover
-    tabulate = None
+from chunklet.document_chunker.md_table import build_md_table
 
 
 def table_to_md(file_path: str | Path) -> str:
@@ -42,18 +39,7 @@ def table_to_md(file_path: str | Path) -> str:
     else:
         raise ValueError(f"Unsupported file type: {ext}")
 
-    headers = data[0]
-    rows = data[1:]
-
-    if not tabulate:
-        raise ImportError(
-            "The 'tabulate2' library is not installed. "
-            "Please install it with 'pip install tabulate2>=1.10.0' "
-            "or install the document processing extras with "
-            "'pip install chunklet-py[structured-document]'"
-        )
-
-    return tabulate(rows, headers=headers, tablefmt="pipe")
+    return build_md_table(data)
 
 
 # --- Example usage ---

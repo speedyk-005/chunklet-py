@@ -1,0 +1,36 @@
+From: Alice Johnson <alice@example.com>
+To: Bob Smith <bob@example.com>
+Subject: Welcome to the Team
+Date: Sat, 25 Jul 2026 14:30:00 +0000
+Message-ID: <123456789@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="boundary123"
+
+--boundary123
+Content-Type: text/plain; charset="UTF-8"
+
+Hi Bob,
+
+Welcome aboard! 🎉
+
+Please join us on Monday at 10:00 AM.
+
+Regards,
+Alice
+
+--boundary123
+Content-Type: text/html; charset="UTF-8"
+
+<!DOCTYPE html>
+<html>
+<body>
+    <p>Hi Bob,</p>
+    <p><strong>Welcome aboard!</strong> 🎉</p>
+
+    <p>Please join us on <b>Monday at 10:00 AM</b>.</p>
+
+    <p>Regards,<br>Alice</p>
+</body>
+</html>
+
+--boundary123--

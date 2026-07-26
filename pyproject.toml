@@ -60,13 +60,14 @@ structured-document = [
   "docutils>=0.21.2,<1.0",
   "markdownify>=1.1.0,<2.0",
   "striprtf>=0.0.29,<1.0",
+  "mailparse>=1.0.1,<2.0",
+  "python-pptx>=1.0.0,<2.0",
 
   # Lastest version of 2.x.x series
   "pylatexenc==2.10",
   
   "odfpy>=1.4.1,<2.0",
   "openpyxl>=3.1.5,<4.0",
-  "tabulate2>=1.10.2,<2.0",
 ]
 
 # Kept for compatibility
@@ -95,7 +96,6 @@ dev = [
   "pytest>=8.3.5",
   "pytest-cov>=6.2.1",
   "pytest-mock>=3.14.1",
-
   "ruff>=0.14.14",
 ]
 

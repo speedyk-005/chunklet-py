@@ -2,8 +2,6 @@
 
 import json
 import socket
-import pytest
-import requests
 import threading
 import time
 import urllib.error
@@ -12,6 +10,8 @@ from contextlib import closing
 from pathlib import Path
 
 import msgpack
+import pytest
+import requests
 
 from chunklet.visualizer import Visualizer
 
@@ -51,7 +51,7 @@ def visualizer_server():
     thread = threading.Thread(target=visualizer.serve, daemon=True)
     thread.start()
 
-    url = f"http://{host}:{port}"  # noqa: URLhttp
+    url = f"http://{host}:{port}"  # noqa: S310
     wait_for_server(url)
 
     yield {
