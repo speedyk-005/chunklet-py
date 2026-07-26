@@ -63,6 +63,7 @@ class DocumentChunker(BaseChunker):
     BUILTIN_SUPPORTED_EXTENSIONS = {
         ".csv",
         ".docx",
+        ".eml",
         ".epub",
         ".hml",
         ".html",
