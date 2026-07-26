@@ -15,19 +15,17 @@ def build_md_table(data: list[list[object]]) -> str:
         newlines, ready to embed in Markdown output.
 
     Raises:
-        ValueError: If *data* is empty or any row is empty.
+        ValueError: If *data* is empty.
     """
     if not data:
         raise ValueError("At least one row (the header) is required.")
-    if any(not row for row in data):
-        raise ValueError("Every row must contain at least one cell.")
 
     def _escape(cell: object) -> str:
         return str(cell).replace("|", "\\|")
 
     header = [_escape(c) for c in data[0]]
     sep = ["---"] * len(header)
-    rows = [[_escape(c) for c in row] for row in data[1:]]
+    rows = [[_escape(c) for c in row] for row in data[1:] if row]
 
     lines = []
     lines.append("| " + " | ".join(header) + " |")
