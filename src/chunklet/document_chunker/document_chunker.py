@@ -32,6 +32,7 @@ from chunklet.document_chunker.converters import (
 )
 from chunklet.document_chunker.processors import (
     docx_processor,
+    eml_processor,
     epub_processor,
     odt_processor,
     pdf_processor,
@@ -117,6 +118,7 @@ class DocumentChunker(BaseChunker):
         )
 
         self.processors = {
+            ".eml": eml_processor.EmlProcessor,
             ".pdf": pdf_processor.PDFProcessor,
             ".epub": epub_processor.EPUBProcessor,
             ".docx": docx_processor.DOCXProcessor,

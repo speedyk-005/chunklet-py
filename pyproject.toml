@@ -60,6 +60,7 @@ structured-document = [
   "docutils>=0.21.2,<1.0",
   "markdownify>=1.1.0,<2.0",
   "striprtf>=0.0.29,<1.0",
+  "mailparse>=1.0.1,<2.0",
 
   # Lastest version of 2.x.x series
   "pylatexenc==2.10",
