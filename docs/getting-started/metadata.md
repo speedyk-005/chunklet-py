@@ -36,9 +36,11 @@ Need more context? File input's got you covered! Provides comprehensive metadata
 **File-Type Specific Information:**
 
 *   **[PDF Files](https://stackoverflow.com/questions/75591385/extract-metadata-info-from-online-pdf-using-pdfminer-in-python):** Includes `title`, `author`, `creator`, `producer`, `publisher`, `created`, `modified`, and `page_count` fields (powered by pdfminer.six)
-*   **[EPUB Files](https://docs.sourcefabric.org/projects/ebooklib/en/latest/tutorial.html):** Dublin Core metadata including `title`, `creator`, `contributor`, `publisher`, `date`, and `rights
-*   **[DOCX Files](https://python-docx.readthedocs.io/en/latest/dev/analysis/features/coreprops.html):** Core properties like `title`, `author`, `publisher`, `last_modified_by`, `created`, `modified`, `rights`, and `version`
+*   **[EPUB Files](https://docs.sourcefabric.org/projects/ebooklib/en/latest/tutorial.html):** Dublin Core metadata including `title`, `creator`, `contributor`, `publisher`, `date`, and `rights` (powered by ebooklib)
+*   **[DOCX Files](https://python-docx.readthedocs.io/en/latest/dev/analysis/features/coreprops.html):** Core properties like `title`, `author`, `publisher`, `last_modified_by`, `created`, `modified`, `rights`, and `version` (powered by mammoth and python-docx)
 *   **[ODT Files](https://odfpy.readthedocs.io/en/latest/):** Dublin Core and OpenDocument metadata including `title`, `creator`, `initial_creator`, `created`, `chapter`, and `author` (powered by odfpy)
+*   **[EML Files](https://nodemailer.com/extras/mailparser/#returned-mail-object):** Email header metadata including `subject`, `from`, `to`, `cc`, `date`, `message_id`, `in_reply_to`, `references`, and attachment/inline file names (powered by mailparse)
+*   **[PPTX Files](https://python-pptx.readthedocs.io/en/latest/):** OpenXML CoreProperties including `title`, `author`, `last_modified_by`, `created`, `modified`, `subject`, `keywords`, `category`, `content_status`, and `version` (powered by python-pptx)
   
 !!! tip "Safety First with Optional Fields!"
     These metadata fields are optional - not every document fills them out. Use `chunk.metadata.get("author")` instead of `chunk.metadata["author"]` to avoid `KeyError`s when a field is missing. Better safe than sorry! 😉

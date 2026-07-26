@@ -33,7 +33,7 @@ And that's all there is to it! You're now ready to start using Chunklet-py.
 
 Chunklet-py offers optional dependencies to unlock additional functionalities, such as document processing or code chunking. You can install these extras using the following syntax:
 
-*   **Structured Documents:** For handling `.pdf`, `.docx`, `.epub`, and other document formats:
+*   **Structured Documents:** For handling `.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, and other document formats:
     ```bash
     pip install "chunklet-py[structured-document]"
     ```
