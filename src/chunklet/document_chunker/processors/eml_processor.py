@@ -1,8 +1,6 @@
 from collections.abc import Generator
 from typing import Any
 
-from mailparse import EmailDecode
-
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
 
@@ -32,6 +30,13 @@ class EmlProcessor(BaseProcessor):
             file_path: Path to the EML file.
         """
         super().__init__(file_path)
+        try:
+            from mailparse import EmailDecode
+        except ImportError as e:  # pragma: no cover
+            raise ImportError(
+                "The 'mailparse' library is not installed. "
+                "Please install it with 'pip install mailparse>=1.0.1'."
+            ) from e
         self._parsed = EmailDecode.open(self.file_path)
 
     def extract_metadata(self) -> dict[str, Any]:
