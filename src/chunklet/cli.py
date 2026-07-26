@@ -328,7 +328,7 @@ def split_command(
             destination.write_text(output_str, encoding="utf-8")
             typer.echo(
                 f"Successfully split and wrote {len(sentences)} sentences "
-                f"{source_display} to {destination} (Confidence: {confidence})",
+                f"{source_display} to {destination} (Lang: {lang_detected}, Confidence: {confidence})",
                 err=True,
             )
         except Exception as e:
@@ -339,7 +339,7 @@ def split_command(
 
         typer.echo(
             f"--- Sentences ({len(sentences)}): "
-            f" [{source_display} | Lang: {lang.upper()} | Confidence: {confidence}] ---"
+            f" [{source_display} | Lang: {lang_detected} | Confidence: {confidence}] ---"
         )
 
         for sentence in sentences:
