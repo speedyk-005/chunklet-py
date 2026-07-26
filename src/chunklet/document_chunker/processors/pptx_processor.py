@@ -2,7 +2,6 @@ from collections.abc import Generator
 from typing import Any
 
 # pptx is lazily imported
-
 from chunklet.document_chunker.md_table import build_md_table
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
@@ -12,12 +11,12 @@ class PPTXProcessor(BaseProcessor):
     Processor class for extracting text, tables, charts, notes, and metadata from PPTX files.
 
     Text content is extracted sequentially slide-by-slide. Structural elements
-    like slide titles are converted to Markdown headers, bullet points maintain 
+    like slide titles are converted to Markdown headers, bullet points maintain
     indentation, presentation tables are structured into valid Markdown tables,
     visual charts are transformed into text grids, and presenter notes are appended
     at the bottom of each slide block.
 
-    This processor focuses on extracting core **metadata** following the OpenXML 
+    This processor focuses on extracting core **metadata** following the OpenXML
     Document CoreProperties format, matching common practice in office document types.
 
     For more details on PPTX layout elements, refer to the `python-pptx` documentation:
@@ -52,12 +51,12 @@ class PPTXProcessor(BaseProcessor):
         super().__init__(file_path)
         try:
             from pptx import Presentation
-        except ImportError:  # pragma: no cover
+        except ImportError as e:  # pragma: no cover
             raise ImportError(
                 "The 'python-pptx' library is not installed. "
                 "Please install it with 'pip install python-pptx>=1.0.0' or install the document processing extras "
                 "with 'pip install 'chunklet-py[structured-document]''"
-            )
+            ) from e
 
         self.prs = Presentation(file_path)
 
@@ -113,7 +112,7 @@ class PPTXProcessor(BaseProcessor):
             else:
                 indent = "  " * (level - 1)
                 lines.append(f"{indent}- {text}")
-                
+
         return "\n".join(lines) if lines else None
 
     def _extract_table(self, shape: Any) -> str | None:
@@ -154,7 +153,7 @@ class PPTXProcessor(BaseProcessor):
 
         chart = shape.chart
         chart_lines = ["\n### [Chart]"]
-        
+
         # Extract chart title safely using getattr
         chart_title = getattr(chart, 'chart_title', None)
         if chart.has_title and chart_title and hasattr(chart_title, 'has_text_frame'):
@@ -170,7 +169,7 @@ class PPTXProcessor(BaseProcessor):
             categories = getattr(plot, 'categories', None)
             if not categories:
                 continue
-                
+
             # Convert categories to strings safely
             try:
                 categories = [str(cat) for cat in categories]
@@ -181,13 +180,13 @@ class PPTXProcessor(BaseProcessor):
             series_list = list(getattr(plot, 'series', []) or [])
             if not series_list:
                 continue
-                
+
             # Build headers with safe name access
             headers = ["Categories"] + [
-                getattr(s, 'name', f"Series {idx}") or f"Series {idx}" 
+                getattr(s, 'name', f"Series {idx}") or f"Series {idx}"
                 for idx, s in enumerate(series_list, start=1)
             ]
-            
+
             chart_lines.append("")
             chart_lines.append("| " + " | ".join(headers) + " |")
             chart_lines.append("| " + " | ".join(["---"] * len(headers)) + " |")
@@ -238,7 +237,7 @@ class PPTXProcessor(BaseProcessor):
 
     def extract_metadata(self) -> dict[str, Any]:
         """
-        Extracts OpenXML Document CoreProperties from the PPTX file 
+        Extracts OpenXML Document CoreProperties from the PPTX file
         based on the defined METADATA_FIELDS class schema.
 
         Returns:
@@ -246,7 +245,7 @@ class PPTXProcessor(BaseProcessor):
         """
         meta = self.prs.core_properties
         metadata = {"source": str(self.file_path)}
-        
+
         for field in self.METADATA_FIELDS:
             # Handle cases where property might not exist in an older python-pptx build
             if not hasattr(meta, field):
@@ -272,7 +271,7 @@ class PPTXProcessor(BaseProcessor):
             title = self._extract_slide_title(slide)
             if title:
                 slide_content.append(title)
-            
+
             # 2. Iterate remaining layout blocks
             for shape in slide.shapes:
                 if shape == slide.shapes.title:
@@ -289,7 +288,7 @@ class PPTXProcessor(BaseProcessor):
                     chart_md = self._extract_chart(shape)
                     if chart_md:
                         slide_content.append(chart_md)
-                        
+
                 # Handle text boxes & paragraphs
                 elif hasattr(shape, "has_text_frame") and shape.has_text_frame:
                     text_md = self._extract_text(shape)
@@ -316,5 +315,5 @@ if __name__ == "__main__":  # pragma: no cover
         print(f"{k}: {v}")
 
     print("\nSlide Content Stream:\n")
-    for i, slide_markdown in enumerate(processor.extract_text(), start=1):
+    for _, slide_markdown in enumerate(processor.extract_text(), start=1):
         print(slide_markdown)
