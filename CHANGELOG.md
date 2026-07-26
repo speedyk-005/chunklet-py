@@ -9,9 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.4.0] - Unreleased
 
+### Added
+- **EML Processor**: New `EmlProcessor` for RFC 822 email files. Extracts plain-text body and metadata (subject, from, to, cc, date, attachments) via `mailparse`.
+- **PPTX Processor**: New `PPTXProcessor` for PowerPoint files. Extracts slide content, tables, charts, and presenter notes via `python-pptx`.
+- **Markdown Table Utility**: New `build_md_table()` in `chunklet.document_chunker.md_table`. Shared pipe-table builder used by CSV/XLSX and PPTX table extraction.
+
 ### Changed
-- **Sentence splitting**: Replaced `pysbd` and `sentsplit` with `yasbd-lib` — our own from-scratch SBD library. 39 built-in languages vs pysbd's 23, ~8× faster, higher accuracy. Total supported languages went from 53 to 62.
-- **Dependencies**: Removed `pysbd` and `sentsplit`; added `yasbd-lib>=0.12.0,<2.0`.
+- **Sentence splitting**: Replaced `pysbd` and `sentsplit` with `yasbd-lib`. 39 built-in languages vs pysbd's 23, ~8× faster, higher accuracy. Total supported languages went from 53 to 62.
+
+### Removed
+- **Dependencies**: `pysbd`, `sentsplit`, and `tabulate2`.
 
 ---
 
