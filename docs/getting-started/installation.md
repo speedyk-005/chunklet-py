@@ -14,7 +14,7 @@ The most straightforward method to install Chunklet-py is by using `pip`:
 
 ```bash
 # Install and verify version
-pip install chunklet-py
+pip install chunklet-py -U
 chunklet --version
 ```
 

@@ -100,7 +100,7 @@ The simplest way to get started is with pip:
 
 ```bash
 # Install and check it's working
-pip install chunklet-py
+pip install chunklet-py -U
 chunklet --version
 ```
 

@@ -7,7 +7,7 @@
 ## Quick Install
 
 ```bash
-pip install chunklet-py
+pip install chunklet-py -U
 ```
 
 No extra dependencies needed - `DocumentChunker` is ready to roll right out of the box for plain text! 🚀
