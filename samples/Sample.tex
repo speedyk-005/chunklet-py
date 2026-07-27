@@ -1,0 +1,55 @@
+% Define the document type
+\documentclass[12pt, letterpaper]{article}
+
+% Load essential packages
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath}  % Required for advanced math formatting
+\usepackage{hyperref} % Required for clickable hyperlinks
+
+% Document Metadata
+\title{Sample LaTeX Document}
+\author{Jane Doe}
+\date{\today}
+
+\begin{document}
+
+% Generate the title, author, and date layout
+\maketitle
+
+\section{Introduction}
+This is a standard paragraph in \LaTeX. You can easily make text \textbf{bold}, \textit{italicized}, or \texttt{monospaced (code style)}. 
+
+To start a new paragraph, simply leave a blank line in your source code.
+
+\section{Mathematics}
+LaTeX is widely used for typesetting mathematical equations. You can write inline formulas like $E = mc^2$ within a sentence. Alternatively, you can display numbered equations on their own line:
+
+\begin{equation}
+    \int_{a}^{b} f(x) \,dx = F(b) - F(a)
+\end{equation}
+
+\section{Tables and Lists}
+You can organize information using structured lists or tables.
+
+\subsection{Bullet Points}
+\begin{itemize}
+    \item This is the first item.
+    \item This is the second item.
+\end{itemize}
+
+\subsection{A Simple Table}
+Below is a basic centered table with borders:
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+    \hline
+    Item ID & Product Name & Status \\
+    \hline
+    001 & Widget A & Available \\
+    002 & Widget B & Out of Stock \\
+    \hline
+\end{tabular}
+\end{center}
+
+\section{Conclusion}
+For more robust templates or cloud-based editing, you can test this code directly on platforms like the [

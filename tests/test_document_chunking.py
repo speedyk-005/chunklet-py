@@ -64,6 +64,7 @@ def test_batch_chunk_with_different_file_type(chunker):
         "samples/file-sample_100kB.odt",
         "samples/sample.eml",
         "samples/Free_Test_Data_100KB_PPTX.pptx",
+        "samples/Sample.tex",
     ]
     all_document_chunks = list(chunker.chunk_files(paths, max_sentences=5))
 
