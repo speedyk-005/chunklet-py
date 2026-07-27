@@ -271,6 +271,13 @@ splitter = SentenceSplitter()
 sentences = splitter.split_text(text, lang="auto")
 ```
 
+> [!TIP]
+> **Advanced text splitting**
+>
+> Chunklet-py quietly delegates sentence splitting to [yasbd-lib](https://github.com/speedyk-005/yasbd-lib), our high-accuracy SBD supporting **39 languages**.
+>
+> Curious why we built it? Read **[yasbd-lib vs PySBD: Two Philosophies of Sentence Boundary Detection](https://dev.to/speed_k_7e1b449706e59e433/yasbd-lib-vs-pysbd-two-philosophies-of-sentence-boundary-detection-i88)**.
+
 **CLI (Command Line Interface)**
 
 If you prefer the terminal to an IDE, the CLI is packed with features. Just ask for help.
