@@ -126,6 +126,7 @@ class CodeChunker(BaseChunker):
         # Deduplicate relations
         def relation_key(relation: dict):
             return tuple(sorted(relation.items()))
+
         unique_relations = list(unique_everseen(all_relations_flat, key=relation_key))
 
         if not unique_relations:

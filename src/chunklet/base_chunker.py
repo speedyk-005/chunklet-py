@@ -8,7 +8,6 @@ from abc import ABC, abstractmethod
 from collections.abc import Generator
 
 from chunklet.common.dotdict import DotDict
-from loguru import logger
 
 
 class BaseChunker(ABC):

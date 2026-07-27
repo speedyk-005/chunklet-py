@@ -96,7 +96,9 @@ def test_constraint_based_chunking(
         if max_sentences is not None:
             # Split by sentence and check count
             # Remove continuation marker before splitting to avoid counting it as a sentence
-            sentences_in_chunk = SentenceSplitter().split_text(content.removeprefix("... "))
+            sentences_in_chunk = SentenceSplitter().split_text(
+                content.removeprefix("... ")
+            )
             assert len(sentences_in_chunk) <= max_sentences, (
                 f"Chunk exceeded max_sentences: {len(sentences_in_chunk)} > {max_sentences}"
             )
@@ -179,6 +181,7 @@ def test_overlap_behavior(chunker):
         f"Expected second chunk to start with '{expected_overlap}'."
     )
 
+
 # --- Span Finder Tests ---
 
 
@@ -188,12 +191,10 @@ def test_overlap_behavior(chunker):
         # Exact matches
         ("Hello world", "Hello world", (0, 11)),
         ("Hello world", "world", (6, 11)),
-
         # With punctuation variations
         ("Hello, world! Test.", "Hello world", (0, 11)),
         ("Test... Python is great.", "Python is great", (8, 23)),
         ("Yes--no maybe", "Yes no maybe", (0, 11)),
-
         # Not found
         ("Hello world", "not found", (-1, -1)),
     ],

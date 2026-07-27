@@ -1,11 +1,12 @@
 import re
-import os
+
 import pytest
 
 from chunklet import CallbackError
 from chunklet.sentence_splitter import SentenceSplitter, custom_splitter_registry
 
 # --- Fixture ---
+
 
 @pytest.fixture
 def splitter():
@@ -20,6 +21,7 @@ def registry():
 
 
 # --- Multilingual Splitting Tests ---
+
 
 @pytest.mark.parametrize(
     "text, expected_sentences",
@@ -52,7 +54,7 @@ def test_multilingual_splitting(splitter, text, expected_sentences):
     "text, lang",
     [
         ("Hello world. How are you?", "xh"),  # Xhosa
-        ("Sawubona Mhlaba. Unjani?", "zu"),   # Zulu
+        ("Sawubona Mhlaba. Unjani?", "zu"),  # Zulu
     ],
 )
 def test_unsupported_language_fallback(splitter, text, lang):
@@ -80,6 +82,7 @@ def test_special_handler_exists(splitter, lang):
 
 
 # --- Custom Splitter Tests ---
+
 
 def test_custom_splitter_usage(registry):
     """Test that the splitter can work a custom splitter without errors."""

@@ -90,9 +90,13 @@ class DotDict(dict):
             raise ImportError("pyyaml required: pip install pyyaml") from None
         if filename:
             with open(filename, "w", encoding="utf-8") as f:
-                yaml.dump(self.to_dict(), f, default_flow_style=default_flow_style, **kwargs)
+                yaml.dump(
+                    self.to_dict(), f, default_flow_style=default_flow_style, **kwargs
+                )
         else:
-            return yaml.dump(self.to_dict(), default_flow_style=default_flow_style, **kwargs)
+            return yaml.dump(
+                self.to_dict(), default_flow_style=default_flow_style, **kwargs
+            )
 
     def to_toml(self, filename=None):
         try:

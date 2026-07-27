@@ -1,8 +1,9 @@
 import functools
 import warnings
 from importlib.metadata import PackageNotFoundError, version
-from packaging.version import InvalidVersion, Version
 from typing import Any, Callable
+
+from packaging.version import Version
 
 try:
     CURRENT_VERSION = version("chunklet-py")

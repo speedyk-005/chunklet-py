@@ -77,7 +77,7 @@ if __name__ == "__main__":  # pragma: no cover
     finder = DeterministicSpanFinder(
         "Hello, world! This is a test... Python3.10 is great, right? Yes--no maybe!"
     )
-    print(finder.find_span("Hello, world"))       # new punctuation
+    print(finder.find_span("Hello, world"))  # new punctuation
     print(finder.find_span("Python310 is great, right"))  # multiple punctuation
-    print(finder.find_span("Yes--no maybe"))    # em-dash
-    print(finder.find_span("doesn't exist"))     # not found
+    print(finder.find_span("Yes--no maybe"))  # em-dash
+    print(finder.find_span("doesn't exist"))  # not found

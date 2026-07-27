@@ -1,12 +1,12 @@
-import warnings
 from itertools import chain, tee
 from pathlib import Path
 from typing import Annotated, Any, Callable, Generator, Iterable, Literal
 
-from chunklet.common.dotdict import DotDict
 from loguru import logger
 from more_itertools import ilen, split_at
 from pydantic import Field
+
+from chunklet.common.dotdict import DotDict
 
 try:
     from striprtf.striprtf import rtf_to_text
@@ -22,7 +22,7 @@ from chunklet.base_chunker import BaseChunker
 from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
-from chunklet.common.validation import IterableOfStr, IterableOfPath, validate_input
+from chunklet.common.validation import IterableOfPath, IterableOfStr, validate_input
 from chunklet.document_chunker._plain_text_chunker import PlainTextChunker
 from chunklet.document_chunker.converters import (
     html_2_md,
@@ -258,7 +258,9 @@ class DocumentChunker(BaseChunker):
 
         return text_content, {"source": str(path)}
 
-    def _prepare_batch_documents(self, paths: Iterable[str | Path], on_errors: str) -> dict:
+    def _prepare_batch_documents(
+        self, paths: Iterable[str | Path], on_errors: str
+    ) -> dict:
         """
         Prepares documents for batch processing by extracting text and metadata from multiple paths.
 
@@ -292,8 +294,8 @@ class DocumentChunker(BaseChunker):
                 path = Path(path)
                 ext = self._validate_and_get_extension(path)
 
-                text_content_or_generator, document_metadata = self._extract_text_and_metadata(
-                    path, ext
+                text_content_or_generator, document_metadata = (
+                    self._extract_text_and_metadata(path, ext)
                 )
                 all_metadata.append(document_metadata)
 
@@ -613,7 +615,9 @@ class DocumentChunker(BaseChunker):
             sections_per_path[curr_path] -= 1
 
     @deprecated_callable(
-        use_instead="chunk_file or chunk_text", deprecated_in="2.2.0", removed_in="3.0.0"
+        use_instead="chunk_file or chunk_text",
+        deprecated_in="2.2.0",
+        removed_in="3.0.0",
     )
     def chunk(  # pragma: no cover
         self,
@@ -638,7 +642,9 @@ class DocumentChunker(BaseChunker):
         return self.chunk_file(**params)
 
     @deprecated_callable(
-        use_instead="chunk_files or chunk_texts", deprecated_in="2.2.0", removed_in="3.0.0"
+        use_instead="chunk_files or chunk_texts",
+        deprecated_in="2.2.0",
+        removed_in="3.0.0",
     )
     def batch_chunk(  # pragma: no cover
         self,
