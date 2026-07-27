@@ -57,18 +57,16 @@ class DeterministicSpanFinder:
         """
         stripped = text.strip()
 
-        if stripped in self.full_text:
-            start = self.full_text.find(stripped)
+        if (start := self.full_text.find(stripped)) != -1:
             return start, start + len(stripped)
 
         cleaned_text = "".join(ch for ch in text if ch.isalnum())
 
-        if cleaned_text in self.cleaned_full_text:
-            pos = self.cleaned_full_text.find(cleaned_text.strip())
-            if pos >= 0:
-                start = self.index_map[pos]
-                end = start + len(cleaned_text) + 1
-                return start, end
+        pos = self.cleaned_full_text.find(cleaned_text)
+        if pos != -1:
+            start = self.index_map[pos]
+            end = start + len(cleaned_text) + 1
+            return start, end
 
         return -1, -1
 
