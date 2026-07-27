@@ -1,15 +1,15 @@
 import copy
-import sys
 import re
+import sys
 from collections.abc import Iterable
 from functools import partial
 from typing import Annotated, Any, Callable, Generator, Literal
 
-from chunklet.common.dotdict import DotDict
 from loguru import logger
 from pydantic import Field
 
 from chunklet.common.batch_runner import run_in_batch
+from chunklet.common.dotdict import DotDict
 from chunklet.common.logging_utils import log_info
 from chunklet.common.token_utils import count_tokens
 from chunklet.common.validation import IterableOfStr, validate_input
@@ -20,7 +20,6 @@ from chunklet.exceptions import (
     MissingTokenCounterError,
 )
 from chunklet.sentence_splitter import BaseSplitter, SentenceSplitter
-
 
 CLAUSE_END_PATTERN = re.compile(r"(?<=[;,’：—)&…])\s")
 SECTION_BREAK_PATTERN = re.compile(
@@ -335,9 +334,12 @@ class PlainTextChunker:
                 else 0
             )
 
-            sentence_limit_reached = constraint_counter["sentence_count"] + 1 > max_sentences
+            sentence_limit_reached = (
+                constraint_counter["sentence_count"] + 1 > max_sentences
+            )
             heading_limit_reached = (
-                is_heading and constraint_counter["heading_count"] + 1 > max_section_breaks
+                is_heading
+                and constraint_counter["heading_count"] + 1 > max_section_breaks
             )
             token_limit_reached = (
                 max_tokens != sys.maxsize

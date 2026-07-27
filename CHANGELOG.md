@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Sentence splitting**: Replaced `pysbd` and `sentsplit` with `yasbd-lib`. 39 built-in languages vs pysbd's 23, ~8× faster, higher accuracy. Total supported languages went from 53 to 62.
+- **Code chunker**: Extracted `_handle_oversized_snippet` from `_group_by_chunk`.
+- **PPTX processor**: Simplified `_extract_text` (extracted `_is_template_placeholder` helper). Split `_extract_chart` into `_safe_chart_title` and `_plot_to_table`, now uses `build_md_table`.
+- **CLI split output**: Shows detected language code instead of raw `--lang` flag.
+
+### Fixed
+- **Visualizer**: Added `<label for="fileInput">` for screen-reader accessibility.
 
 ### Removed
 - **Dependencies**: `pysbd`, `sentsplit`, and `tabulate2`.

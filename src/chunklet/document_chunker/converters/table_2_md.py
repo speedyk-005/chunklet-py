@@ -2,7 +2,6 @@ import csv
 from pathlib import Path
 
 # openpyxyl is lazy imported
-
 from chunklet.document_chunker.md_table import build_md_table
 
 

@@ -1,14 +1,13 @@
+import re
 import warnings
-from os import getenv
+from functools import lru_cache
 from pathlib import Path
 from typing import Callable
-from functools import lru_cache
 
-import re
 from loguru import logger
 from py3langid.langid import MODEL_FILE, LanguageIdentifier
-# pysbd, sentsplit, indicnlp and sentencex are lazy imported
 
+# pysbd, sentsplit, indicnlp and sentencex are lazy imported
 from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
@@ -20,7 +19,6 @@ from chunklet.sentence_splitter.languages import (
     YASBD_SUPPORTED_LANGUAGES,
 )
 from chunklet.sentence_splitter.registry import custom_splitter_registry
-
 
 # To identify strings consisting solely of punctuation or symbols.
 PUNCTUATION_ONLY_PATTERN = re.compile(r"\W+")
@@ -122,16 +120,19 @@ class SentenceSplitter(BaseSplitter):
         """
         if lang in YASBD_SUPPORTED_LANGUAGES:
             from yasbd.boundary_detector import BoundaryDetector
+
             log_info(verbose, "Using yasbd")
             return BoundaryDetector(lang=lang).segment
 
         elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
             from indicnlp.tokenize import sentence_tokenize
+
             log_info(verbose, "Using indicnlp")
             return lambda text: sentence_tokenize.sentence_split(text, lang)
 
         elif lang in SENTENCEX_UNIQUE_LANGUAGES:
             from sentencex import segment
+
             log_info(verbose, "Using sentencex")
             return lambda text: segment(lang, text)
 
@@ -225,7 +226,9 @@ class SentenceSplitter(BaseSplitter):
             if custom_splitter_registry.is_registered(lang):
                 sentences, splitter_name = custom_splitter_registry.split(text, lang)
                 log_info(self.verbose, "Using registered splitter: {}", splitter_name)
-            elif (handler := self._get_special_lang_handler(lang, self.verbose)) is not None:
+            elif (
+                handler := self._get_special_lang_handler(lang, self.verbose)
+            ) is not None:
                 sentences = handler(text)
 
         # If no handler found, use fallback

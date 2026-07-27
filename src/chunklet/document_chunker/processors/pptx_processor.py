@@ -70,8 +70,12 @@ class PPTXProcessor(BaseProcessor):
         Returns:
             The string text of the title formatted as a Markdown H1 header, or None.
         """
-        title_shape = getattr(slide.shapes, 'title', None)
-        if title_shape and hasattr(title_shape, 'has_text_frame') and title_shape.has_text_frame:
+        title_shape = getattr(slide.shapes, "title", None)
+        if (
+            title_shape
+            and hasattr(title_shape, "has_text_frame")
+            and title_shape.has_text_frame
+        ):
             title_text = title_shape.text.strip()
             if title_text and not title_text.isdigit():
                 return f"# {title_text}\n"
@@ -90,30 +94,25 @@ class PPTXProcessor(BaseProcessor):
         if not shape.has_text_frame:
             return None
 
-        # Filter background template layout elements (Headers/Footers/Slide numbers)
-        if shape.is_placeholder:
-            placeholder_type = getattr(
-                getattr(shape, 'placeholder_format', None),
-                'type',
-                None
-            )
-            if placeholder_type in self.TEMPLATE_PLACEHOLDERS:
-                return None
+        if self._is_template_placeholder(shape):
+            return None
 
         lines = []
-        for paragraph in shape.text_frame.paragraphs:
-            text = paragraph.text.strip()
+        for p in shape.text_frame.paragraphs:
+            text = p.text.strip()
             if not text or text.isdigit():
                 continue
-
-            level = paragraph.level
-            if level == 0:
-                lines.append(f"{text}\n")
-            else:
-                indent = "  " * (level - 1)
-                lines.append(f"{indent}- {text}")
+            prefix = "" if p.level == 0 else "  " * (p.level - 1) + "- "
+            lines.append(f"{prefix}{text}")
 
         return "\n".join(lines) if lines else None
+
+    def _is_template_placeholder(self, shape: Any) -> bool:
+        """Check if a shape is a background template element to skip."""
+        if not shape.is_placeholder:
+            return False
+        pf = getattr(shape, "placeholder_format", None)
+        return getattr(pf, "type", None) in self.TEMPLATE_PLACEHOLDERS
 
     def _extract_table(self, shape: Any) -> str | None:
         """
@@ -152,59 +151,63 @@ class PPTXProcessor(BaseProcessor):
             return None
 
         chart = shape.chart
-        chart_lines = ["\n### [Chart]"]
+        parts = ["\n### [Chart]"]
 
-        # Extract chart title safely using getattr
-        chart_title = getattr(chart, 'chart_title', None)
-        if chart.has_title and chart_title and hasattr(chart_title, 'has_text_frame'):
-            if chart_title.has_text_frame:
-                title_text = chart_title.text_frame.text.strip()
-                if title_text:
-                    chart_lines.append(f"**Title**: {title_text}")
+        title = self._safe_chart_title(chart)
+        if title:
+            parts.append(f"**Title**: {title}")
 
-        # Process chart plots with safe attribute access
-        plots = getattr(chart, 'plots', [])
-        for plot in plots:
-            # Safely get categories
-            categories = getattr(plot, 'categories', None)
-            if not categories:
-                continue
+        for plot in getattr(chart, "plots", []):
+            table = self._plot_to_table(plot)
+            if table:
+                parts.append("")
+                parts.append(build_md_table(table))
 
-            # Convert categories to strings safely
-            try:
-                categories = [str(cat) for cat in categories]
-            except (TypeError, ValueError):
-                continue
+        parts.append("")
+        return "\n".join(parts)
 
-            # Safely get series
-            series_list = list(getattr(plot, 'series', []) or [])
-            if not series_list:
-                continue
+    @staticmethod
+    def _safe_chart_title(chart: Any) -> str | None:
+        """Extract chart title text safely, avoiding missing-attribute errors."""
+        title = getattr(chart, "chart_title", None)
+        if not title or not hasattr(title, "has_text_frame"):
+            return None
+        if not title.has_text_frame:
+            return None
+        text = title.text_frame.text.strip()
+        return text or None
 
-            # Build headers with safe name access
-            headers = ["Categories"] + [
-                getattr(s, 'name', f"Series {idx}") or f"Series {idx}"
-                for idx, s in enumerate(series_list, start=1)
-            ]
+    @staticmethod
+    def _plot_to_table(plot: Any) -> list[list[str]] | None:
+        """Build a list-of-lists table (header + rows) from a chart plot."""
+        categories = getattr(plot, "categories", None)
+        if not categories:
+            return None
+        try:
+            categories = [str(c) for c in categories]
+        except (TypeError, ValueError):
+            return None
 
-            chart_lines.append("")
-            chart_lines.append("| " + " | ".join(headers) + " |")
-            chart_lines.append("| " + " | ".join(["---"] * len(headers)) + " |")
+        series_list = list(getattr(plot, "series", []) or [])
+        if not series_list:
+            return None
 
-            # Build table rows with safe value access
-            for cat_idx, category in enumerate(categories):
-                row = [category]
-                for series in series_list:
-                    values = getattr(series, 'values', [])
-                    try:
-                        val = values[cat_idx] if cat_idx < len(values) else None
-                        row.append(str(val) if val is not None else "")
-                    except (IndexError, AttributeError, TypeError):
-                        row.append("")
-                chart_lines.append("| " + " | ".join(row) + " |")
-
-        chart_lines.append("")
-        return "\n".join(chart_lines)
+        headers = ["Categories"] + [
+            getattr(s, "name", f"Series {i + 1}") or f"Series {i + 1}"
+            for i, s in enumerate(series_list)
+        ]
+        rows = [headers]
+        for cat_idx, cat in enumerate(categories):
+            row = [cat]
+            for s in series_list:
+                values = getattr(s, "values", [])
+                try:
+                    val = values[cat_idx] if cat_idx < len(values) else ""
+                    row.append(str(val) if val is not None else "")
+                except (IndexError, AttributeError, TypeError):
+                    row.append("")
+            rows.append(row)
+        return rows
 
     def _extract_notes(self, slide: Any) -> str | None:
         """
@@ -216,8 +219,12 @@ class PPTXProcessor(BaseProcessor):
         Returns:
             Extracted text blocks formatted as a blockquote block, or None.
         """
-        notes_slide = getattr(slide, 'notes_slide', None)
-        if notes_slide and hasattr(notes_slide, 'notes_text_frame') and notes_slide.notes_text_frame:
+        notes_slide = getattr(slide, "notes_slide", None)
+        if (
+            notes_slide
+            and hasattr(notes_slide, "notes_text_frame")
+            and notes_slide.notes_text_frame
+        ):
             notes_lines = []
             for paragraph in notes_slide.notes_text_frame.paragraphs:
                 text = paragraph.text.strip()

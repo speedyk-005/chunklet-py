@@ -173,4 +173,4 @@ def test_chunk_file_invalid_format(visualizer_server):
 
     error_detail = response.json()
     assert "detail" in error_detail
-    assert "only text files are supported." == error_detail["detail"].lower()
+    assert error_detail["detail"].lower() == "only text files are supported."

@@ -1,7 +1,6 @@
 from typing import Any, Generator
 
 # odfpy is lazy imported
-
 from chunklet.document_chunker.processors.base_processor import BaseProcessor
 
 
