@@ -44,7 +44,7 @@ class EPUBProcessor(BaseProcessor):
         Args:
             file_path: Path to the EPUB file.
         """
-        if not epub:
+        if epub is None:
             raise ImportError(
                 "The 'ebooklib' library is not installed. "
                 "Please install it with 'pip install 'ebooklib>=0.19'' or install the document processing extras "
