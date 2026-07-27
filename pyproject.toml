@@ -26,10 +26,10 @@ classifiers = [
 ]
 
 keywords = [
-  "nlp", "chunking", "text-splitting", "sentence-splitting", "llm", "rag", "ai", "multilingual",
+  "nlp", "chunking", "chunker", "text-chunking", "text-splitting", "sentence-splitting", "llm", "rag", "ai", "multilingual",
   "text processing", "natural language processing", "data processing",
   "information retrieval", "semantic search", "document processing", "document-chunker",
-  "code chunking", "code-chunker", "source code analysis", "programming languages",
+  "code chunking", "code-chunker", "programming languages",
   "code structure", "chunk-visualization",
 ]
 
