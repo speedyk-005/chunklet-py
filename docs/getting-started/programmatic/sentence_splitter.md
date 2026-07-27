@@ -10,13 +10,13 @@ Splitting text by periods is like trying to perform surgery with a butter knife 
 
 This problem has a name: [Sentence Boundary Disambiguation](https://en.wikipedia.org/wiki/Sentence_boundary_disambiguation). That's where `SentenceSplitter` comes in.
 
-Think of it as a skilled linguist who knows where sentences actually end. It handles grammar, context, and those tricky abbreviations (like "Dr." or "U.S.A.") without breaking a sweat. Supports 50+ languages out of the box.
+Think of it as a skilled linguist who knows where sentences actually end. It handles grammar, context, and those tricky abbreviations (like "Dr." or "U.S.A.") without breaking a sweat. Supports 60+ languages out of the box.
 
 ### What's Under the Hood? ⚙️
 
 The `SentenceSplitter` is a sophisticated system:
 
--  **Multilingual Support 🌍:** Handles over **50** languages with intelligent detection. See the [full list](../../supported-languages.md).
+-  **Multilingual Support 🌍:** Handles over **60** languages with intelligent detection. See the [full list](../../supported-languages.md).
 -  **Custom Splitters 🔧:** Plug in your own splitting logic for specialized languages or domains.
 -  **Reliable Fallback 🛡️:** For unsupported languages, a rule-based fallback kicks in.
 -  **Error Monitoring 🔍:** Reports issues with custom splitters clearly.

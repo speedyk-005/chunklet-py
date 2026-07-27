@@ -21,13 +21,14 @@ Hey! Thanks for thinking about contributing. Bug fixes, features, docs — all w
 
 > [!WARNING]
 > #### Termux (Android)
-> Termux doesn't have a rust toolchain by default, so pydantic-core might fail to build (especially for python 3.13).
-> Install pre-built wheels:
+> Termux doesn't have a rust toolchain by default, so pydantic-core and cryptography won't build from source.
+> Install pre-built wheels and dependencies:
 > 
 > ```bash
 > pip install typing-extensions
 > pip install pydantic-core --index-url https://termux-user-repository.github.io/pypi/
 > pip install "pydantic>=2.12.4,<2.13"
+> pkg install python-cryptography
 > pip install -e ".[dev-all]"
 > ```
 

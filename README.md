@@ -44,7 +44,7 @@ Dumb splitting causes problems:
 Smart chunking solves this by:
 
 - **Smart limits** — Respects both natural boundaries (sentences, paragraphs, sections) AND configurable limits (tokens, lines, functions)
-- **Language-aware** — Detects language automatically and applies the right rules (50+ languages supported)
+- **Language-aware** — Detects language automatically and applies the right rules (60+ languages supported)
 - **Context preservation** — Overlap between chunks, rich metadata (source, span, document structure)
 
 ## 🤔 So What's Chunklet-py Anyway? (And Why Should You Care?)
@@ -73,7 +73,7 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 | 🪶 **Featherlight Footprint** | Designed to be lightweight and memory-efficient, ensuring optimal performance without unnecessary overhead. |
 | 🗂️ **Rich Metadata for RAG** | Enriches chunks with valuable, context-aware metadata (source, span, document properties, code AST details) crucial for advanced RAG and LLM applications. |
 | 🔧 **Infinitely Customizable** | Offers extensive customization options, from pluggable token counters to custom sentence splitters and processors. |
-| 🌐 **Multilingual Mastery** | Supports over 50 natural languages for text and document chunking with intelligent detection and language-specific algorithms. |
+| 🌐 **Multilingual Mastery** | Supports over 60 natural languages for text and document chunking with intelligent detection and language-specific algorithms. |
 | 🧑‍💻 **Code-Aware Intelligence** | Language-agnostic code chunking that understands and preserves the structural integrity of your source code. |
 | 🎯 **Precision Chunking** | Flexible chunking with configurable limits based on sentences, tokens, sections, lines, and functions. |
 | 📄 **Document Format Mastery** | Processes a wide array of document formats including `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`. |
@@ -100,19 +100,21 @@ The simplest way to get started is with pip:
 
 ```bash
 # Install and check it's working
-pip install chunklet-py
+pip install chunklet-py -U
 chunklet --version
 ```
 
 > [!TIP]
 > <b>Termux (Android)</b>
 >
-> No rust toolchain on Termux (especially python 3.13)? Install pydantic-core pre-built wheels first then retry installing chunklet-py:
+> No rust toolchain on Termux (especially python 3.13)? Pydantic-core and cryptography won't build from source.
+> Install pre-built wheels and dependencies:
 >
 > ```bash
 > pip install typing-extensions
 > pip install pydantic-core --index-url https://termux-user-repository.github.io/pypi/
 > pip install "pydantic>=2.12.4,<2.13"
+> pkg install python-cryptography
 > ```
 
 That's it! You're all set to start chunking.
@@ -132,6 +134,8 @@ Want to unlock more Chunklet-py superpowers? Add these optional dependencies bas
 *   **Visualization:** For the interactive web-based chunk visualizer:
     ```bash
     pip install "chunklet-py[visualization]"
+    # Or
+    pip install "chunklet-py[viz]"
     ```
 * **All Extras:** To install all optional dependencies:
     ```bash
@@ -266,6 +270,13 @@ splitter = SentenceSplitter()
 # 'auto' usually guesses right, but you can specify 'en', 'es', etc.
 sentences = splitter.split_text(text, lang="auto")
 ```
+
+> [!TIP]
+> **Advanced text splitting**
+>
+> Chunklet-py quietly delegates sentence splitting to [yasbd-lib](https://github.com/speedyk-005/yasbd-lib), our high-accuracy SBD supporting **39 languages**.
+>
+> Curious why we built it? Read **[yasbd-lib vs PySBD: Two Philosophies of Sentence Boundary Detection](https://dev.to/speed_k_7e1b449706e59e433/yasbd-lib-vs-pysbd-two-philosophies-of-sentence-boundary-detection-i88)**.
 
 **CLI (Command Line Interface)**
 

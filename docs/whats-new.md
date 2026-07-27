@@ -3,7 +3,35 @@
 
 ---
 
+## Chunklet v2.4.0
+
+### 📎 EML and PPTX, At Your Service
+
+Two new processors joined the family. EML (RFC 822 email) and PPTX (PowerPoint). Drop a `.eml` or `.pptx` in, get chunks out. Nothing to configure, nothing to wire up.
+
+The EML one grabs body, subject, headers, and attachments. The PPTX one handles slides, tables, charts, and presenter notes. We also built a shared `build_md_table()` utility so CSV, XLSX, and PPTX tables all go through the same code path instead of three different ones.
+
+### 🇺🇳 yasbd-lib: Faster, More accurate, More Languages
+
+We swapped `pysbd` and `sentsplit` for [`yasbd-lib`](https://github.com/speedyk-005/yasbd-lib). Total supported languages went from 53 to 62. 39 built-in in yasbd-lib alone plus fallbacks for the rest. Not convinced? Then let [yasbd-lib vs PySBD](https://dev.to/speed_k_7e1b449706e59e433/yasbd-lib-vs-pysbd-two-philosophies-of-sentence-boundary-detection-i88) prove it.
+
+### 🐛 What Broke and Got Fixed
+
+- **Visualizer label**: `<label for="fileInput">` so screen readers can actually see the file picker
+- **Lazy import gotcha**: `if not epub:` became `if epub is None:` because truthiness on an optional import is not a personality trait
+- **Split oversize dupe**: `_split_oversized` no longer doubles the first function signature when a decorated class hits the limit. `curr_chunk = [line]` + `curr_chunk.append(line)` is one too many.
+- **Bye dependencies**: dropped `pysbd`, `sentsplit`, and `tabulate2`
+
+### 🧹 The Little Things
+
+- **CLI split output**: shows the detected language instead of `--lang=en --lang=en` (yes, it was literally showing the flag in the output)
+- **Sentence terminators**: removed `¡` and `¿`. They're Spanish opening marks, not sentence closers. We didn't notice for a while. Spanish speakers probably did.
+- **Code chunker cleanup**: extracted `_handle_oversized_snippet` with `**kwargs` so we don't have to thread params through the main loop every time we sneeze
+
+---
+
 ## Chunklet v2.3.2
+
 
 ### 🏎️ DotDict Gets Box-Compatible Serialization
 

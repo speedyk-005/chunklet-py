@@ -7,7 +7,7 @@
 ## Quick Install
 
 ```bash
-pip install chunklet-py
+pip install chunklet-py -U
 ```
 
 No extra dependencies needed - `DocumentChunker` is ready to roll right out of the box for plain text! 🚀
@@ -32,7 +32,7 @@ The `DocumentChunker` comes packed with smart features that make it your go-to t
 
 -  **Flexible Composable Constraints:** Ultimate control over your chunks! Mix and match limits based on sentences, tokens, or section breaks (headings, horizontal rules, `<details>` tags). Craft exactly the chunk size you need with precision control! 🎯
 -  **Intelligent Overlap:** Adds smart overlaps between chunks so your text flows smoothly. No more jarring transitions that leave readers scratching their heads!
--  **Extensive Multilingual Support:** Speaks over 50 languages fluently, thanks to our trusty sentence splitter. Global domination through better text chunking! 🌍
+-  **Extensive Multilingual Support:** Speaks over 60 languages fluently, thanks to our trusty sentence splitter. Global domination through better text chunking! 🌍
 -  **Customizable Token Counting:** Plug in your own token counter for perfect alignment with different LLMs. Because one size definitely doesn't fit all models!
 -  **Memory-Conscious Operation:** Handles massive documents efficiently by yielding chunks one at a time. Your RAM will thank you later! 💾
 -  **Multi-Format Maestro:** From corporate DOCX boardrooms to academic PDF libraries, this chunker speaks every file language fluently! Handles `.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx` files like a pro. 🌍
