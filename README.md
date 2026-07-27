@@ -132,6 +132,8 @@ Want to unlock more Chunklet-py superpowers? Add these optional dependencies bas
 *   **Visualization:** For the interactive web-based chunk visualizer:
     ```bash
     pip install "chunklet-py[visualization]"
+    # Or
+    pip install "chunklet-py[viz]"
     ```
 * **All Extras:** To install all optional dependencies:
     ```bash
