@@ -19,12 +19,14 @@ chunklet --version
 ```
 
 !!! tip "Termux (Android)"
-    No rust toolchain on Termux (especially python 3.13)? Install pydantic-core pre-built wheels first then retry installing chunklet-py:
+    No rust toolchain on Termux (especially python 3.13)? Pydantic-core and cryptography won't build from source.
+    Install pre-built wheels and dependencies:
     
     ```bash
     pip install typing-extensions
     pip install pydantic-core --index-url https://termux-user-repository.github.io/pypi/
     pip install "pydantic>=2.12.4,<2.13"
+    pkg install python-cryptography
     ```
 
 And that's all there is to it! You're now ready to start using Chunklet-py.
