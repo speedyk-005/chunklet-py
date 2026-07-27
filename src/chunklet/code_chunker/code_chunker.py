@@ -205,7 +205,7 @@ class CodeChunker(BaseChunker):
                         }
                     )
                 )
-                curr_chunk = [line]  # Add the overflow line!
+                curr_chunk = []
                 token_count = 0
                 line_count = 0
 
