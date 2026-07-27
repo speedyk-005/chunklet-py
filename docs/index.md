@@ -23,7 +23,7 @@ Dumb splitting causes problems:
 Smart chunking solves this by:
 
 - **Smart limits** — Respects both natural boundaries (sentences, paragraphs, sections) AND configurable limits (tokens, lines, functions)
-- **Language-aware** — Detects language automatically and applies the right rules (50+ languages supported)
+- **Language-aware** — Detects language automatically and applies the right rules (60+ languages supported)
 - **Context preservation** — Overlap between chunks, rich metadata (source, span, document structure)
 
 ## 🤔 So What's Chunklet-py Anyway? (And Why Should You Care?)
@@ -66,7 +66,7 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 
 - :material-translate:{ .lg .middle } __Multilingual Mastery__
 
-    Supports over 50 natural languages for text and document chunking with intelligent detection and language-specific algorithms.
+    Supports over 60 natural languages for text and document chunking with intelligent detection and language-specific algorithms.
 
 - :material-code-tags:{ .lg .middle } __Code-Aware Intelligence__
 

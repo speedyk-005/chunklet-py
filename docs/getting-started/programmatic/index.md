@@ -6,7 +6,7 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
     ---
 
-    Precisely splits text into semantically meaningful sentences across 50+ languages with intelligent detection and complex structure handling.
+    Precisely splits text into semantically meaningful sentences across 60+ languages with intelligent detection and complex structure handling.
 
     Essential for preparing clean text data for NLP tasks, LLMs, and any application that needs accurate sentence boundaries.
 

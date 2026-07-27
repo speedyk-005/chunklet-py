@@ -44,7 +44,7 @@ Dumb splitting causes problems:
 Smart chunking solves this by:
 
 - **Smart limits** — Respects both natural boundaries (sentences, paragraphs, sections) AND configurable limits (tokens, lines, functions)
-- **Language-aware** — Detects language automatically and applies the right rules (50+ languages supported)
+- **Language-aware** — Detects language automatically and applies the right rules (60+ languages supported)
 - **Context preservation** — Overlap between chunks, rich metadata (source, span, document structure)
 
 ## 🤔 So What's Chunklet-py Anyway? (And Why Should You Care?)
@@ -73,7 +73,7 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 | 🪶 **Featherlight Footprint** | Designed to be lightweight and memory-efficient, ensuring optimal performance without unnecessary overhead. |
 | 🗂️ **Rich Metadata for RAG** | Enriches chunks with valuable, context-aware metadata (source, span, document properties, code AST details) crucial for advanced RAG and LLM applications. |
 | 🔧 **Infinitely Customizable** | Offers extensive customization options, from pluggable token counters to custom sentence splitters and processors. |
-| 🌐 **Multilingual Mastery** | Supports over 50 natural languages for text and document chunking with intelligent detection and language-specific algorithms. |
+| 🌐 **Multilingual Mastery** | Supports over 60 natural languages for text and document chunking with intelligent detection and language-specific algorithms. |
 | 🧑‍💻 **Code-Aware Intelligence** | Language-agnostic code chunking that understands and preserves the structural integrity of your source code. |
 | 🎯 **Precision Chunking** | Flexible chunking with configurable limits based on sentences, tokens, sections, lines, and functions. |
 | 📄 **Document Format Mastery** | Processes a wide array of document formats including `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`. |
