@@ -19,9 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Code chunker**: Extracted `_handle_oversized_snippet` from `_group_by_chunk`.
 - **PPTX processor**: Simplified `_extract_text` (extracted `_is_template_placeholder` helper). Split `_extract_chart` into `_safe_chart_title` and `_plot_to_table`, now uses `build_md_table`.
 - **CLI split output**: Shows detected language code instead of raw `--lang` flag.
+- **Span finder**: Used walrus operator and dropped redundant `in`-check.
 
 ### Fixed
 - **Visualizer**: Added `<label for="fileInput">` for screen-reader accessibility.
+- **Sentence terminators**: Removed inverted punct (`¡`, `¿`) from global sentence terminators. They're opening marks in Spanish, not closing marks.
 
 ### Removed
 - **Dependencies**: `pysbd`, `sentsplit`, and `tabulate2`.
