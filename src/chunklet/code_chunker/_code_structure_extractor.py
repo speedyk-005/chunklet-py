@@ -395,7 +395,6 @@ class CodeStructureExtractor:
         func_start: str | None = None,
         is_python_code: bool = False,
     ):
-        # TODO: Hard to read but works. Refactor when touching this area.
         """
         Detects top-level namespace or function starts and performs language-aware flushing.
 
