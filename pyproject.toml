@@ -147,6 +147,7 @@ chunklet = ["visualizer/static/**/*"]
 minversion = "7.4"
 filterwarnings = [
     "ignore::DeprecationWarning:websockets.*",
+    "ignore::DeprecationWarning:multiprocessing.*",
 ]
 
 # disable coverage report to prevent racing with multiprocessing
