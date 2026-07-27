@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Visualizer**: Added `<label for="fileInput">` for screen-reader accessibility.
+- **Code chunker**: Fixed duplicate function signature in `_split_oversized` when a decorator precedes a class.
 
 ### Removed
 - **Dependencies**: `pysbd`, `sentsplit`, and `tabulate2`.
