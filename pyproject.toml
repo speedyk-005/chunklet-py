@@ -64,7 +64,7 @@ structured-document = [
   "python-pptx>=1.0.0,<2.0",
 
   # Lastest version of 2.x.x series
-  "pylatexenc==2.10",
+  "pylatexenc==2.11",
   
   "odfpy>=1.4.1,<2.0",
   "openpyxl>=3.1.5,<4.0",
