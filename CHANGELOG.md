@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.4.0] - Unreleased
+## [2.4.0] - 2026-07-27
 
 ### Added
 - **EML Processor**: New `EmlProcessor` for RFC 822 email files. Extracts plain-text body and metadata (subject, from, to, cc, date, attachments) via `mailparse`.
