@@ -76,7 +76,7 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 | 🌐 **Multilingual Mastery** | Supports over 60 natural languages for text and document chunking with intelligent detection and language-specific algorithms. |
 | 🧑‍💻 **Code-Aware Intelligence** | Language-agnostic code chunking that understands and preserves the structural integrity of your source code. |
 | 🎯 **Precision Chunking** | Flexible chunking with configurable limits based on sentences, tokens, sections, lines, and functions. |
-| 📄 **Document Format Mastery** | Processes a wide array of document formats including `.pdf`, `.docx`, `.epub`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`. |
+| 📄 **Document Format Mastery** | Processes a wide array of document formats including `.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`. |
 | 💻 **Triple Interface: CLI, Library & Web** | Use it as a command-line tool, import as a library for deep integration, or launch the interactive web visualizer for real-time chunk exploration and parameter tuning. |
 
 
@@ -123,7 +123,7 @@ That's it! You're all set to start chunking.
 
 Want to unlock more Chunklet-py superpowers? Add these optional dependencies based on what you need:
 
-*   **Structured Documents:** For handling `.pdf`, `.docx`, `.epub`, and other document formats:
+*   **Structured Documents:** For handling `.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, and other document formats:
     ```bash
     pip install "chunklet-py[structured-document]"
     ```
