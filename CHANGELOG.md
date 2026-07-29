@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.4.2] - 2026-07-29
+
+### Fixed
+- **EML processor**: Fixed metadata extraction to capture all header fields (subject, from, to, cc, date) instead of only the body. Thanks [@AkshatSharma25](https://github.com/AkshatSharma25).
+
+---
+
 ## [2.4.0] - 2026-07-27
 
 ### Added
@@ -28,6 +35,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - **Dependencies**: `pysbd`, `sentsplit`, and `tabulate2`.
+
+---
+
+## [2.4.1] - 2026-07-29
+
+### Fixed
+- **EML processor**: Fixed metadata extraction to capture all header fields (subject, from, to, cc, date) instead of only the body. Thanks [@AkshatSharma25](https://github.com/AkshatSharma25).
 
 ---
 
