@@ -10,4 +10,4 @@ export PYTHONPATH=$(pwd)/src:$PYTHONPATH
 uv python -m mkdocs build
 
 # Deploy the documentation using mike
-uv run mike deploy --push --update-aliases --no-build 2.4.0 latest
+uv run mike deploy --push --update-aliases 2.4.2 latest
