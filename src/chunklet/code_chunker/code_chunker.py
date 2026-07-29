@@ -398,7 +398,9 @@ class CodeChunker(BaseChunker):
                 function_count + 1 > max_functions
             )
 
-            if not any([token_limit_reached, line_limit_reached, function_limit_reached]):
+            if not any(
+                [token_limit_reached, line_limit_reached, function_limit_reached]
+            ):
                 # Fits: merge normally
                 merged_content.append(snippet_dict["content"])
                 relations_list.append(snippet_dict["relations"])

@@ -337,14 +337,17 @@ class PlainTextChunker:
                 constraint_counter["sentence_count"] + 1 > max_sentences
             )
             heading_limit_reached = (
-                is_heading and constraint_counter["heading_count"] + 1 > max_section_breaks
+                is_heading
+                and constraint_counter["heading_count"] + 1 > max_section_breaks
             )
             token_limit_reached = (
                 max_tokens != sys.maxsize
                 and constraint_counter["token_count"] + sentence_tokens > max_tokens
             )
 
-            if any([token_limit_reached, sentence_limit_reached, heading_limit_reached]):
+            if any(
+                [token_limit_reached, sentence_limit_reached, heading_limit_reached]
+            ):
                 # for token-based mode, try splitting further
                 unfitted = ""
                 if token_limit_reached:

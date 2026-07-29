@@ -181,7 +181,9 @@ class MigrationAuditor:
                 "bold red",
             )
 
-    def _audit_calls(self, file_path: Path, tree: ast.AST, tracked_instances: set, lines: list[str]):
+    def _audit_calls(
+        self, file_path: Path, tree: ast.AST, tracked_instances: set, lines: list[str]
+    ):
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
@@ -198,9 +200,7 @@ class MigrationAuditor:
 
             if method_name in LEGACY_METHODS:
                 style = (
-                    "bold red"
-                    if method_name in ("preview_sentences",)
-                    else "yellow"
+                    "bold red" if method_name in ("preview_sentences",) else "yellow"
                 )
                 self._has_legacy_issues = True
                 self._print_issue(
