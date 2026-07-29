@@ -180,15 +180,11 @@ class PPTXProcessor(BaseProcessor):
     @staticmethod
     def _plot_to_table(plot: Any) -> list[list[str]] | None:
         """Build a list-of-lists table (header + rows) from a chart plot."""
-        categories = getattr(plot, "categories", None)
-        if not categories:
+        if not (categories := getattr(plot, "categories", None)):
             return None
-        try:
-            categories = [str(c) for c in categories]
-        except (TypeError, ValueError):
-            return None
+        categories = [str(c) for c in categories]
 
-        series_list = list(getattr(plot, "series", []) or [])
+        series_list = getattr(plot, "series", [])
         if not series_list:
             return None
 
