@@ -84,7 +84,7 @@ class EmlProcessor(BaseProcessor):
             if val := self._parsed.get(field):
                 metadata[field] = val
 
-            return metadata
+        return metadata
 
     def extract_text(self) -> Generator[str, None, None]:
         """
