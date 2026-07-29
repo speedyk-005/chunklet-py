@@ -270,40 +270,25 @@ class PPTXProcessor(BaseProcessor):
         for slide_idx, slide in enumerate(self.prs.slides, start=1):
             slide_content = [f"\n<!-- Slide {slide_idx} -->\n"]
 
-            # 1. Title Processing
-            title = self._extract_slide_title(slide)
-            if title:
+            # Title
+            if title := self._extract_slide_title(slide):
                 slide_content.append(title)
 
-            # 2. Iterate remaining layout blocks
+            # Layout blocks
             for shape in slide.shapes:
                 if shape == slide.shapes.title:
                     continue
+                if table_md := self._extract_table(shape):
+                    slide_content.append(table_md)
+                if chart_md := self._extract_chart(shape):
+                    slide_content.append(chart_md)
+                if text_md := self._extract_text(shape):
+                    slide_content.append(text_md)
 
-                # Handle Table blocks
-                if hasattr(shape, "has_table") and shape.has_table:
-                    table_md = self._extract_table(shape)
-                    if table_md:
-                        slide_content.append(table_md)
-
-                # Handle Chart blocks
-                elif hasattr(shape, "has_chart") and shape.has_chart:
-                    chart_md = self._extract_chart(shape)
-                    if chart_md:
-                        slide_content.append(chart_md)
-
-                # Handle text boxes & paragraphs
-                elif hasattr(shape, "has_text_frame") and shape.has_text_frame:
-                    text_md = self._extract_text(shape)
-                    if text_md:
-                        slide_content.append(text_md)
-
-            # 3. Presenter Notes Append
-            notes_md = self._extract_notes(slide)
-            if notes_md:
+            # Presenter Notes
+            if notes_md := self._extract_notes(slide):
                 slide_content.append(notes_md)
 
-            # Package slide buffer string cleanly
             yield "\n".join(slide_content).strip()
 
 
