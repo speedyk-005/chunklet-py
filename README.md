@@ -326,6 +326,7 @@ A huge thank you to the awesome people who helped shape Chunklet-py:
 
 - [@jmbernabotto](https://github.com/jmbernabotto) — for helping mostly on the CLI part, suggesting fixes, features, and design improvements.
 - [@arnoldfranz](https://github.com/arnoldfranz) — for reporting the CLI Path Validation Bug (#6) that helped improve error handling.
+- [@AkshatSharma25](https://github.com/AkshatSharma25) — for fixing EML metadata extraction to capture all header fields.
 
 ---
 

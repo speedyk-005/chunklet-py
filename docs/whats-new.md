@@ -3,6 +3,18 @@
 
 ---
 
+## Chunklet v2.4.1 and v2.4.2
+
+### 📄 The "We Forgot to Mention" Release
+
+- README now lists EML and PPTX in supported formats (they were there, just hiding)
+
+### 🐛 EML Metadata, Actually Complete
+
+PR from [@AkshatSharma25](https://github.com/AkshatSharma25) — the EML processor was quietly dropping header fields (subject, from, to, cc, date) and only grabbing the body. Fixed. All fields captured now.
+
+---
+
 ## Chunklet v2.4.0
 
 ### 📎 EML and PPTX, At Your Service
