@@ -10,9 +10,9 @@ Run:
     python examples/langchain_integration.py
 """
 
-from chunklet import DocumentChunker
 from langchain_core.documents import Document  # pip install langchain-core
 
+from chunklet import DocumentChunker
 
 text = """
 Artificial intelligence (AI) is transforming industries worldwide.
@@ -31,13 +31,10 @@ The field has advanced rapidly with transformer architectures.
 chunker = DocumentChunker()
 chunks = chunker.chunk_text(text, max_sentences=2, overlap_percent=10)
 
-docs = [
-    Document(page_content=c.content, metadata=c.metadata)
-    for c in chunks
-]
+docs = [Document(page_content=c.content, metadata=c.metadata) for c in chunks]
 
 for i, doc in enumerate(docs):
-    print(f"--- Chunk {i+1} ---")
+    print(f"--- Chunk {i + 1} ---")
     print(doc.page_content)
     print(f"Metadata: {doc.metadata}")
     print()

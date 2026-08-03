@@ -322,11 +322,10 @@ class PlainTextChunker:
         while index < len(sentences):
             sentence = sentences[index]
 
+            is_heading = False
             if SECTION_BREAK_PATTERN.match(sentence):
                 is_heading = True
                 sentence = "\n" + sentence
-            else:
-                is_heading = False
 
             sentence_tokens = (
                 count_tokens(sentence + "\n", token_counter)
@@ -346,8 +345,11 @@ class PlainTextChunker:
                 and constraint_counter["token_count"] + sentence_tokens > max_tokens
             )
 
-            if token_limit_reached or sentence_limit_reached or heading_limit_reached:
+            if any(
+                [token_limit_reached, sentence_limit_reached, heading_limit_reached]
+            ):
                 # for token-based mode, try splitting further
+                unfitted = ""
                 if token_limit_reached:
                     remaining_tokens = max_tokens - constraint_counter["token_count"]
                     fitted, unfitted = self._find_clauses_that_fit(
@@ -378,9 +380,6 @@ class PlainTextChunker:
                         # We need to process the remnants separately
                         sentences[index] = unfitted
 
-                else:
-                    unfitted = ""
-
                 chunks.append("\n".join(curr_chunk))  # Considered complete
 
                 curr_chunk = self._prepare_next_chunk(
@@ -393,13 +392,12 @@ class PlainTextChunker:
                     constraint_counter=constraint_counter,
                 )
 
-            else:
-                curr_chunk.append(sentence)
-                constraint_counter["token_count"] += sentence_tokens
-                constraint_counter["sentence_count"] += 1
-                if is_heading:
-                    constraint_counter["heading_count"] += 1
-                index += 1
+            curr_chunk.append(sentence)
+            constraint_counter["token_count"] += sentence_tokens
+            constraint_counter["sentence_count"] += 1
+            if is_heading:
+                constraint_counter["heading_count"] += 1
+            index += 1
 
         # Add the last chunk if it exists
         if curr_chunk:
