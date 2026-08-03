@@ -7,7 +7,7 @@ from typing import Callable
 from loguru import logger
 from py3langid.langid import MODEL_FILE, LanguageIdentifier
 
-# pysbd, sentsplit, indicnlp and sentencex are lazy imported
+# yasbd, indicnlp and sentencex are lazy imported
 from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
