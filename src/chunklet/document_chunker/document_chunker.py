@@ -19,7 +19,6 @@ except ImportError:  # pragma: no cover
     from_path = None
 
 from chunklet.base_chunker import BaseChunker
-from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
 from chunklet.common.validation import IterableOfPath, IterableOfStr, validate_input
@@ -613,61 +612,3 @@ class DocumentChunker(BaseChunker):
                 yield ch
 
             sections_per_path[curr_path] -= 1
-
-    @deprecated_callable(
-        use_instead="chunk_file or chunk_text",
-        deprecated_in="2.2.0",
-        removed_in="3.0.0",
-    )
-    def chunk(  # pragma: no cover
-        self,
-        path: str | Path,
-        *,
-        lang: str = "auto",
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_sentences: Annotated[int | None, Field(ge=1)] = None,
-        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
-        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
-        offset: Annotated[int, Field(ge=0)] = 0,
-        token_counter: Callable[[str], int] | None = None,
-    ) -> list[DotDict]:
-        """
-        Chunk a document file into semantic pieces.
-
-        Note:
-            Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_file` instead.
-        """
-        params = {k: v for k, v in locals().items() if k != "self"}
-        params["token_counter"] = params["token_counter"] or self.token_counter
-        return self.chunk_file(**params)
-
-    @deprecated_callable(
-        use_instead="chunk_files or chunk_texts",
-        deprecated_in="2.2.0",
-        removed_in="3.0.0",
-    )
-    def batch_chunk(  # pragma: no cover
-        self,
-        paths: IterableOfPath,
-        *,
-        lang: str = "auto",
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_sentences: Annotated[int | None, Field(ge=1)] = None,
-        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
-        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
-        offset: Annotated[int, Field(ge=0)] = 0,
-        token_counter: Callable[[str], int] | None = None,
-        separator: Any = None,
-        n_jobs: Annotated[int, Field(ge=1)] | None = None,
-        show_progress: bool = True,
-        on_errors: Literal["raise", "skip", "break"] = "raise",
-    ) -> Generator[DotDict, None, None]:
-        """
-        Batch chunk multiple document files.
-
-        Note:
-            Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_files` instead.
-        """
-        params = {k: v for k, v in locals().items() if k != "self"}
-        params["token_counter"] = params["token_counter"] or self.token_counter
-        yield from self.chunk_files(**params)

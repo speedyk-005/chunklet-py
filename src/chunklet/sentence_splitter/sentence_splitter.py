@@ -1,5 +1,4 @@
 import re
-import warnings
 from functools import lru_cache
 from pathlib import Path
 from typing import Callable
@@ -8,7 +7,6 @@ from loguru import logger
 from py3langid.langid import MODEL_FILE, LanguageIdentifier
 
 # yasbd, indicnlp and sentencex are lazy imported
-from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
 from chunklet.common.validation import validate_input
@@ -33,21 +31,6 @@ class BaseSplitter:
     Defines the interface that all splitter implementations must adhere to.
     """
 
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-
-        # Compare against BaseSplitter (the class that actually owns the defaults)
-        is_split_overridden = cls.split is not BaseSplitter.split
-        is_split_text_overridden = cls.split_text is not BaseSplitter.split_text
-
-        if is_split_overridden and not is_split_text_overridden:
-            warnings.warn(
-                f"Class '{cls.__name__}' overrides 'split', which is deprecated. "
-                f"Please migrate to overriding 'split_text' instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
     def split_text(self, text: str, lang: str = "auto") -> list[str]:
         """Splits the given text into a list of sentences.
 
@@ -59,18 +42,6 @@ class BaseSplitter:
             A list of sentences extracted from the text.
         """
         raise NotImplementedError("Subclasses must implement 'split_text'.")
-
-    @deprecated_callable(
-        use_instead="split_text", deprecated_in="2.2.0", removed_in="3.0.0"
-    )
-    def split(self, text: str, lang: str = "auto") -> list[str]:  # pragma: no cover
-        """
-        Split text into sentences.
-
-        Note:
-            Deprecated since 2.2.0. Will be removed in 3.0.0. Use `split_text` instead.
-        """
-        return self.split_text(text, lang)
 
 
 class SentenceSplitter(BaseSplitter):
