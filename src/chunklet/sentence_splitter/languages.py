@@ -8,8 +8,8 @@ regex-based sentence splitter is used as a fallback to ensure broad compatibilit
 
 from yasbd import get_supported_langs
 
-# Yasbd is our own lib. Built to mor emore accurate and faster than PySBD
-# and it support multiple languages (39)
+# Yasbd is our own lib built to be more accurate and faster than PySBD
+# and also supports more languages (39)
 # https://github.com/speedyk-005/yasbd-lib#-supported-languages-api
 YASBD_SUPPORTED_LANGUAGES = set(get_supported_langs()) - {"auto"}
 
