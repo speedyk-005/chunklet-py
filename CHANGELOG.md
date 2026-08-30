@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.0] - Unreleased
+
+### Removed
+- **Deprecated APIs**: Removed the aliases deprecated in v2.2.0 ahead of the v3.0.0 release:
+  - `chunk()` and `batch_chunk()` from `DocumentChunker` and `CodeChunker`.
+  - `BaseSplitter.split()` used `split_text()`.
+  - `PlainTextChunker` public import from `chunklet`.
+
+---
+
 ## [2.4.2] - 2026-07-29
 
 ### Fixed
