@@ -170,11 +170,10 @@ class SentenceSplitter:
         self._last_lang_used = lang
 
         sentences = None
-        if lang != "fallback":
-            if (
-                handler := self._get_lang_handler(lang, self.verbose)
-            ) is not None:
-                sentences = handler(text)
+        if lang != "fallback" and (
+            handler := self._get_lang_handler(lang, self.verbose)
+        ) is not None:
+            sentences = handler(text)
 
         # If no handler found, use fallback
         if sentences is None:
