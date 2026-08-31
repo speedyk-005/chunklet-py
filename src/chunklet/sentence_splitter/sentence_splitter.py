@@ -16,7 +16,6 @@ from chunklet.sentence_splitter.languages import (
     SENTENCEX_UNIQUE_LANGUAGES,
     YASBD_SUPPORTED_LANGUAGES,
 )
-from chunklet.sentence_splitter.registry import custom_splitter_registry
 
 # To identify strings consisting solely of punctuation or symbols.
 PUNCTUATION_ONLY_PATTERN = re.compile(r"\W+")
@@ -50,7 +49,6 @@ class SentenceSplitter(BaseSplitter):
 
     Key Features:
     - Multilingual Support: Leverages language-specific algorithms and detection for broad coverage.
-    - Custom Splitters: Uses centralized registry for custom splitting logic.
     - Fallback Mechanism: Employs a universal rule-based splitter for unsupported languages.
     - Robust Error Handling: Provides clear error reporting for issues with custom splitters.
     - Intelligent Post-processing: Cleans up split sentences by filtering empty strings and rejoining stray punctuation.
@@ -77,7 +75,7 @@ class SentenceSplitter(BaseSplitter):
 
     @staticmethod
     @lru_cache(maxsize=52)
-    def _get_special_lang_handler(lang: str, verbose: bool) -> Callable | None:
+    def _get_lang_handler(lang: str, verbose: bool) -> Callable | None:
         """
         Get language-specific sentence splitting handler.
 
@@ -193,12 +191,8 @@ class SentenceSplitter(BaseSplitter):
 
         sentences = None
         if lang != "fallback":
-            # Prioritize custom splitters from registry
-            if custom_splitter_registry.is_registered(lang):
-                sentences, splitter_name = custom_splitter_registry.split(text, lang)
-                log_info(self.verbose, "Using registered splitter: {}", splitter_name)
-            elif (
-                handler := self._get_special_lang_handler(lang, self.verbose)
+            if (
+                handler := self._get_lang_handler(lang, self.verbose)
             ) is not None:
                 sentences = handler(text)
 
