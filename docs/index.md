@@ -122,8 +122,8 @@ Curious about all the features?
 
 Want to keep up with Chunklet-py's latest adventures?
 
-  *   [**What's New:**](whats-new.md) Discover all the exciting new features and improvements in Chunklet 2.2.0.
-  *   [**Migration Guide:**](migration.md) Learn how to smoothly transition from previous versions to Chunklet 2.x.x.
+  *   [**What's New:**](whats-new.md) Discover all the exciting new features and improvements in Chunklet.
+  *   [**Migration Guide:**](migration.md) Learn how to smoothly transition from previous versions to Chunklet 3.x.x.
 
  *   [**Changelog:**](https://github.com/speedyk-005/chunklet-py/blob/main/CHANGELOG.md) See what's new, what's fixed, and what's been improved in recent versions.
 
