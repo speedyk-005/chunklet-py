@@ -91,7 +91,7 @@ Using universal rule-based splitter. Language not supported or detected with low
 
 **What it means:** No specialized splitter for your language exists in yasbd or the other backends. We're using the generic regex fallback instead. Some languages have complex punctuation rules that the specialized splitters handle — the fallback is a one-size-fits-all that works okay but isn't great for anything.
 
-**Fix:** The fallback is a one-size-fits-all that's decent for most cases. For languages with complex punctuation rules, consider splitting the text manually. Note: the custom splitter registry was removed in v3.0.0.
+**Fix:** The fallback is a one-size-fits-all that's decent for most cases.
 
 ---
 

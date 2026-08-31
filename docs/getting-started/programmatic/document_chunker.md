@@ -571,7 +571,7 @@ To use a custom processor, you leverage the [`@registry.register`](../../referen
     - For multi-section documents, return a list of strings - each will be processed as a separate section
     - If an error occurs during the document processing (e.g., an issue with the custom processor function), a [`CallbackError`](../../exceptions-and-warnings.md#callbackerror) will be raised
 
-```py linenums="1" hl_lines="4-6 10-20 27 57"
+```py linenums="1" hl_lines="5-7 9-19 21 53-54"
 import os
 import re
 import json

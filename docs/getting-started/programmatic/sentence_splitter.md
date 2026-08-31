@@ -139,12 +139,5 @@ for lang, text in lang_texts.items():
     --------------------
     ```
 
-## Custom Sentence Splitters Removed ⚠️ {#custom-sentence-splitter}
-
-!!! warning "Removed in v3.0.0"
-    The custom splitter registry (`custom_splitter_registry` / `CustomSplitterRegistry`) and the `BaseSplitter` interface were removed in v3.0.0. There is no longer a way to register custom splitting logic via the registry.
-
-    `SentenceSplitter` now always uses its built-in language handlers and, when a language isn't supported (or auto-detection confidence is low), falls back to a universal rule-based splitter (`UniversalSplitter`). For unsupported languages you can still split manually or open a feature request for the language you need.
-
 ??? info "API Reference"
     For complete technical details on the `SentenceSplitter` class, check out the [API documentation](../../reference/chunklet/sentence_splitter/sentence_splitter.md).

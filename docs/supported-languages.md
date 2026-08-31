@@ -120,11 +120,3 @@ Think of it as that friend at the karaoke bar who doesn't know the song but will
 !!! info "API Reference"
     For the nerds who want the full details, check out the [`_universal_splitter` API docs](reference/chunklet/sentence_splitter/_universal_splitter.md).
 
----
-
-## Custom Splitters Removed ⚠️
-
-!!! warning "Removed in v3.0.0"
-    The custom splitter registry (`custom_splitter_registry`) was removed in v3.0.0. There is no longer a way to register your own splitting logic.
-
-    For languages not covered by the built-in handlers, `SentenceSplitter` automatically falls back to the universal rule-based splitter above. If you need proper support for a specific language, consider requesting it or contributing a handler.
