@@ -375,9 +375,6 @@ chunks = chunker.chunk_text(
     chunker = DocumentChunker(verbose=True)
     ```
 
-!!! tip "Custom Sentence Splitter"
-    You can provide a custom [`SentenceSplitter`](sentence_splitter.md) instance to `DocumentChunker` for specialized sentence splitting behavior. For more details, see the [Sentence Splitter documentation](sentence_splitter.md#custom-sentence-splitter).
-
 !!! tip "Adding Base Metadata"
     You can pass a `base_metadata` dictionary to `chunk_text` and `chunk_texts`. This metadata will be included in each chunk. For example: `chunker.chunk_text(..., base_metadata={"source": "my_document.txt"})`. For more details, see the [Metadata guide](../metadata.md#documentchunker-metadata).
 

@@ -31,7 +31,6 @@ class SentenceSplitter:
     Key Features:
     - Multilingual Support: Leverages language-specific algorithms and detection for broad coverage.
     - Fallback Mechanism: Employs a universal rule-based splitter for unsupported languages.
-    - Robust Error Handling: Provides clear error reporting for issues with custom splitters.
     - Intelligent Post-processing: Cleans up split sentences by filtering empty strings and rejoining stray punctuation.
     """
 

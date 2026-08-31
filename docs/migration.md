@@ -142,49 +142,12 @@ The old `detect_text_language.py` file is gone. Language detection now lives ins
     lang, confidence = splitter.detected_top_language(text)
     ```
 
-### Custom splitters use a registry now
+### Custom splitters are gone
 
-The old `custom_splitters` parameter in the constructor is gone. Instead, there's a global registry you register with. This means your custom splitters work across all chunker instances, not just one.
+!!! warning "Removed in v3.0.0"
+    Custom splitters were a v2 feature: the old `custom_splitters` constructor parameter was replaced by a global `custom_splitter_registry` in v2, and **both were removed entirely in v3.0.0**.
 
-**Fix:**
-
-=== "Before (v1.4.0)"
-
-    ```py
-    import re
-    from chunklet import Chunklet
-    from typing import List
-
-    def my_custom_splitter(text: str) -> List[str]:
-        return [s.strip() for s in re.split(r'(?<=\.)\\s+', text) if s.strip()]
-
-    chunker = Chunklet(
-        custom_splitters=[
-            {
-                "name": "MyCustomEnglishSplitter",
-                "languages": "en",
-                "callback": my_custom_splitter,
-            }
-        ]
-    )
-    ```
-
-=== "After (v2.x.x)"
-
-    ```py
-    import re
-    from chunklet import DocumentChunker
-    from chunklet.sentence_splitter import custom_splitter_registry
-
-    @custom_splitter_registry.register("en", name="MyAwesomeEnglishSplitter")
-    def my_awesome_splitter(text: str) -> list[str]:
-        return [s.strip() for s in re.split(r'[.!?]\s+', text) if s.strip()]
-
-    chunker = DocumentChunker()
-    chunks = chunker.chunk_text(text, lang="en", max_sentences=1)
-    ```
-
-Check the [docs](getting-started/programmatic/sentence_splitter.md#custom-sentence-splitter) for more details.
+    `SentenceSplitter` now always uses its built-in language handlers, falling back to a universal rule-based splitter for unsupported languages. If you were relying on a custom splitter for a specific language, open a feature request or split that language manually.
 
 ### Exception name changes
 
