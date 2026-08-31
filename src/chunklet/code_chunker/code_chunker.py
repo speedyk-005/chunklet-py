@@ -47,7 +47,6 @@ from chunklet.base_chunker import BaseChunker
 from chunklet.code_chunker._code_structure_extractor import CodeStructureExtractor
 from chunklet.code_chunker.utils import is_python_code
 from chunklet.common.batch_runner import run_in_batch
-from chunklet.common.deprecation import deprecated_callable
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import is_path_like, read_text_file
 from chunklet.common.token_utils import count_tokens
@@ -836,102 +835,6 @@ class CodeChunker(BaseChunker):
             func=chunk_func,
             iterable_of_args=paths,
             iterable_name="paths",
-            separator=separator,
-            n_jobs=n_jobs,
-            show_progress=show_progress,
-            on_errors=on_errors,
-            verbose=self.verbose,
-        )
-
-    @deprecated_callable(
-        use_instead="chunk_text or chunk_file",
-        deprecated_in="2.2.0",
-        removed_in="3.0.0",
-    )
-    def chunk(  # pragma: no cover
-        self,
-        source: str | Path,
-        *,
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_lines: Annotated[int | None, Field(ge=5)] = None,
-        max_functions: Annotated[int | None, Field(ge=1)] = None,
-        token_counter: Callable[[str], int] | None = None,
-        include_comments: bool = True,
-        docstring_mode: Literal["summary", "all", "excluded"] = "all",
-        strict: bool = True,
-    ) -> list[DotDict]:
-        """
-        Chunk code into semantic pieces.
-
-        Note:
-            Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_file` or `chunk_text` instead.
-        """
-        if isinstance(source, Path) or (
-            isinstance(source, str) and is_path_like(source)
-        ):
-            return self.chunk_file(
-                path=source,
-                max_tokens=max_tokens,
-                max_lines=max_lines,
-                max_functions=max_functions,
-                token_counter=token_counter,
-                include_comments=include_comments,
-                docstring_mode=docstring_mode,
-                strict=strict,
-            )
-        return self.chunk_text(
-            code=source,
-            max_tokens=max_tokens,
-            max_lines=max_lines,
-            max_functions=max_functions,
-            token_counter=token_counter,
-            include_comments=include_comments,
-            docstring_mode=docstring_mode,
-            strict=strict,
-        )
-
-    @deprecated_callable(
-        use_instead="chunk_texts or chunk_files",
-        deprecated_in="2.2.0",
-        removed_in="3.0.0",
-    )
-    def batch_chunk(  # pragma: no cover
-        self,
-        sources: IterableOfPath,
-        *,
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_lines: Annotated[int | None, Field(ge=5)] = None,
-        max_functions: Annotated[int | None, Field(ge=1)] = None,
-        token_counter: Callable[[str], int] | None = None,
-        separator: Any = None,
-        include_comments: bool = True,
-        docstring_mode: Literal["summary", "all", "excluded"] = "all",
-        strict: bool = True,
-        n_jobs: Annotated[int, Field(ge=1)] | None = None,
-        show_progress: bool = True,
-        on_errors: Literal["raise", "skip", "break"] = "raise",
-    ) -> Generator[DotDict, None, None]:
-        """
-        Batch chunk multiple code sources.
-
-        Note:
-            Deprecated since v2.2.0. Will be removed in v3.0.0. Use `chunk_files` instead.
-        """
-        chunk_func = partial(
-            self.chunk,
-            max_tokens=max_tokens,
-            max_lines=max_lines,
-            max_functions=max_functions,
-            token_counter=token_counter or self.token_counter,
-            include_comments=include_comments,
-            docstring_mode=docstring_mode,
-            strict=strict,
-        )
-
-        yield from run_in_batch(
-            func=chunk_func,
-            iterable_of_args=sources,
-            iterable_name="sources",
             separator=separator,
             n_jobs=n_jobs,
             show_progress=show_progress,

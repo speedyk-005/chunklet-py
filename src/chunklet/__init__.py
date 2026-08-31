@@ -9,24 +9,15 @@ context-aware chunking strategies.
 Key Features:
 
 - Sentence splitting: Multilingual text segmentation across 50+ languages
-- Semantic chunking: PlainTextChunker, DocumentChunker, and CodeChunker
+- Semantic chunking: DocumentChunker and CodeChunker
 - Interactive visualization: Web-based chunk exploration and parameter tuning
 - Multi-format support: Text, code, PDF, DOCX, EPUB, and more
 - Batch processing: Memory-optimized generators with flexible error handling
-
-Note:
-    PlainTextChunker has been merged into DocumentChunker since v2.2.0.
-    Use DocumentChunker.chunk_text() or DocumentChunker.chunk_texts() instead.
 """
 
 import importlib
-import sys
-import types
 import typing
-import warnings
 from importlib.metadata import PackageNotFoundError, version
-
-from chunklet.common.deprecation import deprecated_callable
 
 try:
     __version__ = version("chunklet-py")
@@ -54,54 +45,17 @@ __all__ = [
     "SentenceSplitter",
     "DocumentChunker",
     "CodeChunker",
-    "PlainTextChunker",  # Kept for backward compatibility
     "Visualizer",
 ]
 
 
 # Map the public names to their sub-module locations
-_PLAIN_TEXT_CHUNKER_MODULE = "chunklet.plain_text_chunker"
-
 _LOOKUP = {
     "SentenceSplitter": "chunklet.sentence_splitter",
-    "PlainTextChunker": _PLAIN_TEXT_CHUNKER_MODULE,
     "DocumentChunker": "chunklet.document_chunker",
     "CodeChunker": "chunklet.code_chunker",
     "Visualizer": "chunklet.visualizer",
 }
-
-
-class _PlainTextChunkerModuleProxy(types.ModuleType):
-    """Proxy module for backward compatibility.
-
-    This proxy intercepts attribute access to show a deprecation warning
-    when accessing PlainTextChunker via the old import path.
-    """
-
-    def __init__(self):
-        super().__init__(_PLAIN_TEXT_CHUNKER_MODULE)
-        self._PlainTextChunker: typing.Any = None
-
-    def _get_deprecated_class(self):
-        if self._PlainTextChunker is None:
-            from chunklet.document_chunker._plain_text_chunker import PlainTextChunker
-
-            self._PlainTextChunker = deprecated_callable(
-                use_instead="chunklet.DocumentChunker.chunk_text and chunk_texts",
-                deprecated_in="2.2.0",
-                removed_in="3.0.0",
-            )(PlainTextChunker)
-        return self._PlainTextChunker
-
-    def __getattr__(self, name: str) -> typing.Any:
-        return self._get_deprecated_class()
-
-    def __dir__(self):
-        return dir(self._get_deprecated_class())
-
-
-# Register proxy in sys.modules for backward compatibility
-sys.modules[_PLAIN_TEXT_CHUNKER_MODULE] = _PlainTextChunkerModuleProxy()
 
 
 def __getattr__(name: str) -> typing.Any:
