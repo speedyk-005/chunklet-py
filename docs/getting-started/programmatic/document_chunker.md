@@ -375,9 +375,6 @@ chunks = chunker.chunk_text(
     chunker = DocumentChunker(verbose=True)
     ```
 
-!!! tip "Custom Sentence Splitter"
-    You can provide a custom [`SentenceSplitter`](sentence_splitter.md) instance to `DocumentChunker` for specialized sentence splitting behavior. For more details, see the [Sentence Splitter documentation](sentence_splitter.md#custom-sentence-splitter).
-
 !!! tip "Adding Base Metadata"
     You can pass a `base_metadata` dictionary to `chunk_text` and `chunk_texts`. This metadata will be included in each chunk. For example: `chunker.chunk_text(..., base_metadata={"source": "my_document.txt"})`. For more details, see the [Metadata guide](../metadata.md#documentchunker-metadata).
 
@@ -561,10 +558,9 @@ for i, doc_chunks in enumerate(chunk_groups):
 
 Want to handle exotic file formats that `DocumentChunker` doesn't know about? Create your own custom processors! This lets you add specialized processing for any file type and prioritize your custom processors over the built-in ones.
 
-!!! warning "Global Registry Alert!"
-    Custom processors get registered globally - once you add one, it's available everywhere in your app. Watch out for side effects if you're registering processors across different parts of your codebase, especially in multi-threaded or long-running applications!
+Custom processors live in a [`CustomProcessorRegistry`](../../reference/chunklet/document_chunker/registry.md) instance that **you create and own**. Create a registry, register your processors on it, and pass it to a `DocumentChunker` via the `processor_registry` parameter. This gives you full control over scope — no more global side effects.
 
-To use a custom processor, you leverage the [`@custom_processor_registry.register`](../../reference/chunklet/document_chunker/registry.md) decorator. This decorator allows you to register your function for one or more file extensions directly. Your custom processor function must accept a single `file_path` parameter (str) and return a `tuple[str | list[str], dict]` containing extracted text (or list of texts for multi-section documents) and a metadata dictionary.
+To use a custom processor, you leverage the [`@registry.register`](../../reference/chunklet/document_chunker/registry.md) decorator. This decorator allows you to register your function for one or more file extensions directly. Your custom processor function must accept a single `file_path` parameter (str) and return a `tuple[str | list[str], dict]` containing extracted text (or list of texts for multi-section documents) and a metadata dictionary.
 
 !!! important "Custom Processor Rules"
     - Your function must accept exactly one required parameter (the file path)
@@ -575,16 +571,17 @@ To use a custom processor, you leverage the [`@custom_processor_registry.registe
     - For multi-section documents, return a list of strings - each will be processed as a separate section
     - If an error occurs during the document processing (e.g., an issue with the custom processor function), a [`CallbackError`](../../exceptions-and-warnings.md#callbackerror) will be raised
 
-```py linenums="1" hl_lines="5 8-18 52-53"
+```py linenums="1" hl_lines="5-7 9-19 21 53-54"
 import os
 import re
 import json
 import tempfile
-from chunklet.document_chunker import DocumentChunker, custom_processor_registry
+from chunklet.document_chunker import CustomProcessorRegistry, DocumentChunker
 
+registry = CustomProcessorRegistry()
 
 # Define a simple custom processor for .json files
-@custom_processor_registry.register(".json", name="MyJSONProcessor")
+@registry.register(".json", name="MyJSONProcessor")
 def my_json_processor(file_path: str) -> tuple[str, dict]:
     with open(file_path, 'r') as f:
         data = json.load(f)
@@ -594,6 +591,8 @@ def my_json_processor(file_path: str) -> tuple[str, dict]:
     metadata = data.get("metadata", {})
     metadata["source"] = file_path
     return text_content, metadata
+
+chunker = DocumentChunker(processor_registry=registry)
 
 # A longer and more complex JSON sample
 json_data = {
@@ -607,8 +606,6 @@ json_data = {
         "Finally, the third paragraph concludes our sample. We hope this demonstrates the flexibility of the system in handling various data formats."
     ]
 }
-
-chunker = DocumentChunker()
 
 # Use a temporary file
 with tempfile.NamedTemporaryFile(mode='w+', suffix=".json") as tmp:
@@ -628,7 +625,7 @@ with tempfile.NamedTemporaryFile(mode='w+', suffix=".json") as tmp:
         print()
 
 # Optionally unregister
-custom_processor_registry.unregister(".json")
+registry.unregister(".json")
 ```
 
 ??? success "Click to show output"
@@ -653,19 +650,25 @@ custom_processor_registry.unregister(".json")
     ```
 
 !!! note "Registering Without the Decorator"
-    If you prefer not to use decorators, you can directly use the `custom_processor_registry.register()` method. This is particularly useful when registering processors dynamically.
+    If you prefer not to use decorators, you can directly use the `registry.register()` method. This is particularly useful when registering processors dynamically.
 
     ```py linenums="1"
-    from chunklet.document_chunker import custom_processor_registry
+    from chunklet.document_chunker import CustomProcessorRegistry, DocumentChunker
+
+    registry = CustomProcessorRegistry()
 
     def my_other_processor(file_path: str) -> tuple[str, dict]:
         # ... your logic ...
         return "some text", {"source": file_path}
 
-    custom_processor_registry.register(my_other_processor, ".custom", name="MyOtherProcessor")
+    registry.register(my_other_processor, ".custom", name="MyOtherProcessor")
+    chunker = DocumentChunker(processor_registry=registry)
     ```
 
-### [`custom_processor_registry`](../../reference/chunklet/document_chunker/registry.md) Methods Summary
+!!! tip "Per-Instance Scope"
+    Each `DocumentChunker` gets its own independent registry unless you pass one in. Create a new `CustomProcessorRegistry()` per logical group of processors to keep registrations isolated.
+
+### [`CustomProcessorRegistry`](../../reference/chunklet/document_chunker/registry.md) Methods Summary
 
 *   `processors`: Returns a shallow copy of the dictionary of registered processors.
 *   `is_registered(ext: str)`: Checks if a processor is registered for the given file extension, returning `True` or `False`.

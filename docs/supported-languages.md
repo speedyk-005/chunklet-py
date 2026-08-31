@@ -120,37 +120,3 @@ Think of it as that friend at the karaoke bar who doesn't know the song but will
 !!! info "API Reference"
     For the nerds who want the full details, check out the [`_universal_splitter` API docs](reference/chunklet/sentence_splitter/_universal_splitter.md).
 
----
-
-## Teaching Chunklet New Tricks: Custom Splitters 🛠️
-
-What if none of this works for you? Maybe you have a weird edge case, or you're working with something really niche. That's where custom splitters come in — you bring your own splitting logic, and Chunklet-py will use it like a boss.
-
-Here's how you can add your own splitter:
-
-**Option A: Register Directly (The No-Nonsense Way)**
-
-```py
-from chunklet.sentence_splitter import custom_splitter_registry
-
-def my_custom_splitter(text: str) -> list[str]:
-    # Your brilliant, custom splitting logic here
-    return text.split('.')
-
-# Teach Chunklet your new trick for English
-custom_splitter_registry.register(my_custom_splitter, "en", name="MyCustomSplitter")
-```
-
-**Option B: Use a Decorator (The Fancy Way)**
-
-```py
-from chunklet.sentence_splitter import custom_splitter_registry
-
-@custom_splitter_registry.register("fr", name="MyFrenchSplitter")
-def my_french_splitter(text: str) -> list[str]:
-    # Your magnifique splitting logic for French
-    return text.split('!')
-```
-
-!!! tip "Go Global with 'xx'"
-    Register a splitter with the language code `xx` and it'll become your universal fallback. Just set `lang='xx'` when chunking and boom — your splitter runs the show.

@@ -37,9 +37,8 @@ from chunklet.document_chunker.processors import (
     pdf_processor,
     pptx_processor,
 )
-from chunklet.document_chunker.registry import custom_processor_registry
-from chunklet.exceptions import InvalidInputError, UnsupportedFileTypeError
-from chunklet.sentence_splitter import BaseSplitter
+from chunklet.document_chunker.registry import CustomProcessorRegistry
+from chunklet.exceptions import UnsupportedFileTypeError
 
 
 class DocumentChunker(BaseChunker):
@@ -80,40 +79,28 @@ class DocumentChunker(BaseChunker):
 
     def __init__(
         self,
-        sentence_splitter: Any | None = None,
         verbose: bool = False,
         continuation_marker: str = "...",
         token_counter: Callable[[str], int] | None = None,
+        processor_registry: CustomProcessorRegistry | None = None,
     ):
         """
         Initializes the DocumentChunker.
 
         Args:
-            sentence_splitter: An optional BaseSplitter instance.
-                If None, a default SentenceSplitter will be initialized.
             verbose: Enable verbose logging.
             continuation_marker: The marker to prepend to unfitted clauses. Defaults to '...'.
             token_counter: Function that counts tokens in text.
                 If None, must be provided when calling chunk() methods.
-
-        Raises:
-            InvalidInputError: If any of the input arguments are invalid or if the provided `sentence_splitter` is not an instance of `BaseSplitter`.
+            processor_registry: An optional CustomProcessorRegistry instance to use for
+                custom document processors. If None, a fresh registry is created.
         """
         self._verbose = verbose
         self.token_counter = token_counter
         self.continuation_marker = continuation_marker
-
-        # Explicit type validation for sentence_splitter
-        if sentence_splitter is not None and not isinstance(
-            sentence_splitter, BaseSplitter
-        ):
-            raise InvalidInputError(
-                f"The provided sentence_splitter must be an instance of BaseSplitter, "
-                f"but got {type(sentence_splitter).__name__}."
-            )
+        self.processor_registry = processor_registry or CustomProcessorRegistry()
 
         self.plain_text_chunker = PlainTextChunker(
-            sentence_splitter=sentence_splitter,
             verbose=self._verbose,
             continuation_marker=self.continuation_marker,
             token_counter=self.token_counter,
@@ -141,7 +128,7 @@ class DocumentChunker(BaseChunker):
         """Get the supported extensions, including the custom ones."""
         return (
             self.BUILTIN_SUPPORTED_EXTENSIONS
-            | custom_processor_registry.processors.keys()
+            | self.processor_registry.processors.keys()
         )
 
     @property
@@ -235,10 +222,11 @@ class DocumentChunker(BaseChunker):
         log_info(self.verbose, "Extracting text from file {}", path)
 
         # Prioritize custom processors from registry
-        if custom_processor_registry.is_registered(ext):
-            texts_and_metadata, processor_name = custom_processor_registry.extract_data(
-                str(path), ext
-            )
+        if self.processor_registry.is_registered(ext):
+            (
+                texts_and_metadata,
+                processor_name,
+            ) = self.processor_registry.extract_data(str(path), ext)
             log_info(self.verbose, "Used registered processor: {}", processor_name)
             text_or_gen, metadata = texts_and_metadata
             metadata["source"] = metadata.get("source", str(path))

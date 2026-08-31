@@ -10,12 +10,35 @@ SCRIPT_NAME = Path(__file__).name
 
 console = Console()
 
-DEPRECATED_ARGUMENTS = {"use_cache": "Remove it.", "custom_splitters": "Remove it."}
+REMOVED_ARGUMENTS = {
+    "use_cache": "Remove it.",
+    "custom_splitters": "Remove it.",
+    "mode": "Remove it. Pass your limits (max_sentences, max_tokens, etc.) instead.",
+    "sentence_splitter": (
+        "Removed in v3. DocumentChunker/PlainTextChunker always use a default SentenceSplitter."
+    ),
+}
 
 CHUNKER_CLASS_NAMES = {"Chunklet", "PlainTextChunker", "DocumentChunker", "CodeChunker"}
 
 LEGACY_IMPORTS = {
     "chunklet.utils.detect_text_language": "Use 'SentenceSplitter.detected_top_language()' instead.",
+    "chunklet.sentence_splitter.custom_splitter_registry": "Removed in v3. Custom splitters are gone.",
+    "chunklet.sentence_splitter.CustomSplitterRegistry": "Removed in v3. Custom splitters are gone.",
+    "chunklet.sentence_splitter.BaseSplitter": "Removed in v3.",
+    "chunklet.document_chunker.custom_processor_registry": (
+        "Removed in v3. Create a CustomProcessorRegistry() and pass it to "
+        "DocumentChunker(processor_registry=...)."
+    ),
+}
+# Module-level names (not necessarily dotted-import paths) that are gone in v3.
+LEGACY_MODULE_NAMES = {
+    "custom_splitter_registry": "Removed in v3. Custom splitters are gone.",
+    "CustomSplitterRegistry": "Removed in v3. Custom splitters are gone.",
+    "BaseSplitter": "Removed in v3.",
+    "custom_processor_registry": (
+        "Removed in v3. Create a CustomProcessorRegistry() instead."
+    ),
 }
 
 LEGACY_EXCEPTIONS = {
@@ -31,7 +54,7 @@ LEGACY_METHODS = {
 
 class MigrationAuditor:
     """
-    Audit Python files for legacy Chunklet v1 patterns and suggest v2.x.x updates.
+    Audit Python files for legacy Chunklet v1/v2 patterns and suggest v3.x.x updates.
     Uses AST for accurate Python code analysis.
     """
 
@@ -71,7 +94,7 @@ class MigrationAuditor:
         self._console.print(
             Panel(
                 "[bold]Chunklet Migration Auditor[/bold]",
-                subtitle="Check for legacy v1 patterns",
+                subtitle="Check for legacy v1/v2 patterns",
                 expand=True,
             )
         )
@@ -79,7 +102,7 @@ class MigrationAuditor:
     def _print_summary(self):
         if not self._has_legacy_issues:
             self._console.print(
-                "[bold green]✓ No legacy v1 patterns found. Code is up to date![/bold green]"
+                "[bold green]✓ No legacy v1/v2 patterns found. Code is up to date![/bold green]"
             )
         else:
             self._console.print(
@@ -99,6 +122,7 @@ class MigrationAuditor:
         self._audit_class_instantiation(file_path, tree, tracked_instances, lines)
         self._audit_calls(file_path, tree, tracked_instances, lines)
         self._audit_exceptions(file_path, tree, lines)
+        self._audit_removed_arguments(file_path, tree, lines)
 
     def _get_line(self, lines: list[str], line_no: int) -> str:
         try:
@@ -140,6 +164,17 @@ class MigrationAuditor:
                                 f"Import '{node.module}'. {fix_msg}",
                                 "bold red",
                             )
+                    for alias in node.names:
+                        if alias.name in LEGACY_MODULE_NAMES:
+                            self._has_legacy_issues = True
+                            self._print_issue(
+                                file_path,
+                                node.lineno,
+                                self._get_line(lines, node.lineno),
+                                f"Import '{alias.name}'. "
+                                f"{LEGACY_MODULE_NAMES[alias.name]}",
+                                "bold red",
+                            )
 
             elif isinstance(node, ast.Import):
                 for alias in node.names:
@@ -153,6 +188,33 @@ class MigrationAuditor:
                                 f"Import '{alias.name}'. {fix_msg}",
                                 "bold red",
                             )
+                    if alias.name in LEGACY_MODULE_NAMES:
+                        self._has_legacy_issues = True
+                        self._print_issue(
+                            file_path,
+                            node.lineno,
+                            self._get_line(lines, node.lineno),
+                            f"Import '{alias.name}'. "
+                            f"{LEGACY_MODULE_NAMES[alias.name]}",
+                            "bold red",
+                        )
+
+    def _audit_removed_arguments(self, file_path: Path, tree: ast.AST, lines: list[str]):
+        """Flag keyword arguments removed in v2/v3."""
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            for kw in node.keywords:
+                if kw.arg in REMOVED_ARGUMENTS:
+                    self._has_legacy_issues = True
+                    self._print_issue(
+                        file_path,
+                        node.lineno,
+                        self._get_line(lines, node.lineno),
+                        f"Argument '{kw.arg}' no longer has that meaning. "
+                        f"{REMOVED_ARGUMENTS[kw.arg]}",
+                        "bold red",
+                    )
 
     def _audit_class_instantiation(
         self, file_path: Path, tree: ast.AST, tracked_instances: set, lines: list[str]
@@ -210,18 +272,6 @@ class MigrationAuditor:
                     f"'{inst_name}.{method_name}()' - {LEGACY_METHODS[method_name]}",
                     style,
                 )
-
-            for arg, fix_msg in DEPRECATED_ARGUMENTS.items():
-                for kw in node.keywords:
-                    if kw.arg == arg:
-                        self._has_legacy_issues = True
-                        self._print_issue(
-                            file_path,
-                            node.lineno,
-                            self._get_line(lines, node.lineno),
-                            f"Argument '{arg}' is no longer supported. {fix_msg}",
-                            "bold red",
-                        )
 
     def _audit_exceptions(self, file_path: Path, tree: ast.AST, lines: list[str]):
         for node in ast.walk(tree):

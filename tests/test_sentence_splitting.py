@@ -1,9 +1,6 @@
-import re
-
 import pytest
 
-from chunklet import CallbackError
-from chunklet.sentence_splitter import SentenceSplitter, custom_splitter_registry
+from chunklet.sentence_splitter import SentenceSplitter
 
 # --- Fixture ---
 
@@ -12,12 +9,6 @@ from chunklet.sentence_splitter import SentenceSplitter, custom_splitter_registr
 def splitter():
     """Provides a configured SentenceSplitter instance"""
     return SentenceSplitter()
-
-
-@pytest.fixture
-def registry():
-    """Provides the global CustomSplitterRegistry instance"""
-    return custom_splitter_registry
 
 
 # --- Multilingual Splitting Tests ---
@@ -74,70 +65,8 @@ def test_unsupported_language_fallback(splitter, text, lang):
 )
 def test_special_handler_exists(splitter, lang):
     """Each library should return a non-None handler that produces non-empty output."""
-    handler = splitter._get_special_lang_handler(lang, verbose=False)
+    handler = splitter._get_lang_handler(lang, verbose=False)
     assert handler is not None, f"No handler for language: {lang}"
 
     result = handler("Hello world. This is a test.")
     assert result, f"Handler for '{lang}' returned empty result"
-
-
-# --- Custom Splitter Tests ---
-
-
-def test_custom_splitter_usage(registry):
-    """Test that the splitter can work a custom splitter without errors."""
-
-    @registry.register("x_lang")
-    def custom_x_splitter(text: str):
-        return [s.strip() for s in text.split("X")]
-
-    try:
-        splitter = SentenceSplitter()
-
-        text = "ThisXisXaXtestXstring."
-        expected_sentences = ["This", "is", "a", "test", "string."]
-
-        sentences = splitter.split_text(text, lang="x_lang")
-
-        assert sentences == expected_sentences
-    finally:
-        registry.unregister("x_lang")
-
-
-@pytest.mark.parametrize(
-    "splitter_name, callback_func, expected_match",
-    [
-        (
-            "invalid_list_splitter",
-            lambda text: "This is a single string.",  # Returns str, not list[str]
-            "Input should be a valid list.\n  Found: (input='This is a single string.', type=str)",
-        ),
-        (
-            "list_non_string_splitter",
-            lambda text: ["hello", 123, "world"],  # List contains non-strings
-            "Input should be a valid string.\n  Found: (input='123', type=int)",
-        ),
-        (
-            "failing_splitter",
-            lambda text: (_ for _ in ()).throw(
-                ValueError("Intentional failure in custom splitter.")
-            ),
-            "Splitter 'failing_splitter' for lang 'xx' raised an exception.\nDetails: Intentional failure in custom splitter.",
-        ),
-    ],
-)
-def test_custom_splitter_validation_scenarios(
-    splitter, splitter_name, callback_func, expected_match, registry
-):
-    """Test various custom splitter validation scenarios."""
-
-    @registry.register("xx", name=splitter_name)
-    def _temp_splitter(text):
-        return callback_func(text)
-
-    try:
-        with pytest.raises(CallbackError, match=re.escape(expected_match)):
-            assert registry.is_registered("xx")
-            splitter.split_text("Some text.", lang="xx")
-    finally:
-        registry.unregister("xx")
