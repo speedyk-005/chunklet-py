@@ -19,7 +19,7 @@ from chunklet.exceptions import (
     InvalidInputError,
     MissingTokenCounterError,
 )
-from chunklet.sentence_splitter import BaseSplitter, SentenceSplitter
+from chunklet.sentence_splitter import SentenceSplitter
 
 CLAUSE_END_PATTERN = re.compile(r"(?<=[;,’：—)&…])\s")
 SECTION_BREAK_PATTERN = re.compile(
@@ -48,7 +48,6 @@ class PlainTextChunker:
     @validate_input
     def __init__(
         self,
-        sentence_splitter: Any | None = None,
         verbose: bool = False,
         continuation_marker: str = "...",
         token_counter: Callable[[str], int] | None = None,
@@ -57,29 +56,16 @@ class PlainTextChunker:
         Initialize The PlainTextChunker.
 
         Args:
-            sentence_splitter: An optional BaseSplitter instance.
-                If None, a default SentenceSplitter will be initialized.
             verbose: Enable verbose logging.
             continuation_marker: The marker to prepend to unfitted clauses. Defaults to '...'.
             token_counter: Function that counts tokens in text.
                 If None, must be provided when calling chunk() methods.
-
-        Raises:
-            InvalidInputError: If any of the input arguments are invalid or if the provided `sentence_splitter` is not an instance of `BaseSplitter`.
         """
         self._verbose = verbose
         self.token_counter = token_counter
         self.continuation_marker = continuation_marker
 
-        if sentence_splitter is not None and not isinstance(
-            sentence_splitter, BaseSplitter
-        ):
-            raise InvalidInputError(
-                f"The provided sentence_splitter must be an instance of BaseSplitter, "
-                f"but got {type(sentence_splitter).__name__}."
-            )
-
-        self.sentence_splitter = sentence_splitter or SentenceSplitter()
+        self.sentence_splitter = SentenceSplitter()
         self.sentence_splitter.verbose = self._verbose
 
     @property

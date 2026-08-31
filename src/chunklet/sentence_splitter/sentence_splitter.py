@@ -24,26 +24,7 @@ PUNCTUATION_ONLY_PATTERN = re.compile(r"\W+")
 THEMATIC_BREAK_PATTERN = re.compile(r"\s*([-*_])\s*\1{2,}\s*")
 
 
-class BaseSplitter:
-    """
-    Base class for sentence splitting.
-    Defines the interface that all splitter implementations must adhere to.
-    """
-
-    def split_text(self, text: str, lang: str = "auto") -> list[str]:
-        """Splits the given text into a list of sentences.
-
-        Args:
-            text: The input text to be split.
-            lang: The language of the text (e.g., 'en', 'fr', 'auto').
-
-        Returns:
-            A list of sentences extracted from the text.
-        """
-        raise NotImplementedError("Subclasses must implement 'split_text'.")
-
-
-class SentenceSplitter(BaseSplitter):
+class SentenceSplitter:
     """
     A robust and versatile utility dedicated to precisely segmenting text into individual sentences.
 
