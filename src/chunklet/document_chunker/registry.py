@@ -11,13 +11,8 @@ ReturnType = tuple[str | Iterable[str], dict[str, Any]]
 
 
 class CustomProcessorRegistry:
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(CustomProcessorRegistry, cls).__new__(cls)
-            cls._instance._processors: dict[str, tuple[str, Callable]] = {}
-        return cls._instance
+    def __init__(self) -> None:
+        self._processors: dict[str, tuple[str, Callable]] = {}
 
     @property
     def processors(self):
@@ -196,6 +191,3 @@ class CustomProcessorRegistry:
 
         return result, name
 
-
-# Global registry instance
-custom_processor_registry = CustomProcessorRegistry()

@@ -7,7 +7,7 @@ from chunklet import (
     CallbackError,
     UnsupportedFileTypeError,
 )
-from chunklet.document_chunker import DocumentChunker, custom_processor_registry
+from chunklet.document_chunker import CustomProcessorRegistry, DocumentChunker
 
 # --- Fixtures ---
 
@@ -20,8 +20,14 @@ def chunker():
 
 @pytest.fixture
 def registry():
-    """Provides the global CustomProcessorRegistry instance"""
-    return custom_processor_registry
+    """Provides a fresh CustomProcessorRegistry instance."""
+    return CustomProcessorRegistry()
+
+
+@pytest.fixture
+def chunker_with_registry(registry):
+    """Provides a DocumentChunker bound to the fresh registry."""
+    return DocumentChunker(processor_registry=registry)
 
 
 # --- Core Tests ---
@@ -102,7 +108,7 @@ def test_chunk_method_unsupported_iterable_processor(chunker):
 # --- Custom Processor Tests ---
 
 
-def test_chunk_method_with_custom_processor(tmp_path, mocker, chunker, registry):
+def test_chunk_method_with_custom_processor(tmp_path, mocker, chunker_with_registry, registry):
     """Test that the chunk method correctly uses a custom processor."""
 
     # Define and register a mock custom processor callback
@@ -118,7 +124,7 @@ def test_chunk_method_with_custom_processor(tmp_path, mocker, chunker, registry)
         )
 
         # Chunk the dummy file
-        chunks = chunker.chunk_file(dummy_file, max_sentences=5)
+        chunks = chunker_with_registry.chunk_file(dummy_file, max_sentences=5)
 
         # Assert that the custom processor's output was used
         expected_content_prefix = "Processed failed."
@@ -154,7 +160,7 @@ def test_custom_processor_validation_scenarios(
     callback_func,
     expected_match,
     mocker,
-    chunker,
+    chunker_with_registry,
     registry,
 ):
     """Test various custom processor validation scenarios."""
@@ -168,13 +174,13 @@ def test_custom_processor_validation_scenarios(
 
     try:
         with pytest.raises(CallbackError, match=re.escape(expected_match)):
-            chunker.chunk_file(dummy_file, max_sentences=5)
+            chunker_with_registry.chunk_file(dummy_file, max_sentences=5)
     finally:
         # Unregister to not affect other tests
         registry.unregister(".txt")
 
 
-def test_batch_chunk_custom_processor_error_handling(chunker, registry, tmp_path):
+def test_batch_chunk_custom_processor_error_handling(chunker_with_registry, registry, tmp_path):
     """Test batch_chunk error handling with failing custom processor."""
     # Create test files with different extensions
     file1 = tmp_path / "test1.txt"  # Will use failing processor
@@ -190,18 +196,18 @@ def test_batch_chunk_custom_processor_error_handling(chunker, registry, tmp_path
         # Test on_errors="raise" - should re-raise
         with pytest.raises(CallbackError):
             list(
-                chunker.chunk_files([file1, file2], max_sentences=5, on_errors="raise")
+                chunker_with_registry.chunk_files([file1, file2], max_sentences=5, on_errors="raise")
             )
 
         # Test on_errors="skip" - should skip failed file, process .md file
         chunks = list(
-            chunker.chunk_files([file1, file2], max_sentences=5, on_errors="skip")
+            chunker_with_registry.chunk_files([file1, file2], max_sentences=5, on_errors="skip")
         )
         assert len(chunks) >= 1  # Should get chunks from successful .md file
 
         # Test on_errors="break" - should stop on first error (txt file)
         chunks = list(
-            chunker.chunk_files([file1, file2], max_sentences=5, on_errors="break")
+            chunker_with_registry.chunk_files([file1, file2], max_sentences=5, on_errors="break")
         )
         assert len(chunks) == 0  # Should get no chunks since txt fails first
 

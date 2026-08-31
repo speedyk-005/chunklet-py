@@ -37,7 +37,7 @@ from chunklet.document_chunker.processors import (
     pdf_processor,
     pptx_processor,
 )
-from chunklet.document_chunker.registry import custom_processor_registry
+from chunklet.document_chunker.registry import CustomProcessorRegistry
 from chunklet.exceptions import UnsupportedFileTypeError
 
 
@@ -82,6 +82,7 @@ class DocumentChunker(BaseChunker):
         verbose: bool = False,
         continuation_marker: str = "...",
         token_counter: Callable[[str], int] | None = None,
+        processor_registry: CustomProcessorRegistry | None = None,
     ):
         """
         Initializes the DocumentChunker.
@@ -91,10 +92,13 @@ class DocumentChunker(BaseChunker):
             continuation_marker: The marker to prepend to unfitted clauses. Defaults to '...'.
             token_counter: Function that counts tokens in text.
                 If None, must be provided when calling chunk() methods.
+            processor_registry: An optional CustomProcessorRegistry instance to use for
+                custom document processors. If None, a fresh registry is created.
         """
         self._verbose = verbose
         self.token_counter = token_counter
         self.continuation_marker = continuation_marker
+        self.processor_registry = processor_registry or CustomProcessorRegistry()
 
         self.plain_text_chunker = PlainTextChunker(
             verbose=self._verbose,
@@ -124,7 +128,7 @@ class DocumentChunker(BaseChunker):
         """Get the supported extensions, including the custom ones."""
         return (
             self.BUILTIN_SUPPORTED_EXTENSIONS
-            | custom_processor_registry.processors.keys()
+            | self.processor_registry.processors.keys()
         )
 
     @property
@@ -218,10 +222,11 @@ class DocumentChunker(BaseChunker):
         log_info(self.verbose, "Extracting text from file {}", path)
 
         # Prioritize custom processors from registry
-        if custom_processor_registry.is_registered(ext):
-            texts_and_metadata, processor_name = custom_processor_registry.extract_data(
-                str(path), ext
-            )
+        if self.processor_registry.is_registered(ext):
+            (
+                texts_and_metadata,
+                processor_name,
+            ) = self.processor_registry.extract_data(str(path), ext)
             log_info(self.verbose, "Used registered processor: {}", processor_name)
             text_or_gen, metadata = texts_and_metadata
             metadata["source"] = metadata.get("source", str(path))
