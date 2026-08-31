@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `chunk()` and `batch_chunk()` from `DocumentChunker` and `CodeChunker`
   - `split` in `BaseSplitter.split()`
   - `PlainTextChunker` public import from `chunklet`
+- **Custom sentence splitter registry**: Removed `custom_splitter_registry` / `CustomSplitterRegistry` (and the underlying `BaseSplitter` abstract class). Custom splitters are no longer supported; `SentenceSplitter` always uses its built-in handlers with a universal fallback.
+- **Document processor registry global**: Removed the global `custom_processor_registry` singleton. `CustomProcessorRegistry` is now a plain instance you create and pass to `DocumentChunker(processor_registry=...)`.
+- **`sentence_splitter` constructor parameter**: Removed from `DocumentChunker` and `PlainTextChunker`; both now always use a default `SentenceSplitter`.
 
 ---
 
