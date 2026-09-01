@@ -55,13 +55,9 @@ Let's see `CodeChunker` in action with a single code input. It provides two meth
 - `chunk_text()` - accepts raw code as a string
 - `chunk_file()` - accepts a file path as a string or `pathlib.Path` object
 
-### Chunking by Lines: Line Count Control! 📏
+Let's say you have
 
-Ready to chunk code by line count? This gives you predictable, size-based chunks:
-
-``` py linenums="1"
-from chunklet.code_chunker import CodeChunker
-
+```py
 PYTHON_CODE = '''
 """
 Module docstring
@@ -93,17 +89,20 @@ def standalone_function():
     """A standalone function."""
     return True
 '''
+```
 
-# Helper function
-def simple_token_counter(text: str) -> int:
-    """Simple Token Counter For Testing."""
-    return len(text.split())
+### Chunking by Lines: Line Count Control! 📏
 
-chunker = CodeChunker(token_counter=simple_token_counter)
+Ready to chunk code by line count? This gives you predictable, size-based chunks:
+
+``` py linenums="1"
+from chunklet.code_chunker import CodeChunker
+
+
+chunker = CodeChunker(max_lines=10) # (1)!
 
 chunks = chunker.chunk_text(
-    code=PYTHON_CODE,                
-    max_lines=10,               # (1)!
+    code=PYTHON_CODE,
     include_comments=True,      # (2)!
     docstring_mode="all",       # (3)!
     strict=False,               # (4)!
@@ -134,37 +133,36 @@ for i, chunk in enumerate(chunks):
 
     import os
 
-
+    class Calculator:
     Metadata:
         chunk_num: 1
         tree: global
+        └─ class Calculator
         start_line: 1
-        end_line: 7
-        span: (0, 38)
+        end_line: 8
+        span: (0, 56)
         source: N/A
 
     --- Chunk 2 ---
     Content:
-    class Calculator:
         """
         A simple calculator class.
 
         A calculator that Contains basic arithmetic operations for demonstration purposes.
         """
 
-
+        def add(self, x, y):
     Metadata:
         chunk_num: 2
         tree: global
-        └─ class Calculator
-        start_line: 8
-        end_line: 14
-        span: (38, 192)
+        └─ def add(
+        start_line: 9
+        end_line: 15
+        span: (56, 217)
         source: N/A
 
     --- Chunk 3 ---
     Content:
-        def add(self, x, y):
             """Add two numbers and return result.
 
             This is a longer description that should be truncated
@@ -173,37 +171,33 @@ for i, chunk in enumerate(chunks):
             result = x + y
             return result
 
-
+        def multiply(self, x, y):
     Metadata:
         chunk_num: 3
         tree: global
-        └─ class Calculator
-           └─ def add(
-        start_line: 15
-        end_line: 23
-        span: (192, 444)
+        ├─ def add(
+        └─ def multiply(
+        start_line: 16
+        end_line: 24
+        span: (217, 474)
         source: N/A
 
     --- Chunk 4 ---
     Content:
-        def multiply(self, x, y):
             # Multiply two numbers
             return x * y
 
     def standalone_function():
         """A standalone function."""
         return True
-
-
     Metadata:
         chunk_num: 4
         tree: global
-        ├─ class Calculator
-        │  └─ def multiply(
+        ├─ def multiply(
         └─ def standalone_function(
-        start_line: 24
+        start_line: 25
         end_line: 30
-        span: (444, 603)
+        span: (474, 603)
         source: N/A
     ```
 
@@ -213,21 +207,15 @@ for i, chunk in enumerate(chunks):
     chunker = CodeChunker(verbose=True)
     ```
 
-### Chunking by Tokens: Token Budget Master! 🪙
+### Chunking by Functions: Function Group Guru! 👥
+This constraint is useful when you want to ensure that each chunk contains a specific number of functions, helping to maintain logical code units.
 
-Here's how you can use `CodeChunker` to chunk code by the number of tokens:
-
-```py linenums="1" hl_lines="1-4 6 10"
-# Helper function
-def simple_token_counter(text: str) -> int:
-    """Simple Token Counter For Testing."""
-    return len(text.split())
-
-chunker = CodeChunker(token_counter=simple_token_counter)
+```py linenums="1" hl_lines="1"
+chunker = CodeChunker(max_functions=1) # (1)!
 
 chunks = chunker.chunk_text(
-    code=PYTHON_CODE,                
-    max_tokens=50,                        
+    code=PYTHON_CODE,
+    include_comments=False,
 )
 
 for i, chunk in enumerate(chunks):
@@ -257,18 +245,6 @@ for i, chunk in enumerate(chunks):
         A calculator that Contains basic arithmetic operations for demonstration purposes.
         """
 
-    Metadata:
-    chunk_num: 1
-    tree: global
-    └─ class Calculator
-
-    start_line: 1
-    end_line: 14
-    span: (0, 192)
-    source: N/A
-
-    --- Chunk 2 ---
-    Content:
         def add(self, x, y):
             """Add two numbers and return result.
 
@@ -278,20 +254,31 @@ for i, chunk in enumerate(chunks):
             result = x + y
             return result
 
-        def multiply(self, x, y):
-            # Multiply two numbers
-            return x * y
+    Metadata:
+    chunk_num: 1
+    tree: global
+    ├─ class Calculator
+    └─ def add(
+
+    start_line: 1
+    end_line: 23
+    span: (0, 444)
+    source: N/A
+
+    --- Chunk 2 ---
+    Content:
+    def multiply(self, x, y):
+        
+        return x * y
 
     Metadata:
     chunk_num: 2
     tree: global
-    └─ class Calculator
-       ├─ def add(
-       └─ def multiply(
+    └─ def multiply(
 
-    start_line: 15
+    start_line: 24
     end_line: 27
-    span: (192, 527)
+    span: (444, 527)
     source: N/A
 
     --- Chunk 3 ---
@@ -310,19 +297,31 @@ for i, chunk in enumerate(chunks):
     source: N/A
     ```
 
-!!! tip "Overrides token_counter"
-    You can also provide the `token_counter` directly to any chunking method (e.g., `chunker.chunk_text(..., token_counter=my_tokenizer_function)`). If a `token_counter` is provided in both the constructor and the chunking method, the one in the method call will be used.
+### Chunking by Tokens: Token Budget Master! 🪙
 
+Here's how you can use `CodeChunker` to chunk code by the number of tokens:
 
-### Chunking by Functions: Function Group Guru! 👥
-This constraint is useful when you want to ensure that each chunk contains a specific number of functions, helping to maintain logical code units.
+```py linenums="1" hl_lines="1-3 6-7"
+def simple_token_counter(text: str) -> int:
+    """Simple Token Counter For Testing."""
+    return len(text.split())
 
-```py linenums="1" hl_lines="3"
-chunks = chunker.chunk_text(
-    code=PYTHON_CODE,
-    max_functions=1,
-    include_comments=False,
+chunker = CodeChunker(
+    token_counter=simple_token_counter,
+    max_tokens=50,
 )
+
+chunks = chunker.chunk_text(
+    code=PYTHON_CODE,                
+)
+
+for i, chunk in enumerate(chunks):
+    print(f"--- Chunk {i+1} ---")
+    print(f"Content:\\n{chunk.content}")
+    print("Metadata:")
+    for k,v in chunk.metadata.items():
+        print(f"{k}: {v}")
+    print()
 ```
 
 ??? success "Click to show output"
@@ -344,6 +343,19 @@ chunks = chunker.chunk_text(
         """
 
         def add(self, x, y):
+    Metadata:
+    chunk_num: 1
+    tree: global
+    ├─ class Calculator
+    └─ def add(
+
+    start_line: 1
+    end_line: 15
+    span: (0, 217)
+    source: N/A
+
+    --- Chunk 2 ---
+    Content:
             """Add two numbers and return result.
 
             This is a longer description that should be truncated
@@ -352,61 +364,51 @@ chunks = chunker.chunk_text(
             result = x + y
             return result
 
-    Metadata:
-    chunk_num: 1
-    tree: global
-    └─ class Calculator
-       └─ def add(
-
-    start_line: 1
-    end_line: 23
-    span: (0, 444)
-    source: N/A
-
-    --- Chunk 2 ---
-    Content:
         def multiply(self, x, y):
-
+            # Multiply two numbers
             return x * y
 
+    def standalone_function():
     Metadata:
     chunk_num: 2
     tree: global
-    └─ class Calculator
-       └─ def multiply(
+    ├─ def add(
+    ├─ def multiply(
+    └─ def standalone_function(
 
-    start_line: 24
-    end_line: 27
-    span: (444, 527)
+    start_line: 16
+    end_line: 28
+    span: (217, 554)
     source: N/A
 
     --- Chunk 3 ---
     Content:
-    def standalone_function():
-        """A standalone function."""
-        return True
-
+    """A standalone function."""
+    return True
     Metadata:
     chunk_num: 3
     tree: global
     └─ def standalone_function(
 
-    start_line: 28
+    start_line: 29
     end_line: 30
-    span: (527, 603)
+    span: (554, 603)
     source: N/A
     ```
+
+!!! tip "Overrides token_counter"
+    You can also provide the `token_counter` directly to any chunking method (e.g., `chunker.chunk_text(..., token_counter=my_tokenizer_function)`). If a `token_counter` is provided in both the constructor and the chunking method, the one in the method call will be used.
 
 ### Combining Multiple Constraints: Mix and Match Magic! 🎭
 The real power of `CodeChunker` comes from combining multiple constraints. This allows for highly specific and granular control over how your code is chunked. Here are a few examples of how you can combine different constraints.
 
-```py linenums="1" hl_lines="3-5"
-chunks = chunker.chunk_text(
-    PYTHON_CODE,
-    max_lines=8,
-    max_tokens=150,
-    max_functions=1
-)
+```py linenums="1" hl_lines="1-3"
+chunker = CodeChunker()
+chunker.max_lines=8,
+chunker.max_tokens=150,
+chunker.max_functions=1
+
+chunk = chunker.chunk_text(PYTHON_CODE)
 ```
 
 ## Batch Run: Processing Multiple Code Inputs Like a Pro! 📚
@@ -517,16 +519,11 @@ func (c *Config) displayInfo() {
 
 We can process them all at once by providing a list of paths to the `chunk_files` method. Assuming these files are saved in a `code_examples` directory:
 
-```py linenums="1" hl_lines="18-25"
-from chunklet.code_chunker import CodeChunker
-
-# Helper function
-def simple_token_counter(text: str) -> int:
-    """Simple Token Counter For Testing."""
-    return len(text.split())
-
-# Initialize the chunker
-chunker = CodeChunker(token_counter=simple_token_counter)
+```py linenums="1" hl_lines="13-20"
+chunker = CodeChunker(
+    token_counter=simple_token_counter,
+    max_tokens=50,
+)
 
 sources = [
     "code_examples/cpp_calculator.cpp",
@@ -537,7 +534,6 @@ sources = [
 
 chunks = chunker.chunk_files(
     paths=sources,
-    max_tokens=50,
     include_comments=False,
     n_jobs=2,               # (1)!
     on_errors="raise",      # (2)!
@@ -583,17 +579,50 @@ for i, chunk in enumerate(chunks):
       chunk_num: 1
       tree: global
       start_line: 1
-      end_line: 17
-      span: (0, 329)
-      source: code_examples/cpp_calculator.cpp
+      end_line: 14
+      span: (0, 256)
+      source: N/A
 
-    Chunking ...:  50%|███████████████               | 2/4 [00:00, 19.73it/s]
+    Chunking ...:  50%|█████     | 2/4 [00:00, 19.26it/s]
     --- Chunk 2 ---
+    Content:
+    package com.chunker.data;
+
+    public class DataProcessor {
+        private String sourcePath;
+
+        public DataProcessor(String path) {
+            this.sourcePath = path;
+        }
+
+        public String getPath() {
+            return this.sourcePath;
+        }
+
+        public boolean process() {
+            if (this.sourcePath.isEmpty()) {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    Metadata:
+      chunk_num: 1
+      tree: global
+      ├─ package com
+      └─ public class DataProcessor
+         └─ public class DataProcessor {
+      start_line: 1
+      end_line: 20
+      span: (0, 373)
+      source: N/A
+
+    --- Chunk 3 ---
     Content:
     const sanitizeInput = (input) => {
         return input.trim().substring(0, 100);
     };
-
 
     function processArray(data) {
         if (!data || data.length === 0) {
@@ -611,94 +640,48 @@ for i, chunk in enumerate(chunks):
     Metadata:
       chunk_num: 1
       tree: global
-    └─ function processArray(
+      └─ function processArray(
       start_line: 1
-      end_line: 19
-      span: (0, 372)
-      source: code_examples/js_utils.js
+      end_line: 16
+      span: (0, 291)
+      source: N/A
 
-    --- Chunk 3 ---
-    Content:
-    package com.chunker.data;
-
-    public class DataProcessor {
-        private String sourcePath;
-
-
-        public DataProcessor(String path) {
-            this.sourcePath = path;
-        }
-
-
-        public String getPath() {
-            return this.sourcePath;
-        }
-
-
-        public boolean process() {
-            if (this.sourcePath.isEmpty()) {
-                return false;
-            }
-
-            return true;
-        }
-    }
-
-    Metadata:
-      chunk_num: 1
-      tree: global
-    ├─ package com
-    └─ public class DataProcessor
-       ├─ public DataProcessor(
-       ├─ public String getPath(
-       └─ public boolean process(
-
-      start_line: 1
-      end_line: 25
-      span: (0, 500)
-      source: code_examples/JavaDataProcessor.java
-
-    Chunking ...:  50%|███████████████               | 2/4 [00:00, 19.73it/s]
     --- Chunk 4 ---
     Content:
-    package main
+    package config
 
     import (
         "fmt"
+        "os"
     )
 
-
     type Config struct {
-        Timeout int
-        Retries int
+        Host     string
+        Port     int
+        Debug    bool
     }
 
-
-    func NewConfig() Config {
-        return Config{
-            Timeout: 5000,
-            Retries: 3,
+    func (c *Config) Load() error {
+        if c.Host == "" {
+            return fmt.Errorf("host is required")
         }
+        return nil
     }
 
-
-    func (c *Config) displayInfo() {
-        fmt.Printf("Timeout: %dms, Retries: %d\n", c.Timeout, c.Retries)
-    }
+    func (c *Config) DisplayInfo() {
+        fmt.Printf("Host: %s, Port: %d, Debug: %t
 
     Metadata:
       chunk_num: 1
       tree: global
-    ├─ package main
-    ├─ type Config
-    └─ func NewConfig(
-
+      ├─ package config
+      └─ type Config
       start_line: 1
-      end_line: 26
-      span: (0, 382)
-      source: code_examples/go_config.go
+      end_line: 23
+      span: (0, 331)
+      source: N/A
 
-    Chunking ...: 100%|██████████████████████████████| 4/4 [00:00, 19.71it/s]
+    Chunking ...: 100%|██████████| 4/4 [00:00, 12.45it/s]
     ```
 
 !!! warning "Generator Cleanup"
@@ -712,14 +695,8 @@ The `separator` parameter lets you add a custom marker that gets yielded after a
 !!! note "note"
     `None` cannot be used as a separator.
 
-```py linenums="1" hl_lines="2 32 37 40-43"
-from chunklet.code_chunker import CodeChunker
+```py linenums="1" hl_lines="1 31 35 38-41"
 from more_itertools import split_at
-
-# Helper function
-def simple_token_counter(text: str) -> int:
-    """Simple Token Counter For Testing."""
-    return len(text.split())
 
 SIMPLE_SOURCES = [
     # Python: Simple Function Definition Boundary
@@ -744,12 +721,15 @@ public class Utility
     '''
 ]
 
-chunker = CodeChunker(token_counter=simple_token_counter)
+chunker = CodeChunker(
+    token_counter=simple_token_counter,
+    max_tokens=20,
+)
+
 custom_separator = "---END_OF_SOURCE---"
 
 chunks_with_separators = chunker.chunk_texts(
     codes=SIMPLE_SOURCES,
-    max_tokens=20,
     separator=custom_separator,
 )
 
