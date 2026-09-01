@@ -21,7 +21,7 @@ changelog:
         - python
         - optimization
         - breaking-changes
-       
+
     - title: '🐛 Fixed'
       labels:
         - bug
