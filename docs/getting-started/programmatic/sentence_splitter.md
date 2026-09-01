@@ -40,14 +40,14 @@ The Playlist contains:
 Robots are learning. It's raining. Let's code. Mars is red. Sr. sleep is rare. Consider item 1. This is a test. The year is 2025. This is a good year since N.A.S.A. reached 123.4 light year more.
 """
 
-splitter = SentenceSplitter(verbose=True)
-sentences = splitter.split_text(TEXT, lang="auto") #(1)!
+splitter = SentenceSplitter(verbose=True, lang="auto")
+sentences = splitter.split_text(TEXT) #(1)!
 
 for sentence in sentences:
     print(sentence)
 ```
 
-1.  **Auto language detection**: Let the splitter automatically detect the language of your text. For best results, specify a language code like `"en"` or `"fr"` directly.
+1.  **Auto language detection**: Let the splitter automatically detect the language of your text by setting `lang="auto"` in the constructor. For best results, specify a language code like `"en"` or `"fr"` directly in the constructor.
 
 ??? success "Click to show output"
     ```linenums="0"
@@ -82,8 +82,8 @@ Need to split a file directly into sentences? Use `split_file`:
 ``` py linenums="1"
 from chunklet.sentence_splitter import SentenceSplitter
 
-splitter = SentenceSplitter()
-sentences = splitter.split_file("sample.txt", lang="en")
+splitter = SentenceSplitter(lang="en")
+sentences = splitter.split_file("sample.txt")
 
 for i, sentence in enumerate(sentences):
     print(f"Sentence {i+1}: {sentence}")
