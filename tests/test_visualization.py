@@ -11,9 +11,41 @@ from pathlib import Path
 
 import msgpack
 import pytest
-import requests
 
 from chunklet.visualizer import Visualizer
+
+
+def _multipart_post(
+    url: str,
+    *,
+    file_content: bytes,
+    file_name: str,
+    fields: dict | None,
+    headers: dict | None,
+) -> urllib.request.Request:
+    """POST a multipart/form-data upload using urllib."""
+    boundary = "----chunklet-boundary"
+    body = bytearray()
+    for key, value in (fields or {}).items():
+        body += (
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="{key}"\r\n\r\n'
+            f"{value}\r\n"
+        ).encode()
+    body += (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="file"; '
+        f'filename="{file_name}"\r\nContent-Type: text/plain\r\n\r\n'
+    ).encode()
+    body += file_content
+    body += f"\r\n--{boundary}--\r\n".encode()
+
+    request_headers = {"Content-Type": f"multipart/form-data; boundary={boundary}"}
+    request_headers.update(headers or {})
+    return urllib.request.urlopen(
+        urllib.request.Request(url, data=bytes(body), headers=request_headers, method="POST"),
+        timeout=10,
+    )
 
 
 def get_free_port() -> int:
@@ -102,32 +134,36 @@ def test_chunk_file(visualizer_server):
     assert sample_file_path.exists(), f"Sample file not found: {sample_file_path}"
 
     # Test with MessagePack format (explicit request)
-    with open(sample_file_path, "rb") as f:
-        files = {"file": ("sample_text.txt", f, "text/plain")}
-        data = {
-            "mode": "document",
-            "params": json.dumps(
-                {"max_sentences": 3, "overlap_percent": 20}  # Chunk by 3 sentences
-            ),
-        }
-        headers = {"Accept": "application/msgpack"}
+    data = {
+        "mode": "document",
+        "params": json.dumps(
+            {"max_sentences": 3, "overlap_percent": 20}  # Chunk by 3 sentences
+        ),
+    }
+    headers = {"Accept": "application/msgpack"}
 
-        response = requests.post(url, files=files, data=data, headers=headers)
-        assert response.status_code == 200
+    response = _multipart_post(
+        url,
+        file_content=sample_file_path.read_bytes(),
+        file_name="sample_text.txt",
+        fields=data,
+        headers=headers,
+    )
+    assert response.getcode() == 200
 
-        result = msgpack.unpackb(response.content, raw=False)
-        assert "text" in result
-        assert "chunks" in result
-        assert "stats" in result
+    result = msgpack.unpackb(response.read(), raw=False)
+    assert "text" in result
+    assert "chunks" in result
+    assert "stats" in result
 
-        # Verify chunking worked
-        assert result["stats"]["chunk_count"] > 1  # Should have multiple chunks
-        assert len(result["chunks"]) == result["stats"]["chunk_count"]
+    # Verify chunking worked
+    assert result["stats"]["chunk_count"] > 1  # Should have multiple chunks
+    assert len(result["chunks"]) == result["stats"]["chunk_count"]
 
-        # Verify chunk structure
-        for chunk in result["chunks"]:
-            assert "content" in chunk
-            assert "metadata" in chunk
+    # Verify chunk structure
+    for chunk in result["chunks"]:
+        assert "content" in chunk
+        assert "metadata" in chunk
 
 
 def test_chunk_file_json_backward_compatible(visualizer_server):
@@ -138,22 +174,26 @@ def test_chunk_file_json_backward_compatible(visualizer_server):
     assert sample_file_path.exists(), f"Sample file not found: {sample_file_path}"
 
     # Test JSON (default - backward compatible)
-    with open(sample_file_path, "rb") as f:
-        files = {"file": ("sample_text.txt", f, "text/plain")}
-        data = {
-            "mode": "document",
-            "params": json.dumps({"max_sentences": 2}),
-        }
-        # No Accept header = JSON default
+    data = {
+        "mode": "document",
+        "params": json.dumps({"max_sentences": 2}),
+    }
+    # No Accept header = JSON default
 
-        response = requests.post(url, files=files, data=data)
-        assert response.status_code == 200
+    response = _multipart_post(
+        url,
+        file_content=sample_file_path.read_bytes(),
+        file_name="sample_text.txt",
+        fields=data,
+        headers=None,
+    )
+    assert response.getcode() == 200
 
-        result = response.json()
-        assert "text" in result
-        assert "chunks" in result
-        assert "stats" in result
-        assert result["stats"]["chunk_count"] > 1
+    result = json.loads(response.read().decode())
+    assert "text" in result
+    assert "chunks" in result
+    assert "stats" in result
+    assert result["stats"]["chunk_count"] > 1
 
 
 def test_chunk_file_invalid_format(visualizer_server):
@@ -161,16 +201,20 @@ def test_chunk_file_invalid_format(visualizer_server):
     url = f"{visualizer_server['url']}/api/chunk"
 
     # Create a mock binary file
-    import io
-
     binary_data = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR"  # PNG header
-
-    files = {"file": ("fake.png", io.BytesIO(binary_data), "image/png")}
     data = {"mode": "document"}
 
-    response = requests.post(url, files=files, data=data)
-    assert response.status_code == 400
+    with pytest.raises(urllib.error.HTTPError) as exc_info:
+        _multipart_post(
+            url,
+            file_content=binary_data,
+            file_name="fake.png",
+            fields=data,
+            headers=None,
+        )
 
-    error_detail = response.json()
+    response = exc_info.value
+    assert response.getcode() == 400
+    error_detail = json.loads(response.read().decode())
     assert "detail" in error_detail
     assert error_detail["detail"].lower() == "only text files are supported."
