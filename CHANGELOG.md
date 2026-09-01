@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Plain text chunker**: When a sentence is split mid-way on the token limit, its unfitted remainder now opens the next chunk instead of the full sentence being re-appended on top of the overlap clause. Fixes duplicated clauses and unresolved `(-1, -1)` spans in token-limited chunking.
 - **Span finder**: The normalized search keeps `#` from Markdown headings, so a chunk starting with a heading reports a span that includes the heading marker instead of starting after it.
 
+### Changed
+- **Chunker constraints moved to the constructor**: Sizing/tuning parameters are now set at `__init__` instead of per call:
+  - `DocumentChunker` / `PlainTextChunker`: `max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, `offset`, and `lang` are now set at construction instead of passed to `chunk_text` / `chunk_texts` / `chunk_file` / `chunk_files`.
+  - `CodeChunker`: `max_tokens`, `max_lines`, and `max_functions` are now set at construction. `strict`, `docstring_mode`, and `include_comments` remain per-call.
+  - `SentenceSplitter`: `lang` is now set at construction; `split_text` / `split_file` no longer accept it.
+- **Mutability**: Constraints are now plain attributes on the chunker. Mutating a validated constraint (e.g., `chunker.max_sentences = 4`) re-runs constraint validation, and `DocumentChunker` delegates these attributes to its internal plain-text chunker.
+
 ### Removed
 - **Deprecated APIs**: Removed the aliases deprecated in v2.2.0 ahead of the v3.0.0 release:
   - `chunk()` and `batch_chunk()` from `DocumentChunker` and `CodeChunker`
