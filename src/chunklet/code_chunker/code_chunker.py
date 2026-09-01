@@ -79,20 +79,38 @@ class CodeChunker(BaseChunker):
     @validate_input
     def __init__(
         self,
-        verbose: bool = False,
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_lines: Annotated[int | None, Field(ge=5)] = None,
+        max_functions: Annotated[int | None, Field(ge=1)] = None,
         token_counter: Callable[[str], int] | None = None,
+        verbose: bool = False,
     ):
         """
-        Initialize the CodeChunker with optional token counter and verbosity control.
+        Initialize the CodeChunker with optional constraints, token counter,
+        and verbosity control.
 
         Args:
+            max_tokens: Maximum tokens per chunk. Must be >= 12.
+            max_lines: Maximum number of lines per chunk. Must be >= 5.
+            max_functions: Maximum number of functions per chunk. Must be >= 1.
+            token_counter: Function that counts tokens in text. Required for
+                token-based chunking. If None, must be provided when calling
+                chunk methods.
             verbose: Enable verbose logging.
-            token_counter: Function that counts tokens in text.
-                If None, must be provided when calling chunk() methods.
         """
         self.token_counter = token_counter
         self._verbose = verbose
+        self.max_tokens = max_tokens
+        self.max_lines = max_lines
+        self.max_functions = max_functions
         self.extractor = CodeStructureExtractor(verbose=self._verbose)
+
+        self._validate_constraints(
+            max_tokens=max_tokens,
+            max_lines=max_lines,
+            max_functions=max_functions,
+            token_counter=token_counter,
+        )
 
     @property
     def verbose(self) -> bool:
@@ -515,9 +533,6 @@ class CodeChunker(BaseChunker):
         self,
         code: str,
         *,
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_lines: Annotated[int | None, Field(ge=5)] = None,
-        max_functions: Annotated[int | None, Field(ge=1)] = None,
         token_counter: Callable[[str], int] | None = None,
         include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
@@ -526,14 +541,11 @@ class CodeChunker(BaseChunker):
         """
         Extract semantic code chunks from source using multi-dimensional analysis.
         Processes source code by identifying structural boundaries (functions, classes,
-        namespaces) and grouping content based on multiple constraints including
-        tokens, lines, and logical units while preserving semantic coherence.
+        namespaces) and grouping content based on multiple constraints that are
+        configured at initialization while preserving semantic coherence.
 
         Args:
             code: Raw code string or file path to process.
-            max_tokens: Maximum tokens per chunk. Must be >= 12.
-            max_lines: Maximum number of lines per chunk. Must be >= 5.
-            max_functions: Maximum number of functions per chunk. Must be >= 1.
             token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
             include_comments: Include comments in output chunks. Default: True.
@@ -562,14 +574,9 @@ class CodeChunker(BaseChunker):
             TokenLimitError: Structural block exceeds max_tokens in strict mode.
             CallbackError: If the token counter fails or returns an invalid type.
         """
-        self._validate_constraints(max_tokens, max_lines, max_functions, token_counter)
-
-        if max_tokens is None:
-            max_tokens = sys.maxsize
-        if max_lines is None:
-            max_lines = sys.maxsize
-        if max_functions is None:
-            max_functions = sys.maxsize
+        max_tokens = self.max_tokens or sys.maxsize
+        max_lines = self.max_lines or sys.maxsize
+        max_functions = self.max_functions or sys.maxsize
 
         token_counter = token_counter or self.token_counter
 
@@ -607,9 +614,6 @@ class CodeChunker(BaseChunker):
         self,
         path: str | Path,
         *,
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_lines: Annotated[int | None, Field(ge=5)] = None,
-        max_functions: Annotated[int | None, Field(ge=1)] = None,
         token_counter: Callable[[str], int] | None = None,
         include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
@@ -618,14 +622,11 @@ class CodeChunker(BaseChunker):
         """
         Extract semantic code chunks from source using multi-dimensional analysis.
         Processes source code by identifying structural boundaries (functions, classes,
-        namespaces) and grouping content based on multiple constraints including
-        tokens, lines, and logical units while preserving semantic coherence.
+        namespaces) and grouping content based on multiple constraints that are
+        configured at initialization while preserving semantic coherence.
 
         Args:
             path: File path to process.
-            max_tokens: Maximum tokens per chunk. Must be >= 12.
-            max_lines: Maximum number of lines per chunk. Must be >= 5.
-            max_functions: Maximum number of functions per chunk. Must be >= 1.
             token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
             include_comments: Include comments in output chunks. Default: True.
@@ -666,9 +667,6 @@ class CodeChunker(BaseChunker):
 
         return self.chunk_text(
             code=code,
-            max_tokens=max_tokens,
-            max_lines=max_lines,
-            max_functions=max_functions,
             token_counter=token_counter or self.token_counter,
             include_comments=include_comments,
             docstring_mode=docstring_mode,
@@ -680,9 +678,6 @@ class CodeChunker(BaseChunker):
         self,
         codes: IterableOfStr,
         *,
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_lines: Annotated[int | None, Field(ge=5)] = None,
-        max_functions: Annotated[int | None, Field(ge=1)] = None,
         token_counter: Callable[[str], int] | None = None,
         separator: Any = None,
         include_comments: bool = True,
@@ -699,9 +694,6 @@ class CodeChunker(BaseChunker):
 
         Args:
             codes: A non-string iterable of raw code strings.
-            max_tokens: Maximum tokens per chunk. Must be >= 12.
-            max_lines: Maximum number of lines per chunk. Must be >= 5.
-            max_functions: Maximum number of functions per chunk. Must be >= 1.
             token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
             separator: A value to be yielded after the chunks of each text are processed.
@@ -738,9 +730,6 @@ class CodeChunker(BaseChunker):
         """
         chunk_func = partial(
             self.chunk_text,
-            max_tokens=max_tokens,
-            max_lines=max_lines,
-            max_functions=max_functions,
             token_counter=token_counter or self.token_counter,
             include_comments=include_comments,
             docstring_mode=docstring_mode,
@@ -763,9 +752,6 @@ class CodeChunker(BaseChunker):
         self,
         paths: IterableOfPath,
         *,
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_lines: Annotated[int | None, Field(ge=5)] = None,
-        max_functions: Annotated[int | None, Field(ge=1)] = None,
         token_counter: Callable[[str], int] | None = None,
         separator: Any = None,
         include_comments: bool = True,
@@ -782,9 +768,6 @@ class CodeChunker(BaseChunker):
 
         Args:
             paths: A non-string iterable of file paths to process.
-            max_tokens: Maximum tokens per chunk. Must be >= 12.
-            max_lines: Maximum number of lines per chunk. Must be >= 5.
-            max_functions: Maximum number of functions per chunk. Must be >= 1.
             token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
             separator: A value to be yielded after the chunks of each text are processed.
@@ -822,9 +805,6 @@ class CodeChunker(BaseChunker):
         """
         chunk_func = partial(
             self.chunk_file,
-            max_tokens=max_tokens,
-            max_lines=max_lines,
-            max_functions=max_functions,
             token_counter=token_counter or self.token_counter,
             include_comments=include_comments,
             docstring_mode=docstring_mode,
