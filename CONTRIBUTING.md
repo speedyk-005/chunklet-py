@@ -13,10 +13,8 @@ Hey! Thanks for thinking about contributing. Bug fixes, features, docs — all w
 
 2. **Install dependencies:**
     ```bash
-    python -m venv .venv
-    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-    pip install -e ".[dev]"      # basic dev: pytest, ruff
-    pip install -e ".[dev-all]" # all optional features
+    uv sync
+    uv pip install -e ".[dev,all]"   # all optional features
     ```
 
 > [!WARNING]
@@ -25,11 +23,11 @@ Hey! Thanks for thinking about contributing. Bug fixes, features, docs — all w
 > Install pre-built wheels and dependencies:
 > 
 > ```bash
-> pip install typing-extensions
-> pip install pydantic-core --index-url https://termux-user-repository.github.io/pypi/
-> pip install "pydantic>=2.12.4,<2.13"
+> uv pip install typing-extensions
+> uv pip install pydantic-core --index-url https://termux-user-repository.github.io/pypi/
+> uv pip install "pydantic>=2.12.4,<2.13"
 > pkg install python-cryptography
-> pip install -e ".[dev-all]"
+> uv pip install -e ".[dev,all]"
 > ```
 
 ## Making Changes
@@ -57,27 +55,10 @@ Hey! Thanks for thinking about contributing. Bug fixes, features, docs — all w
     ./build_docs.sh
     ```
 
-## Pull Request Template
+## Pull Requests
 
-### Summary
+Open the PR against `main`. A PR template (`.github/PULL_REQUEST_TEMPLATE.md`) is applied automatically when you open a pull request — fill it out, keeping it scannable. Don't duplicate information GitHub already shows (files changed, commit list, branch). See the [full pull request template](.github/PULL_REQUEST_TEMPLATE.md).
 
-Brief description of what this PR accomplishes.
-
-### Changes
-
-- Specific changes made
-- Problems solved
-- Impact on existing functionality
-
-### Testing
-
-- Tests added or modified
-- Manual testing performed
-
-### Related Issues
-
-- Fixes #issue-number
-  
 ## Coding Style Guidelines
 
 ### Method Ordering
