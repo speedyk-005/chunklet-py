@@ -45,6 +45,15 @@ class PlainTextChunker:
         - Memory friendly batching: Yields chunks one at a time, reducing memory usage, especially for very large documents.
     """
 
+    # Attributes that feed into constraint validation; mutating any of them
+    # outside __init__ triggers _validate_constraints.
+    _VALIDATED_ATTRS = {
+        "max_tokens",
+        "max_sentences",
+        "max_section_breaks",
+        "token_counter",
+    }
+
     @validate_input
     def __init__(
         self,
@@ -86,6 +95,19 @@ class PlainTextChunker:
 
         self.sentence_splitter = SentenceSplitter()
         self.sentence_splitter.verbose = self._verbose
+        self._initialized = True
+
+    def __setattr__(self, name: str, value):
+        """Validate constraints whenever a constraint attribute is mutated."""
+        object.__setattr__(self, name, value)
+
+        if name in self._VALIDATED_ATTRS and self.__dict__.get("_initialized"):
+            self._validate_constraints(
+                self.max_tokens,
+                self.max_sentences,
+                self.max_section_breaks,
+                self.token_counter,
+            )
 
     @property
     def verbose(self) -> bool:

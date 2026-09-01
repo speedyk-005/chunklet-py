@@ -79,15 +79,13 @@ class DocumentChunker(BaseChunker):
 
     # Constraints stored on the internal PlainTextChunker; attribute access on
     # this class is delegated so they can be read/mutated from the outside.
-    _DELEGATED_CONSTRAINTS = frozenset(
-        {
-            "max_tokens",
-            "max_sentences",
-            "max_section_breaks",
-            "overlap_percent",
-            "offset",
-        }
-    )
+    _DELEGATED_CONSTRAINTS = {
+        "max_tokens",
+        "max_sentences",
+        "max_section_breaks",
+        "overlap_percent",
+        "offset",
+    }
 
     def __init__(
         self,
@@ -152,25 +150,6 @@ class DocumentChunker(BaseChunker):
             ".xlsx": table_2_md.table_to_md,
         }
 
-    @property
-    def supported_extensions(self):
-        """Get the supported extensions, including the custom ones."""
-        return (
-            self.BUILTIN_SUPPORTED_EXTENSIONS
-            | self.processor_registry.processors.keys()
-        )
-
-    @property
-    def verbose(self) -> bool:
-        """Get the verbosity status."""
-        return self._verbose
-
-    @verbose.setter
-    def verbose(self, value: bool):
-        """Set the verbosity and propagate to plain_text_chunker."""
-        self._verbose = value
-        self.plain_text_chunker.verbose = value
-
     def __getattr__(self, name: str):
         """Proxy any constraint attribute access to the internal PlainTextChunker."""
         if name in self._DELEGATED_CONSTRAINTS:
@@ -190,6 +169,25 @@ class DocumentChunker(BaseChunker):
             setattr(self.plain_text_chunker, name, value)
         else:
             object.__setattr__(self, name, value)
+
+    @property
+    def supported_extensions(self):
+        """Get the supported extensions, including the custom ones."""
+        return (
+            self.BUILTIN_SUPPORTED_EXTENSIONS
+            | self.processor_registry.processors.keys()
+        )
+
+    @property
+    def verbose(self) -> bool:
+        """Get the verbosity status."""
+        return self._verbose
+
+    @verbose.setter
+    def verbose(self, value: bool):
+        """Set the verbosity and propagate to plain_text_chunker."""
+        self._verbose = value
+        self.plain_text_chunker.verbose = value
 
     def _validate_and_get_extension(self, path: Path) -> str:
         """
