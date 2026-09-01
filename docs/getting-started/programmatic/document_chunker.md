@@ -396,6 +396,11 @@ chunks = chunker.chunk_files(PATHS, ...)
 !!! warning "Generator Cleanup"
     When using `chunk_texts`, it's crucial to ensure the generator is properly closed, especially if you don't iterate through all the chunks. This is necessary to release the underlying multiprocessing resources. The recommended way is to use a `try...finally` block to call `close()` on the generator. For more details, see the [Troubleshooting](../../troubleshooting.md) guide.
 
+!!! note "Non-Deterministic Batch Ordering"
+    When using `chunk_texts` or `chunk_files` with parallel processing (`n_jobs > 1`), chunks from different inputs are processed concurrently by multiple worker processes. The order in which chunks are yielded depends on which worker finishes first, which varies with system load and scheduling. So the overall ordering of chunks across inputs is not guaranteed to be stable between runs. The `chunk_num` field within each chunk's metadata still reflects the chunk's position within its source input.
+
+    When using the `separator` parameter, the separator-based grouping is deterministic even with parallel processing.
+
 ### Separator: Keeping Your Batches Organized! 📋
 
 The `separator` parameter works for both `chunk_texts` and `chunk_files`. It lets you add a custom marker that gets yielded after all chunks from a single input are processed. Super handy for batch processing when you want to clearly separate chunks from different source texts.

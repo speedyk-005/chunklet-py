@@ -684,6 +684,11 @@ for i, chunk in enumerate(chunks):
     Chunking ...: 100%|██████████| 4/4 [00:00, 12.45it/s]
     ```
 
+!!! note "Non-Deterministic Batch Ordering"
+    When using `chunk_files` or `chunk_texts` with parallel processing (`n_jobs > 1`), chunks from different files are processed concurrently by multiple worker processes. The order in which chunks are yielded depends on which worker finishes first, which varies with system load and scheduling. So the overall ordering of chunks across files is not guaranteed to be stable between runs. The `chunk_num` field within each chunk's metadata still reflects the chunk's position within its source file.
+
+    When using the `separator` parameter, the separator-based grouping is deterministic even with parallel processing.
+
 !!! warning "Generator Cleanup"
     When using `chunk_files`, it's crucial to ensure the generator is properly closed, especially if you don't iterate through all the chunks. This is necessary to release the underlying multiprocessing resources. The recommended way is to use a `try...finally` block to call `close()` on the generator. For more details, see the [Troubleshooting](../../troubleshooting.md) guide.
 
