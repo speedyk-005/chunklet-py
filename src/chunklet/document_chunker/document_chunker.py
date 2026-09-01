@@ -77,6 +77,18 @@ class DocumentChunker(BaseChunker):
         ".xlsx",
     }
 
+    # Constraints stored on the internal PlainTextChunker; attribute access on
+    # this class is delegated so they can be read/mutated from the outside.
+    _DELEGATED_CONSTRAINTS = frozenset(
+        {
+            "max_tokens",
+            "max_sentences",
+            "max_section_breaks",
+            "overlap_percent",
+            "offset",
+        }
+    )
+
     def __init__(
         self,
         processor_registry: CustomProcessorRegistry | None = None,
@@ -158,6 +170,26 @@ class DocumentChunker(BaseChunker):
         """Set the verbosity and propagate to plain_text_chunker."""
         self._verbose = value
         self.plain_text_chunker.verbose = value
+
+    def __getattr__(self, name: str):
+        """Proxy any constraint attribute access to the internal PlainTextChunker."""
+        if name in self._DELEGATED_CONSTRAINTS:
+            plain_text_chunker = self.__dict__.get("plain_text_chunker")
+            if plain_text_chunker is not None:
+                return getattr(plain_text_chunker, name)
+        raise AttributeError(
+            f"{type(self).__name__!r} object has no attribute {name!r}"
+        )
+
+    def __setattr__(self, name: str, value):
+        """Propagate constraint attribute assignment to the internal PlainTextChunker."""
+        if (
+            name in self._DELEGATED_CONSTRAINTS
+            and "plain_text_chunker" in self.__dict__
+        ):
+            setattr(self.plain_text_chunker, name, value)
+        else:
+            object.__setattr__(self, name, value)
 
     def _validate_and_get_extension(self, path: Path) -> str:
         """
