@@ -18,8 +18,7 @@ from chunklet.sentence_splitter import SentenceSplitter
 # Sentinel to serve as boundary between the groups of chunks for each text
 SEPARATOR_SENTINEL = object()
 
-TEXT = """
-# A weird dream
+TEXT = """# A weird dream
 
 She loves cooking. He studies AI. "You are a Dr.", she said. The weather is great. We play chess. Books are fun, aren't they?
 
@@ -84,6 +83,7 @@ def test_constraint_based_chunking(
 
     # Verify the structure of the first chunk
     first_chunk = chunks[0]
+    assert first_chunk.metadata.span[0] == 0
     assert hasattr(first_chunk, "content")
     assert hasattr(first_chunk, "metadata")
     assert len(first_chunk.content) > 0
