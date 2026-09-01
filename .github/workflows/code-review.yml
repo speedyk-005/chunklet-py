@@ -1,0 +1,48 @@
+name: Gemini AI Code Reviewer
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  gemini-code-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    if: |
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/gemini-review')
+    steps:
+      - name: PR Info
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          echo "Comment: $COMMENT_BODY"
+          echo "Issue Number: $ISSUE_NUMBER"
+          echo "Repository: $REPOSITORY"
+
+      - name: Checkout Repo
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Get PR Details
+        id: pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          PR_JSON=$(gh api "repos/$REPOSITORY/pulls/$ISSUE_NUMBER")
+          echo "head_sha=$(echo "$PR_JSON" | jq -r .head.sha)" >> $GITHUB_OUTPUT
+          echo "base_sha=$(echo "$PR_JSON" | jq -r .base.sha)" >> $GITHUB_OUTPUT
+
+      - uses: truongnh1992/gemini-ai-code-reviewer@main
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-3.1-flash-lite
+          EXCLUDE: "*.txt,package-lock.json,API_REFERENCES.md,LICENSE"
