@@ -99,20 +99,20 @@ Ready to chunk code by line count? This gives you predictable, size-based chunks
 from chunklet.code_chunker import CodeChunker
 
 
-chunker = CodeChunker(max_lines=10) # (1)!
+chunker = CodeChunker(max_lines=10)  # (1)!
 
 chunks = chunker.chunk_text(
     code=PYTHON_CODE,
-    include_comments=True,      # (2)!
-    docstring_mode="all",       # (3)!
-    strict=False,               # (4)!
+    include_comments=True,  # (2)!
+    docstring_mode="all",  # (3)!
+    strict=False,  # (4)!
 )
 
 for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
+    print(f"--- Chunk {i + 1} ---")
     print(f"Content:\\n{chunk.content}")
     print("Metadata:")
-    for k,v in chunk.metadata.items():
+    for k, v in chunk.metadata.items():
         print(f"{k}: {v}")
     print()
 ```
@@ -211,7 +211,7 @@ for i, chunk in enumerate(chunks):
 This constraint is useful when you want to ensure that each chunk contains a specific number of functions, helping to maintain logical code units.
 
 ```py linenums="1" hl_lines="1"
-chunker = CodeChunker(max_functions=1) # (1)!
+chunker = CodeChunker(max_functions=1)
 
 chunks = chunker.chunk_text(
     code=PYTHON_CODE,
@@ -219,10 +219,10 @@ chunks = chunker.chunk_text(
 )
 
 for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
+    print(f"--- Chunk {i + 1} ---")
     print(f"Content:\\n{chunk.content}")
     print("Metadata:")
-    for k,v in chunk.metadata.items():
+    for k, v in chunk.metadata.items():
         print(f"{k}: {v}")
     print()
 ```
@@ -301,10 +301,11 @@ for i, chunk in enumerate(chunks):
 
 Here's how you can use `CodeChunker` to chunk code by the number of tokens:
 
-```py linenums="1" hl_lines="1-3 6-7"
+```py linenums="1" hl_lines="1-3 7"
 def simple_token_counter(text: str) -> int:
     """Simple Token Counter For Testing."""
     return len(text.split())
+
 
 chunker = CodeChunker(
     token_counter=simple_token_counter,
@@ -312,14 +313,14 @@ chunker = CodeChunker(
 )
 
 chunks = chunker.chunk_text(
-    code=PYTHON_CODE,                
+    code=PYTHON_CODE,
 )
 
 for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
+    print(f"--- Chunk {i + 1} ---")
     print(f"Content:\\n{chunk.content}")
     print("Metadata:")
-    for k,v in chunk.metadata.items():
+    for k, v in chunk.metadata.items():
         print(f"{k}: {v}")
     print()
 ```
@@ -403,10 +404,9 @@ for i, chunk in enumerate(chunks):
 The real power of `CodeChunker` comes from combining multiple constraints. This allows for highly specific and granular control over how your code is chunked. Here are a few examples of how you can combine different constraints.
 
 ```py linenums="1" hl_lines="1-3"
-chunker = CodeChunker()
-chunker.max_lines=8,
-chunker.max_tokens=150,
-chunker.max_functions=1
+chunker.max_lines = 8
+chunker.max_tokens = 150
+chunker.max_functions = 1
 
 chunk = chunker.chunk_text(PYTHON_CODE)
 ```
@@ -419,7 +419,9 @@ While `chunk_text`/`chunk_file` is perfect for single code inputs, `chunk_texts`
 - `chunk_files()` - process multiple file paths
 
 Given we have the following code snippets saved as individual files in a `code_examples` directory:
-# cpp_calculator.cpp
+<details>
+<summary>cpp_calculator.cpp</summary>
+
 ```cpp
 #include <iostream>
 #include <string>
@@ -439,7 +441,11 @@ int calculate_sum(int a, int b) {
 }
 ```
 
-# JavaDataProcessor.java
+</details>
+
+<details>
+<summary>JavaDataProcessor.java</summary>
+
 ```java
 package com.chunker.data;
 
@@ -467,7 +473,11 @@ public class DataProcessor {
 }
 ```
 
-# js_utils.js
+</details>
+
+<details>
+<summary>js_utils.js</summary>
+
 ```javascript
 // Utility function
 const sanitizeInput = (input) => {
@@ -489,7 +499,11 @@ function processArray(data) {
 }
 ```
 
-# go_config.go
+</details>
+
+<details>
+<summary>go_config.go</summary>
+
 ```go
 package main
 
@@ -517,9 +531,11 @@ func (c *Config) displayInfo() {
 }
 ```
 
+</details>
+
 We can process them all at once by providing a list of paths to the `chunk_files` method. Assuming these files are saved in a `code_examples` directory:
 
-```py linenums="1" hl_lines="13-20"
+```py linenums="1" hl_lines="13-19"
 chunker = CodeChunker(
     token_counter=simple_token_counter,
     max_tokens=50,
@@ -535,17 +551,17 @@ sources = [
 chunks = chunker.chunk_files(
     paths=sources,
     include_comments=False,
-    n_jobs=2,               # (1)!
-    on_errors="raise",      # (2)!
-    show_progress=True,     # (3)!
+    n_jobs=2,  # (1)!
+    on_errors="raise",  # (2)!
+    show_progress=True,  # (3)!
 )
 
 # Output the results
 for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
+    print(f"--- Chunk {i + 1} ---")
     print(f"Content:\n{chunk.content.strip()}\n")
     print("Metadata:")
-    for k,v in chunk.metadata.items():
+    for k, v in chunk.metadata.items():
         print(f"  {k}: {v}")
     print()
 ```
@@ -700,7 +716,7 @@ The `separator` parameter lets you add a custom marker that gets yielded after a
 !!! note "note"
     `None` cannot be used as a separator.
 
-```py linenums="1" hl_lines="1 31 35 38-41"
+```py linenums="1" hl_lines="1 30 34 37-41"
 from more_itertools import split_at
 
 SIMPLE_SOURCES = [
@@ -711,9 +727,8 @@ def greet_user(name):
     message = "Welcome back, " + name
     return message
     ''',
-
     # C#: Simple Method and Class Boundary
-    '''
+    """
 public class Utility
 {
     // C# Method
@@ -723,7 +738,7 @@ public class Utility
         return sum;
     }
 }
-    '''
+    """,
 ]
 
 chunker = CodeChunker(
@@ -741,8 +756,8 @@ chunks_with_separators = chunker.chunk_texts(
 chunk_groups = split_at(chunks_with_separators, lambda x: x == custom_separator)
 # Process the results using split_at
 for i, code_chunks in enumerate(chunk_groups):
-    if code_chunks: # (1)!
-        print(f"--- Chunks for Document {i+1} ---")
+    if code_chunks:  # (1)!
+        print(f"--- Chunks for Document {i + 1} ---")
         for chunk in code_chunks:
             print(f"Content:\n {chunk.content}\n")
             print(f"Metadata: {chunk.metadata}")
@@ -761,27 +776,27 @@ for i, code_chunks in enumerate(chunk_groups):
         message = "Welcome back, " + name
         return message
 
-    Metadata: {'chunk_num': 1, 'tree': 'global\n└─ def greet_user(\n', 'start_line': 1, 'end_line': 5, 'span': (0, 124), 'source': 'N/A'}
+    Metadata: {'chunk_num': 1, 'tree': 'global\n└─ def greet_user(\n', 'start_line': 1, 'end_line': 6, 'span': (0, 128), 'source': 'N/A'}
 
-    Chunking ...:  50%|███████████████               | 1/2 [00:00,  9.48it/s]
+    Chunking ...:  50%|█████     | 1/2 [00:00,  9.70it/s]
     --- Chunks for Document 2 ---
     Content:
     public class Utility
     {
-        // C# Method
 
-    Metadata: {'chunk_num': 1, 'tree': 'global\n└─ public class Utility\n', 'start_line': 1, 'end_line': 4, 'span': (0, 41), 'source': 'N/A'}
+    Metadata: {'chunk_num': 1, 'tree': 'global\n└─ public class Utility\n', 'start_line': 1, 'end_line': 3, 'span': (0, 24), 'source': 'N/A'}
     Content:
-         public int Add(int x, int y)
-        {
-            int sum = x + y;
-            return sum;
-        }
+     // C# Method
+    public int Add(int x, int y)
+    {
+        int sum = x + y;
+        return sum;
+    }
     }
 
-    Metadata: {'chunk_num': 2, 'tree': 'global\n└─ public class Utility\n   └─ public int Add(\n', 'start_line': 5, 'end_line': 10, 'span': (41, 133), 'source': 'N/A'}
+    Metadata: {'chunk_num': 2, 'tree': 'global\n└─ public class Utility\n   └─ public int Add(\n', 'start_line': 4, 'end_line': 11, 'span': (24, 137), 'source': 'N/A'}
 
-    Chunking ...: 100%|██████████████████████████████| 2/2 [00:00,  1.92it/s]
+    Chunking ...: 100%|██████████| 2/2 [00:01,  1.01it/s]
     ```
 
 !!! question "What are the limitations of CodeChunker?"

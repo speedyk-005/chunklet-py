@@ -35,9 +35,10 @@ In v2, custom processors lived on a **global** `custom_processor_registry` singl
     ```py
     from chunklet.document_chunker import DocumentChunker, custom_processor_registry
 
+
     @custom_processor_registry.register(".json", name="MyJSONProcessor")
-    def my_json_processor(file_path: str) -> tuple[str, dict]:
-        ...
+    def my_json_processor(file_path: str) -> tuple[str, dict]: ...
+
 
     chunker = DocumentChunker()
     ```
@@ -49,9 +50,10 @@ In v2, custom processors lived on a **global** `custom_processor_registry` singl
 
     registry = CustomProcessorRegistry()
 
+
     @registry.register(".json", name="MyJSONProcessor")
-    def my_json_processor(file_path: str) -> tuple[str, dict]:
-        ...
+    def my_json_processor(file_path: str) -> tuple[str, dict]: ...
+
 
     chunker = DocumentChunker(processor_registry=registry)
     ```

@@ -37,8 +37,8 @@ from chunklet.visualizer import Visualizer
 #     return len(text.split())  # Simple word-based counting
 
 visualizer = Visualizer(
-    host="127.0.0.1",    #(1)!
-    port=8000,          #(2)!
+    host="127.0.0.1",  # (1)!
+    port=8000,  # (2)!
     # token_counter=my_token_counter  # Uncomment if using custom counter
 )
 
@@ -218,7 +218,7 @@ Use this Python client to chunk files programmatically:
         files = {"file": ("my_document.txt", f, "text/plain")}
         data = {
             "mode": "document",  # or "code"
-            "params": '{"max_sentences": 3, "overlap_percent": 20}'
+            "params": '{"max_sentences": 3, "overlap_percent": 20}',
         }
 
         response = requests.post(f"{base_url}/api/chunk", files=files, data=data)
@@ -249,12 +249,11 @@ Use this Python client to chunk files programmatically:
 
     with open("my_document.txt", "rb") as f:
         files = {"file": ("my_document.txt", f, "text/plain")}
-        data = {
-            "mode": "document",
-            "params": '{"max_sentences": 3, "overlap_percent": 20}'
-        }
+        data = {"mode": "document", "params": '{"max_sentences": 3, "overlap_percent": 20}'}
 
-        response = requests.post(f"{base_url}/api/chunk", files=files, data=data, headers=headers)
+        response = requests.post(
+            f"{base_url}/api/chunk", files=files, data=data, headers=headers
+        )
 
     if response.status_code == 200:
         result = msgpack.unpackb(response.content, raw=False)

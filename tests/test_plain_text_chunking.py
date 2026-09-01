@@ -1,7 +1,7 @@
 import re
+from textwrap import dedent
 
 import pytest
-from textwrap import dedent
 from more_itertools import split_at
 
 from chunklet import (

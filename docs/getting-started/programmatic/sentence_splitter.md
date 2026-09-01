@@ -41,7 +41,7 @@ Robots are learning. It's raining. Let's code. Mars is red. Sr. sleep is rare. C
 """
 
 splitter = SentenceSplitter(verbose=True, lang="auto")
-sentences = splitter.split_text(TEXT) #(1)!
+sentences = splitter.split_text(TEXT)  # (1)!
 
 for sentence in sentences:
     print(sentence)
@@ -86,7 +86,7 @@ splitter = SentenceSplitter(lang="en")
 sentences = splitter.split_file("sample.txt")
 
 for i, sentence in enumerate(sentences):
-    print(f"Sentence {i+1}: {sentence}")
+    print(f"Sentence {i + 1}: {sentence}")
 ```
 
 ??? success "Click to show output"
@@ -108,7 +108,7 @@ lang_texts = {
     "fr": "Ceci est une phrase. Voici une autre phrase. M. Smith est allé à Washington. Il a dit 'Bonjour le monde!'. Le renard brun et rapide saute par-dessus le chien paresseux.",
     "es": "Esta es una oración. Aquí hay otra oración. El Sr. Smith fue a Washington. Dijo '¡Hola Mundo!'. El rápido zorro marrón salta sobre el perro perezoso.",
     "de": "Dies ist ein Satz. Hier ist ein weiterer Satz. Herr Smith ging nach Washington. Er sagte 'Hallo Welt!'. Der schnelle braune Fuchs springt über den faulen Hund.",
-    "hi": "यह एक वाक्य है। यह एक और वाक्य है। श्री स्मिथ वाशिंगटन गए। उसने कहा 'नमस्ते दुनिया!'। तेज भूरा लोमड़ी आलसी कुत्ते पर कूदता है।"
+    "hi": "यह एक वाक्य है। यह एक और वाक्य है। श्री स्मिथ वाशिंगटन गए। उसने कहा 'नमस्ते दुनिया!'। तेज भूरा लोमड़ी आलसी कुत्ते पर कूदता है।",
 }
 
 splitter = SentenceSplitter()

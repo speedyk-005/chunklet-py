@@ -100,16 +100,16 @@ from chunklet.document_chunker import DocumentChunker
 text = "..."  # The text from above
 
 chunker = DocumentChunker(  # (1)!
-    lang="auto",             # (2)!
+    lang="auto",  # (2)!
     max_sentences=2,
-    overlap_percent=0,       # (3)!
-    offset=0,                # (4)!
+    overlap_percent=0,  # (3)!
+    offset=0,  # (4)!
 )
 
 chunks = chunker.chunk_text(text=text)
 
 for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
+    print(f"--- Chunk {i + 1} ---")
     print(f"Metadata: {chunk.metadata}")
     print(f"Content: {chunk.content}")
     print()
@@ -163,13 +163,13 @@ for i, chunk in enumerate(chunks):
 
 This constraint is useful for documents structured with Markdown headings or thematic breaks.
 
-``` py linenums="1" hl_lines="2"
+``` py linenums="1" hl_lines="1"
 chunker = DocumentChunker(max_section_breaks=2)
 
 chunks = chunker.chunk_text(text=text)
 
 for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
+    print(f"--- Chunk {i + 1} ---")
     print(f"Metadata: {chunk.metadata}")
     print(f"Content: {chunk.content}")
     print()
@@ -214,18 +214,20 @@ for i, chunk in enumerate(chunks):
 !!! note "Token Counter Requirement"
     When using the `max_tokens` constraint, a `token_counter` function is essential. This function, which you provide, should accept a string and return an integer representing its token count. Failing to provide a `token_counter` will result in a [`MissingTokenCounterError`](../../exceptions-and-warnings.md#missingtokencountererror).
 
-```py linenums="1" hl_lines="3-4 6"
+```py linenums="1" hl_lines="4-5 8"
 from chunklet.document_chunker import DocumentChunker
+
 
 def word_counter(text: str) -> int:
     return len(text.split())
+
 
 chunker = DocumentChunker(token_counter=word_counter, max_tokens=50)
 
 chunks = chunker.chunk_text(text=text)
 
 for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
+    print(f"--- Chunk {i + 1} ---")
     print(f"Metadata: {chunk.metadata}")
     print(f"Content: {chunk.content}")
     print()
@@ -336,12 +338,11 @@ While `chunk_text` is perfect for single texts and `chunk_file` for single files
 
 ### For Texts
 
-```py linenums="1" hl_lines="14-19"
-def word_counter(text: str) -> int:
-    return len(text.split())
-
+```py linenums="1" hl_lines="13-18"
 EN_TEXT = "This is the first document. It has multiple sentences for chunking. Here is the second document."
-ES_TEXT = "Este es el primer documento. Contiene varias frases para la segmentación de texto."
+ES_TEXT = (
+    "Este es el primer documento. Contiene varias frases para la segmentación de texto."
+)
 
 chunker = DocumentChunker(
     token_counter=word_counter,
@@ -352,13 +353,13 @@ chunker = DocumentChunker(
 
 chunks = chunker.chunk_texts(
     texts=[EN_TEXT, ES_TEXT],
-    n_jobs=2,                    # (1)!
-    on_errors="raise",           # (2)!
-    show_progress=True,          # (3)!
+    n_jobs=2,  # (1)!
+    on_errors="raise",  # (2)!
+    show_progress=True,  # (3)!
 )
 
 for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
+    print(f"--- Chunk {i + 1} ---")
     print(f"Metadata: {chunk.metadata}")
     print(f"Content: {chunk.content}")
     print()
@@ -414,7 +415,7 @@ from more_itertools import split_at
 chunker = DocumentChunker(max_sentences=1)
 texts = [
     "This is the first document. It has two sentences.",
-    "This is the second document. It also has two sentences."
+    "This is the second document. It also has two sentences.",
 ]
 custom_separator = "---END_OF_DOCUMENT---"
 
@@ -427,8 +428,8 @@ chunks_with_separators = chunker.chunk_texts(
 chunk_groups = split_at(chunks_with_separators, lambda x: x == custom_separator)
 # Process the results using split_at
 for i, doc_chunks in enumerate(chunk_groups):
-    if doc_chunks:        # (1)!
-        print(f"--- Chunks for Document {i+1} ---")
+    if doc_chunks:  # (1)!
+        print(f"--- Chunks for Document {i + 1} ---")
         for chunk in doc_chunks:
             print(f"Content: {chunk.content}")
             print(f"Metadata: {chunk.metadata}")
@@ -469,7 +470,7 @@ To use a custom processor, you leverage the [`@registry.register`](../../referen
     - For multi-section documents, return a list of strings - each will be processed as a separate section
     - If an error occurs during the document processing (e.g., an issue with the custom processor function), a [`CallbackError`](../../exceptions-and-warnings.md#callbackerror) will be raised
 
-```py linenums="1" hl_lines="5-7 9-19 21 44-48 50-51"
+```py linenums="1" hl_lines="5-7 10-20 23 43-47 49-50"
 import os
 import re
 import json
@@ -478,10 +479,11 @@ from chunklet.document_chunker import CustomProcessorRegistry, DocumentChunker
 
 registry = CustomProcessorRegistry()
 
+
 # Define a simple custom processor for .json files
 @registry.register(".json", name="MyJSONProcessor")
 def my_json_processor(file_path: str) -> tuple[str, dict]:
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         data = json.load(f)
 
     # Assuming the json has a "text" field with paragraphs
@@ -490,23 +492,21 @@ def my_json_processor(file_path: str) -> tuple[str, dict]:
     metadata["source"] = file_path
     return text_content, metadata
 
+
 chunker = DocumentChunker(processor_registry=registry, max_sentences=5)
 
 # A complex JSON sample
 json_data = {
-    "metadata": {
-        "document_id": "doc-12345",
-        "created_at": "2025-11-05"
-    },
+    "metadata": {"document_id": "doc-12345", "created_at": "2025-11-05"},
     "text": [
         "This is the first paragraph of our longer JSON sample. It contains multiple sentences to test the chunking process.",
         "The second paragraph introduces a new topic. We are exploring the capabilities of custom processors in the chunklet library.",
-        "Finally, the third paragraph concludes our sample. We hope this demonstrates the flexibility of the system in handling various data formats."
-    ]
+        "Finally, the third paragraph concludes our sample. We hope this demonstrates the flexibility of the system in handling various data formats.",
+    ],
 }
 
 # Use a temporary file
-with tempfile.NamedTemporaryFile(mode='w+', suffix=".json") as tmp:
+with tempfile.NamedTemporaryFile(mode="w+", suffix=".json") as tmp:
     json.dump(json_data, tmp)
     tmp.seek(0)
     tmp_path = tmp.name
@@ -514,7 +514,7 @@ with tempfile.NamedTemporaryFile(mode='w+', suffix=".json") as tmp:
     chunks = chunker.chunk_file(path=tmp_path)
 
     for i, chunk in enumerate(chunks):
-        print(f"--- Chunk {i+1} ---")
+        print(f"--- Chunk {i + 1} ---")
         print(f"Content:\n{chunk.content}\n")
         print(f"Metadata:\n{chunk.metadata}")
         print()
