@@ -64,6 +64,7 @@ class PlainTextChunker:
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
+        lang: str = "auto",
         verbose: bool = False,
     ):
         """
@@ -78,6 +79,7 @@ class PlainTextChunker:
             offset: Starting sentence offset for chunking. Defaults to 0.
             token_counter: Function that counts tokens in text.
                 If None, must be provided when calling chunk() methods.
+            lang: Language code (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             verbose: Enable verbose logging.
         """
         self._verbose = verbose
@@ -88,12 +90,13 @@ class PlainTextChunker:
         self.max_section_breaks = max_section_breaks
         self.overlap_percent = overlap_percent
         self.offset = offset
+        self.lang = lang
 
         self._validate_constraints(
             max_tokens, max_sentences, max_section_breaks, token_counter
         )
 
-        self.sentence_splitter = SentenceSplitter()
+        self.sentence_splitter = SentenceSplitter(lang=lang)
         self.sentence_splitter.verbose = self._verbose
         self._initialized = True
 
@@ -478,7 +481,6 @@ class PlainTextChunker:
         self,
         text: str,
         *,
-        lang: str = "auto",
         token_counter: Callable[[str], int] | None = None,
         base_metadata: dict[str, Any] | None = None,
     ) -> list[DotDict]:
@@ -490,7 +492,6 @@ class PlainTextChunker:
 
         Args:
             text: The input text to chunk.
-            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             token_counter: Optional token counting function.
                 Required for token-based modes only.
             base_metadata: Optional dictionary to be included with each chunk.
@@ -517,11 +518,9 @@ class PlainTextChunker:
             log_info(self.verbose, "Input text is empty. Returning empty list.")
             return []
 
+        self.sentence_splitter.lang = self.lang
         try:
-            sentences = self.sentence_splitter.split_text(
-                text,
-                lang,
-            )
+            sentences = self.sentence_splitter.split_text(text)
         except Exception as e:
             raise CallbackError(
                 f"An error occurred during the sentence splitting process.\nDetails: {e}\n"
@@ -559,7 +558,6 @@ class PlainTextChunker:
         self,
         texts: IterableOfStr,
         *,
-        lang: str = "auto",
         token_counter: Callable[[str], int] | None = None,
         separator: Any = None,
         base_metadata: dict[str, Any] | None = None,
@@ -577,7 +575,6 @@ class PlainTextChunker:
 
         Args:
             texts: A non-string iterable of input texts to be chunked.
-            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             token_counter: The token counting function.
                 Required if `max_tokens` is set.
             separator: A value to be yielded after the chunks of each text are processed.
@@ -600,7 +597,6 @@ class PlainTextChunker:
         """
         chunk_func = partial(
             self.chunk,
-            lang=lang,
             base_metadata=base_metadata,
             token_counter=token_counter or self.token_counter,
         )

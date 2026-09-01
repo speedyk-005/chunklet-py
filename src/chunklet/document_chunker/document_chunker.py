@@ -85,6 +85,7 @@ class DocumentChunker(BaseChunker):
         "max_section_breaks",
         "overlap_percent",
         "offset",
+        "lang",
     }
 
     def __init__(
@@ -97,6 +98,7 @@ class DocumentChunker(BaseChunker):
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
+        lang: str = "auto",
         verbose: bool = False,
     ):
         """
@@ -115,6 +117,7 @@ class DocumentChunker(BaseChunker):
             offset: Starting sentence offset for chunking. Defaults to 0.
             token_counter: Function that counts tokens in text.
                 If None, must be provided (or token-based limits disabled).
+            lang: Language code (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             verbose: Enable verbose logging.
         """
         self._verbose = verbose
@@ -130,6 +133,7 @@ class DocumentChunker(BaseChunker):
             overlap_percent=overlap_percent,
             offset=offset,
             token_counter=self.token_counter,
+            lang=lang,
             verbose=self._verbose,
         )
 
@@ -378,7 +382,6 @@ class DocumentChunker(BaseChunker):
         self,
         text: str,
         *,
-        lang: str = "auto",
         token_counter: Callable[[str], int] | None = None,
         base_metadata: dict[str, Any] | None = None,
     ) -> list[DotDict]:
@@ -387,7 +390,6 @@ class DocumentChunker(BaseChunker):
 
         Args:
             text: The raw text to chunk.
-            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             token_counter: Optional token counting function.
             base_metadata: Optional dictionary to be included with each chunk.
 
@@ -403,7 +405,6 @@ class DocumentChunker(BaseChunker):
         self,
         texts: IterableOfStr,
         *,
-        lang: str = "auto",
         token_counter: Callable[[str], int] | None = None,
         base_metadata: dict[str, Any] | None = None,
         separator: Any = None,
@@ -417,7 +418,6 @@ class DocumentChunker(BaseChunker):
 
         Args:
             texts: A non-string iterable of texts to chunk.
-            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             token_counter: Optional token counting function.
             base_metadata: Optional dictionary to be included with each chunk.
             separator: A value to be yielded after the chunks of each text are processed.
@@ -443,7 +443,6 @@ class DocumentChunker(BaseChunker):
         self,
         path: str | Path,
         *,
-        lang: str = "auto",
         token_counter: Callable[[str], int] | None = None,
     ) -> list[DotDict]:
         """
@@ -456,7 +455,6 @@ class DocumentChunker(BaseChunker):
 
         Args:
             path: The path to the document file.
-            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             token_counter: Optional token counting function.
 
         Returns:
@@ -487,7 +485,6 @@ class DocumentChunker(BaseChunker):
 
         chunks_out = self.plain_text_chunker.chunk(
             text=text_content,
-            lang=lang,
             token_counter=token_counter or self.token_counter,
         )
 
@@ -503,7 +500,6 @@ class DocumentChunker(BaseChunker):
         self,
         paths: IterableOfPath,
         *,
-        lang: str = "auto",
         token_counter: Callable[[str], int] | None = None,
         separator: Any = None,
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
@@ -520,7 +516,6 @@ class DocumentChunker(BaseChunker):
 
         Args:
             paths: A non-string iterable of paths to the document files.
-            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             token_counter: Optional token counting function.
             separator: A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
@@ -546,7 +541,6 @@ class DocumentChunker(BaseChunker):
 
         all_chunks_gen = self.plain_text_chunker.batch_chunk(
             texts=list(batch_documents["all_texts_gen"]),
-            lang=lang,
             token_counter=token_counter or self.token_counter,
             separator=sentinel,
             n_jobs=n_jobs,

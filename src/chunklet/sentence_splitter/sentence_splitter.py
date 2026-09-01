@@ -35,11 +35,16 @@ class SentenceSplitter:
     """
 
     @validate_input
-    def __init__(self, verbose: bool = False):
+    def __init__(
+        self,
+        lang: str = "auto",
+        verbose: bool = False,
+    ):
         """
         Initializes the SentenceSplitter.
 
         Args:
+            lang: Language code (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
             verbose: If True, enables verbose logging for debugging and informational messages.
         """
         self.verbose = verbose
@@ -52,6 +57,8 @@ class SentenceSplitter:
 
         # Tracked to reduce log spamming about language detection
         self._last_lang_used = None
+
+        self.lang = lang
 
     @staticmethod
     @lru_cache(maxsize=52)
@@ -134,26 +141,29 @@ class SentenceSplitter:
         return lang_detected, confidence
 
     @validate_input
-    def split_text(self, text: str, lang: str = "auto") -> list[str]:
+    def split_text(self, text: str) -> list[str]:
         """
         Splits a given text into a list of sentences.
 
         Args:
             text: The input text to be split.
-            lang: The language of the text (e.g., 'en', 'fr'). Defaults to 'auto'
 
         Returns:
             A list of sentences.
 
         Examples:
-            >>> splitter = SentenceSplitter()
-            >>> splitter.split_text("Hello world. How are you?", "en")
+            >>> splitter = SentenceSplitter(lang="en")
+            >>> splitter.split_text("Hello world. How are you?")
             ['Hello world.', 'How are you?']
-            >>> splitter.split_text("Bonjour le monde. Comment allez-vous?", "fr")
+            >>> splitter = SentenceSplitter(lang="fr")
+            >>> splitter.split_text("Bonjour le monde. Comment allez-vous?")
             ['Bonjour le monde.', 'Comment allez-vous?']
-            >>> splitter.split_text("Hello world. How are you?", "auto")
+            >>> splitter = SentenceSplitter()
+            >>> splitter.split_text("Hello world. How are you?")
             ['Hello world.', 'How are you?']
         """
+        lang = self.lang
+
         if not text:
             log_info(self.verbose, "Input text is empty. Returning empty list.")
             return []
@@ -192,16 +202,15 @@ class SentenceSplitter:
         )
         return cleaned_sentences
 
-    def split_file(self, path: str | Path, lang: str = "auto") -> list[str]:
+    def split_file(self, path: str | Path) -> list[str]:
         """
         Read and split a file into sentences.
 
         Args:
             path: Path to the file to read.
-            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to 'auto'.
 
         Returns:
             A list of sentences extracted from the file.
         """
         content = read_text_file(path)
-        return self.split_text(content, lang)
+        return self.split_text(content)

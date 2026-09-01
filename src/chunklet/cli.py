@@ -308,15 +308,15 @@ def split_command(
         raise typer.Exit(code=1)
 
     # Split Logic
-    splitter = SentenceSplitter(verbose=verbose)
+    splitter = SentenceSplitter(lang=lang or "auto", verbose=verbose)
 
     if source:
-        sentences = splitter.split_file(source, lang=lang or "auto")
+        sentences = splitter.split_file(source)
         lang_detected, confidence = splitter.detected_top_language(
             source.read_text(encoding="utf-8")
         )
     else:
-        sentences = splitter.split_text(input_text, lang=lang or "auto")
+        sentences = splitter.split_text(input_text)
         lang_detected, confidence = splitter.detected_top_language(input_text)
 
     # Output Handling
@@ -533,10 +533,10 @@ def chunk_command(
             max_section_breaks=max_section_breaks,
             overlap_percent=overlap_percent,
             offset=offset,
+            lang=lang,
         )
         chunk_kwargs = {
             "token_counter": token_counter,
-            "lang": lang,
         }
 
     # --- Chunking logic ---

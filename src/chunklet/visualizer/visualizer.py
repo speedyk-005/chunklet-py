@@ -187,12 +187,10 @@ class Visualizer:
                     dict(chunk) for chunk in chunker.chunk_text(text, strict=strict)
                 ]
             else:
-                # 'lang' is a per-call arg; the rest are constraint attributes.
-                lang = chunker_params.pop("lang", "auto")
                 chunker = self.document_chunker
                 for key, value in chunker_params.items():
                     setattr(chunker, key, value)
-                chunks = [dict(chunk) for chunk in chunker.chunk_text(text, lang=lang)]
+                chunks = [dict(chunk) for chunk in chunker.chunk_text(text)]
 
             response_data = {
                 "text": text,
