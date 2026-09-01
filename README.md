@@ -191,10 +191,10 @@ Chunklet-py is basically a "choose your own adventure" for data. It's constraint
 Pick your weapon based on whatever data mess you're currently cleaning up.
 
 ```python
-from chunklet import DocumentChunker   # For PDFs, DOCX, and general text chaos
-from chunklet import CodeChunker       # For source code (it actually respects brackets)
+from chunklet import DocumentChunker  # For PDFs, DOCX, and general text chaos
+from chunklet import CodeChunker  # For source code (it actually respects brackets)
 from chunklet import SentenceSplitter  # For when you just need to split sentences
-from chunklet import visualizer        # Web-based chunk visualizer
+from chunklet import visualizer  # Web-based chunk visualizer
 ```
 
 ### Configuration & Limits
@@ -211,11 +211,11 @@ chunker = DocumentChunker()
 # Feel free to mix and match these
 chunks = chunker.chunk_text(
     text,
-    max_sentences=3,       # Stop after X sentences
-    max_tokens=500,        # Don't blow up the LLM context
+    max_sentences=3,  # Stop after X sentences
+    max_tokens=500,  # Don't blow up the LLM context
     max_section_breaks=2,  # Respect the Markdown headers
-    overlap_percent=20,    # Give it some "memory" of the last chunk
-    offset=0               # Skip the first N sentences if you're feeling adventurous
+    overlap_percent=20,  # Give it some "memory" of the last chunk
+    offset=0,  # Skip the first N sentences if you're feeling adventurous
 )
 ```
 
@@ -229,10 +229,10 @@ chunker = CodeChunker()
 # Again, use whichever constraints make sense for your file
 chunks = chunker.chunk_text(
     text,
-    max_lines=50,          # Height limit
-    max_tokens=512,        # Width limit
-    max_functions=1,       # One function per chunk (keeps things tidy)
-    strict=True            # True: Crash on big blocks; False: Slice 'em up anyway
+    max_lines=50,  # Height limit
+    max_tokens=512,  # Width limit
+    max_functions=1,  # One function per chunk (keeps things tidy)
+    strict=True,  # True: Crash on big blocks; False: Slice 'em up anyway
 )
 ```
 
@@ -242,9 +242,9 @@ The chunkers return a list (or generator) of Chunk objects. These are Box instan
 
 ```python
 for chunk in chunks:
-    print(chunk.content)   # The actual text/code
+    print(chunk.content)  # The actual text/code
     print(chunk.metadata)  # Chunk metadata
-    print()                # Because whitespace is free
+    print()  # Because whitespace is free
 ```
 
 ### Input Methods (Chunkers Only)

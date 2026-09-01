@@ -52,9 +52,12 @@ The `DocumentChunker` comes packed with smart features that make it your go-to t
 | `max_sentences`      | `int >= 1`        | Sentence power mode! Tell us how many sentences per chunk, and we'll group them thoughtfully so your ideas flow like a well-written story. |
 | `max_tokens`         | `int >= 12`       | Token budget watcher! We'll carefully pack sentences into chunks while respecting your token limits. If a sentence gets too chatty, we'll politely split it at clause boundaries. 🤐 |
 | `max_section_breaks` | `int >= 1`        | Structure superhero! Limits section breaks per chunk — headings (`##`), horizontal rules (`---`, `***`, `___`), and `<details>` tags. Your document structure stays intact! |
+| `overlap_percent`    | `int 0-75`        | Repeat a bit of the previous chunk's tail for continuity. Defaults to 20. |
+| `offset`             | `int >= 0`        | Skip the first N sentences before chunking. Defaults to 0. |
+| `lang`               | `str`             | Language code (`'en'`, `'fr'`, ...) or `'auto'`. Defaults to `'auto'`. |
 
 !!! note "Quick Note: Constraints Required!"
-    You must specify at least one limit (`max_sentences`, `max_tokens`, or `max_section_breaks`) when using chunking methods. Forget to add one? You'll get an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror)!
+    You must specify at least one limit (`max_sentences`, `max_tokens`, or `max_section_breaks`) when constructing. Forget to add one? You'll get an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror)!
 
 The `DocumentChunker` has four main methods: `chunk_text`, `chunk_file`, `chunk_texts`, and `chunk_files`. `chunk_text` and `chunk_file` return a list of [`DotDict`][chunklet.common.dotdict.DotDict] objects, while `chunk_texts` and `chunk_files` are memory-friendly generators that yield chunks one by one. Each `DotDict` has `content` (the actual text) and `metadata` (all the juicy details). Check the [Metadata guide](../metadata.md#documentchunker-metadata) for the full scoop!
 
@@ -84,16 +87,6 @@ There are several strategies for chunking, including splitting by sentences, by 
 
 ---
 
-## Advanced Chunking Techniques
-
-Ready to go beyond the basics? Let's explore some pro-level techniques!
-
-### Overlap Considerations
-
-Overlap is your secret weapon! It includes a bit of the previous chunk at the start of the next one, ensuring your text doesn't feel choppy or disconnected.
-
----
-
 # Conclusion
 
 In conclusion, mastering chunking is key to unlocking the full potential of your text data.
@@ -106,18 +99,17 @@ from chunklet.document_chunker import DocumentChunker
 
 text = "..."  # The text from above
 
-chunker = DocumentChunker()  # (1)!
-
-chunks = chunker.chunk_text(
-    text=text,
-    lang="auto",             # (2)!
+chunker = DocumentChunker(  # (1)!
+    lang="auto",  # (2)!
     max_sentences=2,
-    overlap_percent=0,       # (3)!
-    offset=0                 # (4)!
+    overlap_percent=0,  # (3)!
+    offset=0,  # (4)!
 )
 
+chunks = chunker.chunk_text(text=text)
+
 for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
+    print(f"--- Chunk {i + 1} ---")
     print(f"Metadata: {chunk.metadata}")
     print(f"Content: {chunk.content}")
     print()
@@ -131,159 +123,53 @@ for i, chunk in enumerate(chunks):
 ??? success "Click to show output"
     ```linenums="0"
     --- Chunk 1 ---
-    Metadata: {'chunk_num': 1, 'span': (1, 73)}
+    Metadata: {'chunk_num': 1, 'span': (0, 60)}
     Content: # Introduction to Chunking
     This is the first paragraph of our document.
 
     --- Chunk 2 ---
-    Metadata: {'chunk_num': 2, 'span': (74, 259)}
+    Metadata: {'chunk_num': 2, 'span': (73, 227)}
     Content: It discusses the importance of text segmentation for various NLP tasks, such as RAG systems and summarization.
     We aim to break down large documents into manageable, context-rich pieces.
 
-    ## Why is Chunking Important?
+    --- Chunk 3 ---
+    Metadata: {'chunk_num': 3, 'span': (260, 353)}
+    Content: ## Why is Chunking Important?
     Effective chunking helps in maintaining the semantic coherence of information.
 
-    --- Chunk 3 ---
-    Metadata: {'chunk_num': 3, 'span': (261, 370)}
+    --- Chunk 4 ---
+    Metadata: {'chunk_num': 4, 'span': (370, 528)}
     Content: It ensures that each piece of text retains enough context to be meaningful on its own, which is crucial for downstream applications.
 
     ### Different Strategies
 
-    --- Chunk 4 ---
-    Metadata: {'chunk_num': 4, 'span': (371, 529)}
+    --- Chunk 5 ---
+    Metadata: {'chunk_num': 5, 'span': (530, 710)}
     Content: There are several strategies for chunking, including splitting by sentences, by a fixed number of tokens, or by structural elements like headings.
     Each method has its own advantages depending on the specific use case.
 
-    --- Chunk 5 ---
-    Metadata: {'chunk_num': 5, 'span': (531, 748)}
+    --- Chunk 6 ---
+    Metadata: {'chunk_num': 6, 'span': (749, 766)}
     Content: ---
 
-    ## Advanced Chunking Techniques
-
-    --- Chunk 6 ---
-    Metadata: {'chunk_num': 6, 'span': (750, 787)}
-    Content: Ready to go beyond the basics?
-    Let's explore some pro-level techniques!
+    # Conclusion
 
     --- Chunk 7 ---
-    Metadata: {'chunk_num': 7, 'span': (788, 859)}
-    Content: ### Overlap Considerations
-    Overlap is your secret weapon!
-
-    --- Chunk 8 ---
-    Metadata: {'chunk_num': 8, 'span': (861, 919)}
-    Content: ### Overlap Considerations
-    Overlap is your secret weapon!
-
-    --- Chunk 9 ---
-    Metadata: {'chunk_num': 9, 'span': (920, 1050)}
-    Content: It includes a bit of the previous chunk at the start of the next one, ensuring your text doesn't feel choppy or disconnected.
-
-    ---
-
-    --- Chunk 10 ---
-    Metadata: {'chunk_num': 10, 'span': (1052, 1157)}
-    Content: # Conclusion
-    In conclusion, mastering chunking is key to unlocking the full potential of your text data.
+    Metadata: {'chunk_num': 7, 'span': (768, 859)}
+    Content: In conclusion, mastering chunking is key to unlocking the full potential of your text data.
     ```
-
-### Chunking by Tokens: Token Budget Master! 🪙
-
-!!! note "Token Counter Requirement"
-    When using the `max_tokens` constraint, a `token_counter` function is essential. This function, which you provide, should accept a string and return an integer representing its token count. Failing to provide a `token_counter` will result in a [`MissingTokenCounterError`](../../exceptions-and-warnings.md#missingtokencountererror).
-
-```py linenums="1" hl_lines="1 3-4 6 10"
-from chunklet.document_chunker import DocumentChunker
-
-def word_counter(text: str) -> int:
-    return len(text.split())
-
-chunker = DocumentChunker(token_counter=word_counter)
-
-chunks = chunker.chunk_text(
-    text=text,
-    max_tokens=50,
-)
-
-for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
-    print(f"Metadata: {chunk.metadata}")
-    print(f"Content: {chunk.content}")
-    print()
-```
-
-??? success "Click to show output"
-    ```linenums="0"
-    --- Chunk 1 ---
-    Metadata: {'chunk_num': 1, 'span': (1, 290)}
-    Content: # Introduction to Chunking
-    This is the first paragraph of our document.
-    It discusses the importance of text segmentation for various NLP tasks, such as RAG systems and summarization.
-    We aim to break down large documents into manageable, context-rich pieces.
-
-    ## Why is Chunking Important?
-
-    --- Chunk 2 ---
-    Metadata: {'chunk_num': 2, 'span': (261, 573)}
-    Content: ... 
-    ## Why is Chunking Important?
-
-    Effective chunking helps in maintaining the semantic coherence of information.
-    It ensures that each piece of text retains enough context to be meaningful on its own, which is crucial for downstream applications.
-
-    ### Different Strategies
-    There are several strategies for chunking,
-
-    --- Chunk 3 ---
-    Metadata: {'chunk_num': 3, 'span': (531, 859)}
-    Content: There are several strategies for chunking,
-    including splitting by sentences, by a fixed number of tokens, or by structural elements like headings.
-    Each method has its own advantages depending on the specific use case.
-
-    ---
-
-    ## Advanced Chunking Techniques
-    Ready to go beyond the basics?
-    Let's explore some pro-level techniques!
-
-    --- Chunk 4 ---
-    Metadata: {'chunk_num': 4, 'span': (819, 1080)}
-    Content: Let's explore some pro-level techniques!
-
-
-
-    ### Overlap Considerations
-    Overlap is your secret weapon!
-    It includes a bit of the previous chunk at the start of the next one, ensuring your text doesn't feel choppy or disconnected.
-
-    ---
-
-    # Conclusion
-    In conclusion,
-
-    --- Chunk 5 ---
-    Metadata: {'chunk_num': 5, 'span': (1052, 1157)}
-    Content: ... 
-    # Conclusion
-    In conclusion,
-    mastering chunking is key to unlocking the full potential of your text data.
-    ```
-
-!!! tip "Overrides token_counter"
-    You can also provide the `token_counter` directly to any chunking method. If provided in both the constructor and the method, the one in the method will be used.
 
 ### Chunking by Section Breaks: Structure Superhero! 🦸‍♀️
 
 This constraint is useful for documents structured with Markdown headings or thematic breaks.
 
-``` py linenums="1" hl_lines="3"
-chunks = chunker.chunk_text(
-    text=text,
-    max_section_breaks=2
-)
+``` py linenums="1" hl_lines="1"
+chunker = DocumentChunker(max_section_breaks=2)
+
+chunks = chunker.chunk_text(text=text)
 
 for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
+    print(f"--- Chunk {i + 1} ---")
     print(f"Metadata: {chunk.metadata}")
     print(f"Content: {chunk.content}")
     print()
@@ -292,7 +178,7 @@ for i, chunk in enumerate(chunks):
 ??? success "Click to show output"
     ```linenums="0"
     --- Chunk 1 ---
-    Metadata: {'chunk_num': 1, 'span': (1, 503)}
+    Metadata: {'chunk_num': 1, 'span': (0, 414)}
     Content: # Introduction to Chunking
     This is the first paragraph of our document.
     It discusses the importance of text segmentation for various NLP tasks, such as RAG systems and summarization.
@@ -303,7 +189,7 @@ for i, chunk in enumerate(chunks):
     It ensures that each piece of text retains enough context to be meaningful on its own, which is crucial for downstream applications.
 
     --- Chunk 2 ---
-    Metadata: {'chunk_num': 2, 'span': (371, 753)}
+    Metadata: {'chunk_num': 2, 'span': (370, 681)}
     Content: It ensures that each piece of text retains enough context to be meaningful on its own,
     which is crucial for downstream applications.
 
@@ -314,28 +200,8 @@ for i, chunk in enumerate(chunks):
     ---
 
     --- Chunk 3 ---
-    Metadata: {'chunk_num': 3, 'span': (678, 859)}
+    Metadata: {'chunk_num': 3, 'span': (677, 822)}
     Content: Each method has its own advantages depending on the specific use case.
-
-    ---
-
-    ## Advanced Chunking Techniques
-    Ready to go beyond the basics?
-    Let's explore some pro-level techniques!
-
-    --- Chunk 4 ---
-    Metadata: {'chunk_num': 4, 'span': (819, 1050)}
-    Content: Let's explore some pro-level techniques!
-
-    ### Overlap Considerations
-    Overlap is your secret weapon!
-    It includes a bit of the previous chunk at the start of the next one, ensuring your text doesn't feel choppy or disconnected.
-
-    ---
-
-    --- Chunk 5 ---
-    Metadata: {'chunk_num': 5, 'span': (1047, 1157)}
-    Content: ... 
 
     ---
 
@@ -343,17 +209,84 @@ for i, chunk in enumerate(chunks):
     In conclusion, mastering chunking is key to unlocking the full potential of your text data.
     ```
 
+### Chunking by Tokens: Token Budget Master! 🪙
+
+!!! note "Token Counter Requirement"
+    When using the `max_tokens` constraint, a `token_counter` function is essential. This function, which you provide, should accept a string and return an integer representing its token count. Failing to provide a `token_counter` will result in a [`MissingTokenCounterError`](../../exceptions-and-warnings.md#missingtokencountererror).
+
+```py linenums="1" hl_lines="4-5 8"
+from chunklet.document_chunker import DocumentChunker
+
+
+def word_counter(text: str) -> int:
+    return len(text.split())
+
+
+chunker = DocumentChunker(token_counter=word_counter, max_tokens=50)
+
+chunks = chunker.chunk_text(text=text)
+
+for i, chunk in enumerate(chunks):
+    print(f"--- Chunk {i + 1} ---")
+    print(f"Metadata: {chunk.metadata}")
+    print(f"Content: {chunk.content}")
+    print()
+```
+
+??? success "Click to show output"
+    ```linenums="0"
+    --- Chunk 1 ---
+    Metadata: {'chunk_num': 1, 'span': (0, 237)}
+    Content: # Introduction to Chunking
+    This is the first paragraph of our document.
+    It discusses the importance of text segmentation for various NLP tasks, such as RAG systems and summarization.
+    We aim to break down large documents into manageable, context-rich pieces.
+
+    ## Why is Chunking Important?
+
+    --- Chunk 2 ---
+    Metadata: {'chunk_num': 2, 'span': (260, 520)}
+    Content: ... 
+    ## Why is Chunking Important?
+
+    Effective chunking helps in maintaining the semantic coherence of information.
+    It ensures that each piece of text retains enough context to be meaningful on its own, which is crucial for downstream applications.
+
+    ### Different Strategies
+    There are several strategies for chunking,
+
+    --- Chunk 3 ---
+    Metadata: {'chunk_num': 3, 'span': (530, 733)}
+    Content: There are several strategies for chunking,
+    including splitting by sentences, by a fixed number of tokens, or by structural elements like headings.
+    Each method has its own advantages depending on the specific use case.
+
+    ---
+
+    # Conclusion
+    In conclusion,
+
+    --- Chunk 4 ---
+    Metadata: {'chunk_num': 4, 'span': (754, 841)}
+    Content: ... 
+    # Conclusion
+    In conclusion,
+    mastering chunking is key to unlocking the full potential of your text data.
+    ```
+
+!!! tip "Overrides token_counter"
+    You can also provide the `token_counter` directly to any chunking method. If provided in both the constructor and the method, the one in the method will be used.
+
 ### Combining Multiple Constraints: Mix and Match Magic! 🎭
 
 The real power of `DocumentChunker` comes from combining multiple constraints. The chunking will stop as soon as any of the limits is reached.
 
-``` py linenums="1" hl_lines="3-5"
-chunks = chunker.chunk_text(
-    text,
-    max_sentences=5,
-    max_tokens=100,
-    max_section_breaks=2
-)
+``` py linenums="1" hl_lines="1-3"
+chunker.max_sentences = 5
+chunker.max_tokens = 100
+chunker.max_section_breaks = 2
+
+chunks = chunker.chunk_text(text)
 ```
 
 !!! tip "Customizing the Continuation Marker"
@@ -381,28 +314,11 @@ chunks = chunker.chunk_text(
 
 ## Single File: Process One Document! 📄
 
-While `chunk_text` is perfect for plain text, `chunk_file` handles document files. It supports the same constraints (max_sentences, max_tokens, max_section_breaks, etc.).
+While `chunk_text` is perfect for plain text, `chunk_file` handles document files. It uses the same constraints (max_sentences, max_tokens, max_section_breaks, etc.) configured on the constructor.
 
 ``` py linenums="1"
-from chunklet.document_chunker import DocumentChunker
-
 file_path = "sample_text.txt"
-
-chunker = DocumentChunker()
-
-chunks = chunker.chunk_file(
-    path=file_path,
-    lang="auto",
-    max_sentences=4,
-    overlap_percent=20,
-    offset=0
-)
-
-for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
-    print(f"Metadata: {chunk.metadata}")
-    print(f"Content: {chunk.content}")
-    print()
+chunks = chunker.chunk_file(path=file_path)
 ```
 
 !!! note "Special Handling for Streaming Processors"
@@ -422,29 +338,28 @@ While `chunk_text` is perfect for single texts and `chunk_file` for single files
 
 ### For Texts
 
-```py linenums="1" hl_lines="11-19"
-from chunklet.document_chunker import DocumentChunker
-
-def word_counter(text: str) -> int:
-    return len(text.split())
-
+```py linenums="1" hl_lines="13-18"
 EN_TEXT = "This is the first document. It has multiple sentences for chunking. Here is the second document."
-ES_TEXT = "Este es el primer documento. Contiene varias frases para la segmentación de texto."
+ES_TEXT = (
+    "Este es el primer documento. Contiene varias frases para la segmentación de texto."
+)
 
-chunker = DocumentChunker(token_counter=word_counter)
-
-chunks = chunker.chunk_texts(
-    texts=[EN_TEXT, ES_TEXT],
+chunker = DocumentChunker(
+    token_counter=word_counter,
     max_sentences=5,
     max_tokens=20,
     overlap_percent=30,
-    n_jobs=2,                    # (1)!
-    on_errors="raise",           # (2)!
-    show_progress=True,          # (3)!
+)
+
+chunks = chunker.chunk_texts(
+    texts=[EN_TEXT, ES_TEXT],
+    n_jobs=2,  # (1)!
+    on_errors="raise",  # (2)!
+    show_progress=True,  # (3)!
 )
 
 for i, chunk in enumerate(chunks):
-    print(f"--- Chunk {i+1} ---")
+    print(f"--- Chunk {i + 1} ---")
     print(f"Metadata: {chunk.metadata}")
     print(f"Content: {chunk.content}")
     print()
@@ -457,34 +372,15 @@ for i, chunk in enumerate(chunks):
 ??? success "Click to show output"
     ```linenums="0"
     --- Chunk 1 ---
-    Metadata: {'chunk_num': 1, 'span': (0, 82)}
-    Content: Este es el primer documento.
-    Contiene varias frases para la segmentación de texto.
-
-    --- Chunk 2 ---
-    Metadata: {'chunk_num': 2, 'span': (83, 196)}
-    Content: El segundo ejemplo es más extenso para probar el procesamiento por lotes.
-    La tercera oración añade más contenido.
-
-    --- Chunk 3 ---
-    Metadata: {'chunk_num': 3, 'span': (197, 236)}
-    Content: Y la cuarta oración para mayor medida.
-
-    --- Chunk 4 ---
-    Metadata: {'chunk_num': 1, 'span': (0, 96)}
+    Metadata: {'chunk_num': 1, 'span': (0, 79)}
     Content: This is the first document.
     It has multiple sentences for chunking.
     Here is the second document.
 
-    --- Chunk 5 ---
-    Metadata: {'chunk_num': 2, 'span': (97, 201)}
-    Content: It is a bit longer to test batch processing effectively.
-    This is the third sentence to add more content.
-
-    --- Chunk 6 ---
-    Metadata: {'chunk_num': 3, 'span': (202, 294)}
-    Content: And the fourth sentence for good measure.
-    The fifth sentence makes it even more interesting.
+    --- Chunk 2 ---
+    Metadata: {'chunk_num': 1, 'span': (0, 69)}
+    Content: Este es el primer documento.
+    Contiene varias frases para la segmentación de texto.
     ```
 
 ### For Files
@@ -501,6 +397,11 @@ chunks = chunker.chunk_files(PATHS, ...)
 !!! warning "Generator Cleanup"
     When using `chunk_texts`, it's crucial to ensure the generator is properly closed, especially if you don't iterate through all the chunks. This is necessary to release the underlying multiprocessing resources. The recommended way is to use a `try...finally` block to call `close()` on the generator. For more details, see the [Troubleshooting](../../troubleshooting.md) guide.
 
+!!! note "Non-Deterministic Batch Ordering"
+    When using `chunk_texts` or `chunk_files` with parallel processing (`n_jobs > 1`), chunks from different inputs are processed concurrently by multiple worker processes. The order in which chunks are yielded depends on which worker finishes first, which varies with system load and scheduling. So the overall ordering of chunks across inputs is not guaranteed to be stable between runs. The `chunk_num` field within each chunk's metadata still reflects the chunk's position within its source input.
+
+    When using the `separator` parameter, the separator-based grouping is deterministic even with parallel processing.
+
 ### Separator: Keeping Your Batches Organized! 📋
 
 The `separator` parameter works for both `chunk_texts` and `chunk_files`. It lets you add a custom marker that gets yielded after all chunks from a single input are processed. Super handy for batch processing when you want to clearly separate chunks from different source texts.
@@ -508,20 +409,18 @@ The `separator` parameter works for both `chunk_texts` and `chunk_files`. It let
 !!! note "Quick Note"
     `None` won't work as a separator - you'll need something more substantial!
 
-```py linenums="1" hl_lines="2 9 14 18-21"
-from chunklet.document_chunker import DocumentChunker
+```py linenums="1" hl_lines="3 8 12 16-20"
 from more_itertools import split_at
 
-chunker = DocumentChunker()
+chunker = DocumentChunker(max_sentences=1)
 texts = [
     "This is the first document. It has two sentences.",
-    "This is the second document. It also has two sentences."
+    "This is the second document. It also has two sentences.",
 ]
 custom_separator = "---END_OF_DOCUMENT---"
 
 chunks_with_separators = chunker.chunk_texts(
     texts,
-    max_sentences=1,
     separator=custom_separator,
     show_progress=False,
 )
@@ -529,8 +428,8 @@ chunks_with_separators = chunker.chunk_texts(
 chunk_groups = split_at(chunks_with_separators, lambda x: x == custom_separator)
 # Process the results using split_at
 for i, doc_chunks in enumerate(chunk_groups):
-    if doc_chunks:        # (1)!
-        print(f"--- Chunks for Document {i+1} ---")
+    if doc_chunks:  # (1)!
+        print(f"--- Chunks for Document {i + 1} ---")
         for chunk in doc_chunks:
             print(f"Content: {chunk.content}")
             print(f"Metadata: {chunk.metadata}")
@@ -571,7 +470,7 @@ To use a custom processor, you leverage the [`@registry.register`](../../referen
     - For multi-section documents, return a list of strings - each will be processed as a separate section
     - If an error occurs during the document processing (e.g., an issue with the custom processor function), a [`CallbackError`](../../exceptions-and-warnings.md#callbackerror) will be raised
 
-```py linenums="1" hl_lines="5-7 9-19 21 53-54"
+```py linenums="1" hl_lines="5-7 10-20 23 43-47 49-50"
 import os
 import re
 import json
@@ -580,10 +479,11 @@ from chunklet.document_chunker import CustomProcessorRegistry, DocumentChunker
 
 registry = CustomProcessorRegistry()
 
+
 # Define a simple custom processor for .json files
 @registry.register(".json", name="MyJSONProcessor")
 def my_json_processor(file_path: str) -> tuple[str, dict]:
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         data = json.load(f)
 
     # Assuming the json has a "text" field with paragraphs
@@ -592,34 +492,29 @@ def my_json_processor(file_path: str) -> tuple[str, dict]:
     metadata["source"] = file_path
     return text_content, metadata
 
-chunker = DocumentChunker(processor_registry=registry)
 
-# A longer and more complex JSON sample
+chunker = DocumentChunker(processor_registry=registry, max_sentences=5)
+
+# A complex JSON sample
 json_data = {
-    "metadata": {
-        "document_id": "doc-12345",
-        "created_at": "2025-11-05"
-    },
+    "metadata": {"document_id": "doc-12345", "created_at": "2025-11-05"},
     "text": [
         "This is the first paragraph of our longer JSON sample. It contains multiple sentences to test the chunking process.",
         "The second paragraph introduces a new topic. We are exploring the capabilities of custom processors in the chunklet library.",
-        "Finally, the third paragraph concludes our sample. We hope this demonstrates the flexibility of the system in handling various data formats."
-    ]
+        "Finally, the third paragraph concludes our sample. We hope this demonstrates the flexibility of the system in handling various data formats.",
+    ],
 }
 
 # Use a temporary file
-with tempfile.NamedTemporaryFile(mode='w+', suffix=".json") as tmp:
+with tempfile.NamedTemporaryFile(mode="w+", suffix=".json") as tmp:
     json.dump(json_data, tmp)
     tmp.seek(0)
     tmp_path = tmp.name
 
-    chunks = chunker.chunk_file(
-        path=tmp_path,
-        max_sentences=5,
-    )
+    chunks = chunker.chunk_file(path=tmp_path)
 
     for i, chunk in enumerate(chunks):
-        print(f"--- Chunk {i+1} ---")
+        print(f"--- Chunk {i + 1} ---")
         print(f"Content:\n{chunk.content}\n")
         print(f"Metadata:\n{chunk.metadata}")
         print()
@@ -639,30 +534,22 @@ registry.unregister(".json")
     Finally, the third paragraph concludes our sample.
 
     Metadata:
-    {'document_id': 'doc-12345', 'created_at': '2025-11-05', 'source': '/tmp/tmpdt6xa5rh.json', 'chunk_num': 1, 'span': (0, 292)}
+    {'document_id': 'doc-12345', 'created_at': '2025-11-05', 'source': '/tmp/tmpdt6xa5rh.json', 'chunk_num': 1, 'span': (0, 242)}
 
     --- Chunk 2 ---
     Content:
     ... the third paragraph concludes our sample.
+    We hope this demonstrates the flexibility of the system in handling various data formats.
 
     Metadata:
-    {'document_id': 'doc-12345', 'created_at': '2025-11-05', 'source': '/tmp/tmpdt6xa5rh.json', 'chunk_num': 2, 'span': (250, 292)}
+    {'document_id': 'doc-12345', 'created_at': '2025-11-05', 'source': '/tmp/tmpdt6xa5rh.json', 'chunk_num': 2, 'span': (250, 361)}
     ```
 
 !!! note "Registering Without the Decorator"
     If you prefer not to use decorators, you can directly use the `registry.register()` method. This is particularly useful when registering processors dynamically.
 
-    ```py linenums="1"
-    from chunklet.document_chunker import CustomProcessorRegistry, DocumentChunker
-
-    registry = CustomProcessorRegistry()
-
-    def my_other_processor(file_path: str) -> tuple[str, dict]:
-        # ... your logic ...
-        return "some text", {"source": file_path}
-
+    ```py
     registry.register(my_other_processor, ".custom", name="MyOtherProcessor")
-    chunker = DocumentChunker(processor_registry=registry)
     ```
 
 !!! tip "Per-Instance Scope"

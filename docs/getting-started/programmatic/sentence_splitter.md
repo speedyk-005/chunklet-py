@@ -40,14 +40,14 @@ The Playlist contains:
 Robots are learning. It's raining. Let's code. Mars is red. Sr. sleep is rare. Consider item 1. This is a test. The year is 2025. This is a good year since N.A.S.A. reached 123.4 light year more.
 """
 
-splitter = SentenceSplitter(verbose=True)
-sentences = splitter.split_text(TEXT, lang="auto") #(1)!
+splitter = SentenceSplitter(verbose=True, lang="auto")
+sentences = splitter.split_text(TEXT)  # (1)!
 
 for sentence in sentences:
     print(sentence)
 ```
 
-1.  **Auto language detection**: Let the splitter automatically detect the language of your text. For best results, specify a language code like `"en"` or `"fr"` directly.
+1.  **Auto language detection**: Let the splitter automatically detect the language of your text by setting `lang="auto"` in the constructor. For best results, specify a language code like `"en"` or `"fr"` directly in the constructor.
 
 ??? success "Click to show output"
     ```linenums="0"
@@ -82,11 +82,11 @@ Need to split a file directly into sentences? Use `split_file`:
 ``` py linenums="1"
 from chunklet.sentence_splitter import SentenceSplitter
 
-splitter = SentenceSplitter()
-sentences = splitter.split_file("sample.txt", lang="en")
+splitter = SentenceSplitter(lang="en")
+sentences = splitter.split_file("sample.txt")
 
 for i, sentence in enumerate(sentences):
-    print(f"Sentence {i+1}: {sentence}")
+    print(f"Sentence {i + 1}: {sentence}")
 ```
 
 ??? success "Click to show output"
@@ -108,7 +108,7 @@ lang_texts = {
     "fr": "Ceci est une phrase. Voici une autre phrase. M. Smith est allé à Washington. Il a dit 'Bonjour le monde!'. Le renard brun et rapide saute par-dessus le chien paresseux.",
     "es": "Esta es una oración. Aquí hay otra oración. El Sr. Smith fue a Washington. Dijo '¡Hola Mundo!'. El rápido zorro marrón salta sobre el perro perezoso.",
     "de": "Dies ist ein Satz. Hier ist ein weiterer Satz. Herr Smith ging nach Washington. Er sagte 'Hallo Welt!'. Der schnelle braune Fuchs springt über den faulen Hund.",
-    "hi": "यह एक वाक्य है। यह एक और वाक्य है। श्री स्मिथ वाशिंगटन गए। उसने कहा 'नमस्ते दुनिया!'। तेज भूरा लोमड़ी आलसी कुत्ते पर कूदता है।"
+    "hi": "यह एक वाक्य है। यह एक और वाक्य है। श्री स्मिथ वाशिंगटन गए। उसने कहा 'नमस्ते दुनिया!'। तेज भूरा लोमड़ी आलसी कुत्ते पर कूदता है।",
 }
 
 splitter = SentenceSplitter()

@@ -35,9 +35,10 @@ In v2, custom processors lived on a **global** `custom_processor_registry` singl
     ```py
     from chunklet.document_chunker import DocumentChunker, custom_processor_registry
 
+
     @custom_processor_registry.register(".json", name="MyJSONProcessor")
-    def my_json_processor(file_path: str) -> tuple[str, dict]:
-        ...
+    def my_json_processor(file_path: str) -> tuple[str, dict]: ...
+
 
     chunker = DocumentChunker()
     ```
@@ -49,9 +50,10 @@ In v2, custom processors lived on a **global** `custom_processor_registry` singl
 
     registry = CustomProcessorRegistry()
 
+
     @registry.register(".json", name="MyJSONProcessor")
-    def my_json_processor(file_path: str) -> tuple[str, dict]:
-        ...
+    def my_json_processor(file_path: str) -> tuple[str, dict]: ...
+
 
     chunker = DocumentChunker(processor_registry=registry)
     ```
@@ -71,6 +73,39 @@ The names deprecated in v2.2.0 are gone in v3. If you were still using them, her
 - `PlainTextChunker` public import => `DocumentChunker.chunk_text()`
 
 If you were already calling the `chunk_text`/`chunk_texts`/`split_text` methods, nothing changes for you.
+
+### Constraints moved to the constructor
+
+Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, `offset`, `lang`) used to be passed per call to `chunk_text()`, `chunk_file()`, `chunk_texts()`, `chunk_files()`, `split_text()`, and `split_file()`. They now live on the chunker/splitter instance, set once at construction and mutable as plain attributes. The same applies to `CodeChunker` (`max_tokens`, `max_lines`, `max_functions`) and `SentenceSplitter` (`lang`).
+
+=== "Before"
+
+    ```py
+    chunker = DocumentChunker()
+    chunks = chunker.chunk_text(
+        text,
+        lang="auto",
+        max_sentences=3,
+        max_tokens=500,
+        max_section_breaks=2,
+        overlap_percent=20,
+        offset=0,
+    )
+    ```
+
+=== "After"
+
+    ```py
+    chunker = DocumentChunker(
+        lang="auto",
+        max_sentences=3,
+        max_tokens=500,
+        max_section_breaks=2,
+        overlap_percent=20,
+        offset=0,
+    )
+    chunks = chunker.chunk_text(text)
+    ```
 
 ---
 
