@@ -308,15 +308,15 @@ def split_command(
         raise typer.Exit(code=1)
 
     # Split Logic
-    splitter = SentenceSplitter(verbose=verbose)
+    splitter = SentenceSplitter(lang=lang or "auto", verbose=verbose)
 
     if source:
-        sentences = splitter.split_file(source, lang=lang or "auto")
+        sentences = splitter.split_file(source)
         lang_detected, confidence = splitter.detected_top_language(
             source.read_text(encoding="utf-8")
         )
     else:
-        sentences = splitter.split_text(input_text, lang=lang or "auto")
+        sentences = splitter.split_text(input_text)
         lang_detected, confidence = splitter.detected_top_language(input_text)
 
     # Output Handling
@@ -494,12 +494,6 @@ def chunk_command(
     if tokenizer_command:
         token_counter = _create_external_tokenizer(tokenizer_command, tokenizer_timeout)
 
-    # Construct chunk_kwargs dynamically
-    chunk_kwargs = {
-        "max_tokens": max_tokens,
-        "token_counter": token_counter,
-    }
-
     if code:
         if CodeChunker is None:
             typer.echo(
@@ -512,16 +506,16 @@ def chunk_command(
         chunker_instance = CodeChunker(
             verbose=verbose,
             token_counter=token_counter,
+            max_tokens=max_tokens,
+            max_lines=max_lines,
+            max_functions=max_functions,
         )
-        chunk_kwargs.update(
-            {
-                "max_lines": max_lines,
-                "max_functions": max_functions,
-                "docstring_mode": docstring_mode,
-                "strict": strict,
-                "include_comments": include_comments,
-            }
-        )
+        chunk_kwargs = {
+            "token_counter": token_counter,
+            "docstring_mode": docstring_mode,
+            "strict": strict,
+            "include_comments": include_comments,
+        }
     else:
         if DocumentChunker is None:
             typer.echo(
@@ -534,16 +528,16 @@ def chunk_command(
         chunker_instance = DocumentChunker(
             verbose=verbose,
             token_counter=token_counter,
+            max_tokens=max_tokens,
+            max_sentences=max_sentences,
+            max_section_breaks=max_section_breaks,
+            overlap_percent=overlap_percent,
+            offset=offset,
+            lang=lang,
         )
-        chunk_kwargs.update(
-            {
-                "lang": lang,
-                "max_sentences": max_sentences,
-                "max_section_breaks": max_section_breaks,
-                "overlap_percent": overlap_percent,
-                "offset": offset,
-            }
-        )
+        chunk_kwargs = {
+            "token_counter": token_counter,
+        }
 
     # --- Chunking logic ---
     if text:

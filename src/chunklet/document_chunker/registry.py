@@ -190,4 +190,3 @@ class CustomProcessorRegistry:
             ) from None
 
         return result, name
-

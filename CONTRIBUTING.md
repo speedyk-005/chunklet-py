@@ -68,9 +68,10 @@ Order methods like this:
 1. Class docstring
 2. Constants/attributes
 3. `__init__`
-4. Properties (`@property`)
-5. Private methods (`_method`)
-6. Public methods (`method`)
+4. Dunder methods (`__getattr__`, `__setattr__`, etc.)
+5. Properties (`@property`)
+6. Private methods (`_method`)
+7. Public methods (`method`)
 
 ```python
 class ExampleClass:
@@ -79,6 +80,9 @@ class ExampleClass:
     CONSTANT = "value"
 
     def __init__(self):
+        pass
+
+    def __getattr__(self, name):
         pass
 
     @property

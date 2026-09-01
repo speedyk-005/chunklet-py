@@ -37,7 +37,7 @@ def splitter():
 )
 def test_multilingual_splitting(splitter, text, expected_sentences):
     """Test sentence splitting for various languages but not limited to."""
-    sentences = splitter.split_text(text, lang="auto")
+    sentences = splitter.split_text(text)
     assert sentences == expected_sentences
 
 
@@ -48,9 +48,10 @@ def test_multilingual_splitting(splitter, text, expected_sentences):
         ("Sawubona Mhlaba. Unjani?", "zu"),  # Zulu
     ],
 )
-def test_unsupported_language_fallback(splitter, text, lang):
+def test_unsupported_language_fallback(text, lang):
     """Test fallback to universal regex splitter for unsupported languages."""
-    sentences = splitter.split_text(text, lang)
+    splitter = SentenceSplitter(lang=lang)
+    sentences = splitter.split_text(text)
     assert len(sentences) >= 1
 
 

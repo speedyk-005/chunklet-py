@@ -139,7 +139,7 @@ MULTIPLE_SOURCES = [PYTHON_CODE, CSHARP_CODE, RUBY_CODE]
 @pytest.fixture
 def chunker():
     """Provide a ready-to-use CodeChunker instance for tests."""
-    return CodeChunker(token_counter=simple_token_counter)
+    return CodeChunker(token_counter=simple_token_counter, max_tokens=200)
 
 
 # --- Language Paradigm Tests ---
@@ -159,12 +159,13 @@ def test_chunking_with_different_constraints(
     chunker, code_string, max_tokens, max_lines, max_functions, expected_num_chunks
 ):
     """Test chunking with different constraints (max_tokens, max_lines, max_functions)."""
-    chunks = chunker.chunk_text(
-        code_string,
+    chunker = CodeChunker(
+        token_counter=simple_token_counter,
         max_tokens=max_tokens,
         max_lines=max_lines,
         max_functions=max_functions,
     )
+    chunks = chunker.chunk_text(code_string)
 
     assert len(chunks) > 0
     if max_tokens is not None:
@@ -224,7 +225,7 @@ def test_chunking_with_different_constraints(
 def test_docstring_modes(chunker, code_string, all_mode_pattern, summary_mode_pattern):
     """Test docstring processing modes for Python and C#."""
     # Test "all" mode - full docstring should be present
-    chunks_all = chunker.chunk_text(code_string, max_tokens=200, docstring_mode="all")
+    chunks_all = chunker.chunk_text(code_string, docstring_mode="all")
     content_all = "".join(chunk.content for chunk in chunks_all)
 
     assert re.search(all_mode_pattern, content_all, re.DOTALL), (
@@ -232,9 +233,7 @@ def test_docstring_modes(chunker, code_string, all_mode_pattern, summary_mode_pa
     )
 
     # Test "excluded" mode - docstring should be absent
-    chunks_excluded = chunker.chunk_text(
-        code_string, max_tokens=200, docstring_mode="excluded"
-    )
+    chunks_excluded = chunker.chunk_text(code_string, docstring_mode="excluded")
     content_excluded = "".join(chunk.content for chunk in chunks_excluded)
 
     assert not re.search(all_mode_pattern, content_excluded, re.DOTALL), (
@@ -242,9 +241,7 @@ def test_docstring_modes(chunker, code_string, all_mode_pattern, summary_mode_pa
     )
 
     # Test "summary" mode - only summary should be present
-    chunks_summary = chunker.chunk_text(
-        code_string, max_tokens=200, docstring_mode="summary"
-    )
+    chunks_summary = chunker.chunk_text(code_string, docstring_mode="summary")
     content_summary = "".join(chunk.content for chunk in chunks_summary)
 
     assert re.search(summary_mode_pattern, content_summary), (
@@ -272,9 +269,7 @@ def test_docstring_modes(chunker, code_string, all_mode_pattern, summary_mode_pa
 @pytest.mark.parametrize("include_comments", [True, False])
 def test_comment_inclusion(chunker, include_comments):
     """Test Inclusion/Exclusion Of Comments."""
-    chunks = chunker.chunk_text(
-        PYTHON_CODE, max_tokens=200, include_comments=include_comments
-    )
+    chunks = chunker.chunk_text(PYTHON_CODE, include_comments=include_comments)
     content = "\n".join(chunk.content for chunk in chunks)
 
     # Use correct case and exact comment text from fixture
@@ -293,19 +288,15 @@ def test_broken_token_counter():
     def broken_token_counter(text: str) -> int:
         raise ValueError("Token counter failed")
 
-    chunker = CodeChunker(token_counter=broken_token_counter)
+    chunker = CodeChunker(token_counter=broken_token_counter, max_tokens=30)
     with pytest.raises(CallbackError):  # Should raise from the broken token counter
-        chunker.chunk_text("def test(): pass", max_tokens=30)
+        chunker.chunk_text("def test(): pass")
 
 
 def test_missing_token_counter_error():
     """Test MissingTokenCounterError when token counter is required but not provided."""
-    new_chunker = CodeChunker()  # chunker without a token counter
     with pytest.raises(MissingTokenCounterError):
-        new_chunker.chunk_text(
-            "def test(): pass",
-            max_tokens=30,
-        )
+        CodeChunker(max_tokens=30)
 
 
 @pytest.mark.parametrize(
@@ -317,10 +308,8 @@ def test_missing_token_counter_error():
 )
 def test_invalid_constraints_error(max_tokens, max_lines, max_functions):
     """Test InvalidInputError for invalid constraint combinations."""
-    new_chunker = CodeChunker()  # chunker without a token counter
     with pytest.raises(InvalidInputError):
-        new_chunker.chunk_text(
-            "def test(): pass",
+        CodeChunker(
             max_tokens=max_tokens,
             max_lines=max_lines,
             max_functions=max_functions,
@@ -329,8 +318,8 @@ def test_invalid_constraints_error(max_tokens, max_lines, max_functions):
 
 def test_empty_source_code():
     """Test that empty source code returns empty list."""
-    chunker = CodeChunker()
-    result = chunker.chunk_text("", max_lines=30)
+    chunker = CodeChunker(max_lines=30)
+    result = chunker.chunk_text("")
     assert result == []
 
 
@@ -338,13 +327,13 @@ def test_code_chunker_with_file(tmp_path):
     """Test CodeChunker with temporary files - both valid Python and binary."""
     from chunklet import FileProcessingError
 
-    chunker = CodeChunker(token_counter=simple_token_counter)
+    chunker = CodeChunker(token_counter=simple_token_counter, max_tokens=50)
 
     # Test 1: Valid Python file
     python_file = tmp_path / "test_code.py"
     python_file.write_text(PYTHON_CODE)
 
-    chunks = chunker.chunk_file(python_file, max_tokens=50)
+    chunks = chunker.chunk_file(python_file)
     assert len(chunks) > 0
     assert all(chunk.metadata.start_line <= chunk.metadata.end_line for chunk in chunks)
 
@@ -353,28 +342,28 @@ def test_code_chunker_with_file(tmp_path):
     binary_file.write_bytes(b"\x00\x01\x02\x03\xff\xfe\xfd\xfc")  # Binary data
 
     with pytest.raises(FileProcessingError, match="Binary file not supported"):
-        chunker.chunk_file(binary_file, max_tokens=50)
+        chunker.chunk_file(binary_file)
 
 
 def test_nonexistent_file(chunker):
     """Test Error For Non-Existent File."""
     with pytest.raises(FileProcessingError):
-        chunker.chunk_file(NON_EXISTENT_FILE, max_tokens=30)
+        chunker.chunk_file(NON_EXISTENT_FILE)
 
 
 def test_oversized_block_error(chunker):
     """Test Error For Blocks Exceeding Max Tokens."""
-    params = {
-        "code": LONG_FUNCTION_CODE,
-        "max_tokens": 30,
-        "max_lines": 5,
-        "max_functions": 1,
-    }
+    chunker_strict = CodeChunker(
+        token_counter=simple_token_counter,
+        max_tokens=30,
+        max_lines=5,
+        max_functions=1,
+    )
     with pytest.raises(TokenLimitError):
-        chunker.chunk_text(**params, strict=True)
+        chunker_strict.chunk_text(LONG_FUNCTION_CODE, strict=True)
 
-    # should not raise on strict mode is disabled
-    chunks = chunker.chunk_text(**params, strict=False)
+    # should not raise when strict mode is disabled
+    chunks = chunker_strict.chunk_text(LONG_FUNCTION_CODE, strict=False)
     assert len(chunks) > 0  # Should split into multiple chunks
 
 
@@ -385,10 +374,11 @@ def test_batch_chunk_success(chunker):
     """Test successful batch processing of multiple sources."""
     separator = object()
 
+    chunker = CodeChunker(token_counter=simple_token_counter, max_tokens=50)
+
     results = list(
         chunker.chunk_texts(
             MULTIPLE_SOURCES,
-            max_tokens=50,
             on_errors="skip",
             separator=separator,
         )
@@ -412,10 +402,11 @@ def test_batch_chunk_success(chunker):
 def test_batch_chunk_different_max_tokens(max_tokens, chunker):
     """Test batch processing with different max_tokens values."""
 
+    chunker = CodeChunker(token_counter=simple_token_counter, max_tokens=max_tokens)
+
     chunks = list(
         chunker.chunk_texts(
             MULTIPLE_SOURCES,
-            max_tokens=max_tokens,
         )
     )
 
@@ -428,6 +419,8 @@ def test_batch_chunk_different_max_tokens(max_tokens, chunker):
 
 def test_batch_chunk_error_handling_on_task(chunker):
     """Test the on_errors parameter in chunk_texts."""
+
+    chunker = CodeChunker(token_counter=simple_token_counter, max_tokens=50)
 
     # Create a temp file for testing
     with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
@@ -442,16 +435,13 @@ def test_batch_chunk_error_handling_on_task(chunker):
             list(
                 chunker.chunk_files(
                     sources_with_error,
-                    max_tokens=50,
                     on_errors="raise",
                     show_progress=False,
                 )
             )
 
         # Test on_errors = 'skip'
-        chunks = list(
-            chunker.chunk_files(sources_with_error, max_tokens=50, on_errors="skip")
-        )
+        chunks = list(chunker.chunk_files(sources_with_error, on_errors="skip"))
         assert len(chunks) > 0
     finally:
         os.unlink(valid_file)

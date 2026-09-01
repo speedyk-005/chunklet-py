@@ -3,16 +3,14 @@ import re
 import sys
 from collections.abc import Iterable
 from functools import partial
-from typing import Annotated, Any, Callable, Generator, Literal
+from typing import Any, Callable, Generator, Literal
 
 from loguru import logger
-from pydantic import Field
 
 from chunklet.common.batch_runner import run_in_batch
 from chunklet.common.dotdict import DotDict
 from chunklet.common.logging_utils import log_info
 from chunklet.common.token_utils import count_tokens
-from chunklet.common.validation import IterableOfStr, validate_input
 from chunklet.document_chunker.span_finder import DeterministicSpanFinder
 from chunklet.exceptions import (
     CallbackError,
@@ -45,28 +43,62 @@ class PlainTextChunker:
         - Memory friendly batching: Yields chunks one at a time, reducing memory usage, especially for very large documents.
     """
 
-    @validate_input
+    # Attributes that feed into constraint validation; mutating any of them
+    # outside __init__ triggers _validate_constraints.
+    _VALIDATED_ATTRS = {
+        "max_tokens",
+        "max_sentences",
+        "max_section_breaks",
+        "token_counter",
+    }
+
     def __init__(
         self,
-        verbose: bool = False,
         continuation_marker: str = "...",
+        max_tokens: int | None = None,
+        max_sentences: int | None = None,
+        max_section_breaks: int | None = None,
+        overlap_percent: int = 20,
+        offset: int = 0,
         token_counter: Callable[[str], int] | None = None,
+        lang: str = "auto",
+        verbose: bool = False,
     ):
         """
         Initialize The PlainTextChunker.
 
-        Args:
-            verbose: Enable verbose logging.
-            continuation_marker: The marker to prepend to unfitted clauses. Defaults to '...'.
-            token_counter: Function that counts tokens in text.
-                If None, must be provided when calling chunk() methods.
+        Constraints limit how each chunk is shaped; `lang` selects the language
+        used for splitting. Limit constraints are validated at construction and
+        on mutation. Args are documented on `DocumentChunker`.
         """
         self._verbose = verbose
         self.token_counter = token_counter
         self.continuation_marker = continuation_marker
+        self.max_tokens = max_tokens
+        self.max_sentences = max_sentences
+        self.max_section_breaks = max_section_breaks
+        self.overlap_percent = overlap_percent
+        self.offset = offset
+        self.lang = lang
 
-        self.sentence_splitter = SentenceSplitter()
-        self.sentence_splitter.verbose = self._verbose
+        self._validate_constraints(
+            max_tokens, max_sentences, max_section_breaks, token_counter
+        )
+
+        self.sentence_splitter = SentenceSplitter(lang=lang, verbose=self._verbose)
+        self._initialized = True
+
+    def __setattr__(self, name: str, value):
+        """Validate constraints whenever a constraint attribute is mutated."""
+        object.__setattr__(self, name, value)
+
+        if name in self._VALIDATED_ATTRS and self.__dict__.get("_initialized"):
+            self._validate_constraints(
+                self.max_tokens,
+                self.max_sentences,
+                self.max_section_breaks,
+                self.token_counter,
+            )
 
     @property
     def verbose(self) -> bool:
@@ -432,33 +464,21 @@ class PlainTextChunker:
         if max_tokens is not None and not (token_counter or self.token_counter):
             raise MissingTokenCounterError()
 
-    @validate_input
     def chunk(
         self,
         text: str,
         *,
-        lang: str = "auto",
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_sentences: Annotated[int | None, Field(ge=1)] = None,
-        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
-        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
-        offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
         base_metadata: dict[str, Any] | None = None,
     ) -> list[DotDict]:
         """
-        Chunks a single text into smaller pieces based on specified parameters.
+        Chunks a single text into smaller pieces based on constraints
+        configured at initialization.
         Supports flexible constraint-based chunking, clause-level overlap,
         and custom token counters.
 
         Args:
             text: The input text to chunk.
-            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
-            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks: Maximum number of section breaks per chunk. Must be >= 1.
-            overlap_percent: Percentage of overlap between chunks (0-75). Defaults to 20
-            offset: Starting sentence offset for chunking. Defaults to 0.
             token_counter: Optional token counting function.
                 Required for token-based modes only.
             base_metadata: Optional dictionary to be included with each chunk.
@@ -471,9 +491,9 @@ class PlainTextChunker:
             MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
             CallbackError: If an error occurs during sentence splitting or token counting within a chunking task.
         """
-        self._validate_constraints(
-            max_tokens, max_sentences, max_section_breaks, token_counter
-        )
+        max_tokens = self.max_tokens or sys.maxsize
+        max_sentences = self.max_sentences or sys.maxsize
+        max_section_breaks = self.max_section_breaks or sys.maxsize
 
         log_info(
             self.verbose,
@@ -481,23 +501,13 @@ class PlainTextChunker:
             f"{text[:100]}...",
         )
 
-        # Adjust limits for _group_by_chunk's internal use
-        if max_tokens is None:
-            max_tokens = sys.maxsize
-        if max_sentences is None:
-            max_sentences = sys.maxsize
-        if max_section_breaks is None:
-            max_section_breaks = sys.maxsize
-
         if not text.strip():
             log_info(self.verbose, "Input text is empty. Returning empty list.")
             return []
 
+        self.sentence_splitter.lang = self.lang
         try:
-            sentences = self.sentence_splitter.split_text(
-                text,
-                lang,
-            )
+            sentences = self.sentence_splitter.split_text(text)
         except Exception as e:
             raise CallbackError(
                 f"An error occurred during the sentence splitting process.\nDetails: {e}\n"
@@ -507,7 +517,7 @@ class PlainTextChunker:
         if not sentences:
             return []
 
-        offset = round(offset)
+        offset = round(self.offset)
         if offset >= len(sentences):
             logger.warning(
                 "Offset {} >= total sentences {}. Returning empty list.",
@@ -522,7 +532,7 @@ class PlainTextChunker:
             max_tokens=max_tokens,
             max_sentences=max_sentences,
             max_section_breaks=max_section_breaks,
-            overlap_percent=overlap_percent,
+            overlap_percent=self.overlap_percent,
         )
 
         # Note: We use DeterministicSpanFinder because sentence splitter may modify text
@@ -530,39 +540,27 @@ class PlainTextChunker:
         span_finder = DeterministicSpanFinder(text)
         return self._create_chunks(chunks, base_metadata or {}, span_finder)
 
-    @validate_input
     def batch_chunk(
         self,
-        texts: IterableOfStr,
+        texts: Iterable[str],
         *,
-        lang: str = "auto",
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_sentences: Annotated[int | None, Field(ge=1)] = None,
-        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
-        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
-        offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
         separator: Any = None,
         base_metadata: dict[str, Any] | None = None,
-        n_jobs: Annotated[int, Field(ge=1)] | None = None,
+        n_jobs: int | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
     ) -> Generator[Any, None, None]:
         """
         Processes a batch of texts in parallel, splitting each into chunks.
         Leverages multiprocessing for efficient batch chunking.
+        Uses the constraints configured at initialization.
 
         If a task fails, `chunklet` will now stop processing and return the results
         of the tasks that completed successfully, preventing wasted work.
 
         Args:
             texts: A non-string iterable of input texts to be chunked.
-            lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
-            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks: Maximum number of section breaks per chunk. Must be >= 1.
-            overlap_percent: Percentage of overlap between chunks (0-85).
-            offset: Starting sentence offset for chunking. Defaults to 0.
             token_counter: The token counting function.
                 Required if `max_tokens` is set.
             separator: A value to be yielded after the chunks of each text are processed.
@@ -585,12 +583,6 @@ class PlainTextChunker:
         """
         chunk_func = partial(
             self.chunk,
-            lang=lang,
-            max_tokens=max_tokens,
-            max_sentences=max_sentences,
-            overlap_percent=overlap_percent,
-            max_section_breaks=max_section_breaks,
-            offset=offset,
             base_metadata=base_metadata,
             token_counter=token_counter or self.token_counter,
         )
