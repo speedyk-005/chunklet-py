@@ -70,17 +70,9 @@ class PlainTextChunker:
         """
         Initialize The PlainTextChunker.
 
-        Args:
-            continuation_marker: The marker to prepend to unfitted clauses. Defaults to '...'.
-            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
-            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks: Maximum number of section breaks per chunk. Must be >= 1.
-            overlap_percent: Percentage of overlap between chunks (0-75). Defaults to 20.
-            offset: Starting sentence offset for chunking. Defaults to 0.
-            token_counter: Function that counts tokens in text.
-                If None, must be provided when calling chunk() methods.
-            lang: Language code (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            verbose: Enable verbose logging.
+        Constraints limit how each chunk is shaped; `lang` selects the language
+        used for splitting. Limit constraints are validated at construction and
+        on mutation. Args are documented on `DocumentChunker`.
         """
         self._verbose = verbose
         self.token_counter = token_counter
@@ -96,8 +88,7 @@ class PlainTextChunker:
             max_tokens, max_sentences, max_section_breaks, token_counter
         )
 
-        self.sentence_splitter = SentenceSplitter(lang=lang)
-        self.sentence_splitter.verbose = self._verbose
+        self.sentence_splitter = SentenceSplitter(lang=lang, verbose=self._verbose)
         self._initialized = True
 
     def __setattr__(self, name: str, value):
