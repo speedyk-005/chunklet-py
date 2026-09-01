@@ -43,7 +43,9 @@ def _multipart_post(
     request_headers = {"Content-Type": f"multipart/form-data; boundary={boundary}"}
     request_headers.update(headers or {})
     return urllib.request.urlopen(
-        urllib.request.Request(url, data=bytes(body), headers=request_headers, method="POST"),
+        urllib.request.Request(
+            url, data=bytes(body), headers=request_headers, method="POST"
+        ),
         timeout=10,
     )
 

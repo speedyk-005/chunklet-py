@@ -85,9 +85,12 @@ class Visualizer:
 
         self.app = FastAPI()
 
-        # Initialize chunkers
-        self.document_chunker = DocumentChunker(token_counter=token_counter)
-        self.code_chunker = CodeChunker(token_counter=token_counter)
+        # Initialize chunkers with sensible defaults; constraint attributes are
+        # mutated per request from the submitted params.
+        self.document_chunker = DocumentChunker(
+            token_counter=token_counter, max_sentences=3
+        )
+        self.code_chunker = CodeChunker(token_counter=token_counter, max_lines=50)
 
         self.static_dir = Path(__file__).parent / "static"
 
@@ -172,12 +175,24 @@ class Visualizer:
         content = await file.read()
         encoding = detect(content).get("encoding", "utf-8")
         text = content.decode(encoding, errors="ignore")
-        chunker = self.code_chunker if mode == "code" else self.document_chunker
 
         try:
-            chunks = [
-                dict(chunk) for chunk in chunker.chunk_text(text, **chunker_params)
-            ]
+            if mode == "code":
+                # 'strict' is a per-call arg; the rest are constraint attributes.
+                strict = chunker_params.pop("strict", True)
+                chunker = self.code_chunker
+                for key, value in chunker_params.items():
+                    setattr(chunker, key, value)
+                chunks = [
+                    dict(chunk) for chunk in chunker.chunk_text(text, strict=strict)
+                ]
+            else:
+                # 'lang' is a per-call arg; the rest are constraint attributes.
+                lang = chunker_params.pop("lang", "auto")
+                chunker = self.document_chunker
+                for key, value in chunker_params.items():
+                    setattr(chunker, key, value)
+                chunks = [dict(chunk) for chunk in chunker.chunk_text(text, lang=lang)]
 
             response_data = {
                 "text": text,
