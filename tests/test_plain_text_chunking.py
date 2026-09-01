@@ -212,7 +212,8 @@ def test_split_sentence_remnant_is_not_duplicated(chunker):
     In conclusion, mastering chunking is key to unlocking the full potential of your text data.
     """)
 
-    chunks = chunker.chunk_text(text, max_tokens=50)
+    chunker.max_tokens = 50
+    chunks = chunker.chunk_text(text)
 
     # Every chunk must resolve to a real span in the source text.
     for chunk in chunks:
