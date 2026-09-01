@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Plain text chunker**: When a sentence is split mid-way on the token limit, its unfitted remainder now opens the next chunk instead of the full sentence being re-appended on top of the overlap clause. Fixes duplicated clauses and unresolved `(-1, -1)` spans in token-limited chunking.
+- **Span finder**: The normalized search keeps `#` from Markdown headings, so a chunk starting with a heading reports a span that includes the heading marker instead of starting after it.
 
 ### Removed
 - **Deprecated APIs**: Removed the aliases deprecated in v2.2.0 ahead of the v3.0.0 release:
