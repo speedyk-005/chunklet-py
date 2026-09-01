@@ -81,8 +81,13 @@ class SentenceSplitter:
             return BoundaryDetector(lang=lang).segment
 
         elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
-            from indicnlp.tokenize import sentence_tokenize
-
+            try:
+                from indicnlp.tokenize import sentence_tokenize
+            except ImportError:
+                raise ImportError(
+                    "indic-nlp-library required for Indic languages. "
+                    "Install with: pip install 'chunklet-py[indic]'"
+                ) from None
             log_info(verbose, "Using indicnlp")
             return lambda text: sentence_tokenize.sentence_split(text, lang)
 
