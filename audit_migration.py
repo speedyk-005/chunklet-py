@@ -19,6 +19,17 @@ REMOVED_ARGUMENTS = {
     ),
 }
 
+MOVED_TO_CONSTRUCTOR = {
+    "max_tokens": "Move to the constructor: `Chunker(max_tokens=...)`.",
+    "max_sentences": "Move to the constructor: `Chunker(max_sentences=...)`.",
+    "max_section_breaks": "Move to the constructor: `Chunker(max_section_breaks=...)`.",
+    "overlap_percent": "Move to the constructor: `Chunker(overlap_percent=...)`.",
+    "offset": "Move to the constructor: `Chunker(offset=...)`.",
+    "lang": "Move to the constructor: `Chunker(lang=...)`.",
+    "max_lines": "Move to the constructor: `CodeChunker(max_lines=...)`.",
+    "max_functions": "Move to the constructor: `CodeChunker(max_functions=...)`.",
+}
+
 CHUNKER_CLASS_NAMES = {"Chunklet", "PlainTextChunker", "DocumentChunker", "CodeChunker"}
 
 LEGACY_IMPORTS = {
@@ -200,19 +211,36 @@ class MigrationAuditor:
                         )
 
     def _audit_removed_arguments(self, file_path: Path, tree: ast.AST, lines: list[str]):
-        """Flag keyword arguments removed in v2/v3."""
+        """Flag keyword arguments removed in v2/v3 or moved to the constructor."""
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
-            for kw in node.keywords:
-                if kw.arg in REMOVED_ARGUMENTS:
-                    self._has_legacy_issues = True
+            moved_args = [
+                kw.arg for kw in node.keywords
+                if kw.arg in MOVED_TO_CONSTRUCTOR
+            ]
+            removed_args = [
+                kw.arg for kw in node.keywords
+                if kw.arg in REMOVED_ARGUMENTS
+            ]
+            if moved_args:
+                self._has_legacy_issues = True
+                self._print_issue(
+                    file_path,
+                    node.lineno,
+                    self._get_line(lines, node.lineno),
+                    f"Move to constructor: {', '.join(moved_args)}",
+                    "yellow",
+                )
+            if removed_args:
+                self._has_legacy_issues = True
+                for arg in removed_args:
                     self._print_issue(
                         file_path,
                         node.lineno,
                         self._get_line(lines, node.lineno),
-                        f"Argument '{kw.arg}' no longer has that meaning. "
-                        f"{REMOVED_ARGUMENTS[kw.arg]}",
+                        f"'{arg}' no longer has that meaning. "
+                        f"{REMOVED_ARGUMENTS[arg]}",
                         "bold red",
                     )
 
