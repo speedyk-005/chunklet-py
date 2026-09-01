@@ -33,7 +33,7 @@ class DeterministicSpanFinder:
         chars = []
 
         for i, ch in enumerate(text):
-            if ch.isalnum():
+            if ch.isalnum() or ch == "#":
                 chars.append(ch)
                 index_map[curr_idx] = i
                 curr_idx += 1
@@ -60,7 +60,7 @@ class DeterministicSpanFinder:
         if (start := self.full_text.find(stripped)) != -1:
             return start, start + len(stripped)
 
-        cleaned_text = "".join(ch for ch in text if ch.isalnum())
+        cleaned_text = "".join(ch for ch in text if ch.isalnum() or ch == "#")
 
         pos = self.cleaned_full_text.find(cleaned_text)
         if pos != -1:
