@@ -88,6 +88,7 @@ class DocumentChunker(BaseChunker):
         "lang",
     }
 
+    @validate_input
     def __init__(
         self,
         processor_registry: CustomProcessorRegistry | None = None,

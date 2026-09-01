@@ -3,16 +3,14 @@ import re
 import sys
 from collections.abc import Iterable
 from functools import partial
-from typing import Annotated, Any, Callable, Generator, Literal
+from typing import Any, Callable, Generator, Literal
 
 from loguru import logger
-from pydantic import Field
 
 from chunklet.common.batch_runner import run_in_batch
 from chunklet.common.dotdict import DotDict
 from chunklet.common.logging_utils import log_info
 from chunklet.common.token_utils import count_tokens
-from chunklet.common.validation import IterableOfStr, validate_input
 from chunklet.document_chunker.span_finder import DeterministicSpanFinder
 from chunklet.exceptions import (
     CallbackError,
@@ -54,15 +52,14 @@ class PlainTextChunker:
         "token_counter",
     }
 
-    @validate_input
     def __init__(
         self,
         continuation_marker: str = "...",
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_sentences: Annotated[int | None, Field(ge=1)] = None,
-        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
-        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
-        offset: Annotated[int, Field(ge=0)] = 0,
+        max_tokens: int | None = None,
+        max_sentences: int | None = None,
+        max_section_breaks: int | None = None,
+        overlap_percent: int = 20,
+        offset: int = 0,
         token_counter: Callable[[str], int] | None = None,
         lang: str = "auto",
         verbose: bool = False,
@@ -467,7 +464,6 @@ class PlainTextChunker:
         if max_tokens is not None and not (token_counter or self.token_counter):
             raise MissingTokenCounterError()
 
-    @validate_input
     def chunk(
         self,
         text: str,
@@ -544,15 +540,14 @@ class PlainTextChunker:
         span_finder = DeterministicSpanFinder(text)
         return self._create_chunks(chunks, base_metadata or {}, span_finder)
 
-    @validate_input
     def batch_chunk(
         self,
-        texts: IterableOfStr,
+        texts: Iterable[str],
         *,
         token_counter: Callable[[str], int] | None = None,
         separator: Any = None,
         base_metadata: dict[str, Any] | None = None,
-        n_jobs: Annotated[int, Field(ge=1)] | None = None,
+        n_jobs: int | None = None,
         show_progress: bool = True,
         on_errors: Literal["raise", "skip", "break"] = "raise",
     ) -> Generator[Any, None, None]:

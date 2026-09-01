@@ -53,11 +53,12 @@ def chunker():
 
 
 def test_init_validation_error():
-    """Test that InvalidInputError is raised for invalid initialization parameters."""
+    """Test that InvalidInputError is raised when no chunking limit is provided."""
     with pytest.raises(
-        InvalidInputError, match=re.escape("(token_counter) Input should be callable.")
+        InvalidInputError,
+        match="At least one of 'max_tokens', 'max_sentences', or 'max_section_breaks'",
     ):
-        DocumentChunker(token_counter="Not a callable")
+        DocumentChunker()
 
 
 @pytest.mark.parametrize(
@@ -282,25 +283,18 @@ def test_batch_processing_successful(chunker, texts_input, expected_results_len)
 
 def test_batch_processing_input_validation(chunker):
     """Test batch processing error handling on invalid input"""
-    # Test that InvalidInputError is raised for input that is an iterable, but contains wrong types
-    texts_input_int = [1, 2, 3]  # Use list[int] here
-
-    chunker = DocumentChunker(
-        token_counter=chunker.token_counter,
-        max_sentences=1,
-    )
-
-    with pytest.raises(
-        InvalidInputError, match=re.escape("Input should be a valid string.")
-    ):
-        list(chunker.chunk_texts(texts_input_int))
-
-    # Test n_jobs with an invalid type
+    # n_jobs is validated at the DocumentChunker boundary.
     with pytest.raises(
         InvalidInputError,
         match=re.escape("(n_jobs) Input should be greater than or equal to 1."),
     ):
         list(chunker.chunk_texts(["some text"], n_jobs=-1))
+
+    # Non-string items in the iterable are not validated at the boundary
+    # (IterableOfStr is shallow); they reach the batch runner and raise
+    # a TypeError when processed as strings.
+    with pytest.raises(TypeError):
+        list(chunker.chunk_texts([1, 2, 3]))
 
 
 def test_batch_chunk_error_handling_on_task(chunker):
