@@ -1,6 +1,7 @@
 import re
 
 import pytest
+from textwrap import dedent
 from more_itertools import split_at
 
 from chunklet import (
@@ -180,6 +181,33 @@ def test_overlap_behavior(chunker):
     assert all([cls.strip() in chunks[1].content for cls in expected_overlap]), (
         f"Expected second chunk to start with '{expected_overlap}'."
     )
+
+
+def test_split_sentence_remnant_is_not_duplicated(chunker):
+    """Regression: splitting a sentence on the token limit re-appended the full
+    sentence on top of the overlap clause, duplicating content and producing
+    (-1, -1) spans. The unfitted remnant must open the next chunk instead."""
+
+    text = dedent("""### Different Strategies
+
+    There are several strategies for chunking, including splitting by sentences, by a fixed number of tokens, or by structural elements like headings.
+    Each method has its own advantages depending on the specific use case.
+
+    ---
+
+    # Conclusion
+
+    In conclusion, mastering chunking is key to unlocking the full potential of your text data.
+    """)
+
+    chunks = chunker.chunk_text(text, max_tokens=50)
+
+    # Every chunk must resolve to a real span in the source text.
+    for chunk in chunks:
+        assert chunk.metadata["span"] != (-1, -1), (
+            f"Chunk {chunk.metadata['chunk_num']} has an unresolved span: "
+            f"{chunk.content!r}"
+        )
 
 
 # --- Span Finder Tests ---
