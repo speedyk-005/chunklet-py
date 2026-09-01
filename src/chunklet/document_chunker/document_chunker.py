@@ -79,21 +79,33 @@ class DocumentChunker(BaseChunker):
 
     def __init__(
         self,
-        verbose: bool = False,
-        continuation_marker: str = "...",
-        token_counter: Callable[[str], int] | None = None,
         processor_registry: CustomProcessorRegistry | None = None,
+        continuation_marker: str = "...",
+        max_tokens: Annotated[int | None, Field(ge=12)] = None,
+        max_sentences: Annotated[int | None, Field(ge=1)] = None,
+        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
+        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
+        offset: Annotated[int, Field(ge=0)] = 0,
+        token_counter: Callable[[str], int] | None = None,
+        verbose: bool = False,
     ):
         """
         Initializes the DocumentChunker.
 
         Args:
-            verbose: Enable verbose logging.
-            continuation_marker: The marker to prepend to unfitted clauses. Defaults to '...'.
-            token_counter: Function that counts tokens in text.
-                If None, must be provided when calling chunk() methods.
             processor_registry: An optional CustomProcessorRegistry instance to use for
                 custom document processors. If None, a fresh registry is created.
+            continuation_marker: The marker to prepend to unfitted clauses. Defaults to '...'.
+            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
+            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
+            max_section_breaks: Maximum number of section breaks per chunk.
+                Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
+                Must be >= 1.
+            overlap_percent: Percentage of overlap between chunks (0-75). Defaults to 20.
+            offset: Starting sentence offset for chunking. Defaults to 0.
+            token_counter: Function that counts tokens in text.
+                If None, must be provided (or token-based limits disabled).
+            verbose: Enable verbose logging.
         """
         self._verbose = verbose
         self.token_counter = token_counter
@@ -101,9 +113,14 @@ class DocumentChunker(BaseChunker):
         self.processor_registry = processor_registry or CustomProcessorRegistry()
 
         self.plain_text_chunker = PlainTextChunker(
-            verbose=self._verbose,
             continuation_marker=self.continuation_marker,
+            max_tokens=max_tokens,
+            max_sentences=max_sentences,
+            max_section_breaks=max_section_breaks,
+            overlap_percent=overlap_percent,
+            offset=offset,
             token_counter=self.token_counter,
+            verbose=self._verbose,
         )
 
         self.processors = {
@@ -332,29 +349,16 @@ class DocumentChunker(BaseChunker):
         text: str,
         *,
         lang: str = "auto",
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_sentences: Annotated[int | None, Field(ge=1)] = None,
-        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
-        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
-        offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
         base_metadata: dict[str, Any] | None = None,
     ) -> list[DotDict]:
         """
-        Chunks raw text content.
+        Chunks raw text content using the constraints configured at initialization.
 
         Args:
             text: The raw text to chunk.
             lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
-            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks: Maximum number of section breaks per chunk.
-                Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
-                Must be >= 1.
-            overlap_percent: Percentage of overlap between chunks (0-85).
-            offset: Starting sentence offset for chunking. Defaults to 0.
             token_counter: Optional token counting function.
-                Required if `max_tokens` is provided.
             base_metadata: Optional dictionary to be included with each chunk.
 
         Returns:
@@ -370,11 +374,6 @@ class DocumentChunker(BaseChunker):
         texts: IterableOfStr,
         *,
         lang: str = "auto",
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_sentences: Annotated[int | None, Field(ge=1)] = None,
-        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
-        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
-        offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
         base_metadata: dict[str, Any] | None = None,
         separator: Any = None,
@@ -383,20 +382,13 @@ class DocumentChunker(BaseChunker):
         on_errors: Literal["raise", "skip", "break"] = "raise",
     ) -> Generator[DotDict, None, None]:
         """
-        Chunks multiple text contents.
+        Chunks multiple text contents using the constraints configured
+        at initialization.
 
         Args:
             texts: A non-string iterable of texts to chunk.
             lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
-            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks: Maximum number of section breaks per chunk.
-                Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
-                Must be >= 1.
-            overlap_percent: Percentage of overlap between chunks (0-85).
-            offset: Starting sentence offset for chunking. Defaults to 0.
             token_counter: Optional token counting function.
-                Required if `max_tokens` is provided.
             base_metadata: Optional dictionary to be included with each chunk.
             separator: A value to be yielded after the chunks of each text are processed.
             n_jobs: Number of parallel workers.
@@ -422,15 +414,11 @@ class DocumentChunker(BaseChunker):
         path: str | Path,
         *,
         lang: str = "auto",
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_sentences: Annotated[int | None, Field(ge=1)] = None,
-        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
-        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
-        offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
     ) -> list[DotDict]:
         """
-        Chunks a single document from a given path.
+        Chunks a single document from a given path using the constraints
+        configured at initialization.
 
         This method automatically detects the file type and uses the appropriate
         processor to extract text before chunking. It then adds document-level
@@ -439,15 +427,7 @@ class DocumentChunker(BaseChunker):
         Args:
             path: The path to the document file.
             lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
-            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks: Maximum number of section breaks per chunk.
-                Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
-                Must be >= 1.
-            overlap_percent: Percentage of overlap between chunks (0-85).
-            offset: Starting sentence offset for chunking. Defaults to 0.
             token_counter: Optional token counting function.
-                Required if `max_tokens` is provided.
 
         Returns:
             A list of `DotDict` objects, each representing
@@ -478,11 +458,6 @@ class DocumentChunker(BaseChunker):
         chunks_out = self.plain_text_chunker.chunk(
             text=text_content,
             lang=lang,
-            max_tokens=max_tokens,
-            max_sentences=max_sentences,
-            max_section_breaks=max_section_breaks,
-            overlap_percent=overlap_percent,
-            offset=offset,
             token_counter=token_counter or self.token_counter,
         )
 
@@ -499,11 +474,6 @@ class DocumentChunker(BaseChunker):
         paths: IterableOfPath,
         *,
         lang: str = "auto",
-        max_tokens: Annotated[int | None, Field(ge=12)] = None,
-        max_sentences: Annotated[int | None, Field(ge=1)] = None,
-        max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
-        overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
-        offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
         separator: Any = None,
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
@@ -511,7 +481,8 @@ class DocumentChunker(BaseChunker):
         on_errors: Literal["raise", "skip", "break"] = "raise",
     ) -> Generator[DotDict, None, None]:
         """
-        Chunks multiple documents from a list of file paths.
+        Chunks multiple documents from a list of file paths using the constraints
+        configured at initialization.
 
         This method is a memory-efficient generator that yields chunks as they
         are processed, without loading all documents into memory at once. It
@@ -520,15 +491,7 @@ class DocumentChunker(BaseChunker):
         Args:
             paths: A non-string iterable of paths to the document files.
             lang: The language of the text (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
-            max_tokens: Maximum number of tokens per chunk. Must be >= 12.
-            max_sentences: Maximum number of sentences per chunk. Must be >= 1.
-            max_section_breaks: Maximum number of section breaks per chunk.
-                Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
-                Must be >= 1.
-            overlap_percent: Percentage of overlap between chunks (0-85).
-            offset: Starting sentence offset for chunking. Defaults to 0.
             token_counter: Optional token counting function.
-                Required if `max_tokens` is provided.
             separator: A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
 
@@ -554,11 +517,6 @@ class DocumentChunker(BaseChunker):
         all_chunks_gen = self.plain_text_chunker.batch_chunk(
             texts=list(batch_documents["all_texts_gen"]),
             lang=lang,
-            max_tokens=max_tokens,
-            max_sentences=max_sentences,
-            max_section_breaks=max_section_breaks,
-            overlap_percent=overlap_percent,
-            offset=offset,
             token_counter=token_counter or self.token_counter,
             separator=sentinel,
             n_jobs=n_jobs,
