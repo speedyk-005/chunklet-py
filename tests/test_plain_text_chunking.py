@@ -43,7 +43,10 @@ def chunker():
             raise ValueError("Intentional failure")
         return len(text.split())
 
-    return DocumentChunker(token_counter=simple_token_counter)
+    return DocumentChunker(
+        token_counter=simple_token_counter,
+        max_sentences=100,
+    )
 
 
 # --- Core Tests ---
@@ -70,12 +73,13 @@ def test_constraint_based_chunking(
     chunker, max_tokens, max_sentences, max_section_breaks, expected_chunks
 ):
     """Verify constraint-based chunking produces output with expected chunk counts and structure."""
-    chunks = chunker.chunk_text(
-        TEXT,
+    chunker = DocumentChunker(
+        token_counter=chunker.token_counter,
         max_tokens=max_tokens,
         max_sentences=max_sentences,
         max_section_breaks=max_section_breaks,
     )
+    chunks = chunker.chunk_text(TEXT)
     assert chunks, "Expected chunks but got empty list"
     assert len(chunks) == expected_chunks, (
         f"Expected {expected_chunks} chunks, but got {len(chunks)}"
@@ -134,7 +138,12 @@ def test_constraint_based_chunking(
 )
 def test_offset_behavior(chunker, offset, expect_chunks):
     """Verify offset affects output and large offsets produce no chunks"""
-    chunks = chunker.chunk_text(TEXT, offset=offset, max_sentences=3)
+    chunker = DocumentChunker(
+        token_counter=chunker.token_counter,
+        max_sentences=3,
+        offset=offset,
+    )
+    chunks = chunker.chunk_text(TEXT)
 
     if expect_chunks:
         assert len(chunks) >= 1, f"Should get chunks for offset={offset}"
@@ -146,16 +155,17 @@ def test_offset_behavior(chunker, offset, expect_chunks):
 def test_token_counter_validation():
     """Test that a MissingTokenCounterError is raised when a token_counter is missing for token/hybrid modes."""
     with pytest.raises(MissingTokenCounterError):
-        new_chunker = DocumentChunker()
-
-        # Consume the generator to trigger the error
-        new_chunker.chunk_text("some text", max_tokens=30)
+        DocumentChunker(max_tokens=30)
 
 
 def test_long_sentence_truncation(chunker):
     """Test that a long sentence without punctuation is #truncated correctly."""
     long_sentence = "word " * 100
-    chunks = chunker.chunk_text(long_sentence, max_tokens=30)
+    chunker = DocumentChunker(
+        token_counter=chunker.token_counter,
+        max_tokens=30,
+    )
+    chunks = chunker.chunk_text(long_sentence)
 
     assert len(chunks) >= 1, "Expected at least one chunk, but got None"
     assert chunks[0].content.endswith("..."), (
@@ -169,11 +179,12 @@ def test_long_sentence_truncation(chunker):
 def test_overlap_behavior(chunker):
     """Test that overlap produces multiple chunks and the overlap content is correct."""
 
-    chunks = chunker.chunk_text(
-        TEXT,
+    chunker = DocumentChunker(
+        token_counter=chunker.token_counter,
         max_sentences=4,
         overlap_percent=50,
     )
+    chunks = chunker.chunk_text(TEXT)
     assert len(chunks) > 1, "Overlap should produce multiple chunks"
 
     # Expected that about 50% of first chunk content is present in the second one
@@ -251,10 +262,13 @@ def test_span_finder(text: str, query: str, expected: tuple[int, int]):
 )
 def test_batch_processing_successful(chunker, texts_input, expected_results_len):
     """Comprehensive test for batch processing successful runs and edge cases."""
+    chunker = DocumentChunker(
+        token_counter=chunker.token_counter,
+        max_sentences=100,
+    )
     results = list(
         chunker.chunk_texts(
             texts_input,
-            max_sentences=100,
             separator=SEPARATOR_SENTINEL,
         )
     )
@@ -271,23 +285,33 @@ def test_batch_processing_input_validation(chunker):
     # Test that InvalidInputError is raised for input that is an iterable, but contains wrong types
     texts_input_int = [1, 2, 3]  # Use list[int] here
 
+    chunker = DocumentChunker(
+        token_counter=chunker.token_counter,
+        max_sentences=1,
+    )
+
     with pytest.raises(
         InvalidInputError, match=re.escape("Input should be a valid string.")
     ):
-        list(chunker.chunk_texts(texts_input_int, max_sentences=1))
+        list(chunker.chunk_texts(texts_input_int))
 
     # Test n_jobs with an invalid type
     with pytest.raises(
         InvalidInputError,
         match=re.escape("(n_jobs) Input should be greater than or equal to 1."),
     ):
-        list(chunker.chunk_texts(["some text"], n_jobs=-1, max_sentences=1))
+        list(chunker.chunk_texts(["some text"], n_jobs=-1))
 
 
 def test_batch_chunk_error_handling_on_task(chunker):
     """Test the on_errors parameter in chunk_texts."""
 
     texts = ["This is ok.", "This will fail.", "This will not be processed."]
+
+    chunker = DocumentChunker(
+        token_counter=chunker.token_counter,
+        max_tokens=12,
+    )
 
     # Test on_errors = 'raise'
     with pytest.raises(
@@ -297,7 +321,6 @@ def test_batch_chunk_error_handling_on_task(chunker):
         list(
             chunker.chunk_texts(
                 texts,
-                max_tokens=12,
                 on_errors="raise",
                 show_progress=False,  # Disabled to prevent an unexpected hanging
             )
@@ -306,7 +329,6 @@ def test_batch_chunk_error_handling_on_task(chunker):
     # Test on_errors = 'skip'
     results = chunker.chunk_texts(
         texts,
-        max_tokens=12,
         on_errors="skip",
         separator=SEPARATOR_SENTINEL,
     )
@@ -321,7 +343,6 @@ def test_batch_chunk_error_handling_on_task(chunker):
     # Test on_errors = 'break'
     results = chunker.chunk_texts(
         texts,
-        max_tokens=12,
         on_errors="break",
         separator=SEPARATOR_SENTINEL,
     )
