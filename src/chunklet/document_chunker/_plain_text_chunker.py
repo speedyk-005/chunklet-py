@@ -336,6 +336,7 @@ class PlainTextChunker:
             ):
                 # for token-based mode, try splitting further
                 unfitted = ""
+                has_remnant = False
                 if token_limit_reached:
                     remaining_tokens = max_tokens - constraint_counter["token_count"]
                     fitted, unfitted = self._find_clauses_that_fit(
@@ -365,6 +366,7 @@ class PlainTextChunker:
                     if unfitted:
                         # We need to process the remnants separately
                         sentences[index] = unfitted
+                        has_remnant = True
 
                 chunks.append("\n".join(curr_chunk))  # Considered complete
 
@@ -377,6 +379,12 @@ class PlainTextChunker:
                     token_counter=token_counter,
                     constraint_counter=constraint_counter,
                 )
+
+                if has_remnant:
+                    # The sentence was split; its unfitted remnant was stored
+                    # at sentences[index]. Process it as the start of the new
+                    # chunk instead of re-appending the full original sentence.
+                    continue
 
             curr_chunk.append(sentence)
             constraint_counter["token_count"] += sentence_tokens
