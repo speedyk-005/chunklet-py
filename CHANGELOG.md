@@ -34,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.4.3] - 2026-09-02
+
+### Changed
+- **Tightened dependency constraints**: Pinned `py3langid` to `<=0.3.0` and `yasbd-lib` to `<1.0` to lock in the compatible, tested upstream versions.
+
+---
+
 ## [2.4.2] - 2026-07-29
 
 ### Fixed
