@@ -280,6 +280,7 @@ def test_batch_processing_successful(chunker, texts_input, expected_results_len)
         chunker.chunk_texts(
             texts_input,
             separator=SEPARATOR_SENTINEL,
+            n_jobs=2,
         )
     )
 
@@ -327,6 +328,7 @@ def test_batch_chunk_error_handling_on_task(chunker):
                 texts,
                 on_errors="raise",
                 show_progress=False,  # Disabled to prevent an unexpected hanging
+                n_jobs=2,
             )
         )
 
@@ -335,6 +337,7 @@ def test_batch_chunk_error_handling_on_task(chunker):
         texts,
         on_errors="skip",
         separator=SEPARATOR_SENTINEL,
+        n_jobs=2,
     )
 
     # Split the flattened stream into groups
@@ -349,6 +352,7 @@ def test_batch_chunk_error_handling_on_task(chunker):
         texts,
         on_errors="break",
         separator=SEPARATOR_SENTINEL,
+        n_jobs=2,
     )
 
     # Split the flattened stream into groups
