@@ -94,7 +94,7 @@ visualization = [
 
 viz = ["chunklet-py[visualization]"]
 
-all = ["chunklet-py[structured-document,code,visualization]"]
+all = ["chunklet-py[structured-document,code,visualization,auto,indic]"]
 
 dev = [
   "pytest>=8.3.5",
@@ -111,7 +111,7 @@ docs = [
   "pymdown-extensions>=10.16.1",
 ]
 
-dev-all = ["chunklet-py[dev,docs,structured-document,code,visualization]"]
+dev-all = ["chunklet-py[dev,docs,structured-document,code,visualization,auto,indic]"]
 
 [project.urls]
 Homepage = "https://github.com/speedyk-005/chunklet-py"
