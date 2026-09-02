@@ -48,25 +48,11 @@ class SentenceSplitter:
         """
         self.verbose = verbose
         self.fallback_splitter = UniversalSplitter()
-
-        # Create a normalized identifier for language detection
-        try:
-            from py3langid.langid import MODEL_FILE, LanguageIdentifier
-
-            self._identifier = LanguageIdentifier.from_pickled_model(
-                MODEL_FILE, norm_probs=True
-            )
-        except ImportError as e:  # pragma: no cover
-            raise ImportError(
-                "The 'py3langid' library is required for auto language detection. "
-                "Please install it with 'pip install 'py3langid>=0.3.0'' "
-                "or install the auto extra with 'pip install 'chunklet-py[auto]''"
-            ) from e
+        self.lang = lang
+        self._lang_identifier = None
 
         # Tracked to reduce log spamming about language detection
         self._last_lang_used = None
-
-        self.lang = lang
 
     @staticmethod
     @lru_cache(maxsize=52)
@@ -145,7 +131,22 @@ class SentenceSplitter:
         Returns:
             A tuple containing the detected language code and its confidence.
         """
-        lang_detected, confidence = self._identifier.classify(text)
+        if not self._lang_identifier:
+            # Create a normalized identifier for language detection
+            try:
+                from py3langid.langid import MODEL_FILE, LanguageIdentifier
+
+                self._lang_identifier = LanguageIdentifier.from_pickled_model(
+                    MODEL_FILE, norm_probs=True
+                )
+            except ImportError as e:  # pragma: no cover
+                raise ImportError(
+                    "The 'py3langid' library is required for auto language detection. "
+                    "Please install it with 'pip install 'py3langid>=0.3.0'' "
+                    "or install the auto extra with 'pip install 'chunklet-py[auto]''"
+                ) from e
+
+        lang_detected, confidence = self._lang_identifier.classify(text)
         log_info(
             self.verbose,
             "Language detection: '{}' with confidence {}.",
