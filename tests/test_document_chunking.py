@@ -8,6 +8,7 @@ from chunklet import (
     UnsupportedFileTypeError,
 )
 from chunklet.document_chunker import CustomProcessorRegistry, DocumentChunker
+from chunklet.document_chunker.processors.eml_processor import EmlProcessor
 
 # --- Fixtures ---
 
@@ -47,6 +48,30 @@ def test_chunk_simple_files(chunker, path):
     chunks = chunker.chunk_file(path)
     assert len(chunks) > 0
     assert "source" in chunks[0].metadata
+
+
+def test_extract_metadata_returns_all_available_fields():
+    """Test that EmlProcessor.extract_metadata returns all available EML fields."""
+    processor = EmlProcessor.__new__(EmlProcessor)
+    processor.file_path = "sample.eml"
+    processor._parsed = {
+        "subject": "Project update",
+        "from": "alice@example.com",
+        "to": ["bob@example.com"],
+        "message_id": "<message@example.com>",
+        "attachment": [{"name": "report.pdf"}],
+        "inline": [{"name": "logo.png"}],
+    }
+
+    assert processor.extract_metadata() == {
+        "source": "sample.eml",
+        "subject": "Project update",
+        "from": "alice@example.com",
+        "to": ["bob@example.com"],
+        "message_id": "<message@example.com>",
+        "attachment_names": ["report.pdf"],
+        "inline_names": ["logo.png"],
+    }
 
 
 def test_chunk_unsupported_file(chunker, tmp_path):
