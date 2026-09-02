@@ -18,7 +18,7 @@ Things break. Here's how to fix them.
     from chunklet import DocumentChunker
 
     paths = ["doc1.pdf", "doc2.txt"]
-    chunker = DocumentChunker(lang="en")
+    chunker = DocumentChunker(lang="auto")
     chunks = chunker.chunk_files(paths)
 
     try:
