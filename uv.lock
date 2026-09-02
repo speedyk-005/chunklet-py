@@ -298,7 +298,6 @@ dependencies = [
     { name = "loguru" },
     { name = "more-itertools" },
     { name = "mpire" },
-    { name = "py3langid" },
     { name = "pydantic" },
     { name = "regex" },
     { name = "sentencex", version = "0.6.1", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'armv7l' and sys_platform == 'linux')" },
@@ -328,6 +327,9 @@ all = [
     { name = "python-pptx" },
     { name = "striprtf" },
     { name = "uvicorn" },
+]
+auto = [
+    { name = "py3langid" },
 ]
 code = [
     { name = "defusedxml" },
@@ -450,7 +452,7 @@ requires-dist = [
     { name = "odfpy", marker = "extra == 'structured-document'", specifier = ">=1.4.1,<2.0" },
     { name = "openpyxl", marker = "extra == 'structured-document'", specifier = ">=3.1.5,<4.0" },
     { name = "pdfminer-six", marker = "extra == 'structured-document'", specifier = ">=20250324" },
-    { name = "py3langid", specifier = ">=0.3.0,<1.0" },
+    { name = "py3langid", marker = "extra == 'auto'", specifier = ">=0.3.0,<1.0" },
     { name = "pydantic", specifier = ">=2.11.0,<3.0" },
     { name = "pylatexenc", marker = "extra == 'structured-document'", specifier = "==2.11" },
     { name = "pymdown-extensions", marker = "extra == 'docs'", specifier = ">=10.16.1" },
@@ -469,7 +471,7 @@ requires-dist = [
     { name = "uvicorn", marker = "extra == 'visualization'", specifier = ">=0.35.0,<1.0" },
     { name = "yasbd-lib", specifier = ">=0.16.1,<1.0" },
 ]
-provides-extras = ["indic", "structured-document", "document", "code", "visualization", "viz", "all", "dev", "docs", "dev-all"]
+provides-extras = ["indic", "auto", "structured-document", "document", "code", "visualization", "viz", "all", "dev", "docs", "dev-all"]
 
 [[package]]
 name = "click"
