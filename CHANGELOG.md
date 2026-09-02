@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `CodeChunker`: `max_tokens`, `max_lines`, and `max_functions` are now set at construction. `strict`, `docstring_mode`, and `include_comments` remain per-call.
   - `SentenceSplitter`: `lang` is now set at construction; `split_text` / `split_file` no longer accept it.
 - **Mutability**: Constraints are now plain attributes on the chunker. Mutating a validated constraint (e.g., `chunker.max_sentences = 4`) re-runs constraint validation, and `DocumentChunker` delegates these attributes to its internal plain-text chunker.
+- **`lang` is no longer required to default to `"auto"`**: `lang` is now a required argument with no default. `py3langid` is no longer a hard dependency — it's an optional extra called `[auto]`, needed only when using `lang="auto"`.
+- **`indic-nlp-library` is now an optional extra**: Moved out of the core dependencies into the `[indic]` extra. Install with `pip install 'chunklet-py[indic]'` for Indic language support.
 
 ### Fixed
 - **Plain text chunker**: When a sentence is split mid-way on the token limit, its unfitted remainder now opens the next chunk instead of the full sentence being re-appended on top of the overlap clause. Fixes duplicated clauses and unresolved `(-1, -1)` spans in token-limited chunking.
@@ -28,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Custom sentence splitter registry**: Removed `custom_splitter_registry` / `CustomSplitterRegistry` (and the underlying `BaseSplitter` abstract class). Custom splitters are no longer supported; `SentenceSplitter` always uses its built-in handlers with a universal fallback.
 - **Document processor registry global**: Removed the global `custom_processor_registry` singleton. `CustomProcessorRegistry` is now a plain instance you create and pass to `DocumentChunker(processor_registry=...)`.
 - **`sentence_splitter` constructor parameter**: Removed from `DocumentChunker` and `PlainTextChunker`; both now always use a default `SentenceSplitter`.
+- **Hard dependency on `py3langid` and `indic-nlp-library`**: No longer installed by default. Both pulled in heavy dependencies (`numpy`, `pandas`, `morfessor`) that most users don't need. They're now optional extras and this significantly reduces the default install size.
 
 ---
 

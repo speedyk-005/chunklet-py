@@ -135,7 +135,7 @@ Want to unlock more Chunklet-py superpowers? Add these optional dependencies bas
     ```bash
     pip install "chunklet-py[auto]"
     ```
-*   **Indic Languages:** For splitting text in Indic languages (Assamese, Bengali, Gujarati, Kannada, Malayalam, Nepali, Odia, Punjabi, Sanskrit, Tamil, Telugu):
+*   **Indic Languages:** For splitting text in Indic languages (Assamese, Gujarati, Kannada, Nepali, Odia, Punjabi, Sanskrit, Tamil, Telugu). Note: Bengali, Malayalam, and Hindi are already covered by the default install:
     ```bash
     pip install "chunklet-py[indic]"
     ```
