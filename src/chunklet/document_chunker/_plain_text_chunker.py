@@ -54,14 +54,14 @@ class PlainTextChunker:
 
     def __init__(
         self,
-        continuation_marker: str = "...",
+        lang: str,
         max_tokens: int | None = None,
         max_sentences: int | None = None,
         max_section_breaks: int | None = None,
         overlap_percent: int = 20,
         offset: int = 0,
         token_counter: Callable[[str], int] | None = None,
-        lang: str = "auto",
+        continuation_marker: str = "...",
         verbose: bool = False,
     ):
         """

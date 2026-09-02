@@ -8,7 +8,7 @@ from chunklet.sentence_splitter import SentenceSplitter
 @pytest.fixture
 def splitter():
     """Provides a configured SentenceSplitter instance"""
-    return SentenceSplitter()
+    return SentenceSplitter(lang="en")
 
 
 # --- Multilingual Splitting Tests ---

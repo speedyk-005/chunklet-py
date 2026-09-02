@@ -88,7 +88,9 @@ class Visualizer:
         # Initialize chunkers with sensible defaults; constraint attributes are
         # mutated per request from the submitted params.
         self.document_chunker = DocumentChunker(
-            token_counter=token_counter, max_sentences=3
+            lang="auto",
+            token_counter=token_counter,
+            max_sentences=3,
         )
         self.code_chunker = CodeChunker(token_counter=token_counter, max_lines=50)
 

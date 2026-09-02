@@ -32,7 +32,7 @@ Need to break down text into individual sentences with surgical precision? The `
 | `<TEXT>` | The input text to split. If not provided, `--source` must be used. | None |
 | `--source, -s <PATH>` | Path to a single file to read input from. Cannot be a directory. | None |
 | `--destination, -d <PATH>` | Path to a single file to write the segmented sentences. If not provided, output goes to STDOUT. | STDOUT |
-| `--lang` | Language of the text (e.g., 'en', 'fr', 'auto'). Use 'auto' for automatic detection. | auto |
+| `--lang` | Language of the text (e.g., 'en', 'fr', 'auto'). Use 'auto' for automatic detection. Required. |
 | `--verbose, -v` | Enable verbose logging for extra insights. | False |
 
 ### Scenarios: Splitting Like a Pro!

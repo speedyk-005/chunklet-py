@@ -54,7 +54,16 @@ The `DocumentChunker` comes packed with smart features that make it your go-to t
 | `max_section_breaks` | `int >= 1`        | Structure superhero! Limits section breaks per chunk — headings (`##`), horizontal rules (`---`, `***`, `___`), and `<details>` tags. Your document structure stays intact! |
 | `overlap_percent`    | `int 0-75`        | Repeat a bit of the previous chunk's tail for continuity. Defaults to 20. |
 | `offset`             | `int >= 0`        | Skip the first N sentences before chunking. Defaults to 0. |
-| `lang`               | `str`             | Language code (`'en'`, `'fr'`, ...) or `'auto'`. Defaults to `'auto'`. |
+| `lang`               | `str`             | Language code (`'en'`, `'fr'`, ...) or `'auto'`. Required. |
+
+!!! note "Auto language detection requires the `[auto]` extra"
+    When you use `lang="auto"`, the chunker needs `py3langid` to detect the language of your text. This is not installed by default — install it with:
+
+    ```bash
+    pip install 'chunklet-py[auto]'
+    ```
+
+    If you only need specific languages (e.g. `lang="en"`), the default install is enough.
 
 !!! note "Quick Note: Constraints Required!"
     You must specify at least one limit (`max_sentences`, `max_tokens`, or `max_section_breaks`) when constructing. Forget to add one? You'll get an [`InvalidInputError`](../../exceptions-and-warnings.md#invalidinputerror)!
@@ -164,7 +173,7 @@ for i, chunk in enumerate(chunks):
 This constraint is useful for documents structured with Markdown headings or thematic breaks.
 
 ``` py linenums="1" hl_lines="1"
-chunker = DocumentChunker(max_section_breaks=2)
+chunker = DocumentChunker(lang="en", max_section_breaks=2)
 
 chunks = chunker.chunk_text(text=text)
 
@@ -222,7 +231,7 @@ def word_counter(text: str) -> int:
     return len(text.split())
 
 
-chunker = DocumentChunker(token_counter=word_counter, max_tokens=50)
+chunker = DocumentChunker(lang="en", token_counter=word_counter, max_tokens=50)
 
 chunks = chunker.chunk_text(text=text)
 
@@ -293,19 +302,19 @@ chunks = chunker.chunk_text(text)
     You can customize the continuation marker, which is prepended to clauses that don't fit in the previous chunk. To do this, pass the `continuation_marker` parameter to the chunker's constructor.
 
     ```py
-    chunker = DocumentChunker(continuation_marker="[...]")
+    chunker = DocumentChunker(lang="en", continuation_marker="[...]")
     ```
 
     If you don't want any continuation marker, you can set it to an empty string:
 
     ```py
-    chunker = DocumentChunker(continuation_marker="")
+    chunker = DocumentChunker(lang="en", continuation_marker="")
     ```
 
 !!! tip "Enable Verbose Logging"
     To see detailed logging during the chunking process, you can set the `verbose` parameter to `True` when initializing the `DocumentChunker`:
     ```py
-    chunker = DocumentChunker(verbose=True)
+    chunker = DocumentChunker(lang="en", verbose=True)
     ```
 
 !!! tip "Adding Base Metadata"
@@ -338,13 +347,14 @@ While `chunk_text` is perfect for single texts and `chunk_file` for single files
 
 ### For Texts
 
-```py linenums="1" hl_lines="13-18"
+```py linenums="1" hl_lines="14-19"
 EN_TEXT = "This is the first document. It has multiple sentences for chunking. Here is the second document."
 ES_TEXT = (
     "Este es el primer documento. Contiene varias frases para la segmentación de texto."
 )
 
 chunker = DocumentChunker(
+    lang="auto",
     token_counter=word_counter,
     max_sentences=5,
     max_tokens=20,
@@ -412,7 +422,7 @@ The `separator` parameter works for both `chunk_texts` and `chunk_files`. It let
 ```py linenums="1" hl_lines="3 8 12 16-20"
 from more_itertools import split_at
 
-chunker = DocumentChunker(max_sentences=1)
+chunker = DocumentChunker(lang="en", max_sentences=1)
 texts = [
     "This is the first document. It has two sentences.",
     "This is the second document. It also has two sentences.",
@@ -493,7 +503,7 @@ def my_json_processor(file_path: str) -> tuple[str, dict]:
     return text_content, metadata
 
 
-chunker = DocumentChunker(processor_registry=registry, max_sentences=5)
+chunker = DocumentChunker(lang="en", processor_registry=registry, max_sentences=5)
 
 # A complex JSON sample
 json_data = {

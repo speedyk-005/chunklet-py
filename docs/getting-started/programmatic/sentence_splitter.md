@@ -20,6 +20,15 @@ The `SentenceSplitter` is a sophisticated system:
 -  **Reliable Fallback 🛡️:** For unsupported languages, a rule-based fallback kicks in.
 -  **Output Refinement ✨:** Removes empty sentences and fixes punctuation.
 
+!!! note "Auto language detection requires the `[auto]` extra"
+    When you use `lang="auto"`, the splitter needs `py3langid` to detect the language of your text. This is not installed by default — install it with:
+
+    ```bash
+    pip install 'chunklet-py[auto]'
+    ```
+
+    If you only need specific languages (e.g. `lang="en"`), the default install is enough.
+
 ### Example Usage 
 
 ### Split Text into Sentences
@@ -111,7 +120,7 @@ lang_texts = {
     "hi": "यह एक वाक्य है। यह एक और वाक्य है। श्री स्मिथ वाशिंगटन गए। उसने कहा 'नमस्ते दुनिया!'। तेज भूरा लोमड़ी आलसी कुत्ते पर कूदता है।",
 }
 
-splitter = SentenceSplitter()
+splitter = SentenceSplitter(lang="auto")
 
 for lang, text in lang_texts.items():
     detected_lang, confidence = splitter.detected_top_language(text)

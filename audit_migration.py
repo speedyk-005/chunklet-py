@@ -205,23 +205,22 @@ class MigrationAuditor:
                             file_path,
                             node.lineno,
                             self._get_line(lines, node.lineno),
-                            f"Import '{alias.name}'. "
-                            f"{LEGACY_MODULE_NAMES[alias.name]}",
+                            f"Import '{alias.name}'. {LEGACY_MODULE_NAMES[alias.name]}",
                             "bold red",
                         )
 
-    def _audit_removed_arguments(self, file_path: Path, tree: ast.AST, lines: list[str]):
+    def _audit_removed_arguments(
+        self, file_path: Path, tree: ast.AST, lines: list[str]
+    ):
         """Flag keyword arguments removed in v2/v3 or moved to the constructor."""
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
             moved_args = [
-                kw.arg for kw in node.keywords
-                if kw.arg in MOVED_TO_CONSTRUCTOR
+                kw.arg for kw in node.keywords if kw.arg in MOVED_TO_CONSTRUCTOR
             ]
             removed_args = [
-                kw.arg for kw in node.keywords
-                if kw.arg in REMOVED_ARGUMENTS
+                kw.arg for kw in node.keywords if kw.arg in REMOVED_ARGUMENTS
             ]
             if moved_args:
                 self._has_legacy_issues = True
@@ -239,8 +238,7 @@ class MigrationAuditor:
                         file_path,
                         node.lineno,
                         self._get_line(lines, node.lineno),
-                        f"'{arg}' no longer has that meaning. "
-                        f"{REMOVED_ARGUMENTS[arg]}",
+                        f"'{arg}' no longer has that meaning. {REMOVED_ARGUMENTS[arg]}",
                         "bold red",
                     )
 
