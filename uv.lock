@@ -456,7 +456,7 @@ requires-dist = [
     { name = "odfpy", marker = "extra == 'structured-document'", specifier = ">=1.4.1,<2.0" },
     { name = "openpyxl", marker = "extra == 'structured-document'", specifier = ">=3.1.5,<4.0" },
     { name = "pdfminer-six", marker = "extra == 'structured-document'", specifier = ">=20250324" },
-    { name = "py3langid", marker = "extra == 'auto'", specifier = ">=0.3.0,<1.0" },
+    { name = "py3langid", marker = "extra == 'auto'", specifier = ">=0.4.0,<0.5.0" },
     { name = "pydantic", specifier = ">=2.11.0,<3.0" },
     { name = "pylatexenc", marker = "extra == 'structured-document'", specifier = "==2.11" },
     { name = "pymdown-extensions", marker = "extra == 'docs'", specifier = ">=10.16.1" },
@@ -1632,14 +1632,14 @@ wheels = [
 
 [[package]]
 name = "py3langid"
-version = "0.3.0"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/99/43/c3f7a3c5150c56a0ca70c3039e53cc58046698b7ce0913bb8fa86d71abcb/py3langid-0.3.0.tar.gz", hash = "sha256:0a875a031a58aaf9dbda7bb8285fd75e801a7bd276216ffabe037901d4b449ec", size = 752935, upload-time = "2024-06-18T11:31:04.301Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/16/fc/51c88e5ef8346878ae6c09e1f7c86c6e6308c57794723bf423a72ddba4dd/py3langid-0.4.0.tar.gz", hash = "sha256:5924159039b5cc282c2edc10a7ea9363b2099834a0e99ed8d5bea3cc435d7871", size = 4604185, upload-time = "2026-09-02T09:10:53.983Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9d/1c/8212ea872d236af0aea37043fb6feeaa9a43449183782b19d342f8ddd343/py3langid-0.3.0-py3-none-any.whl", hash = "sha256:38f022eec31cf9a2bf6f142acb2a9b350fd7d0d5ae7762b1392c6d3567401fd3", size = 746125, upload-time = "2024-06-18T11:30:51.265Z" },
+    { url = "https://files.pythonhosted.org/packages/69/2d/0eeff2727c970b1d553be70d15ba2d84e3830696c09a79d954c5ae3d5212/py3langid-0.4.0-py3-none-any.whl", hash = "sha256:c25bd038147951ba3a89efe9ec12cc7d2116cb6f311ff8af84ade398a8bc0616", size = 4600605, upload-time = "2026-09-02T09:10:49.54Z" },
 ]
 
 [[package]]

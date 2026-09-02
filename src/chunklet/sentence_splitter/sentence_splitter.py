@@ -136,13 +136,13 @@ class SentenceSplitter:
             try:
                 from py3langid.langid import MODEL_FILE, LanguageIdentifier
 
-                self._lang_identifier = LanguageIdentifier.from_pickled_model(
+                self._lang_identifier = LanguageIdentifier.from_model_file(
                     MODEL_FILE, norm_probs=True
                 )
             except ImportError as e:  # pragma: no cover
                 raise ImportError(
                     "The 'py3langid' library is required for auto language detection. "
-                    "Please install it with 'pip install 'py3langid>=0.3.0'' "
+                    "Please install it with 'pip install 'py3langid>=0.4.0,<0.5.0'' "
                     "or install the auto extra with 'pip install 'chunklet-py[auto]''"
                 ) from e
 
