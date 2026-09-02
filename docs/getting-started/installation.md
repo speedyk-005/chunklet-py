@@ -43,6 +43,14 @@ Chunklet-py offers optional dependencies to unlock additional functionalities, s
     ```bash
     pip install "chunklet-py[code]"
     ```
+*   **Auto Language Detection:** For automatic language detection (`lang="auto"`). Uses `py3langid` to detect the language of your text:
+    ```bash
+    pip install "chunklet-py[auto]"
+    ```
+*   **Indic Languages:** For splitting text in Indic languages (Assamese, Bengali, Gujarati, Kannada, Malayalam, Nepali, Odia, Punjabi, Sanskrit, Tamil, Telugu):
+    ```bash
+    pip install "chunklet-py[indic]"
+    ```
 *   **Visualization:** For the interactive web-based chunk visualizer:
     ```bash
     pip install "chunklet-py[visualization]"

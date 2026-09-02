@@ -137,7 +137,7 @@ def my_tokenizer(text: str) -> int:
     return len(text.split())  # Simple word count!
 
 
-chunker = DocumentChunker(token_counter=my_tokenizer)
+chunker = DocumentChunker(lang="fr", token_counter=my_tokenizer)
 chunks = chunker.chunk_text(text, max_tokens=50)
 
 for chunk in chunks:

@@ -249,10 +249,10 @@ def split_command(
         help="Path to a single file to write the segmented sentences (separated by \\n). Cannot be a directory.",
     ),
     lang: str = typer.Option(
-        "auto",
+        ...,
         "--lang",
         "-l",
-        help="Language of the text (e.g., 'en', 'fr', 'auto').",
+        help="Language of the text (e.g., 'en', 'fr', 'auto'). Required.",
     ),
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging."
@@ -308,7 +308,14 @@ def split_command(
         raise typer.Exit(code=1)
 
     # Split Logic
-    splitter = SentenceSplitter(lang=lang or "auto", verbose=verbose)
+    try:
+        splitter = SentenceSplitter(lang=lang, verbose=verbose)
+    except ImportError as e:
+        typer.echo(
+            f"Error: {e}",
+            err=True,
+        )
+        raise typer.Exit(code=1)
 
     if source:
         sentences = splitter.split_file(source)
@@ -369,10 +376,10 @@ def chunk_command(
         help="Path to a file (for single output) or a directory (for batch output) to write the chunks.",
     ),
     lang: str = typer.Option(
-        "auto",
+        ...,
         "--lang",
         "-l",
-        help="Language of the text (e.g., 'en', 'fr', 'auto').",
+        help="Language of the text (e.g., 'en', 'fr', 'auto'). Required.",
     ),
     max_tokens: int = typer.Option(
         None,

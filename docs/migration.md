@@ -55,7 +55,7 @@ In v2, custom processors lived on a **global** `custom_processor_registry` singl
     def my_json_processor(file_path: str) -> tuple[str, dict]: ...
 
 
-    chunker = DocumentChunker(processor_registry=registry)
+    chunker = DocumentChunker(lang="en", processor_registry=registry)
     ```
 
 !!! tip "Scope your registries"
@@ -74,9 +74,40 @@ The names deprecated in v2.2.0 are gone in v3. If you were still using them, her
 
 If you were already calling the `chunk_text`/`chunk_texts`/`split_text` methods, nothing changes for you.
 
-### Constraints moved to the constructor
+### `lang="auto"` is no longer the default
+
+In v2, `lang` defaulted to `"auto"` and `py3langid` was a hard dependency — it was always installed. In v3, `lang` is required (no default), and `py3langid` is now an optional extra called `[auto]`.
+
+If you were relying on automatic language detection, you need to:
+
+1. Pass `lang="auto"` explicitly (it's no longer implicit).
+2. Install the extra: `pip install 'chunklet-py[auto]'`
+
+If you only ever used specific language codes like `lang="en"`, you don't need the extra — the default install is enough.
+
+=== "Before (v2.x.x)"
+
+    ```py
+    chunker = DocumentChunker()
+    chunks = chunker.chunk_text(text)  # lang defaulted to "auto"
+    ```
+
+=== "After (v3.x.x)"
+
+    ```py
+    chunker = DocumentChunker(lang="auto")
+    chunks = chunker.chunk_text(text)
+    ```
+
+    And install the extra:
+
+    ```bash
+    pip install 'chunklet-py[auto]'
+    ```
 
 Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, `offset`, `lang`) used to be passed per call to `chunk_text()`, `chunk_file()`, `chunk_texts()`, `chunk_files()`, `split_text()`, and `split_file()`. They now live on the chunker/splitter instance, set once at construction and mutable as plain attributes. The same applies to `CodeChunker` (`max_tokens`, `max_lines`, `max_functions`) and `SentenceSplitter` (`lang`).
+
+### Constraints moved to the constructor
 
 === "Before"
 
