@@ -111,7 +111,7 @@ lang_texts = {
     "hi": "यह एक वाक्य है। यह एक और वाक्य है। श्री स्मिथ वाशिंगटन गए। उसने कहा 'नमस्ते दुनिया!'। तेज भूरा लोमड़ी आलसी कुत्ते पर कूदता है।",
 }
 
-splitter = SentenceSplitter()
+splitter = SentenceSplitter(lang="auto")
 
 for lang, text in lang_texts.items():
     detected_lang, confidence = splitter.detected_top_language(text)

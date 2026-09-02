@@ -4,9 +4,8 @@ from pathlib import Path
 from typing import Callable
 
 from loguru import logger
-from py3langid.langid import MODEL_FILE, LanguageIdentifier
 
-# yasbd, indicnlp and sentencex are lazy imported
+# yasbd, indicnlp, sentencex and py3langid are lazy imported
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
 from chunklet.common.validation import validate_input
@@ -37,23 +36,32 @@ class SentenceSplitter:
     @validate_input
     def __init__(
         self,
-        lang: str = "auto",
+        lang: str,
         verbose: bool = False,
     ):
         """
         Initializes the SentenceSplitter.
 
         Args:
-            lang: Language code (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
+            lang: Language code (e.g., 'en', 'fr', 'auto').
             verbose: If True, enables verbose logging for debugging and informational messages.
         """
         self.verbose = verbose
         self.fallback_splitter = UniversalSplitter()
 
         # Create a normalized identifier for language detection
-        self._identifier = LanguageIdentifier.from_pickled_model(
-            MODEL_FILE, norm_probs=True
-        )
+        try:
+            from py3langid.langid import MODEL_FILE, LanguageIdentifier
+
+            self._identifier = LanguageIdentifier.from_pickled_model(
+                MODEL_FILE, norm_probs=True
+            )
+        except ImportError as e:  # pragma: no cover
+            raise ImportError(
+                "The 'py3langid' library is required for auto language detection. "
+                "Please install it with 'pip install 'py3langid>=0.3.0'' "
+                "or install the auto extra with 'pip install 'chunklet-py[auto]''"
+            ) from e
 
         # Tracked to reduce log spamming about language detection
         self._last_lang_used = None
@@ -83,11 +91,12 @@ class SentenceSplitter:
         elif lang in INDIC_NLP_UNIQUE_LANGUAGES:
             try:
                 from indicnlp.tokenize import sentence_tokenize
-            except ImportError:
+            except ImportError as e:  # pragma: no cover
                 raise ImportError(
-                    "indic-nlp-library required for Indic languages. "
-                    "Install with: pip install 'chunklet-py[indic]'"
-                ) from None
+                    "The 'indic-nlp-library' is not installed. "
+                    "Please install it with 'pip install 'indic-nlp-library>=0.92,<1.0'' "
+                    "or install the indic extra with 'pip install 'chunklet-py[indic]''"
+                ) from e
             log_info(verbose, "Using indicnlp")
             return lambda text: sentence_tokenize.sentence_split(text, lang)
 
@@ -163,7 +172,7 @@ class SentenceSplitter:
             >>> splitter = SentenceSplitter(lang="fr")
             >>> splitter.split_text("Bonjour le monde. Comment allez-vous?")
             ['Bonjour le monde.', 'Comment allez-vous?']
-            >>> splitter = SentenceSplitter()
+            >>> splitter = SentenceSplitter(lang="auto")
             >>> splitter.split_text("Hello world. How are you?")
             ['Hello world.', 'How are you?']
         """

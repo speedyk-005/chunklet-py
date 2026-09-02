@@ -91,24 +91,22 @@ class DocumentChunker(BaseChunker):
     @validate_input
     def __init__(
         self,
-        processor_registry: CustomProcessorRegistry | None = None,
-        continuation_marker: str = "...",
+        lang: str,
         max_tokens: Annotated[int | None, Field(ge=12)] = None,
         max_sentences: Annotated[int | None, Field(ge=1)] = None,
         max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
         offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
-        lang: str = "auto",
+        processor_registry: CustomProcessorRegistry | None = None,
+        continuation_marker: str = "...",
         verbose: bool = False,
     ):
         """
         Initializes the DocumentChunker.
 
         Args:
-            processor_registry: An optional CustomProcessorRegistry instance to use for
-                custom document processors. If None, a fresh registry is created.
-            continuation_marker: The marker to prepend to unfitted clauses. Defaults to '...'.
+            lang: Language code (e.g., 'en', 'fr', 'auto').
             max_tokens: Maximum number of tokens per chunk. Must be >= 12.
             max_sentences: Maximum number of sentences per chunk. Must be >= 1.
             max_section_breaks: Maximum number of section breaks per chunk.
@@ -118,7 +116,9 @@ class DocumentChunker(BaseChunker):
             offset: Starting sentence offset for chunking. Defaults to 0.
             token_counter: Function that counts tokens in text.
                 If None, must be provided (or token-based limits disabled).
-            lang: Language code (e.g., 'en', 'fr', 'auto'). Defaults to "auto".
+            processor_registry: An optional CustomProcessorRegistry instance to use for
+                custom document processors. If None, a fresh registry is created.
+            continuation_marker: The marker to prepend to unfitted clauses. Defaults to '...'.
             verbose: Enable verbose logging.
         """
         self._verbose = verbose

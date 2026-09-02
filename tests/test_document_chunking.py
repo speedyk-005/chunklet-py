@@ -15,7 +15,7 @@ from chunklet.document_chunker import CustomProcessorRegistry, DocumentChunker
 @pytest.fixture
 def chunker():
     """Provides a DocumentChunker instance."""
-    return DocumentChunker(max_sentences=5)
+    return DocumentChunker(lang="en", max_sentences=5)
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def registry():
 @pytest.fixture
 def chunker_with_registry(registry):
     """Provides a DocumentChunker bound to the fresh registry."""
-    return DocumentChunker(processor_registry=registry, max_sentences=5)
+    return DocumentChunker(lang="en", processor_registry=registry, max_sentences=5)
 
 
 # --- Core Tests ---

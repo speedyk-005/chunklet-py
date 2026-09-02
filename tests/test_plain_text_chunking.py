@@ -4,6 +4,8 @@ from textwrap import dedent
 import pytest
 from more_itertools import split_at
 
+LANG = "en"
+
 from chunklet import (
     CallbackError,
     InvalidInputError,
@@ -44,6 +46,7 @@ def chunker():
         return len(text.split())
 
     return DocumentChunker(
+        lang=LANG,
         token_counter=simple_token_counter,
         max_sentences=100,
     )
@@ -58,7 +61,7 @@ def test_init_validation_error():
         InvalidInputError,
         match="At least one of 'max_tokens', 'max_sentences', or 'max_section_breaks'",
     ):
-        DocumentChunker()
+        DocumentChunker(lang=LANG)
 
 
 @pytest.mark.parametrize(
@@ -75,6 +78,7 @@ def test_constraint_based_chunking(
 ):
     """Verify constraint-based chunking produces output with expected chunk counts and structure."""
     chunker = DocumentChunker(
+        lang=LANG,
         token_counter=chunker.token_counter,
         max_tokens=max_tokens,
         max_sentences=max_sentences,
@@ -102,7 +106,7 @@ def test_constraint_based_chunking(
         if max_sentences is not None:
             # Split by sentence and check count
             # Remove continuation marker before splitting to avoid counting it as a sentence
-            sentences_in_chunk = SentenceSplitter().split_text(
+            sentences_in_chunk = SentenceSplitter(lang=LANG).split_text(
                 content.removeprefix("... ")
             )
             assert len(sentences_in_chunk) <= max_sentences, (
@@ -120,7 +124,7 @@ def test_constraint_based_chunking(
             # Count headings and check
             headings_in_chunk = [
                 s
-                for s in SentenceSplitter().split_text(content)
+                for s in SentenceSplitter(lang=LANG).split_text(content)
                 if SECTION_BREAK_PATTERN.match(s)
             ]
             assert len(headings_in_chunk) <= max_section_breaks, (
@@ -140,6 +144,7 @@ def test_constraint_based_chunking(
 def test_offset_behavior(chunker, offset, expect_chunks):
     """Verify offset affects output and large offsets produce no chunks"""
     chunker = DocumentChunker(
+        lang=LANG,
         token_counter=chunker.token_counter,
         max_sentences=3,
         offset=offset,
@@ -156,13 +161,14 @@ def test_offset_behavior(chunker, offset, expect_chunks):
 def test_token_counter_validation():
     """Test that a MissingTokenCounterError is raised when a token_counter is missing for token/hybrid modes."""
     with pytest.raises(MissingTokenCounterError):
-        DocumentChunker(max_tokens=30)
+        DocumentChunker(lang=LANG, max_tokens=30)
 
 
 def test_long_sentence_truncation(chunker):
     """Test that a long sentence without punctuation is #truncated correctly."""
     long_sentence = "word " * 100
     chunker = DocumentChunker(
+        lang=LANG,
         token_counter=chunker.token_counter,
         max_tokens=30,
     )
@@ -181,6 +187,7 @@ def test_overlap_behavior(chunker):
     """Test that overlap produces multiple chunks and the overlap content is correct."""
 
     chunker = DocumentChunker(
+        lang=LANG,
         token_counter=chunker.token_counter,
         max_sentences=4,
         overlap_percent=50,
@@ -265,6 +272,7 @@ def test_span_finder(text: str, query: str, expected: tuple[int, int]):
 def test_batch_processing_successful(chunker, texts_input, expected_results_len):
     """Comprehensive test for batch processing successful runs and edge cases."""
     chunker = DocumentChunker(
+        lang=LANG,
         token_counter=chunker.token_counter,
         max_sentences=100,
     )
@@ -304,6 +312,7 @@ def test_batch_chunk_error_handling_on_task(chunker):
     texts = ["This is ok.", "This will fail.", "This will not be processed."]
 
     chunker = DocumentChunker(
+        lang=LANG,
         token_counter=chunker.token_counter,
         max_tokens=12,
     )
