@@ -166,8 +166,7 @@ class PPTXProcessor(BaseProcessor):
         parts.append("")
         return "\n".join(parts)
 
-    @staticmethod
-    def _safe_chart_title(chart: Any) -> str | None:
+    def _safe_chart_title(self, chart: Any) -> str | None:
         """Extract chart title text safely, avoiding missing-attribute errors."""
         title = getattr(chart, "chart_title", None)
         if not title or not hasattr(title, "has_text_frame"):
@@ -177,8 +176,7 @@ class PPTXProcessor(BaseProcessor):
         text = title.text_frame.text.strip()
         return text or None
 
-    @staticmethod
-    def _plot_to_table(plot: Any) -> list[list[str]] | None:
+    def _plot_to_table(self, plot: Any) -> list[list[str]] | None:
         """Build a list-of-lists table (header + rows) from a chart plot."""
         if not (categories := getattr(plot, "categories", None)):
             return None
@@ -238,6 +236,27 @@ class PPTXProcessor(BaseProcessor):
                 return "\n***\n**Notes:**\n" + "\n".join(notes_lines).rstrip(">")
         return None
 
+    def _extract_layout_blocks(self, slide: Any) -> list[str]:
+        """Extract markdown blocks from the slide's layout shapes.
+
+        Args:
+            slide: A python-pptx Slide object.
+
+        Returns:
+            A list of markdown string blocks for each shape in the slide layout.
+        """
+        blocks: list[str] = []
+        for shape in slide.shapes:
+            if shape == slide.shapes.title:
+                continue
+            if table_md := self._extract_table(shape):
+                blocks.append(table_md)
+            if chart_md := self._extract_chart(shape):
+                blocks.append(chart_md)
+            if text_md := self._extract_text(shape):
+                blocks.append(text_md)
+        return blocks
+
     def extract_metadata(self) -> dict[str, Any]:
         """
         Extracts OpenXML Document CoreProperties from the PPTX file
@@ -275,15 +294,7 @@ class PPTXProcessor(BaseProcessor):
                 slide_content.append(title)
 
             # Layout blocks
-            for shape in slide.shapes:
-                if shape == slide.shapes.title:
-                    continue
-                if table_md := self._extract_table(shape):
-                    slide_content.append(table_md)
-                if chart_md := self._extract_chart(shape):
-                    slide_content.append(chart_md)
-                if text_md := self._extract_text(shape):
-                    slide_content.append(text_md)
+            slide_content.extend(self._extract_layout_blocks(slide))
 
             # Presenter Notes
             if notes_md := self._extract_notes(slide):
