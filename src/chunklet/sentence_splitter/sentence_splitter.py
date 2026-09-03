@@ -54,6 +54,31 @@ class SentenceSplitter:
         # Tracked to reduce log spamming about language detection
         self._last_lang_used = None
 
+    def _get_lang_identifier(self):
+        """
+        Lazily build and cache the py3langid LanguageIdentifier used for detection.
+
+        Returns:
+            The cached LanguageIdentifier instance.
+
+        Raises:
+            ImportError: If py3langid is not installed.
+        """
+        if not self._lang_identifier:
+            try:
+                from py3langid.langid import MODEL_FILE, LanguageIdentifier
+
+                self._lang_identifier = LanguageIdentifier.from_model_file(
+                    MODEL_FILE, norm_probs=True
+                )
+            except ImportError as e:  # pragma: no cover
+                raise ImportError(
+                    "The 'py3langid' library is required for auto language detection. "
+                    "Please install it with 'pip install 'py3langid>=0.4.0,<0.5.0'' "
+                    "or install the auto extra with 'pip install 'chunklet-py[auto]''"
+                ) from e
+        return self._lang_identifier
+
     @staticmethod
     @lru_cache(maxsize=52)
     def _get_lang_handler(lang: str, verbose: bool) -> Callable | None:
@@ -131,22 +156,7 @@ class SentenceSplitter:
         Returns:
             A tuple containing the detected language code and its confidence.
         """
-        if not self._lang_identifier:
-            # Create a normalized identifier for language detection
-            try:
-                from py3langid.langid import MODEL_FILE, LanguageIdentifier
-
-                self._lang_identifier = LanguageIdentifier.from_model_file(
-                    MODEL_FILE, norm_probs=True
-                )
-            except ImportError as e:  # pragma: no cover
-                raise ImportError(
-                    "The 'py3langid' library is required for auto language detection. "
-                    "Please install it with 'pip install 'py3langid>=0.4.0,<0.5.0'' "
-                    "or install the auto extra with 'pip install 'chunklet-py[auto]''"
-                ) from e
-
-        lang_detected, confidence = self._lang_identifier.classify(text)
+        lang_detected, confidence = self._get_lang_identifier().classify(text)
         log_info(
             self.verbose,
             "Language detection: '{}' with confidence {}.",
