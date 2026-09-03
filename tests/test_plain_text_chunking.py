@@ -4,8 +4,6 @@ from textwrap import dedent
 import pytest
 from more_itertools import split_at
 
-LANG = "en"
-
 from chunklet import (
     CallbackError,
     InvalidInputError,
@@ -14,6 +12,8 @@ from chunklet import (
 from chunklet.document_chunker import DocumentChunker
 from chunklet.document_chunker._plain_text_chunker import SECTION_BREAK_PATTERN
 from chunklet.sentence_splitter import SentenceSplitter
+
+LANG = "en"
 
 # --- Constants ---
 

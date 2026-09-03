@@ -315,7 +315,7 @@ def split_command(
             f"Error: {e}",
             err=True,
         )
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from None
 
     if source:
         sentences = splitter.split_file(source)

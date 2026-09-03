@@ -88,7 +88,7 @@ def visualizer_server():
     url = f"http://{host}:{port}"  # noqa: S310
     wait_for_server(url)
 
-    yield {
+    return {
         "url": url,
         "host": host,
         "port": port,
