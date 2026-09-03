@@ -6,6 +6,7 @@ from typing import Callable
 from loguru import logger
 
 # yasbd, indicnlp, sentencex and py3langid are lazy imported
+from chunklet.common.lang_detection import detect_top_language
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import read_text_file
 from chunklet.common.validation import validate_input
@@ -49,35 +50,9 @@ class SentenceSplitter:
         self.verbose = verbose
         self.fallback_splitter = UniversalSplitter()
         self.lang = lang
-        self._lang_identifier = None
 
         # Tracked to reduce log spamming about language detection
         self._last_lang_used = None
-
-    def _get_lang_identifier(self):
-        """
-        Lazily build and cache the py3langid LanguageIdentifier used for detection.
-
-        Returns:
-            The cached LanguageIdentifier instance.
-
-        Raises:
-            ImportError: If py3langid is not installed.
-        """
-        if not self._lang_identifier:
-            try:
-                from py3langid.langid import MODEL_FILE, LanguageIdentifier
-
-                self._lang_identifier = LanguageIdentifier.from_model_file(
-                    MODEL_FILE, norm_probs=True
-                )
-            except ImportError as e:  # pragma: no cover
-                raise ImportError(
-                    "The 'py3langid' library is required for auto language detection. "
-                    "Please install it with 'pip install 'py3langid>=0.4.0,<0.5.0'' "
-                    "or install the auto extra with 'pip install 'chunklet-py[auto]''"
-                ) from e
-        return self._lang_identifier
 
     @staticmethod
     @lru_cache(maxsize=52)
@@ -146,26 +121,6 @@ class SentenceSplitter:
         return processed_sentences
 
     @validate_input
-    def detected_top_language(self, text: str) -> tuple[str, float]:
-        """
-        Detects the top language of the given text using py3langid.
-
-        Args:
-            text: The input text to detect the language for.
-
-        Returns:
-            A tuple containing the detected language code and its confidence.
-        """
-        lang_detected, confidence = self._get_lang_identifier().classify(text)
-        log_info(
-            self.verbose,
-            "Language detection: '{}' with confidence {}.",
-            lang_detected,
-            f"{round(confidence) * 10}/10",
-        )
-        return lang_detected, confidence
-
-    @validate_input
     def split_text(self, text: str) -> list[str]:
         """
         Splits a given text into a list of sentences.
@@ -199,7 +154,13 @@ class SentenceSplitter:
                     "The language is set to `auto`. Consider setting the `lang` parameter "
                     "to a specific language to improve reliability."
                 )
-            lang_detected, confidence = self.detected_top_language(text)
+            lang_detected, confidence = detect_top_language(text)
+            log_info(
+                self.verbose,
+                "Language detection: '{}' with confidence {}.",
+                lang_detected,
+                f"{round(confidence) * 10}/10",
+            )
             lang = lang_detected if confidence >= 0.7 else "fallback"
 
         self._last_lang_used = lang
