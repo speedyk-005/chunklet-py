@@ -27,6 +27,7 @@ try:
 except ImportError:  # pragma: no cover
     Visualizer = None
 
+from chunklet.common.lang_detection import detect_top_language
 from chunklet.common.path_utils import is_path_like
 
 try:
@@ -319,12 +320,12 @@ def split_command(
 
     if source:
         sentences = splitter.split_file(source)
-        lang_detected, confidence = splitter.detected_top_language(
+        lang_detected, confidence = detect_top_language(
             source.read_text(encoding="utf-8")
         )
     else:
         sentences = splitter.split_text(input_text)
-        lang_detected, confidence = splitter.detected_top_language(input_text)
+        lang_detected, confidence = detect_top_language(input_text)
 
     # Output Handling
     if destination:

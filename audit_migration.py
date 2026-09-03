@@ -30,10 +30,17 @@ MOVED_TO_CONSTRUCTOR = {
     "max_functions": "Move to the constructor: `CodeChunker(max_functions=...)`.",
 }
 
-CHUNKER_CLASS_NAMES = {"Chunklet", "PlainTextChunker", "DocumentChunker", "CodeChunker"}
+# Classes whose instances the audit tracks to flag legacy method calls on them.
+TRACKED_CLASS_NAMES = {
+    "Chunklet",
+    "PlainTextChunker",
+    "DocumentChunker",
+    "CodeChunker",
+    "SentenceSplitter",
+}
 
 LEGACY_IMPORTS = {
-    "chunklet.utils.detect_text_language": "Use 'SentenceSplitter.detected_top_language()' instead.",
+    "chunklet.utils.detect_text_language": "Use 'detect_top_language' from 'chunklet.common.lang_detection' instead.",
     "chunklet.sentence_splitter.custom_splitter_registry": "Removed in v3. Custom splitters are gone.",
     "chunklet.sentence_splitter.CustomSplitterRegistry": "Removed in v3. Custom splitters are gone.",
     "chunklet.sentence_splitter.BaseSplitter": "Removed in v3.",
@@ -44,6 +51,9 @@ LEGACY_IMPORTS = {
 }
 # Module-level names (not necessarily dotted-import paths) that are gone in v3.
 LEGACY_MODULE_NAMES = {
+    "detect_text_language": (
+        "Use 'detect_top_language' from 'chunklet.common.lang_detection' instead."
+    ),
     "custom_splitter_registry": "Removed in v3. Custom splitters are gone.",
     "CustomSplitterRegistry": "Removed in v3. Custom splitters are gone.",
     "BaseSplitter": "Removed in v3.",
@@ -60,6 +70,7 @@ LEGACY_METHODS = {
     "chunk": "Use 'chunk_text()' or 'chunk_file()' instead.",
     "preview_sentences": "Use 'SentenceSplitter.split_text()' instead.",
     "batch_chunk": "Use 'chunk_texts()' or 'chunk_files()' instead.",
+    "detected_top_language": "Use 'detect_top_language' from 'chunklet.common.lang_detection' instead.",
 }
 
 
@@ -141,22 +152,22 @@ class MigrationAuditor:
         except IndexError:
             return ""
 
-    def _is_chunker_call(self, node: ast.AST) -> bool:
-        """Check if a node is a call to a known chunker class."""
+    def _is_tracked_call(self, node: ast.AST) -> bool:
+        """Check if a node is a call to a known tracked class."""
         if not isinstance(node, ast.Call):
             return False
         if not isinstance(node.func, ast.Name):
             return False
-        return node.func.id in CHUNKER_CLASS_NAMES
+        return node.func.id in TRACKED_CLASS_NAMES
 
     def _get_chunker_instances(self, tree: ast.AST) -> set:
-        """Find all chunker class instantiations in the AST."""
+        """Find all tracked class instantiations in the AST."""
         return {
             target.id
             for node in ast.walk(tree)
             if isinstance(node, ast.Assign)
             and isinstance(node.value, ast.Call)
-            and self._is_chunker_call(node.value)
+            and self._is_tracked_call(node.value)
             for target in node.targets
             if isinstance(target, ast.Name)
         }
@@ -288,7 +299,9 @@ class MigrationAuditor:
 
             if method_name in LEGACY_METHODS:
                 style = (
-                    "bold red" if method_name in ("preview_sentences",) else "yellow"
+                    "bold red"
+                    if method_name in ("preview_sentences", "detected_top_language")
+                    else "yellow"
                 )
                 self._has_legacy_issues = True
                 self._print_issue(
