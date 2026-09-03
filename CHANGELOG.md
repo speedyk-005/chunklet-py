@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Document processor registry global**: Removed the global `custom_processor_registry` singleton. `CustomProcessorRegistry` is now a plain instance you create and pass to `DocumentChunker(processor_registry=...)`.
 - **`sentence_splitter` constructor parameter**: Removed from `DocumentChunker` and `PlainTextChunker`; both now always use a default `SentenceSplitter`.
 - **Hard dependency on `py3langid` and `indic-nlp-library`**: No longer installed by default. Both pulled in heavy dependencies (`numpy`, `pandas`, `morfessor`) that most users don't need. They're now optional extras and this significantly reduces the default install size.
+- **`SentenceSplitter.detected_top_language()`**: Removed as a public method. Language detection is now the standalone `detect_top_language()` in `chunklet.common.lang_detection`. (Before v2 it lived in `chunklet.utils` as `detect_text_language`.)
 
 ---
 

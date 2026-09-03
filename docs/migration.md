@@ -105,6 +105,38 @@ If you only ever used specific language codes like `lang="en"`, you don't need t
     pip install 'chunklet-py[auto]'
     ```
 
+### Language detection moved to `common`
+
+Language detection is no longer a method on `SentenceSplitter`. It's now a standalone function at `chunklet.common.lang_detection.detect_top_language()`, so you can call it without constructing a splitter.
+
+This affects two ways you may have used it before:
+
+- The legacy `chunklet.utils.detect_text_language()` from v1/v2.
+- `SentenceSplitter.detected_top_language()` from v2.
+
+=== "Before (v2.x.x)"
+
+    ```py
+    from chunklet.sentence_splitter import SentenceSplitter
+
+    splitter = SentenceSplitter(lang="auto")
+    lang_code, confidence = splitter.detected_top_language(text)
+    ```
+
+=== "After (v3.x.x)"
+
+    ```py
+    from chunklet.common.lang_detection import detect_top_language
+
+    lang_code, confidence = detect_top_language(text)
+    ```
+
+It still needs `py3langid`, so install the extra if you haven't:
+
+```bash
+pip install 'chunklet-py[auto]'
+```
+
 ### Constraints moved to the constructor
 
 Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, `offset`, `lang`) used to be passed per call to `chunk_text()`, `chunk_file()`, `chunk_texts()`, `chunk_files()`, `split_text()`, and `split_file()`. They now live on the chunker/splitter instance, set once at construction and mutable as plain attributes. The same applies to `CodeChunker` (`max_tokens`, `max_lines`, `max_functions`) and `SentenceSplitter` (`lang`).
