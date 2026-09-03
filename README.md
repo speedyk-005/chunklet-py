@@ -1,7 +1,9 @@
-# 🧩 Chunklet-py
+<div align="center">
+  <h1><b>🧩 chunklet-py</b></h1>
+</div>
 
 <p align="center">
-  <img src="https://github.com/speedyk-005/chunklet-py/blob/main/logo_with_tagline.svg?raw=true" alt="Chunklet-py Logo" width="300"/>
+  <img src="https://raw.githubusercontent.com/speedyk-005/chunklet-py/main/logo_with_tagline.svg" alt="Chunklet-py Logo" width="300"/>
 </p>
 
 <p align="center">
