@@ -61,7 +61,7 @@ for sentence in sentences:
 ??? success "Click to show output"
     ```linenums="0"
     2025-11-02 16:27:29.277 | WARNING  | chunklet.sentence_splitter.sentence_splitter:split_text:192 - The language is set to `auto`. Consider setting the `lang` parameter to a specific language to improve reliability.
-    2025-11-02 16:27:29.316 | INFO     | chunklet.sentence_splitter.sentence_splitter:detected_top_language:146 - Language detection: 'en' with confidence 10/10.
+    2025-11-02 16:27:29.316 | INFO     | chunklet.sentence_splitter.sentence_splitter:split_text:158 - Language detection: 'en' with confidence 10/10.
     2025-11-02 16:27:29.447 | INFO     | chunklet.sentence_splitter.sentence_splitter:split_text:166 - Text splitted into sentences. Total sentences detected: 19
     She loves cooking.
     He studies AI.
@@ -103,49 +103,6 @@ for i, sentence in enumerate(sentences):
     Sentence 1: This is the first sentence.
     Sentence 2: This is the second sentence.
     Sentence 3: And the third.
-    ```
-
-### Detecting Top Languages 🎯
-
-Here's how you can detect the top language of a given text using the `SentenceSplitter`:
-
-``` py linenums="1"
-from chunklet.sentence_splitter import SentenceSplitter
-
-lang_texts = {
-    "en": "This is a sentence. This is another sentence. Mr. Smith went to Washington. He said 'Hello World!'. The quick brown fox jumps over the lazy dog.",
-    "fr": "Ceci est une phrase. Voici une autre phrase. M. Smith est allé à Washington. Il a dit 'Bonjour le monde!'. Le renard brun et rapide saute par-dessus le chien paresseux.",
-    "es": "Esta es una oración. Aquí hay otra oración. El Sr. Smith fue a Washington. Dijo '¡Hola Mundo!'. El rápido zorro marrón salta sobre el perro perezoso.",
-    "de": "Dies ist ein Satz. Hier ist ein weiterer Satz. Herr Smith ging nach Washington. Er sagte 'Hallo Welt!'. Der schnelle braune Fuchs springt über den faulen Hund.",
-    "hi": "यह एक वाक्य है। यह एक और वाक्य है। श्री स्मिथ वाशिंगटन गए। उसने कहा 'नमस्ते दुनिया!'। तेज भूरा लोमड़ी आलसी कुत्ते पर कूदता है।",
-}
-
-splitter = SentenceSplitter(lang="auto")
-
-for lang, text in lang_texts.items():
-    detected_lang, confidence = splitter.detected_top_language(text)
-    print(f"Original language: {lang}")
-    print(f"Detected language: {detected_lang} with confidence {confidence:.2f}")
-    print("-" * 20)
-```
-
-??? success "Click to show output"
-    ```linenums="0"
-    Original language: en
-    Detected language: en with confidence 1.00
-    --------------------
-    Original language: fr
-    Detected language: fr with confidence 1.00
-    --------------------
-    Original language: es
-    Detected language: es with confidence 1.00
-    --------------------
-    Original language: de
-    Detected language: de with confidence 1.00
-    --------------------
-    Original language: hi
-    Detected language: hi with confidence 1.00
-    --------------------
     ```
 
 ??? info "API Reference"
