@@ -198,6 +198,35 @@ def test_chunk_file_json_backward_compatible(visualizer_server):
     assert result["stats"]["chunk_count"] > 1
 
 
+def test_chunk_file_lang_param(visualizer_server):
+    """Test that a lang param submitted from the UI is applied to the chunker."""
+    url = f"{visualizer_server['url']}/api/chunk"
+
+    sample_file_path = Path(__file__).parent.parent / "samples" / "sample_text.txt"
+    assert sample_file_path.exists(), f"Sample file not found: {sample_file_path}"
+
+    data = {
+        "mode": "document",
+        "params": json.dumps({"lang": "fr", "max_sentences": 3}),
+    }
+    response = _multipart_post(
+        url,
+        file_content=sample_file_path.read_bytes(),
+        file_name="sample_text.txt",
+        fields=data,
+        headers=None,
+    )
+    assert response.getcode() == 200
+
+    result = json.loads(response.read().decode())
+    assert result["stats"]["mode"] == "document"
+    assert result["stats"]["chunk_count"] > 0
+
+    # The lang value must have propagated to the shared document chunker via
+    # the backend's setattr loop, not just been accepted for this request.
+    assert visualizer_server["visualizer"].document_chunker.lang == "fr"
+
+
 def test_chunk_file_invalid_format(visualizer_server):
     """Test uploading invalid file format."""
     url = f"{visualizer_server['url']}/api/chunk"
