@@ -170,6 +170,25 @@ Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks
     chunks = chunker.chunk_text(text)
     ```
 
+### Extras renamed
+
+The `structured-document` extra is renamed to `struct-doc`, and the `document` alias for it is gone. The old `visualization` extra is gone too.
+
+=== "Before (v2.x.x)"
+
+    ```bash
+    pip install 'chunklet-py[structured-document]'
+    pip install 'chunklet-py[document]'
+    pip install 'chunklet-py[visualization]'
+    ```
+
+=== "After (v3.x.x)"
+
+    ```bash
+    pip install 'chunklet-py[struct-doc]'
+    pip install 'chunklet-py[viz]'
+    ```
+
 ---
 
 ## Coming from v1
