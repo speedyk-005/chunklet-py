@@ -256,6 +256,21 @@ def test_span_finder(text: str, query: str, expected: tuple[int, int]):
     assert result == expected
 
 
+def test_span_finder_repeated_text_advances():
+    """Repeated text must resolve to its own occurrence, not reuse the first span."""
+    from chunklet.document_chunker.span_finder import DeterministicSpanFinder
+
+    text = "Apple pie is good. Apple pie is great."
+    finder = DeterministicSpanFinder(text)
+
+    first = finder.find_span("Apple pie is")
+    second = finder.find_span("Apple pie is")
+
+    assert first[0] == text.index("Apple pie is")
+    assert second[0] == text.rindex("Apple pie is")
+    assert first != second
+
+
 # --- Batch chunking Tests---
 
 

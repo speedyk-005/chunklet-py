@@ -6,7 +6,7 @@ class DeterministicSpanFinder:
     ~2x performance improvement by avoiding backtracking and complex pattern matching.
     """
 
-    __slots__ = ("full_text", "cleaned_full_text", "index_map")
+    __slots__ = ("full_text", "cleaned_full_text", "index_map", "_last_end")
 
     def __init__(self, text: str):
         """
@@ -17,6 +17,7 @@ class DeterministicSpanFinder:
         """
         self.full_text = text
         self.cleaned_full_text, self.index_map = self._build_index_map(text)
+        self._last_end = 0
 
     def _build_index_map(self, text: str) -> tuple[str, dict[int, int]]:
         """Build a cleaned text string and index map for fast searching.
@@ -57,8 +58,10 @@ class DeterministicSpanFinder:
         """
         stripped = text.strip()
 
-        if (start := self.full_text.find(stripped)) != -1:
-            return start, start + len(stripped)
+        if (start := self.full_text.find(stripped, self._last_end)) != -1:
+            end = start + len(stripped)
+            self._last_end = end
+            return start, end
 
         cleaned_text = "".join(ch for ch in text if ch.isalnum() or ch == "#")
 
