@@ -127,7 +127,7 @@ Want to unlock more Chunklet-py superpowers? Add these optional dependencies bas
 
 *   **Structured Documents:** For handling `.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, and other document formats:
     ```bash
-    pip install "chunklet-py[structured-document]"
+    pip install "chunklet-py[struct-doc]"
     ```
 *   **Code Chunking:** For Language-agnostic code chunking features:
     ```bash
@@ -143,8 +143,6 @@ Want to unlock more Chunklet-py superpowers? Add these optional dependencies bas
     ```
 *   **Visualization:** For the interactive web-based chunk visualizer:
     ```bash
-    pip install "chunklet-py[visualization]"
-    # Or
     pip install "chunklet-py[viz]"
     ```
 * **All Extras:** To install all optional dependencies:

@@ -56,7 +56,7 @@ indic = ["indic-nlp-library>=0.92,<1.0"]
 # Language detection; required for lang="auto"
 auto = ["py3langid>=0.4.0,<0.5.0"]
 
-structured-document = [
+struct-doc = [
   "pdfminer.six>=20250324",
   "python-docx>=1.2.0,<2.0",
   "mammoth>=1.9.1,<2.0",
@@ -74,15 +74,12 @@ structured-document = [
   "openpyxl>=3.1.5,<4.0",
 ]
 
-# Kept for compatibility
-document = ["chunklet-py[structured-document]"]
-
 code = [
   "defusedxml>=0.7.1,<0.8",
   "littletree>=0.8.7,<1.0",
 ]
 
-visualization = [
+viz = [
   "uvicorn>=0.35.0,<0.53",
   "fastapi>=0.116.0,<0.142",
   "python-multipart>=0.0.20,<0.33",
@@ -92,9 +89,7 @@ visualization = [
   "aiofiles==25.1.0",
 ]
 
-viz = ["chunklet-py[visualization]"]
-
-all = ["chunklet-py[structured-document,code,visualization,auto,indic]"]
+all = ["chunklet-py[struct-doc,code,viz,auto,indic]"]
 
 dev = [
   "pytest>=8.3.5",
@@ -111,7 +106,7 @@ docs = [
   "pymdown-extensions>=10.16.1",
 ]
 
-dev-all = ["chunklet-py[dev,docs,structured-document,code,visualization,auto,indic]"]
+dev-all = ["chunklet-py[dev,docs,struct-doc,code,viz,auto,indic]"]
 
 [project.urls]
 Homepage = "https://github.com/speedyk-005/chunklet-py"

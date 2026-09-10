@@ -528,7 +528,7 @@ def chunk_command(
         if DocumentChunker is None:
             typer.echo(
                 "Error: DocumentChunker dependencies not available.\n"
-                "Please install with: pip install chunklet-py[structured-document]",
+                "Please install with: pip install chunklet-py[struct-doc]",
                 err=True,
             )
             raise typer.Exit(code=1)
@@ -634,7 +634,7 @@ def visualize_command(
     if Visualizer is None:
         typer.echo(
             "Error: Visualization dependencies not available.\n"
-            "Please install with: pip install chunklet-py[visualization]",
+            "Please install with: pip install chunklet-py[viz]",
             err=True,
         )
         raise typer.Exit(code=1)

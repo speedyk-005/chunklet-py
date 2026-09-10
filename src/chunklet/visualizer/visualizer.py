@@ -69,14 +69,14 @@ class Visualizer:
             raise ImportError(
                 "The 'fastapi' library is not installed. "
                 "Please install it with 'pip install fastapi>=0.115.12' or install the visualization extras "
-                "with 'pip install 'chunklet-py[visualization]''"
+                "with 'pip install 'chunklet-py[viz]''"
             )
 
         if msgpack is None:
             raise ImportError(
                 "The 'msgpack' library is not installed. "
                 "Please install it with 'pip install msgpack>=1.0.8' or install the visualization extras "
-                "with 'pip install 'chunklet-py[visualization]''"
+                "with 'pip install 'chunklet-py[viz]''"
             )
 
         self.host = host
@@ -171,7 +171,7 @@ class Visualizer:
             raise HTTPException(
                 400,
                 "charset-normalizer library is not available. Please install visualization dependencies."
-                "with 'pip install 'chunklet-py[visualization]''",
+                "with 'pip install 'chunklet-py[viz]''",
             )
 
         content = await file.read()
@@ -242,7 +242,7 @@ class Visualizer:
             raise ImportError(
                 "The 'uvicorn' library is not installed. "
                 "Please install it with 'pip install uvicorn>=0.34.0' or install the visualization extras "
-                "with 'pip install 'chunklet-py[visualization]''"
+                "with 'pip install 'chunklet-py[viz]''"
             )
 
         print(" =" * 20)
