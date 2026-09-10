@@ -12,10 +12,10 @@ pip install chunklet-py -U
 
 No extra dependencies needed - `DocumentChunker` is ready to roll right out of the box for plain text! 🚀
 
-For document processing (PDFs, DOCX, EPUB, ODT, Excel, etc.), install the structured-document extra:
+For structured document processing (PDFs, DOCX, EPUB, ODT, Excel, etc.), install the struct-doc extra:
 
 ```bash
-pip install chunklet-py[structured-document]
+pip install chunklet-py[struct-doc]
 ```
 
 This installs all the document processing dependencies needed to handle PDFs, DOCX, EPUB, ODT, Excel, and more! 📚

@@ -8,7 +8,7 @@
 ## Quick Install
 
 ```bash
-pip install chunklet-py[visualization]
+pip install chunklet-py[viz]
 ```
 
 ## Text Chunk Visualizer: Your Window into the Chunking Abyss
@@ -24,7 +24,7 @@ No more guessing games - see your chunking results in real-time!
 First, make sure you have the visualization dependencies:
 
 ```bash
-pip install "chunklet-py[visualization]"
+pip install "chunklet-py[viz]"
 ```
 
 Here's the basic code to get it running:
