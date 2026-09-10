@@ -382,24 +382,10 @@ docs = [
     { name = "mkdocstrings-python" },
     { name = "pymdown-extensions" },
 ]
-document = [
-    { name = "docutils" },
-    { name = "ebooklib" },
-    { name = "mailparse" },
-    { name = "mammoth" },
-    { name = "markdownify" },
-    { name = "odfpy" },
-    { name = "openpyxl" },
-    { name = "pdfminer-six" },
-    { name = "pylatexenc" },
-    { name = "python-docx" },
-    { name = "python-pptx" },
-    { name = "striprtf" },
-]
 indic = [
     { name = "indic-nlp-library" },
 ]
-structured-document = [
+struct-doc = [
     { name = "docutils" },
     { name = "ebooklib" },
     { name = "mailparse" },
@@ -412,13 +398,6 @@ structured-document = [
     { name = "python-docx" },
     { name = "python-pptx" },
     { name = "striprtf" },
-]
-visualization = [
-    { name = "aiofiles" },
-    { name = "fastapi" },
-    { name = "msgpack" },
-    { name = "python-multipart" },
-    { name = "uvicorn" },
 ]
 viz = [
     { name = "aiofiles" },
@@ -430,52 +409,50 @@ viz = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiofiles", marker = "extra == 'visualization'", specifier = "==25.1.0" },
+    { name = "aiofiles", marker = "extra == 'viz'", specifier = "==25.1.0" },
     { name = "charset-normalizer", specifier = ">=3.4.2,<4.0" },
-    { name = "chunklet-py", extras = ["dev", "docs", "structured-document", "code", "visualization", "auto", "indic"], marker = "extra == 'dev-all'" },
-    { name = "chunklet-py", extras = ["structured-document"], marker = "extra == 'document'" },
-    { name = "chunklet-py", extras = ["structured-document", "code", "visualization", "auto", "indic"], marker = "extra == 'all'" },
-    { name = "chunklet-py", extras = ["visualization"], marker = "extra == 'viz'" },
+    { name = "chunklet-py", extras = ["dev", "docs", "struct-doc", "code", "viz", "auto", "indic"], marker = "extra == 'dev-all'" },
+    { name = "chunklet-py", extras = ["struct-doc", "code", "viz", "auto", "indic"], marker = "extra == 'all'" },
     { name = "defusedxml", marker = "extra == 'code'", specifier = ">=0.7.1,<0.8" },
-    { name = "docutils", marker = "extra == 'structured-document'", specifier = ">=0.21.2,<0.24" },
-    { name = "ebooklib", marker = "extra == 'structured-document'", specifier = ">=0.19,<0.30" },
-    { name = "fastapi", marker = "extra == 'visualization'", specifier = ">=0.116.0,<0.142" },
+    { name = "docutils", marker = "extra == 'struct-doc'", specifier = ">=0.21.2,<0.24" },
+    { name = "ebooklib", marker = "extra == 'struct-doc'", specifier = ">=0.19,<0.30" },
+    { name = "fastapi", marker = "extra == 'viz'", specifier = ">=0.116.0,<0.142" },
     { name = "indic-nlp-library", marker = "extra == 'indic'", specifier = ">=0.92,<1.0" },
     { name = "littletree", marker = "extra == 'code'", specifier = ">=0.8.7,<1.0" },
     { name = "loguru", specifier = ">=0.7.3,<1.0" },
-    { name = "mailparse", marker = "extra == 'structured-document'", specifier = ">=1.0.1,<2.0" },
-    { name = "mammoth", marker = "extra == 'structured-document'", specifier = ">=1.9.1,<2.0" },
-    { name = "markdownify", marker = "extra == 'structured-document'", specifier = ">=1.1.0,<2.0" },
+    { name = "mailparse", marker = "extra == 'struct-doc'", specifier = ">=1.0.1,<2.0" },
+    { name = "mammoth", marker = "extra == 'struct-doc'", specifier = ">=1.9.1,<2.0" },
+    { name = "markdownify", marker = "extra == 'struct-doc'", specifier = ">=1.1.0,<2.0" },
     { name = "mike", marker = "extra == 'docs'", specifier = ">=2.1.2" },
     { name = "mkdocs-api-autonav", marker = "extra == 'docs'", specifier = ">=0.4.0" },
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.6.20" },
     { name = "mkdocstrings-python", marker = "extra == 'docs'", specifier = ">=1.17.0" },
     { name = "more-itertools", specifier = ">=10.6.0,<12.0" },
     { name = "mpire", specifier = ">=2.10.2,<3.0" },
-    { name = "msgpack", marker = "extra == 'visualization'", specifier = ">=1.1.0,<2.0" },
-    { name = "odfpy", marker = "extra == 'structured-document'", specifier = ">=1.4.1,<2.0" },
-    { name = "openpyxl", marker = "extra == 'structured-document'", specifier = ">=3.1.5,<4.0" },
-    { name = "pdfminer-six", marker = "extra == 'structured-document'", specifier = ">=20250324" },
+    { name = "msgpack", marker = "extra == 'viz'", specifier = ">=1.1.0,<2.0" },
+    { name = "odfpy", marker = "extra == 'struct-doc'", specifier = ">=1.4.1,<2.0" },
+    { name = "openpyxl", marker = "extra == 'struct-doc'", specifier = ">=3.1.5,<4.0" },
+    { name = "pdfminer-six", marker = "extra == 'struct-doc'", specifier = ">=20250324" },
     { name = "py3langid", marker = "extra == 'auto'", specifier = ">=0.4.0,<0.5.0" },
     { name = "pydantic", specifier = ">=2.11.0,<3.0" },
-    { name = "pylatexenc", marker = "extra == 'structured-document'", specifier = "==2.11" },
+    { name = "pylatexenc", marker = "extra == 'struct-doc'", specifier = "==2.11" },
     { name = "pymdown-extensions", marker = "extra == 'docs'", specifier = ">=10.16.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.5" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.2.1" },
     { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.14.1" },
-    { name = "python-docx", marker = "extra == 'structured-document'", specifier = ">=1.2.0,<2.0" },
-    { name = "python-multipart", marker = "extra == 'visualization'", specifier = ">=0.0.20,<0.33" },
-    { name = "python-pptx", marker = "extra == 'structured-document'", specifier = ">=1.0.0,<2.0" },
+    { name = "python-docx", marker = "extra == 'struct-doc'", specifier = ">=1.2.0,<2.0" },
+    { name = "python-multipart", marker = "extra == 'viz'", specifier = ">=0.0.20,<0.33" },
+    { name = "python-pptx", marker = "extra == 'struct-doc'", specifier = ">=1.0.0,<2.0" },
     { name = "regex", specifier = ">=2025.7.29" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.14.14" },
     { name = "sentencex", marker = "(platform_machine != 'aarch64' and platform_machine != 'armv7l') or sys_platform != 'linux'", specifier = ">=1.0.0,<2.0" },
     { name = "sentencex", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'armv7l' and sys_platform == 'linux')", specifier = "<=0.6.1" },
-    { name = "striprtf", marker = "extra == 'structured-document'", specifier = ">=0.0.29,<0.34" },
+    { name = "striprtf", marker = "extra == 'struct-doc'", specifier = ">=0.0.29,<0.34" },
     { name = "typer", specifier = ">=0.19.0,<0.30" },
-    { name = "uvicorn", marker = "extra == 'visualization'", specifier = ">=0.35.0,<0.53" },
+    { name = "uvicorn", marker = "extra == 'viz'", specifier = ">=0.35.0,<0.53" },
     { name = "yasbd-lib", specifier = ">=0.16.1,<1.0" },
 ]
-provides-extras = ["indic", "auto", "structured-document", "document", "code", "visualization", "viz", "all", "dev", "docs", "dev-all"]
+provides-extras = ["indic", "auto", "struct-doc", "code", "viz", "all", "dev", "docs", "dev-all"]
 
 [[package]]
 name = "click"

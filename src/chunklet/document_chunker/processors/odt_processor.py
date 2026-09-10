@@ -38,7 +38,7 @@ class ODTProcessor(BaseProcessor):
             raise ImportError(
                 "The 'odfpy' library is not installed. "
                 "Please install it with 'pip install odfpy>=1.4.1' or install the document processing extras "
-                "with 'pip install chunklet-py[structured-document]'"
+                "with 'pip install chunklet-py[struct-doc]'"
             ) from e
 
         self.file_path = file_path

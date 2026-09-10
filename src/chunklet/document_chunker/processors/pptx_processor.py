@@ -55,7 +55,7 @@ class PPTXProcessor(BaseProcessor):
             raise ImportError(
                 "The 'python-pptx' library is not installed. "
                 "Please install it with 'pip install python-pptx>=1.0.0' or install the document processing extras "
-                "with 'pip install 'chunklet-py[structured-document]''"
+                "with 'pip install 'chunklet-py[struct-doc]''"
             ) from e
 
         self.prs = Presentation(file_path)

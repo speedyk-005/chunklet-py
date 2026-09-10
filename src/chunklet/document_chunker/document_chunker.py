@@ -250,7 +250,7 @@ class DocumentChunker(BaseChunker):
                 raise ImportError(
                     "The 'striprtf' library is not installed. "
                     "Please install it with 'pip install 'striprtf>=0.0.29'' or install the document processing extras "
-                    "with 'pip install chunklet-py[structured-document]'"
+                    "with 'pip install chunklet-py[struct-doc]'"
                 )
             return rtf_to_text(content)
         else:  # For .txt, .md, and others handled by simple read
