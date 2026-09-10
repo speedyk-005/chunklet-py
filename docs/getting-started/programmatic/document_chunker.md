@@ -22,22 +22,22 @@ This installs all the document processing dependencies needed to handle PDFs, DO
 
 ## Taming Your Text and Documents with Precision
 
-Got a wall of text that's overwhelming? The `DocumentChunker` transforms unruly paragraphs into perfectly sized, context-aware chunks. Perfect for RAG systems and document analysis.
+Got a wall of text that's overwhelming? The `DocumentChunker` transforms unruly paragraphs into sized, context-aware chunks. Perfect for RAG systems and document analysis.
 
 It preserves meaning and flow — no confusing puzzle pieces.
 
 ### Where `DocumentChunker` Really Shines
 
-The `DocumentChunker` comes packed with smart features that make it your go-to text wrangling sidekick:
+The `DocumentChunker` comes loaded with features that make it your go-to text wrangling sidekick:
 
--  **Flexible Composable Constraints:** Ultimate control over your chunks! Mix and match limits based on sentences, tokens, or section breaks (headings, horizontal rules, `<details>` tags). Craft exactly the chunk size you need with precision control! 🎯
--  **Intelligent Overlap:** Adds smart overlaps between chunks so your text flows smoothly. No more jarring transitions that leave readers scratching their heads!
--  **Extensive Multilingual Support:** Speaks over 60 languages fluently, thanks to our trusty sentence splitter. Global domination through better text chunking! 🌍
--  **Customizable Token Counting:** Plug in your own token counter for perfect alignment with different LLMs. Because one size definitely doesn't fit all models!
+-  **Flexible Composable Constraints:** Full control over your chunks! Mix and match limits based on sentences, tokens, or section breaks (headings, horizontal rules, `<details>` tags). Craft exactly the chunk size you need. 🎯
+-  **Overlap:** Adds overlap between chunks so your text flows smoothly. No more jarring transitions that leave readers scratching their heads!
+-  **Multilingual Support:** Speaks over 60 languages fluently, thanks to our trusty sentence splitter. Global domination through better text chunking! 🌍
+-  **Customizable Token Counting:** Plug in your own token counter for alignment with different LLMs. Because one size definitely doesn't fit all models!
 -  **Memory-Conscious Operation:** Handles massive documents efficiently by yielding chunks one at a time. Your RAM will thank you later! 💾
 -  **Multi-Format Maestro:** From corporate DOCX boardrooms to academic PDF libraries, this chunker speaks every file language fluently! Handles `.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx` files like a pro. 🌍
--  **Metadata Magician:** Not just text - it automatically enriches your chunks with valuable metadata. Your chunks come with bonus context! 📊
--  **Bulk Processing Powerhouse:** Got a mountain of documents to conquer? No problem! This powerhouse efficiently processes multiple documents in parallel. 📚⚡
+-  **Metadata Magician:** Not just text - it automatically enriches your chunks with metadata. Your chunks come with bonus context! 📊
+-  **Bulk Processing Powerhouse:** Got a mountain of documents to conquer? No problem! This powerhouse processes multiple documents in parallel. 📚⚡
 -  **Pluggable Processor Power:** Have a mysterious file format that's one-of-a-kind? Plug in your own custom processors - `DocumentChunker` is ready for any challenge you throw at it! 🔌🛠️
 
 !!! note "No Scanned PDF Support"
@@ -340,7 +340,7 @@ chunks = chunker.chunk_file(path=file_path)
 
 ## Batch: Chunk Multiple Items! 📚
 
-While `chunk_text` is perfect for single texts and `chunk_file` for single files, `chunk_texts` and `chunk_files` are your power players for processing multiple texts or files in parallel. They use memory-friendly generators so you can handle massive collections with ease.
+While `chunk_text` handles single texts and `chunk_file` single files, `chunk_texts` and `chunk_files` are for processing multiple texts or files in parallel. They use memory-friendly generators so you can work through large collections without loading everything at once.
 
 - `chunk_texts()` - process multiple raw text strings
 - `chunk_files()` - process multiple file paths

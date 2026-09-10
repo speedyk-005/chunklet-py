@@ -19,7 +19,7 @@ chunklet visualize --help
 
 ## The `split` Command: Precision Sentence Segmentation ✂️
 
-Need to break down text into individual sentences with surgical precision? The `split` command is your go-to! It leverages `chunklet`'s powerful [`SentenceSplitter`](programmatic/sentence_splitter.md) to give you clean, segmented sentences.
+Need to break down text into individual sentences with surgical precision? The `split` command is your go-to! It uses `chunklet`'s [`SentenceSplitter`](programmatic/sentence_splitter.md) to give you clean, segmented sentences.
 
 ### Quick Facts for `split`
 
@@ -39,7 +39,7 @@ Need to break down text into individual sentences with surgical precision? The `
 
 #### Scenario 1: Splitting Text Directly (and Multilingually!)
 
-Segment a direct text input containing multiple languages into individual sentences, leveraging automatic language detection.
+Segment a direct text input containing multiple languages into individual sentences, using automatic language detection.
 
 ```bash
 chunklet split "This is the first sentence. Here is the second sentence, in French. C'est la vie! ¿Cómo estás?" --lang auto
@@ -57,7 +57,7 @@ chunklet split --source my_novel_chapter.txt --destination sentences.txt --lang 
 
 ## The `chunk` Command: Your Intelligent Chunking Workhorse!
 
-The `chunk` command is where the real magic happens! It's your versatile tool for breaking down text, documents, and even code into RAG-ready chunks. The "flavor" of chunking (plain text, document, or code) is determined by the flags you provide.
+The `chunk` command is where the chunking happens! It's your versatile tool for breaking down text, documents, and even code into RAG-ready chunks. The "flavor" of chunking (plain text, document, or code) is determined by the flags you provide.
 
 ### Key Flags for `chunk` (The Essentials!)
 
@@ -81,8 +81,8 @@ The `chunk` command is where the real magic happens! It's your versatile tool fo
 
 This is your bread-and-butter chunking for everyday text and diverse document types.
 
-*   **Default Behavior:** If neither `--doc` nor `--code` is specified, `chunklet` uses the [DocumentChunker](programmatic/document_chunker.md) for direct text input. The `DocumentChunker` is designed to transform unruly text into perfectly sized, context-aware chunks.
-*   **Document Power-Up:** Activate the [DocumentChunker](programmatic/document_chunker.md) with the `--doc` flag to process `.pdf`, `.docx`, `.odt`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.csv`, `.xlsx` and `.rtf` files! It intelligently extracts text and then applies the same robust chunking logic.
+*   **Default Behavior:** If neither `--doc` nor `--code` is specified, `chunklet` uses the [DocumentChunker](programmatic/document_chunker.md) for direct text input. The `DocumentChunker` transforms unruly text into context-aware chunks.
+*   **Document Power-Up:** Activate the [DocumentChunker](programmatic/document_chunker.md) with the `--doc` flag to process `.pdf`, `.docx`, `.odt`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.csv`, `.xlsx` and `.rtf` files! It extracts text and then applies the same chunking logic.
 
 #### Key Flags for Document Power-Up
 
@@ -250,7 +250,7 @@ chunklet chunk --doc \
 
 #### Scenario 3: Processing Multiple Specific Files with Advanced Hooks
 
-Process a selection of individual files, explicitly listing each one, and apply advanced chunking parameters. This demonstrates how to handle a non-directory batch of files, ensuring each is processed with metadata and error handling.
+Process a selection of individual files, explicitly listing each one, and apply advanced chunking parameters.
 
 ```bash
 chunklet chunk --doc \
@@ -265,7 +265,7 @@ chunklet chunk --doc \
 
 #### Scenario 4: Custom Token Counting with an External Script
 
-Align `chunklet`'s chunk sizes perfectly with your LLM's token limits using *any* external tokenizer you can imagine! Optionally set a timeout:
+Align `chunklet`'s chunk sizes with your LLM's token limits using any external tokenizer! Optionally set a timeout:
 
 ```bash
 chunklet chunk --text "Your text here" \
@@ -297,13 +297,13 @@ chunklet chunk --doc \
 
 Want to know *exactly* what kind of rich context `chunklet` attaches to your chunks? From source paths and character spans to document-specific properties and code AST details.
 
-👉 Head over to the [Metadata in Chunklet-py guide](../getting-started/metadata.md) to unlock all its secrets!
+👉 Head over to the [Metadata in Chunklet-py guide](../getting-started/metadata.md) to see everything it tracks!
 
 ---
 
 ## The `visualize` Command: Your Interactive Chunk Playground! 🎮
 
-Ready to see your chunking in action with a beautiful web interface? The `visualize` command launches Chunklet's interactive web visualizer - perfect for experimenting with parameters, seeing real-time results, and fine-tuning your chunking strategies!
+Ready to see your chunking in action with a web interface? The `visualize` command launches Chunklet's interactive web visualizer - perfect for experimenting with parameters, seeing real-time results, and fine-tuning your chunking strategies!
 
 !!! tip "Want programmatic control?"
     For code-based usage and detailed technical information, check out the [Text Chunk Visualizer documentation](programmatic/visualizer.md).
@@ -358,7 +358,7 @@ See the [Custom Tokenizers](../how-to/custom-tokenizer.md) guide for how to crea
 The visualizer will show you the URL to access it in your browser. Press `Ctrl+C` to stop the server when you're done!
 
 !!! info "REST API for Headless Automation! 🤖"
-    When running in headless mode, you can use the visualizer's REST API to programmatically upload files, chunk content, and retrieve results without any web interface! Perfect for automation scripts, CI/CD pipelines, or integrating chunking into your applications.
+    When running in headless mode, you can use the visualizer's REST API to programmatically upload files, chunk content, and retrieve results without a browser. Great for automation scripts, CI/CD pipelines, or integrating chunking into your applications.
 
     See the [Headless/REST API Usage](programmatic/visualizer.md#headlessrest-api-usage) section for complete examples of programmatic file processing.
 

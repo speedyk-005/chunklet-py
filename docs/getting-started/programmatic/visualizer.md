@@ -142,11 +142,11 @@ Open your browser to the URL shown in the terminal output. You'll find a clean i
     - Use the metadata views to understand chunk boundaries
     - The visualizer is perfect for comparing chunking strategies side-by-side
 
-    Go experiment! The visualizer makes it easy to see exactly what your settings produce, so you can fine-tune for optimal chunking.
+    Go experiment! The visualizer makes it easy to see exactly what your settings produce, so you can fine-tune your chunks.
 
 ### Headless/REST API Usage
 
-The `Visualizer` isn't just a web interface - it also provides a complete REST API for headless chunking operations. This means you can use Chunklet's interactive features programmatically without the web UI!
+The `Visualizer` provides a complete REST API for headless chunking operations. Chunk files programmatically without the web UI!
 
 #### Available Endpoints
 

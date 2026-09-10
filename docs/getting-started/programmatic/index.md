@@ -1,4 +1,4 @@
-Welcome to the programmatic interface! This is where you integrate Chunklet-py's chunking capabilities directly into your Python apps. Building RAG pipelines, data processing workflows, or custom AI solutions? We've got you covered.
+Welcome to the programmatic interface! This is where you integrate Chunklet-py's chunking capabilities directly into your Python apps.
 
 <div class="grid cards" markdown>
 
@@ -6,9 +6,9 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
     ---
 
-    Precisely splits text into semantically meaningful sentences across 60+ languages with intelligent detection and complex structure handling.
+    Splits text into sentences across 60+ languages with automatic language detection and complex structure handling.
 
-    Essential for preparing clean text data for NLP tasks, LLMs, and any application that needs accurate sentence boundaries.
+    Great for preparing clean text data for NLP tasks, LLMs, or any application that needs accurate sentence boundaries.
 
     [:octicons-arrow-right-24: Learn More](sentence_splitter.md)
     
@@ -16,9 +16,9 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
     ---
 
-    Transforms plain text and diverse document formats (`.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`) into perfectly sized, context-aware chunks with flexible composable constraints and intelligent overlap for optimal LLM and embedding performance.
+    Transforms plain text and diverse document formats (`.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`) into sized chunks with composable constraints and overlap for LLM and embedding pipelines.
 
-    Perfect for RAG systems, document analysis, and any workflow that needs smart text segmentation with full control over chunk sizes.
+    Great for RAG systems, document analysis, or any workflow that needs chunk size control.
 
     [:octicons-arrow-right-24: Learn More](document_chunker.md)
 
@@ -26,9 +26,9 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
     ---
 
-    Intelligently chunks source code while preserving logical structure and context and maintaining code semantics across functions, classes, and modules.
+    Chunks source code while preserving logical structure and maintaining code semantics across functions, classes, and modules.
 
-    Language-agnostic and lightweight - ideal for code understanding and generation tasks, analysis, documentation, and AI model training.
+    Language-agnostic and lightweight — great for code understanding, generation, analysis, documentation, and AI model training.
 
     [:octicons-arrow-right-24: Learn More](code_chunker.md)
 
@@ -38,7 +38,7 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
     Interactive web interface for real-time chunk visualization, parameter tuning, and exploring chunking results with live feedback.
 
-    Perfect for experimenting with chunking strategies, comparing different settings, and understanding how your text gets processed.
+    Great for experimenting with chunking strategies and comparing different settings.
 
     [:octicons-arrow-right-24: Learn More](visualizer.md)
 

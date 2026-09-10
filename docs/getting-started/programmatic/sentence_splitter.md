@@ -16,7 +16,7 @@ Think of it as a skilled linguist who knows where sentences actually end. It han
 
 The `SentenceSplitter` is a sophisticated system:
 
--  **Multilingual Support 🌍:** Handles over **60** languages with intelligent detection. See the [full list](../../supported-languages.md).
+-  **Multilingual Support 🌍:** Handles over **60** languages with automatic language detection. See the [full list](../../supported-languages.md).
 -  **Reliable Fallback 🛡️:** For unsupported languages, a rule-based fallback kicks in.
 -  **Output Refinement ✨:** Removes empty sentences and fixes punctuation.
 

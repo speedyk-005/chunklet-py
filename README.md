@@ -51,7 +51,7 @@ Smart chunking solves this by:
 
 ## 🤔 So What's Chunklet-py Anyway? (And Why Should You Care?)
 
-**Chunklet-py** is a developer-friendly text splitting library designed to be the most versatile chunking solution — for devs, researchers, and AI engineers. It goes way beyond basic character counting. I built this because I was tired of terrible chunking options. Chunklet-py intelligently chunks text, documents, and code into meaningful, context-aware pieces — perfect for RAG pipelines and LLM applications.
+**Chunklet-py** is a developer-friendly text splitting library for devs, researchers, and AI engineers. It goes way beyond basic character counting. I built this because I was tired of terrible chunking options. Chunklet-py intelligently chunks text, documents, and code into meaningful, context-aware pieces — perfect for RAG pipelines and LLM applications.
 
 Key features:
 
@@ -71,15 +71,15 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 
 | Feature | Why it's awesome |
 | :--- | :--- |
-| 🚀 **Blazingly Fast** | Leverages efficient parallel processing to chunk large volumes of content with remarkable speed. |
-| 🪶 **Featherlight Footprint** | Designed to be lightweight and memory-efficient, ensuring optimal performance without unnecessary overhead. |
-| 🗂️ **Rich Metadata for RAG** | Enriches chunks with valuable, context-aware metadata (source, span, document properties, code AST details) crucial for advanced RAG and LLM applications. |
-| 🔧 **Infinitely Customizable** | Offers extensive customization options, from pluggable token counters to custom sentence splitters and processors. |
-| 🌐 **Multilingual Mastery** | Supports over 60 natural languages for text and document chunking with intelligent detection and language-specific algorithms. |
-| 🧑‍💻 **Code-Aware Intelligence** | Language-agnostic code chunking that understands and preserves the structural integrity of your source code. |
-| 🎯 **Precision Chunking** | Flexible chunking with configurable limits based on sentences, tokens, sections, lines, and functions. |
-| 📄 **Document Format Mastery** | Processes a wide array of document formats including `.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`. |
-| 💻 **Triple Interface: CLI, Library & Web** | Use it as a command-line tool, import as a library for deep integration, or launch the interactive web visualizer for real-time chunk exploration and parameter tuning. |
+| 🚀 **Blazingly Fast** | Parallel processing to chunk large volumes of content quickly. |
+| 🪶 **Featherlight Footprint** | Lightweight and memory-efficient, no unnecessary overhead. |
+| 🗂️ **Rich Metadata for RAG** | Chunks include context-aware metadata (source, span, document properties, code AST details) for RAG and LLM pipelines. |
+| 🔧 **Infinitely Customizable** | Pluggable token counters, custom sentence splitters, custom processors — mix and match. |
+| 🌐 **Multilingual Mastery** | Supports 60+ languages for text and document chunking with automatic detection and language-specific algorithms. |
+| 🧑‍💻 **Code-Aware Intelligence** | Language-agnostic code chunking that preserves the structural integrity of your source code. |
+| 🎯 **Precision Chunking** | Configurable limits based on sentences, tokens, sections, lines, and functions. |
+| 📄 **Document Format Mastery** | Handles `.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`. |
+| 💻 **Triple Interface: CLI, Library & Web** | Command-line tool, importable library, or interactive web visualizer for real-time chunk exploration and parameter tuning. |
 
 
 And that's just the start - there's plenty more to explore!
@@ -314,7 +314,7 @@ chunklet [COMMAND] [OPTIONS*]
 
 ## How Chunklet-py Compares
 
-While there are other chunking libraries available, Chunklet-py stands out for its unique combination of versatility, performance, and ease of use. Here's a quick look at how it compares to some of the alternatives:
+While there are other chunking libraries available, Chunklet-py offers versatility, performance, and ease of use in one lightweight package. Here's a quick look at how it compares to some of the alternatives:
 
 | Library | Key Differentiator | Focus |
 | :--- | :--- | :--- |
