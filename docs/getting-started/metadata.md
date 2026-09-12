@@ -1,16 +1,16 @@
 # Metadata in Chunklet-py: Your Chunk's Story 📖
 
-Ever wondered where your chunks come from and what makes them tick? 🤔 Chunklet-py's metadata system tells the whole story! Each chunk comes with rich contextual information about its origin, location, and characteristics. Think of metadata as your chunk's detailed biography - the who, what, when, and where of your text.
+Ever wondered where your chunks come from and what makes them tick? 🤔 Chunklet-py's metadata system tells the whole story! Each chunk comes with contextual information about its origin, location, and characteristics. Think of metadata as your chunk's detailed biography - the who, what, when, and where of your text.
 
 Every chunk is wrapped in a handy [`DotDict`][chunklet.common.dotdict.DotDict] object with a `metadata` attribute. This metadata dictionary is your treasure trove of chunk insights. Access it easily with dot notation (`chunk.metadata`) or dictionary-style (`chunk["metadata"]`) - your choice!
 
 ## Common Metadata: The Essentials 📋 {#common-metadata}
 
-No matter which chunker you use, every chunk includes these fundamental metadata fields. Think of them as your chunk's basic information - the essentials you need to know.
+No matter which chunker you use, every chunk includes these metadata fields. Think of them as your chunk's basic information.
 
 *   **`chunk_num`** (int): Your chunk's sequential ID number within each source - perfect for keeping things organized
 *   **`span`** (tuple[int, int]): Character position coordinates showing exactly where this chunk sits in the original text
-*   **`source`** (str): Where did this chunk come from? (The origin story!)
+*   **`source`** (str): Where did this chunk come from?
      *   **File processing**: Absolute path to the file (for [DocumentChunker](programmatic/document_chunker.md) or [CodeChunker](programmatic/code_chunker.md))
      *   **CLI text input**: `"stdin"` (because it came from standard input)
      *   **Document chunker Text input**: Only included if you provide it via `base_metadata` parameter
@@ -22,11 +22,11 @@ The `DocumentChunker` provides comprehensive metadata for both text and file inp
 
 ### Text Input
 
-Keeps things straightforward and clean. Your chunks include the essential [Common Metadata](#common-metadata) fields (`chunk_num` and `span`). No frills, just the basics - perfect when you want clean, minimal metadata without any extra baggage. Additional metadata can be provided via the `base_metadata` parameter.
+Keeps things straightforward and clean. Your chunks include the essential [Common Metadata](#common-metadata) fields (`chunk_num` and `span`). No frills, just the basics. Additional metadata can be provided via the `base_metadata` parameter.
 
 ### File Input
 
-Need more context? File input's got you covered! Provides comprehensive metadata beyond the basics - revealing detailed insights about each file's properties and history:
+Need more context? File input's got you covered! Provides comprehensive document metadata - including detailed insights about each file's properties and history:
 
 **Universal Fields (for multi-section docs):**
 
@@ -47,7 +47,7 @@ Need more context? File input's got you covered! Provides comprehensive metadata
 
 ## CodeChunker Metadata: Code Intelligence 💻 {#codechunker-metadata}
 
-The `CodeChunker` provides code-specific insights beyond basic metadata. It helps you understand the structural context of each chunk - perfect for tracking where your code elements originated! 🔍
+The `CodeChunker` provides code-specific metadata beyond the basics. It helps you understand the structural context of each chunk - perfect for tracking where your code elements originated! 🔍
 
 **Code-Specific Information:**
 
@@ -59,17 +59,17 @@ Automatically included in every [`DotDict`][chunklet.common.dotdict.DotDict] obj
 
 ## CLI Metadata Output: Command Line Insights 🖥️
 
-The `chunklet` [CLI](../getting-started/cli.md) adapts metadata output based on your input type and flags. Think of it as your CLI's helpful companion that provides just the right context!
+The `chunklet` [CLI](../getting-started/cli.md) adapts metadata output based on your input type and flags.
 
 **Metadata Control:** The `--metadata` flag gives you control over what gets included.
 
 *   **With `--metadata`**: Your chunks come with their full context - metadata appears alongside content, either printed to stdout or saved in `.json` files with `--destination`
-*   **Without `--metadata`**: Just the chunk content - clean and simple when you want to focus purely on the text
+*   **Without `--metadata`**: Just the chunk content - clean and simple
 
 **Metadata by Input Type:**
 
 *   **Direct Text Input** (`chunklet chunk "Your text..."`): Uses `DocumentChunker` with essential [Common Metadata](#common-metadata) fields (`chunk_num`, `span`, ...) and `source` set to `"stdin"`
-*   **Document Processing** (`chunklet chunk --doc --source document.pdf`): `DocumentChunker` provides rich document metadata including [Common Metadata](#common-metadata) plus file-specific details (PDF titles, EPUB creators, DOCX authors, ODT creators) as detailed in [DocumentChunker Metadata](#documentchunker-metadata)
+*   **Document Processing** (`chunklet chunk --doc --source document.pdf`): `DocumentChunker` provides document metadata including [Common Metadata](#common-metadata) plus file-specific details (PDF titles, EPUB creators, DOCX authors, ODT creators) as detailed in [DocumentChunker Metadata](#documentchunker-metadata)
 *   **Code Processing** (`chunklet chunk --code --source code.py`): `CodeChunker` includes structural information with [Common Metadata](#common-metadata) and code-specific fields like `tree`, `start_line`, `end_line` as described in [CodeChunker Metadata](#codechunker-metadata)
 
-The CLI automatically provides the most relevant metadata for your use case - making chunk analysis both powerful and intuitive. Smart and simple! 🎯
+The CLI automatically picks the most relevant metadata for your use case. Smart and simple! 🎯

@@ -16,21 +16,21 @@ This installs all the code processing dependencies needed for language-agnostic 
 
 Got a massive codebase that's hard to navigate? The `CodeChunker` transforms tangled functions and classes into clean, understandable chunks that actually make sense.
 
-It uses pattern-based line-by-line processing to identify code structures — no heavy parsers needed. Lightweight yet surprisingly accurate across 30+ languages.
+It uses pattern-based line-by-line processing to identify code structures, no heavy parsers needed. Lightweight yet surprisingly accurate across 30+ languages.
 
 ### Code Chunker Superpowers! ⚡
 
-The `CodeChunker` comes packed with smart features for your coding adventures:
+The `CodeChunker` comes loaded with features for your coding adventures:
 
--  **Multi-Language Support:** Works with 30+ languages out of the box — Python, JavaScript, Java, C++, Go, Rust, PHP, and more! One library to rule them all! 🌍
--  **Convention-Aware:** Assumes your code plays by the rules — no full language parsers needed for surprisingly accurate results! 🎯
--  **Flexible Composable Constraints:** Ultimate control over code segmentation! Mix and match limits based on tokens, lines, or functions for perfect chunks. 🎛️
--  **Customizable Token Counting:** Plug in your own token counter for perfect alignment with different LLMs. Because one size definitely doesn't fit all models! 🤖
--  **Annotation-Aware:** Keeps comments and docstrings intact — your code's story stays complete! 📝
+-  **Multi-Language Support:** Works with 30+ languages out of the box: Python, JavaScript, Java, C++, Go, Rust, PHP, and more! One library to rule them all! 🌍
+-  **Convention-Aware:** Assumes your code plays by the rules: no full language parsers needed for surprisingly accurate results! 🎯
+-  **Flexible Composable Constraints:** Full control over code segmentation! Mix and match limits based on tokens, lines, or functions for chunks that fit your needs. 🎛️
+-  **Customizable Token Counting:** Plug in your own token counter for alignment with different LLMs. Because one size definitely doesn't fit all models! 🤖
+-  **Annotation-Aware:** Keeps comments and docstrings intact, so your code's story stays complete! 📝
 -  **Strict Mode Control:** By default keeps functions and classes together even if large. Set `strict=False` for more flexibility. No more orphaned code! 🛡️
--  **Namespace Hierarchy Tracking:** Builds a tree of your code's structure — functions, classes, namespaces — all tracked for accurate metadata 🌳
+-  **Namespace Hierarchy Tracking:** Builds a tree of your code's structure: functions, classes, namespaces, all tracked for accurate metadata 🌳
 -  **Memory-Conscious Operation:** Handles massive codebases efficiently by yielding chunks one at a time. Your RAM will thank you later! 💾
--  **Bulk Processing Powerhouse:** Got a mountain of code files to conquer? No problem! This powerhouse efficiently processes multiple files in parallel. 📚⚡
+-  **Bulk Processing Powerhouse:** Got a mountain of code files to conquer? No problem! This powerhouse processes multiple files in parallel. 📚⚡
 
 ### Code Constraints: Your Chunking Control Panel! 🎛️
 
@@ -401,7 +401,7 @@ for i, chunk in enumerate(chunks):
     You can also provide the `token_counter` directly to any chunking method (e.g., `chunker.chunk_text(..., token_counter=my_tokenizer_function)`). If a `token_counter` is provided in both the constructor and the chunking method, the one in the method call will be used.
 
 ### Combining Multiple Constraints: Mix and Match Magic! 🎭
-The real power of `CodeChunker` comes from combining multiple constraints. This allows for highly specific and granular control over how your code is chunked. Here are a few examples of how you can combine different constraints.
+The real power of `CodeChunker` comes from combining multiple constraints. Here are a few ways to layer them:
 
 ```py linenums="1" hl_lines="1-3"
 chunker.max_lines = 8
@@ -413,7 +413,7 @@ chunk = chunker.chunk_text(PYTHON_CODE)
 
 ## Batch Run: Processing Multiple Code Inputs Like a Pro! 📚
 
-While `chunk_text`/`chunk_file` is perfect for single code inputs, `chunk_texts` and `chunk_files` are your power players for processing multiple code inputs in parallel. They use memory-friendly generators so you can handle massive codebases with ease.
+While `chunk_text`/`chunk_file` handles single code inputs, `chunk_texts` and `chunk_files` are for processing multiple code inputs in parallel. They use memory-friendly generators so you can work through large codebases without loading everything at once.
 
 - `chunk_texts()` - process multiple raw code strings
 - `chunk_files()` - process multiple file paths
@@ -803,7 +803,7 @@ for i, code_chunks in enumerate(chunk_groups):
     While powerful, `CodeChunker` isn't magic! It assumes your code is reasonably well-behaved (syntactically conventional). Highly obfuscated, minified, or macro-generated sources might give it a headache. Also, nested docstrings or comment blocks can be a bit tricky for it to handle perfectly.
 
 ## Inspiration: The Code Behind the Magic! ✨
-The `CodeChunker` draws inspiration from various projects and concepts in the field of code analysis and segmentation. These influences have shaped its design principles and capabilities:
+The `CodeChunker` draws inspiration from a few projects in code analysis and segmentation:
 
 -  [code_chunker](https://github.com/camel-ai/camel/blob/master/camel/utils/chunker/code_chunker.py) by Camel AI
 -  [code_chunker](https://github.com/JimAiMoment/code-chunker) by JimAiMoment
