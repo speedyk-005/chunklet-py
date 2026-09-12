@@ -28,7 +28,7 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
     Chunks source code while preserving logical structure and maintaining code semantics across functions, classes, and modules.
 
-    Language-agnostic and lightweight — great for code understanding, generation, analysis, documentation, and AI model training.
+    Language-agnostic and lightweight, great for code understanding, generation, analysis, documentation, and AI model training.
 
     [:octicons-arrow-right-24: Learn More](code_chunker.md)
 

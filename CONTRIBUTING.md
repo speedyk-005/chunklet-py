@@ -1,6 +1,6 @@
 # Contributing to Chunklet
 
-Hey! Thanks for thinking about contributing. Bug fixes, features, docs — all welcome.
+Hey! Thanks for thinking about contributing. Bug fixes, features, docs, all welcome.
 
 ## Getting Started
 
@@ -57,7 +57,7 @@ Hey! Thanks for thinking about contributing. Bug fixes, features, docs — all w
 
 ## Pull Requests
 
-Open the PR against `main`. A PR template (`.github/PULL_REQUEST_TEMPLATE.md`) is applied automatically when you open a pull request — fill it out, keeping it scannable. Don't duplicate information GitHub already shows (files changed, commit list, branch). See the [full pull request template](.github/PULL_REQUEST_TEMPLATE.md).
+Open the PR against `main`. A PR template (`.github/PULL_REQUEST_TEMPLATE.md`) is applied automatically when you open a pull request; fill it out, keeping it scannable. Don't duplicate information GitHub already shows (files changed, commit list, branch). See the [full pull request template](.github/PULL_REQUEST_TEMPLATE.md).
 
 ## Coding Style Guidelines
 
@@ -111,7 +111,7 @@ ruff check --fix
 
 ## Submitting a Pull Request
 
-Not sure about something? Open an issue first — happy to chat before you dive in.
+Not sure about something? Open an issue first, happy to chat before you dive in.
 
 - Descriptive title
 - Summary of changes and why

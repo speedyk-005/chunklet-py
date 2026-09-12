@@ -45,27 +45,27 @@ Dumb splitting causes problems:
 
 Smart chunking solves this by:
 
-- **Smart limits** — Respects both natural boundaries (sentences, paragraphs, sections) AND configurable limits (tokens, lines, functions)
-- **Language-aware** — Detects language automatically and applies the right rules (60+ languages supported)
-- **Context preservation** — Overlap between chunks, rich metadata (source, span, document structure)
+- **Smart limits**: respects both natural boundaries (sentences, paragraphs, sections) AND configurable limits (tokens, lines, functions)
+- **Language-aware**: detects language automatically and applies the right rules (60+ languages supported)
+- **Context preservation**: overlap between chunks, rich metadata (source, span, document structure)
 
 ## 🤔 So What's Chunklet-py Anyway? (And Why Should You Care?)
 
-**Chunklet-py** is a developer-friendly text splitting library for devs, researchers, and AI engineers. It goes way beyond basic character counting. I built this because I was tired of terrible chunking options. Chunklet-py intelligently chunks text, documents, and code into meaningful, context-aware pieces — perfect for RAG pipelines and LLM applications.
+**Chunklet-py** is a developer-friendly text splitting library for devs, researchers, and AI engineers. It goes way beyond basic character counting. I built this because I was tired of terrible chunking options. Chunklet-py intelligently chunks text, documents, and code into meaningful, context-aware pieces, perfect for RAG pipelines and LLM applications.
 
 Key features:
 
-- **Composable constraints** — Mix and match limits (sentences, tokens, sections) to get exactly the chunks you need
-- **Pluggable architecture** — Swap in custom tokenizers, sentence splitters, or processors
-- **Rich metadata** — Every chunk comes with source references, spans, and structural info
-- **Multi-format support** — PDF, DOCX, EPUB, Markdown, HTML, LaTeX, ODT, CSV, Excel, and plain text
+- **Composable constraints**: mix and match limits (sentences, tokens, sections) to get exactly the chunks you need
+- **Pluggable architecture**: swap in custom tokenizers, sentence splitters, or processors
+- **Rich metadata**: every chunk comes with source references, spans, and structural info
+- **Multi-format support**: PDF, DOCX, EPUB, Markdown, HTML, LaTeX, ODT, CSV, Excel, and plain text
 
 Available tools:
 
-- `SentenceSplitter` — Lightweight sentence tokenization
-- `DocumentChunker` — Natural language with semantic boundaries
-- `CodeChunker` — Language-aware code chunking
-- `ChunkVisualizer` — Interactive web-based exploration
+- `SentenceSplitter`: lightweight sentence tokenization
+- `DocumentChunker`: natural language with semantic boundaries
+- `CodeChunker`: language-aware code chunking
+- `ChunkVisualizer`: interactive web-based exploration
 
 Perfect for prepping data for LLMs, building RAG systems, or powering AI search - Chunklet-py gives you the precision and flexibility you need across tons of formats and languages.
 
@@ -74,7 +74,7 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 | 🚀 **Blazingly Fast** | Parallel processing to chunk large volumes of content quickly. |
 | 🪶 **Featherlight Footprint** | Lightweight and memory-efficient, no unnecessary overhead. |
 | 🗂️ **Rich Metadata for RAG** | Chunks include context-aware metadata (source, span, document properties, code AST details) for RAG and LLM pipelines. |
-| 🔧 **Infinitely Customizable** | Pluggable token counters, custom sentence splitters, custom processors — mix and match. |
+| 🔧 **Infinitely Customizable** | Pluggable token counters, custom sentence splitters, custom processors: mix and match. |
 | 🌐 **Multilingual Mastery** | Supports 60+ languages for text and document chunking with automatic detection and language-specific algorithms. |
 | 🧑‍💻 **Code-Aware Intelligence** | Language-agnostic code chunking that preserves the structural integrity of your source code. |
 | 🎯 **Precision Chunking** | Configurable limits based on sentences, tokens, sections, lines, and functions. |
@@ -94,7 +94,7 @@ And that's just the start - there's plenty more to explore!
 Ready to get Chunklet-py running? Awesome! Let's get you set up quickly and painlessly.
 
 > [!NOTE]
-> **chunklet-py (aka chunklet)** — The old `chunklet` package is no longer maintained. Use `chunklet-py` to get the latest version.
+> **chunklet-py (aka chunklet)**: the old `chunklet` package is no longer maintained. Use `chunklet-py` to get the latest version.
 
 ### The Quick & Easy Way
 
@@ -332,9 +332,9 @@ Chunklet-py is a specialized, drop-in replacement for the chunking step in any R
 
 A huge thank you to the awesome people who helped shape Chunklet-py:
 
-- [@jmbernabotto](https://github.com/jmbernabotto) — for helping mostly on the CLI part, suggesting fixes, features, and design improvements.
-- [@arnoldfranz](https://github.com/arnoldfranz) — for reporting the CLI Path Validation Bug (#6) that helped improve error handling.
-- [@AkshatSharma25](https://github.com/AkshatSharma25) — for fixing EML metadata extraction to capture all header fields.
+- [@jmbernabotto](https://github.com/jmbernabotto): helped mostly on the CLI part, suggesting fixes, features, and design improvements.
+- [@arnoldfranz](https://github.com/arnoldfranz): reported the CLI Path Validation Bug (#6) that helped improve error handling.
+- [@AkshatSharma25](https://github.com/AkshatSharma25): fixed EML metadata extraction to capture all header fields.
 
 ---
 

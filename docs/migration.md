@@ -26,7 +26,7 @@ The v2-v3 jump is small: no API renames, just a couple of removals. If you're al
 
 ### Custom processor registry is now instance-based
 
-In v2, custom processors lived on a **global** `custom_processor_registry` singleton shared across your whole app. In v3 that global is gone — you now create a `CustomProcessorRegistry()` yourself and pass it to a `DocumentChunker` via `processor_registry`. Each registry is independent, so registrations are scoped to the chunker you attach it to.
+In v2, custom processors lived on a **global** `custom_processor_registry` singleton shared across your whole app. In v3 that global is gone, you now create a `CustomProcessorRegistry()` yourself and pass it to a `DocumentChunker` via `processor_registry`. Each registry is independent, so registrations are scoped to the chunker you attach it to.
 
 **Fix:**
 
@@ -76,14 +76,14 @@ If you were already calling the `chunk_text`/`chunk_texts`/`split_text` methods,
 
 ### `lang="auto"` is no longer the default
 
-In v2, `lang` defaulted to `"auto"` and `py3langid` was a hard dependency — it was always installed. In v3, `lang` is required (no default), and `py3langid` is now an optional extra called `[auto]`.
+In v2, `lang` defaulted to `"auto"` and `py3langid` was a hard dependency; it was always installed. In v3, `lang` is required (no default), and `py3langid` is now an optional extra called `[auto]`.
 
 If you were relying on automatic language detection, you need to:
 
 1. Pass `lang="auto"` explicitly (it's no longer implicit).
 2. Install the extra: `pip install 'chunklet-py[auto]'`
 
-If you only ever used specific language codes like `lang="en"`, you don't need the extra — the default install is enough.
+If you only ever used specific language codes like `lang="en"`, you don't need the extra; the default install is enough.
 
 === "Before (v2.x.x)"
 

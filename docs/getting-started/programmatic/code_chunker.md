@@ -16,19 +16,19 @@ This installs all the code processing dependencies needed for language-agnostic 
 
 Got a massive codebase that's hard to navigate? The `CodeChunker` transforms tangled functions and classes into clean, understandable chunks that actually make sense.
 
-It uses pattern-based line-by-line processing to identify code structures — no heavy parsers needed. Lightweight yet surprisingly accurate across 30+ languages.
+It uses pattern-based line-by-line processing to identify code structures, no heavy parsers needed. Lightweight yet surprisingly accurate across 30+ languages.
 
 ### Code Chunker Superpowers! ⚡
 
 The `CodeChunker` comes loaded with features for your coding adventures:
 
--  **Multi-Language Support:** Works with 30+ languages out of the box — Python, JavaScript, Java, C++, Go, Rust, PHP, and more! One library to rule them all! 🌍
--  **Convention-Aware:** Assumes your code plays by the rules — no full language parsers needed for surprisingly accurate results! 🎯
+-  **Multi-Language Support:** Works with 30+ languages out of the box: Python, JavaScript, Java, C++, Go, Rust, PHP, and more! One library to rule them all! 🌍
+-  **Convention-Aware:** Assumes your code plays by the rules: no full language parsers needed for surprisingly accurate results! 🎯
 -  **Flexible Composable Constraints:** Full control over code segmentation! Mix and match limits based on tokens, lines, or functions for chunks that fit your needs. 🎛️
 -  **Customizable Token Counting:** Plug in your own token counter for alignment with different LLMs. Because one size definitely doesn't fit all models! 🤖
--  **Annotation-Aware:** Keeps comments and docstrings intact — your code's story stays complete! 📝
+-  **Annotation-Aware:** Keeps comments and docstrings intact, so your code's story stays complete! 📝
 -  **Strict Mode Control:** By default keeps functions and classes together even if large. Set `strict=False` for more flexibility. No more orphaned code! 🛡️
--  **Namespace Hierarchy Tracking:** Builds a tree of your code's structure — functions, classes, namespaces — all tracked for accurate metadata 🌳
+-  **Namespace Hierarchy Tracking:** Builds a tree of your code's structure: functions, classes, namespaces, all tracked for accurate metadata 🌳
 -  **Memory-Conscious Operation:** Handles massive codebases efficiently by yielding chunks one at a time. Your RAM will thank you later! 💾
 -  **Bulk Processing Powerhouse:** Got a mountain of code files to conquer? No problem! This powerhouse processes multiple files in parallel. 📚⚡
 

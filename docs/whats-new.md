@@ -11,7 +11,7 @@
 
 ### 🐛 EML Metadata, Actually Complete
 
-PR from [@AkshatSharma25](https://github.com/AkshatSharma25) — the EML processor was quietly dropping header fields (subject, from, to, cc, date) and only grabbing the body. Fixed. All fields captured now.
+PR from [@AkshatSharma25](https://github.com/AkshatSharma25): the EML processor was quietly dropping header fields (subject, from, to, cc, date) and only grabbing the body. Fixed. All fields captured now.
 
 ---
 
@@ -49,13 +49,13 @@ We swapped `pysbd` and `sentsplit` for [`yasbd-lib`](https://github.com/speedyk-
 
 We ditched the external `dotdict3` dependency and vendored the code in-tree. Now our `DotDict` has all the serialization methods you expect from the old python-box days:
 
-- **`to_dict()`** — recursive conversion back to plain dicts/lists
-- **`to_json()`** — serialize to JSON string or file
-- **`to_yaml()`** — YAML, obviously (needs `pyyaml`)
-- **`to_toml()`** — TOML support (needs `toml`)
-- **`to_msgpack()`** — MessagePack binary format (needs `msgpack`)
+- **`to_dict()`**: recursive conversion back to plain dicts/lists
+- **`to_json()`**: serialize to JSON string or file
+- **`to_yaml()`**: YAML, obviously (needs `pyyaml`)
+- **`to_toml()`**: TOML support (needs `toml`)
+- **`to_msgpack()`**: MessagePack binary format (needs `msgpack`)
 
-The CLI `--metadata` flag no longer crashes — `.to_dict()` actually exists now. 2.3x faster than python-box's `to_dict()` too, since we're not dragging in all of Box's feature creep.
+The CLI `--metadata` flag no longer crashes: `.to_dict()` actually exists now. 2.3x faster than python-box's `to_dict()` too, since we're not dragging in all of Box's feature creep.
 
 ### 🔧 The Boring Stuff
 
@@ -68,7 +68,7 @@ The CLI `--metadata` flag no longer crashes — `.to_dict()` actually exists now
 
 ### 🤖 Android Detection, Fixed (Kinda)
 
-v2.3.0 shipped with `platform_system` markers to detect Android. The problem? Android reports as `'Linux'`, not `'Android'` — so literally nobody was getting the right `sentencex` version. Fixed now with `sys_platform` + `platform_machine` markers. Downside: ARM Linux (Raspberry Pi, etc.) also gets the legacy `sentencex<=0.6.1` without Rust bindings. Temporary, we swear.
+v2.3.0 shipped with `platform_system` markers to detect Android. The problem? Android reports as `'Linux'`, not `'Android'`, so literally nobody was getting the right `sentencex` version. Fixed now with `sys_platform` + `platform_machine` markers. Downside: ARM Linux (Raspberry Pi, etc.) also gets the legacy `sentencex<=0.6.1` without Rust bindings. Temporary, we swear.
 
 ### 🐛 DotDict TypeError Fixed
 
@@ -82,28 +82,28 @@ Using `DotDict()` without arguments threw `TypeError` on `dotdict3 < 1.4.2`. Now
 
 The universal fallback splitter finally learned some new tricks:
 
-- **Non-Latin scripts** — Arabic, Chinese, and friends now get treated right
-- **Quoted text and parens** — "this (and this)" stay together as one sentence
-- **Numbered lists** — 1. 2. 3. now behave instead of getting split apart
+- **Non-Latin scripts**: Arabic, Chinese, and friends now get treated right
+- **Quoted text and parens**: "this (and this)" stay together as one sentence
+- **Numbered lists**: 1. 2. 3. now behave instead of getting split apart
 
 ### 📄 Document Chunker Improvements
 
-- Better markdown heading detection — we finally read your headers right
+- Better markdown heading detection: we finally read your headers right
 
 ### 🎨 Visualizer Gets Sleeker
 
-Now serving both JSON and MessagePack — because one format was never enough:
+Now serving both JSON and MessagePack, because one format was never enough:
 
 - Browser visualizer requests MessagePack automatically for performance (~30-50%)
 - Programmatic clients can choose: JSON (default) or MessagePack (opt-in via `Accept: application/msgpack` header)
-- MessagePack encoding — because we care about your bandwidth
+- MessagePack encoding: because we care about your bandwidth
 
 ### 🐛 The Fixes
 
-- **pkg_resources** — finally fixed that annoying ModuleNotFoundError (long story)
-- **Registration** — no more TypeError with `functools.partial` when registering custom splitters
-- **Auto-lang** — stopped spamming you with repeated warnings when `lang='auto'`
-- **Code output** — methods now appear under their class, not "global" (we know, it was annoying)
+- **pkg_resources**: finally fixed that annoying ModuleNotFoundError (long story)
+- **Registration**: no more TypeError with `functools.partial` when registering custom splitters
+- **Auto-lang**: stopped spamming you with repeated warnings when `lang='auto'`
+- **Code output**: methods now appear under their class, not "global" (we know, it was annoying)
 
 ### 🔧 The Boring Stuff
 
@@ -117,18 +117,18 @@ Now serving both JSON and MessagePack — because one format was never enough:
 
 ### ✨ Simpler Chunking API
 
-We renamed some methods. Yes, we're those people who rename things. But honestly, the old names were confusing — even to us:
+We renamed some methods. Yes, we're those people who rename things. But honestly, the old names were confusing even to us:
 
-- `chunk_text()` — chunk a string
-- `chunk_file()` — chunk a file directly  
-- `chunk_texts()` — batch strings
-- `chunk_files()` — batch files
+- `chunk_text()`: chunk a string
+- `chunk_file()`: chunk a file directly  
+- `chunk_texts()`: batch strings
+- `chunk_files()`: batch files
 
-The old `chunk` and `batch_chunk` still work. They'll whine at you with a deprecation warning. Deal with it or migrate — your choice.
+The old `chunk` and `batch_chunk` still work. They'll whine at you with a deprecation warning. Deal with it or migrate; your choice.
 
 ### 🔗 PlainTextChunker Got Absorbed
 
-`PlainTextChunker` is now part of `DocumentChunker`. We know — having two chunkers was weird. Just use `chunk_text()` or `chunk_texts()` like a normal person. The old import still works, technically, with a deprecation warning.
+`PlainTextChunker` is now part of `DocumentChunker`. We know, having two chunkers was weird. Just use `chunk_text()` or `chunk_texts()` like a normal person. The old import still works, technically, with a deprecation warning.
 
 ### ✂️ SentenceSplitter Now Does `split_text()`
 
@@ -138,10 +138,10 @@ The old `chunk` and `batch_chunk` still work. They'll whine at you with a deprec
 
 The chunk visualizer finally got some love:
 
-- **Fullscreen mode** — for when you want to pretend you're doing something important
-- **3-row layout** — less cluttered, more clickable
-- **Smoother hovers** — no more seizure-inducing animations
-- **Smarter buttons** — they stay enabled because, honestly, disabling them was stupid
+- **Fullscreen mode**: for when you want to pretend you're doing something important
+- **3-row layout**: less cluttered, more clickable
+- **Smoother hovers**: no more seizure-inducing animations
+- **Smarter buttons**: they stay enabled because, honestly, disabling them was stupid
 
 ### ⌨️ Shorter CLI Flags
 
@@ -157,17 +157,17 @@ You're welcome.
 
 Code chunking got slightly less terrible:
 
-- **Cleaner output** — fixed weird artifacts in chunks from comment handling (we know, it was annoying)
-- **More languages** — Forth, PHP 8 attributes, VB.NET, ColdFusion, and Pascal. Yes, really.
-- **String protection** — multi-line strings and triple-quotes won't get mangled anymore
+- **Cleaner output**: fixed weird artifacts in chunks from comment handling (we know, it was annoying)
+- **More languages**: Forth, PHP 8 attributes, VB.NET, ColdFusion, and Pascal. Yes, really.
+- **String protection**: multi-line strings and triple-quotes won't get mangled anymore
 
 ### 🔧 The Boring But Necessary Stuff
 
-- **Tokenizer timeout** — new `--tokenizer-timeout` / `-t` flag so custom tokenizers don't hang forever
-- **Direct imports** — `from chunklet import DocumentChunker` now works without making things slow
-- **Fewer crashes** — fixed dependency issues with `setuptools<81` in CI (sentsplit and pkg_resources, long story)
-- **Global registries** — `custom_splitter_registry` and `custom_processor_registry` exist now
-- **Error messages** — slightly less cryptic when things explode
+- **Tokenizer timeout**: new `--tokenizer-timeout` / `-t` flag so custom tokenizers don't hang forever
+- **Direct imports**: `from chunklet import DocumentChunker` now works without making things slow
+- **Fewer crashes**: fixed dependency issues with `setuptools<81` in CI (sentsplit and pkg_resources, long story)
+- **Global registries**: `custom_splitter_registry` and `custom_processor_registry` exist now
+- **Error messages**: slightly less cryptic when things explode
 
 ---
 
@@ -191,7 +191,7 @@ We built an actual UI. Because sometimes you want to click buttons instead of wr
 
 ### 📁 More File Formats
 
-ODT, CSV, and Excel (.xlsx) — added in this release. Because apparently plain text wasn't enough for some people.
+ODT, CSV, and Excel (.xlsx), added in this release. Because apparently plain text wasn't enough for some people.
 
 ---
 
@@ -201,12 +201,12 @@ ODT, CSV, and Excel (.xlsx) — added in this release. Because apparently plain 
 
 We rewrote the whole thing. You're welcome? Here's what changed:
 
-- **🗃 New classes** — PlainTextChunker, DocumentChunker, CodeChunker
-- **🌍 50+ languages** — because the world has more than English
-- **📄 Document formats** — PDF, DOCX, EPUB, HTML, etc.
-- **💻 Code understanding** — actual code chunking, not just "split by lines like a savage"
-- **🎯 New constraints** — `max_section_breaks` and `max_lines` for finer control
-- **⚡ Memory efficient batch** — generators in batch methods so your RAM doesn't cry
+- **🗃 New classes**: PlainTextChunker, DocumentChunker, CodeChunker
+- **🌍 50+ languages**: because the world has more than English
+- **📄 Document formats**: PDF, DOCX, EPUB, HTML, etc.
+- **💻 Code understanding**: actual code chunking, not just "split by lines like a savage"
+- **🎯 New constraints**: `max_section_breaks` and `max_lines` for finer control
+- **⚡ Memory efficient batch**: generators in batch methods so your RAM doesn't cry
 
 ---
 

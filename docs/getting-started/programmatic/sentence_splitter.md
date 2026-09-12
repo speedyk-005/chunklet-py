@@ -6,7 +6,7 @@
 
 ## The Art of Precise Sentence Splitting ✂️
 
-Splitting text by periods is like trying to perform surgery with a butter knife — it barely works and makes a mess. Abbreviations get misinterpreted, sentences get cut mid-thought, and your NLP models end up confused.
+Splitting text by periods is like trying to perform surgery with a butter knife: it barely works and makes a mess. Abbreviations get misinterpreted, sentences get cut mid-thought, and your NLP models end up confused.
 
 This problem has a name: [Sentence Boundary Disambiguation](https://en.wikipedia.org/wiki/Sentence_boundary_disambiguation). That's where `SentenceSplitter` comes in.
 
@@ -21,7 +21,7 @@ The `SentenceSplitter` is a sophisticated system:
 -  **Output Refinement ✨:** Removes empty sentences and fixes punctuation.
 
 !!! note "Auto language detection requires the `[auto]` extra"
-    When you use `lang="auto"`, the splitter needs `py3langid` to detect the language of your text. This is not installed by default — install it with:
+    When you use `lang="auto"`, the splitter needs `py3langid` to detect the language of your text. This is not installed by default; install it with:
 
     ```bash
     pip install 'chunklet-py[auto]'

@@ -1,6 +1,6 @@
 # Chunklet CLI
 
-Meet `chunklet`, your CLI companion for text processing! From sentence splitting to smart chunking to interactive visualization — it's all here.
+Meet `chunklet`, your CLI companion for text processing! From sentence splitting to smart chunking to interactive visualization: it's all here.
 
 !!! info "`chunklet` vs `chunklet-py`"
     The CLI command is `chunklet` (kept for backward compatibility), while the Python package is named `chunklet-py` to avoid naming conflicts with other packages.

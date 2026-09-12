@@ -24,7 +24,7 @@ This installs all the document processing dependencies needed to handle PDFs, DO
 
 Got a wall of text that's overwhelming? The `DocumentChunker` transforms unruly paragraphs into sized, context-aware chunks. Perfect for RAG systems and document analysis.
 
-It preserves meaning and flow — no confusing puzzle pieces.
+It preserves meaning and flow, no confusing puzzle pieces.
 
 ### Where `DocumentChunker` Really Shines
 
@@ -51,13 +51,13 @@ The `DocumentChunker` comes loaded with features that make it your go-to text wr
 | :------------------- | :---------------- | :---------- |
 | `max_sentences`      | `int >= 1`        | Sentence power mode! Tell us how many sentences per chunk, and we'll group them thoughtfully so your ideas flow like a well-written story. |
 | `max_tokens`         | `int >= 12`       | Token budget watcher! We'll carefully pack sentences into chunks while respecting your token limits. If a sentence gets too chatty, we'll politely split it at clause boundaries. 🤐 |
-| `max_section_breaks` | `int >= 1`        | Structure superhero! Limits section breaks per chunk — headings (`##`), horizontal rules (`---`, `***`, `___`), and `<details>` tags. Your document structure stays intact! |
+| `max_section_breaks` | `int >= 1`        | Structure superhero! Limits section breaks per chunk: headings (`##`), horizontal rules (`---`, `***`, `___`), and `<details>` tags. Your document structure stays intact! |
 | `overlap_percent`    | `int 0-75`        | Repeat a bit of the previous chunk's tail for continuity. Defaults to 20. |
 | `offset`             | `int >= 0`        | Skip the first N sentences before chunking. Defaults to 0. |
 | `lang`               | `str`             | Language code (`'en'`, `'fr'`, ...) or `'auto'`. Required. |
 
 !!! note "Auto language detection requires the `[auto]` extra"
-    When you use `lang="auto"`, the chunker needs `py3langid` to detect the language of your text. This is not installed by default — install it with:
+    When you use `lang="auto"`, the chunker needs `py3langid` to detect the language of your text. This is not installed by default; install it with:
 
     ```bash
     pip install 'chunklet-py[auto]'
@@ -467,7 +467,7 @@ for i, doc_chunks in enumerate(chunk_groups):
 
 Want to handle exotic file formats that `DocumentChunker` doesn't know about? Create your own custom processors! This lets you add specialized processing for any file type and prioritize your custom processors over the built-in ones.
 
-Custom processors live in a [`CustomProcessorRegistry`](../../reference/chunklet/document_chunker/registry.md) instance that **you create and own**. Create a registry, register your processors on it, and pass it to a `DocumentChunker` via the `processor_registry` parameter. This gives you full control over scope — no more global side effects.
+Custom processors live in a [`CustomProcessorRegistry`](../../reference/chunklet/document_chunker/registry.md) instance that **you create and own**. Create a registry, register your processors on it, and pass it to a `DocumentChunker` via the `processor_registry` parameter. This gives you full control over scope, no more global side effects.
 
 To use a custom processor, you leverage the [`@registry.register`](../../reference/chunklet/document_chunker/registry.md) decorator. This decorator allows you to register your function for one or more file extensions directly. Your custom processor function must accept a single `file_path` parameter (str) and return a `tuple[str | list[str], dict]` containing extracted text (or list of texts for multi-section documents) and a metadata dictionary.
 
