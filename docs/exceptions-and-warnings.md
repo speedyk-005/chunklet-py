@@ -12,7 +12,7 @@ The base exception. Catch this if you want to catch all the things. One ring to 
 
 ### `InvalidInputError`
 
-You passed something wrong. Wrong type, missing required field, bad file extension, etc. We tried to work with it but couldn't. This is our way of saying "that doesn't look right" — we validate inputs on the way in so you find out early.
+You passed something wrong. Wrong type, missing required field, bad file extension, etc. We tried to work with it but couldn't. This is our way of saying "that doesn't look right". We validate inputs on the way in so you find out early.
 
 **Fix:** Check the error message. It usually tells you what's up. Yes, actually read it.
 
@@ -20,7 +20,7 @@ You passed something wrong. Wrong type, missing required field, bad file extensi
 
 ### `MissingTokenCounterError` 🔢
 
-You tried to chunk by tokens but forgot to give us a `token_counter`. We can't read minds... yet. Without it, we have no idea how many tokens your text has, so we can't enforce `max_tokens`. This only applies to token-based chunking — if you're using sentences or lines, you're fine.
+You tried to chunk by tokens but forgot to give us a `token_counter`. We can't read minds... yet. Without it, we have no idea how many tokens your text has, so we can't enforce `max_tokens`. This only applies to token-based chunking; if you're using sentences or lines, you're fine.
 
 **Fix:** Pass one:
 
@@ -34,7 +34,7 @@ chunker = SomeChunker(token_counter=some_counter)
 
 ### `FileProcessingError` 📁
 
-File couldn't be read. Missing, permissions, encoding issues, corrupted — something went wrong and we gave up. This happens when we try to open a file and it fails, whether the file doesn't exist, you don't have permission, it's binary garbage, or it's just broken.
+File couldn't be read. Missing, permissions, encoding issues, corrupted: something went wrong and we gave up. This happens when we try to open a file and it fails, whether the file doesn't exist, you don't have permission, it's binary garbage, or it's just broken.
 
 **Fix:** Check if the file exists and actually opens.
 
@@ -55,7 +55,7 @@ The list of supported formats includes things like `.txt`, `.md`, `.pdf`, `.docx
 
 ### `TokenLimitError` 📏
 
-A code block is too fat for `max_tokens` and you're in `strict` mode. We refuse to split it because that would break the code. This happens in `CodeChunker` when a function or class is larger than your token limit — splitting it would result in broken, unrunnable code, so we error instead.
+A code block is too fat for `max_tokens` and you're in `strict` mode. We refuse to split it because that would break the code. This happens in `CodeChunker` when a function or class is larger than your token limit; splitting it would result in broken, unrunnable code, so we error instead.
 
 **Fix:** Bump `max_tokens` or set `strict=False` (which will split it anyway, even if it breaks).
 
@@ -63,7 +63,7 @@ A code block is too fat for `max_tokens` and you're in `strict` mode. We refuse 
 
 ### `CallbackError` 🔌
 
-Your custom callback (token_counter, splitter, processor) threw an error. Whatever you wrote in that function crashed. We wrap this so you know the error came from your code, not ours — the traceback will point you to exactly where things went sideways.
+Your custom callback (token_counter, splitter, processor) threw an error. Whatever you wrote in that function crashed. We wrap this so you know the error came from your code, not ours; the traceback will point you to exactly where things went sideways.
 
 **Fix:** Debug your callback. The stack trace has the answers.
 
@@ -77,7 +77,7 @@ Your custom callback (token_counter, splitter, processor) threw an error. Whatev
 The language is set to `auto`. Consider setting `lang` explicitly.
 ```
 
-**What it means:** We don't know what language your text is. Auto-detect works, but explicit is faster and more reliable, especially with short texts. Language detection is a guess — short texts have less signal, so the guess is less confident.
+**What it means:** We don't know what language your text is. Auto-detect works, but explicit is faster and more reliable, especially with short texts. Language detection is a guess; short texts have less signal, so the guess is less confident.
 
 **Fix:** Pass `lang='en'` (or whatever) if you know it.
 
@@ -89,7 +89,7 @@ The language is set to `auto`. Consider setting `lang` explicitly.
 Using universal rule-based splitter. Language not supported or detected with low confidence.
 ```
 
-**What it means:** No specialized splitter for your language exists in yasbd or the other backends. We're using the generic regex fallback instead. Some languages have complex punctuation rules that the specialized splitters handle — the fallback is a one-size-fits-all that works okay but isn't great for anything.
+**What it means:** No specialized splitter for your language exists in yasbd or the other backends. We're using the generic regex fallback instead. Some languages have complex punctuation rules that the specialized splitters handle; the fallback is a one-size-fits-all that works okay but isn't great for anything.
 
 **Fix:** The fallback is a one-size-fits-all that's decent for most cases.
 
@@ -101,7 +101,7 @@ Using universal rule-based splitter. Language not supported or detected with low
 Offset {} >= total sentences {}. Returning empty list.
 ```
 
-**What it means:** Your offset is bigger than the text. There's nothing left to split so we return nothing. This is just informing you — it's not an error, you just asked for more sentences than exist.
+**What it means:** Your offset is bigger than the text. There's nothing left to split so we return nothing. This is just informing you; it's not an error, you just asked for more sentences than exist.
 
 **Fix:** Use a smaller offset.
 
@@ -113,7 +113,7 @@ Offset {} >= total sentences {}. Returning empty list.
 Skipping failed task. Reason: {error}
 ```
 
-**What it means:** One file in your batch choked and you set `on_errors='skip'`. We logged the error and kept going. This is intentional — you told us to continue on error, so we do. Check the logs to see what actually failed.
+**What it means:** One file in your batch choked and you set `on_errors='skip'`. We logged the error and kept going. This is intentional; you told us to continue on error, so we do. Check the logs to see what actually failed.
 
 **Fix:** Check the reason. Fix the file or change `on_errors`.
 
@@ -125,7 +125,7 @@ Skipping failed task. Reason: {error}
 Skipping document {path} due to validation failure. Reason: {reason}
 ```
 
-**What it means:** File failed validation. Bad extension, corrupted, or some other issue — we couldn't process it. This happens before we even try to extract text — the file just doesn't look right.
+**What it means:** File failed validation. Bad extension, corrupted, or some other issue: we couldn't process it. This happens before we even try to extract text; the file just doesn't look right.
 
 **Fix:** Check the reason.
 
@@ -149,7 +149,7 @@ No valid files found after validation. Returning empty generator.
 Splitting oversized block ({token_count} tokens) into sub-chunks
 ```
 
-**What it means:** A code block exceeded `max_tokens`. In non-strict mode, we split it anyway to avoid throwing an error. This is us being helpful — we could have errored, but instead we broke it into smaller chunks even though they're not valid code anymore.
+**What it means:** A code block exceeded `max_tokens`. In non-strict mode, we split it anyway to avoid throwing an error. This is us being helpful: we could have errored, but instead we broke it into smaller chunks even though they're not valid code anymore.
 
 **Fix:** Set `strict=True` if you want it to error instead.
 

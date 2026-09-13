@@ -61,19 +61,19 @@ Things break. Here's how to fix them.
     **Fix:**
 
     - Hard refresh: `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac)
-    - Or just open incognito — caches don't follow you there
+    - Or just open incognito, caches don't follow you there
 
 ## Something Broke or Warned
 
 ??? question "Something threw an exception. Now what?"
 
-    First: actually read the error message. We know, we know — "just read the error" sounds obvious, but sometimes it actually tells you what's wrong.
+    First: actually read the error message. We know, we know, "just read the error" sounds obvious, but sometimes it actually tells you what's wrong.
     
-    If it's a warning, you're probably fine — just a heads up. If it's an exception, something actually broke.
+    If it's a warning, you're probably fine, just a heads up. If it's an exception, something actually broke.
     
     **What to do:**
     
-    1. **Read the message** — it usually tells you what's up
-    2. **Check [exceptions-and-warnings.md](./exceptions-and-warnings.md)** — we explain what each one means
-    3. **Check [What's New](./whats-new.md)** — breaking changes and new stuff live there
-    4. **Open an issue** — if it's genuinely broken and not covered, let us know. But check first.
+    1. **Read the message**: it usually tells you what's up
+    2. **Check [exceptions-and-warnings.md](./exceptions-and-warnings.md)**: we explain what each one means
+    3. **Check [What's New](./whats-new.md)**: breaking changes and new stuff live there
+    4. **Open an issue**: if it's genuinely broken and not covered, let us know. But check first.

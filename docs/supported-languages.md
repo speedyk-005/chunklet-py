@@ -10,9 +10,9 @@ We use [ISO 639-1](https://en.wikipedia.org/wiki/ISO_639-1) codes (those handy t
 
 ## The All-Stars: Languages Where Chunklet-py Truly Shines ⭐
 
-Here's where we bring out the big guns. These languages have dedicated, high-quality splitters — think of them as the VIP section of our language support. If your language is here, you're in good hands.
+Here's where we bring out the big guns. These languages have dedicated, high-quality splitters, think of them as the VIP section of our language support. If your language is here, you're in good hands.
 
-And if it's not? No worries — the [Fallback Splitter](#the-universal-translator-fallback-splitter) at the bottom of this page has your back.
+And if it's not? No worries, the [Fallback Splitter](#the-universal-translator-fallback-splitter) at the bottom of this page has your back.
 
 Let me introduce you to the libraries making this magic happen:
 
@@ -82,12 +82,12 @@ The [`Indic NLP Library`](https://github.com/anoopkunchukuttan/indic_nlp_library
 
 ### The Wildcard: `Sentencex`
 
-[`Sentencex`](https://github.com/wikimedia/sentencex) from Wikimedia adds even more languages to the mix. It's a bit more relaxed about things — uses fallbacks when it doesn't have a perfect match for your language.
+[`Sentencex`](https://github.com/wikimedia/sentencex) from Wikimedia adds even more languages to the mix. It's a bit more relaxed about things, it uses fallbacks when it doesn't have a perfect match for your language.
 
 !!! tip "Wait, what's a fallback?"
-    Good question! If `Sentencex` doesn't have a perfect splitter for your language, it falls back to a similar one. Like using Spanish rules for Galician — close enough, usually gets the job done.
+    Good question! If `Sentencex` doesn't have a perfect splitter for your language, it falls back to a similar one. Like using Spanish rules for Galician: close enough, usually gets the job done.
 
-    I've filtered the list below to only show languages that are actually useful and reliable. No point showing you 200 languages if half of them are just "eh, good enough" — right?
+    I've filtered the list below to only show languages that are actually useful and reliable. No point showing you 200 languages if half of them are just "eh, good enough", right?
 
 | Language Code | Language Name | Flag |
 |:--------------|:--------------|:----:|
@@ -111,7 +111,7 @@ The [`Indic NLP Library`](https://github.com/anoopkunchukuttan/indic_nlp_library
 
 ## The Universal Translator: Fallback Splitter 🔄
 
-So your language isn't on the list? That's okay — this is where things get interesting.
+So your language isn't on the list? That's okay, this is where things get interesting.
 
 The **Fallback Splitter** is my "when in doubt" solution. It's a rule-based regex splitter that takes a reasonable shot at sentence segmentation for... well, anything. Is it as smart as the dedicated libraries above? Nope. But it'll work when you need it to.
 
