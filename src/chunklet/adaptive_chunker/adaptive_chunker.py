@@ -90,6 +90,7 @@ class AdaptiveChunker:
             verbose: Enable verbose logging.
         """
         self._verbose = verbose
+        self._lang = lang
         self.token_counter = token_counter
 
         self.hard_token_limit = hard_token_limit
@@ -111,7 +112,7 @@ class AdaptiveChunker:
         # Initialize chunkers with sensible defaults; constraint attributes are
         # mutated per request from the learned params.
         self.document_chunker = DocumentChunker(
-            lang="auto",
+            lang=self._lang,
             max_sentences=7,
             token_counter=self.token_counter,
             verbose=self._verbose,
@@ -121,6 +122,29 @@ class AdaptiveChunker:
             token_counter=self.token_counter,
             verbose=self._verbose,
         )
+
+    @property
+    def lang(self) -> str:
+        """Get the chunking language code."""
+        return self._lang
+
+    @lang.setter
+    def lang(self, value: str) -> None:
+        """Set the chunking language and propagate to the document chunker."""
+        self._lang = value
+        self.document_chunker.lang = value
+
+    @property
+    def verbose(self) -> bool:
+        """Get the verbosity status."""
+        return self._verbose
+
+    @verbose.setter
+    def verbose(self, value: bool) -> None:
+        """Set the verbosity and propagate to the underlying chunkers."""
+        self._verbose = value
+        self.document_chunker.verbose = value
+        self.code_chunker.verbose = value
 
     def _update_ema(self, profile_type: str, key: str, current_value: float) -> None:
         """Update the given profile metric with an Exponential Moving Average.
