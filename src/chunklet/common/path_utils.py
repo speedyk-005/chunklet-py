@@ -22,7 +22,7 @@ PATH_PATTERN = re.compile(
 )
 
 
-def _is_binary_file(path: str | Path) -> bool:
+def is_binary_file(path: str | Path) -> bool:
     """
     Determine whether a file is binary or text.
 
@@ -120,7 +120,7 @@ def read_text_file(path: str | Path) -> str:
     if not path.exists():
         raise FileProcessingError(f"File does not exist: {path}")
 
-    if _is_binary_file(path):
+    if is_binary_file(path):
         raise FileProcessingError(f"Binary file not supported: {path}")
 
     match = from_path(str(path)).best()
