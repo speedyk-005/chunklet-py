@@ -5,6 +5,8 @@ Better LLM Applications"): chunking parameters are adjusted dynamically based on
 measured content characteristics instead of using fixed limits.
 """
 
+import os
+import tempfile
 from collections import deque
 from itertools import pairwise
 from pathlib import Path
@@ -18,7 +20,7 @@ from chunklet.code_chunker.patterns import FUNCTION_DECLARATION
 from chunklet.common.dotdict import DotDict
 from chunklet.common.path_utils import is_binary_file, read_text_file
 from chunklet.common.token_utils import count_tokens
-from chunklet.common.validation import IterableOfPath, validate_input
+from chunklet.common.validation import IterableOfPath, IterableOfStr, validate_input
 from chunklet.document_chunker._plain_text_chunker import SECTION_BREAK_PATTERN
 from chunklet.exceptions import UnsupportedFileTypeError
 from chunklet.sentence_splitter._universal_splitter import UniversalSplitter
@@ -107,6 +109,7 @@ class AdaptiveChunker:
         }
 
         self._pending_sources = deque()
+        self._temp_files: list[Path] = []
         self._sentence_splitter = UniversalSplitter()
 
         # Initialize chunkers with sensible defaults; constraint attributes are
@@ -380,6 +383,35 @@ class AdaptiveChunker:
             self.add_file(path)
 
     @validate_input
+    def add_text(self, text: str) -> None:
+        """Enqueue a raw text string by persisting it to a temporary file.
+
+        The content is written without a file extension so that type detection
+        falls back to the content heuristics, exactly like an extensionless
+        source. The temporary file is removed once ``process`` finishes
+        draining the queue.
+
+        Args:
+            text: Raw text content to chunk.
+        """
+        fd, tmp_path = tempfile.mkstemp(prefix="chunklet_")
+        with os.fdopen(fd, "w") as tmp_file:
+            tmp_file.write(text)
+        tmp_file = Path(tmp_path)
+        self._temp_files.append(tmp_file)
+        self.add_file(tmp_file)
+
+    @validate_input
+    def add_texts(self, texts: IterableOfStr) -> None:
+        """Enqueue a batch list of raw text strings.
+
+        Args:
+            texts: An iterable of raw text strings to chunk.
+        """
+        for text in texts:
+            self.add_text(text)
+
+    @validate_input
     def process(
         self,
         *,
@@ -449,7 +481,11 @@ class AdaptiveChunker:
 
                 gen = fit_and_stream_text(text_or_gen)
                 chunks = self.document_chunker.chunk_texts(
-                    gen, token_counter=self.token_counter, n_jobs=4, on_errors=on_errors
+                    gen,
+                    token_counter=self.token_counter,
+                    n_jobs=4,
+                    on_errors=on_errors,
+                    base_metadata=metadata,
                 )
 
             for chunk in chunks:

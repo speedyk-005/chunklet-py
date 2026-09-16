@@ -144,6 +144,17 @@ def test_process_on_empty_queue_yields_nothing(chunker):
     assert list(chunker.process()) == []
 
 
+def test_add_texts_routes_each_source_to_its_profile(chunker):
+    """Test that add_texts classifies each raw string independently."""
+    chunker.add_texts(
+        [Path(SAMPLE_CODE).read_text(), Path(SAMPLE_DOCUMENT).read_text()]
+    )
+    chunks = list(chunker.process())
+
+    types = {chunk.metadata.inferred_type for chunk in chunks}
+    assert types == {"code", "document"}
+
+
 def test_all_chunks_carry_inferred_type(chunker):
     """Test that every produced chunk is tagged with inferred_type."""
     chunker.add_files(SOURCES)
