@@ -417,6 +417,7 @@ class AdaptiveChunker:
         *,
         separator: Any = None,
         on_errors: Literal["raise", "skip", "break"] = "raise",
+        show_progress: bool = True,
     ) -> Generator[DotDict, None, None]:
         """Process the queue, extracting and chunking each source on the spot.
 
@@ -425,9 +426,6 @@ class AdaptiveChunker:
          Args:
             separator: A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
-
-            n_jobs: Number of parallel workers to use. If None, uses all available CPUs.
-                   Must be >= 1 if specified.
             show_progress: Flag to show or disable the loading bar.
             on_errors: How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
 
@@ -484,6 +482,7 @@ class AdaptiveChunker:
                     gen,
                     token_counter=self.token_counter,
                     n_jobs=4,
+                    show_progress=show_progress,
                     on_errors=on_errors,
                     base_metadata=metadata,
                 )
