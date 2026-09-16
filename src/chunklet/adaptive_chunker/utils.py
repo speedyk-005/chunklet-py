@@ -5,6 +5,8 @@ CODE_LINE_PREFIX = {
     '"""',
     "'''",
     "///",
+    "//",
+    "/*",
     "fun",
     "func",
     "class",
@@ -78,40 +80,56 @@ CODE_LINE_PREFIX_PAT = re.compile(
 
 MIN_WEIGHT = 47
 
-CODE_SYMBOLS = r"={}[]()?.!%#/"
+CODE_SYMBOLS = r"={}[]()?.!%#/%^-+*&|!=><:__"
+
+LINE_ENDING_SEMICOLON_PAT = re.compile(r";[ \t]*$", re.M)
 
 
 def is_code_like(text: str) -> bool:
     """Determine whether text has a code-like structural profile.
 
-    The classifier computes a weighted score from three structural
+    The classifier computes a weighted score from several structural
     signals:
 
     - indentation whitespace as a percentage of total characters
-    - lines as a percentage of total characters
+    - lines ending in a semicolon as a percentage of total lines
     - symbol concentration
     - code-like line prefixes as a percentage of total lines
+    - lines as a percentage of total characters
+
 
     A Unix shebang adds a fixed bonus of 20 points.
 
     The final score is compared against ``MIN_WEIGHT`` to determine
     whether the text is considered code-like.
 
+    Examples:
+        >>> is_code_like('printf("hello");\\n')
+        True
+        >>> is_code_like("int main(void) {\\n    printf(\\"hello\\");\\n    return 0;\\n}\\n")
+        True
+        >>> is_code_like("The quick brown fox jumps over the lazy dog.\\n")
+        False
+        >>> is_code_like(open("samples/sample_module.py").read())
+        True
+        >>> is_code_like(open("samples/sample_text.txt").read())
+        False
+
     Args:
         text: Text to classify.
 
     Returns:
-        A tuple containing the computed score and a boolean indicating
-        whether the score meets the code-like threshold.
+        Whether the computed code-like score meets the threshold.
     """
     if not text:
-        return 0.0, False
+        return False
 
     lines = text.splitlines()
 
     if not lines:
-        return 0.0, False
+        return False
 
+    line_count = len(lines)
     weight = 0.0
 
     if re.match(r"^#!/usr/bin/", text):
@@ -122,20 +140,25 @@ def is_code_like(text: str) -> bool:
     indent_percent = indent_chars / len(text) * 100
     weight += indent_percent
 
-    # Line density
-    newline_percent = len(lines) / len(text) * 100
-    weight += newline_percent * 2
-
     # Symbol density
     symbol_percent = sum(text.count(char) for char in CODE_SYMBOLS) / len(text) * 100
     weight += symbol_percent
 
+    # Line-terminating semicolon density
+    semicolon_count = len(LINE_ENDING_SEMICOLON_PAT.findall(text))
+    semicolon_percent = semicolon_count / line_count * 100
+    weight += semicolon_percent
+
+    # Line density
+    newline_percent = line_count / len(text) * 100
+    weight += newline_percent * 2
+
     # Code-like line-prefix density
     prefix_count = len(CODE_LINE_PREFIX_PAT.findall(text))
-    prefix_percent = prefix_count / len(lines) * 100
+    prefix_percent = prefix_count / line_count * 100
     weight += prefix_percent * 2
 
-    return weight, weight >= MIN_WEIGHT
+    return weight >= MIN_WEIGHT
 
 
 if __name__ == "__main__":  # pragme: no cover
