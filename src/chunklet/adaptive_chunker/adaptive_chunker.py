@@ -123,6 +123,8 @@ class AdaptiveChunker:
             verbose=self._verbose,
         )
 
+        self._is_first_doc = False
+
     @property
     def lang(self) -> str:
         """Get the chunking language code."""
@@ -207,6 +209,7 @@ class AdaptiveChunker:
         """
         if len(fx_matches) < 2:
             return
+
         starts = [text[:start].count("\n") + 1 for _, start, _ in fx_matches]
         diffs = [abs(b - a) for a, b in pairwise(starts)]
         avg_diff = sum(diffs) / len(diffs)
@@ -222,8 +225,10 @@ class AdaptiveChunker:
         Files with fewer than two functions are skipped, as no gap exists.
         """
         starts = [start for _, start, _ in fx_matches]
+
         if len(starts) < 2:
             return
+
         diffs = [abs(b - a) for a, b in pairwise(starts)]
         avg_diff = sum(diffs) / len(diffs)
         signal = 1 if avg_diff > IDEAL_LINES_PER_FUNCTION / 2 else 2
@@ -239,6 +244,7 @@ class AdaptiveChunker:
         sentence_counts = [len(self._sentence_splitter.split(p)) for p in paragraphs]
         if not sentence_counts:
             return
+
         avg_sent = sum(sentence_counts) / len(sentence_counts)
         self._update_ema(
             "document",
@@ -277,8 +283,12 @@ class AdaptiveChunker:
 
         Files with fewer than two functions are skipped, as no span exists.
         """
+        if self.token_counter is None:
+            return
+
         if len(starts) < 2:
             return
+
         spans = [text[a:b] for a, b in pairwise(starts[:5])]
         self._update_ema(
             "code",
@@ -298,9 +308,13 @@ class AdaptiveChunker:
         The first five paragraphs are token-counted with `count_tokens` and their
         mean is EMA-folded into document max_tokens.
         """
+        if self.token_counter is None:
+            return
+
         paragraphs = paragraphs[:5]
         if not paragraphs:
             return
+
         self._update_ema(
             "document",
             key="max_tokens",
@@ -438,8 +452,10 @@ class AdaptiveChunker:
                     gen, token_counter=self.token_counter, n_jobs=4, on_errors=on_errors
                 )
 
-            for i, chunk in enumerate(chunks):
-                if i != 0 and separator is not None:
-                    yield separator
+            for chunk in chunks:
                 chunk["metadata"]["inferred_type"] = file_type
                 yield chunk
+
+            if not self._is_first_doc and separator is not None:
+                yield separator
+            self._is_first_doc = False
