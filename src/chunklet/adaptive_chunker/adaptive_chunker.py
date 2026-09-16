@@ -54,6 +54,11 @@ COMMON_CODE_FILE_EXTENSIONS = {
 }
 
 IDEAL_LINES_PER_FUNCTION = 15
+TOKEN_SAMPLE_SIZE = 5
+MIN_SENTENCES_PER_PARAGRAPH = 2.0
+MAX_SENTENCES_PER_PARAGRAPH = 25.0
+SECTION_DENSITY_THRESHOLD = 0.75
+N_JOBS = 4
 
 
 class AdaptiveChunker:
@@ -67,7 +72,7 @@ class AdaptiveChunker:
         - Profile-based dispatch: classifies each source as code or document via heuristic.
         - Learning memory (EMA profiles): persists per-profile stats via exponential moving average.
         - Adaptive limits: derives constraints from the learned profile each time instead of using fixed values.
-        - Enriched chunk metadata: adds inferred_type, active_max_functions to each chunk.
+        - Enriched chunk metadata: adds inferred_type to each chunk.
     """
 
     @validate_input
@@ -80,12 +85,12 @@ class AdaptiveChunker:
         verbose: bool = False,
     ):
         """
-        Initializes the AdaptativeChunker.
+        Initializes the AdaptiveChunker.
 
         Args:
             lang: Language code (e.g., 'en', 'fr', 'auto'). Defaults to auto
             token_counter: Function that counts tokens in text.
-                If None, must be provided (or token-based limits disabled).
+                If None, token-based limits and max_tokens learning are disabled.
             hard_token_limit: Ceiling for the dynamically grown ``max_tokens``.
             ema_alpha: Smoothing factor in [0, 1] for the exponential moving average;
                 higher values react faster to recent sources.
@@ -125,8 +130,6 @@ class AdaptiveChunker:
             token_counter=self.token_counter,
             verbose=self._verbose,
         )
-
-        self._is_first_doc = False
 
     @property
     def lang(self) -> str:
@@ -223,7 +226,7 @@ class AdaptiveChunker:
 
         When the mean pairwise gap between function starts exceeds half of
         IDEAL_LINES_PER_FUNCTION the functions are spread out enough to allow
-        two per chunk, so 2 is folded in; otherwise 1 is folded in.
+        one per chunk, so 1 is folded in; otherwise 2 is folded in.
 
         Files with fewer than two functions are skipped, as no gap exists.
         """
@@ -234,8 +237,8 @@ class AdaptiveChunker:
 
         diffs = [abs(b - a) for a, b in pairwise(starts)]
         avg_diff = sum(diffs) / len(diffs)
-        signal = 1 if avg_diff > IDEAL_LINES_PER_FUNCTION / 2 else 2
-        self._update_ema("code", key="max_functions", current_value=signal)
+        functions_per_chunk = 1 if avg_diff > IDEAL_LINES_PER_FUNCTION / 2 else 2
+        self._update_ema("code", key="max_functions", current_value=functions_per_chunk)
 
     def _fit_sentences_per_para(self, paragraphs: list[str]) -> None:
         """Fold the average sentences-per-paragraph into the document EMA.
@@ -252,7 +255,10 @@ class AdaptiveChunker:
         self._update_ema(
             "document",
             key="max_sentences",
-            current_value=min(25.0, max(2.0, avg_sent)),
+            current_value=min(
+                MAX_SENTENCES_PER_PARAGRAPH,
+                max(MIN_SENTENCES_PER_PARAGRAPH, avg_sent),
+            ),
         )
 
     def _fit_section_breaks(self, lines: list[str], paragraphs: list[str]) -> None:
@@ -274,7 +280,7 @@ class AdaptiveChunker:
         self._update_ema(
             "document",
             key="max_section_breaks",
-            current_value=2 if density > 0.75 else 1,
+            current_value=2 if density > SECTION_DENSITY_THRESHOLD else 1,
         )
 
     def _fit_max_tokens_code(self, text: str, starts: list[int]) -> None:
@@ -292,16 +298,12 @@ class AdaptiveChunker:
         if len(starts) < 2:
             return
 
-        spans = [text[a:b] for a, b in pairwise(starts[:5])]
+        spans = [text[a:b] for a, b in pairwise(starts[:TOKEN_SAMPLE_SIZE])]
         self._update_ema(
             "code",
             key="max_tokens",
             current_value=(
-                min(
-                    self.hard_token_limit,
-                    sum(count_tokens(s, self.token_counter) for s in spans)
-                    / len(spans),
-                )
+                sum(count_tokens(s, self.token_counter) for s in spans) / len(spans)
             ),
         )
 
@@ -314,19 +316,15 @@ class AdaptiveChunker:
         if self.token_counter is None:
             return
 
-        paragraphs = paragraphs[:5]
-        if not paragraphs:
+        paras = paragraphs[:TOKEN_SAMPLE_SIZE]
+        if not paras:
             return
 
         self._update_ema(
             "document",
             key="max_tokens",
             current_value=(
-                min(
-                    self.hard_token_limit,
-                    sum(count_tokens(p, self.token_counter) for p in paragraphs)
-                    / len(paragraphs),
-                )
+                sum(count_tokens(p, self.token_counter) for p in paras) / len(paras)
             ),
         )
 
@@ -421,15 +419,16 @@ class AdaptiveChunker:
     ) -> Generator[DotDict, None, None]:
         """Process the queue, extracting and chunking each source on the spot.
 
-        Every returned chunk is enriched with inferred_type metadata
+        Every returned chunk is enriched with inferred_type metadata.
 
-         Args:
-            separator: A value to be yielded after the chunks of each text are processed.
-                Note: None cannot be used as a separator.
+        Args:
+            separator: A value to be yielded after the chunks of each source
+                are processed. Note: None cannot be used as a separator.
             show_progress: Flag to show or disable the loading bar.
-            on_errors: How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
+            on_errors: How to handle errors during processing. Can be
+                'raise', 'skip', or 'break'.
 
-        yields:
+        Yields:
             `DotDict` object, representing a chunk with its content and metadata.
         """
 
@@ -442,9 +441,9 @@ class AdaptiveChunker:
                 yield text
 
         while self._pending_sources:
-            origin = self._pending_sources.popleft()
+            pending_src = self._pending_sources.popleft()
 
-            path_obj = Path(origin)
+            path_obj = Path(pending_src)
             file_type = self._detect_file_type(path_obj)
             learned_state = self.learned_state[file_type]
 
@@ -454,7 +453,9 @@ class AdaptiveChunker:
 
                 self.code_chunker.token_counter = self.token_counter
                 self.code_chunker.max_tokens = (
-                    learned_state["max_tokens"] if self.token_counter else None
+                    min(self.hard_token_limit, learned_state["max_tokens"])
+                    if self.token_counter
+                    else None
                 )
                 self.code_chunker.max_lines = learned_state["max_lines"]
                 self.code_chunker.max_functions = round(learned_state["max_functions"])
@@ -468,7 +469,9 @@ class AdaptiveChunker:
                 )
 
                 self.document_chunker.max_tokens = (
-                    learned_state["max_tokens"] if self.token_counter else None
+                    min(self.hard_token_limit, learned_state["max_tokens"])
+                    if self.token_counter
+                    else None
                 )
                 self.document_chunker.max_sentences = int(
                     learned_state["max_sentences"]
@@ -481,7 +484,7 @@ class AdaptiveChunker:
                 chunks = self.document_chunker.chunk_texts(
                     gen,
                     token_counter=self.token_counter,
-                    n_jobs=4,
+                    n_jobs=N_JOBS,
                     show_progress=show_progress,
                     on_errors=on_errors,
                     base_metadata=metadata,
@@ -491,6 +494,5 @@ class AdaptiveChunker:
                 chunk["metadata"]["inferred_type"] = file_type
                 yield chunk
 
-            if not self._is_first_doc and separator is not None:
+            if separator is not None:
                 yield separator
-            self._is_first_doc = False

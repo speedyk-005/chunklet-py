@@ -20,8 +20,6 @@ def simple_token_counter(text: str) -> int:
 SAMPLE_CODE = "samples/sample_module.py"
 SAMPLE_DOCUMENT = "samples/sample_text.txt"
 
-LONG_CODE = "def f():\n    return 1\n" * 40
-
 SOURCES = [SAMPLE_CODE, SAMPLE_DOCUMENT]
 
 # --- Fixtures ---
@@ -115,6 +113,21 @@ def test_missing_token_counter_skips_max_tokens_learning():
     assert chunks
     assert chunker.learned_state["code"]["max_tokens"] == 512.0
     assert chunker.learned_state["document"]["max_tokens"] == 512.0
+
+
+def test_hard_token_limit_caps_learned_max_tokens(tmp_path, monkeypatch):
+    """Test that hard_token_limit caps the learned max_tokens at chunk time."""
+    chunker = AdaptiveChunker(token_counter=simple_token_counter, hard_token_limit=128)
+    monkeypatch.setitem(chunker.learned_state["code"], "max_tokens", 100_000)
+    monkeypatch.setitem(chunker.learned_state["document"], "max_tokens", 100_000)
+
+    chunker.add_files(SOURCES)
+    chunks = list(chunker.process())
+
+    assert chunks
+    assert chunker.code_chunker.max_tokens == 128
+    assert chunker.document_chunker.max_tokens == 128
+    assert all(simple_token_counter(chunk.content) <= 128 for chunk in chunks)
 
 
 # --- Error Handling Tests ---

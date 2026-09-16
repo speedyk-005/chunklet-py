@@ -72,17 +72,14 @@ _CODE_PREFIXES = sorted(
     key=len,
     reverse=True,
 )
-
-CODE_LINE_PREFIX_PAT = re.compile(
+CODE_LINE_PREFIX_PATTERN = re.compile(
     rf"^[ \t]*(?:{'|'.join(_CODE_PREFIXES)})(?:[ \t]|$)",
     re.M,
 )
 
-MIN_WEIGHT = 47
-
-CODE_SYMBOLS = r"={}[]()?.!%#/%^-+*&|!=><:__"
-
-LINE_ENDING_SEMICOLON_PAT = re.compile(r";[ \t]*$", re.M)
+LINE_ENDING_SEMICOLON_PATTERN = re.compile(r";[ \t]*$", re.M)
+CODE_SYMBOL_CHARS = r"={}[]()?.!%#/%^-+*&|!=><:__"
+CODE_LIKE_SCORE_THRESHOLD = 47
 
 
 def is_code_like(text: str) -> bool:
@@ -100,8 +97,8 @@ def is_code_like(text: str) -> bool:
 
     A Unix shebang adds a fixed bonus of 20 points.
 
-    The final score is compared against ``MIN_WEIGHT`` to determine
-    whether the text is considered code-like.
+    The final score is compared against ``CODE_LIKE_SCORE_THRESHOLD`` to
+    determine whether the text is considered code-like.
 
     Examples:
         >>> is_code_like('printf("hello");\\n')
@@ -141,11 +138,13 @@ def is_code_like(text: str) -> bool:
     weight += indent_percent
 
     # Symbol density
-    symbol_percent = sum(text.count(char) for char in CODE_SYMBOLS) / len(text) * 100
+    symbol_percent = (
+        sum(text.count(char) for char in CODE_SYMBOL_CHARS) / len(text) * 100
+    )
     weight += symbol_percent
 
     # Line-terminating semicolon density
-    semicolon_count = len(LINE_ENDING_SEMICOLON_PAT.findall(text))
+    semicolon_count = len(LINE_ENDING_SEMICOLON_PATTERN.findall(text))
     semicolon_percent = semicolon_count / line_count * 100
     weight += semicolon_percent
 
@@ -154,11 +153,11 @@ def is_code_like(text: str) -> bool:
     weight += newline_percent * 2
 
     # Code-like line-prefix density
-    prefix_count = len(CODE_LINE_PREFIX_PAT.findall(text))
+    prefix_count = len(CODE_LINE_PREFIX_PATTERN.findall(text))
     prefix_percent = prefix_count / line_count * 100
     weight += prefix_percent * 2
 
-    return weight >= MIN_WEIGHT
+    return weight >= CODE_LIKE_SCORE_THRESHOLD
 
 
 if __name__ == "__main__":  # pragme: no cover
