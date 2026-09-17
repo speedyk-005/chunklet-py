@@ -22,13 +22,13 @@ This installs all the document processing dependencies needed to handle PDFs, DO
 
 ## Taming Your Text and Documents with Precision
 
-Got a wall of text that's overwhelming? The `DocumentChunker` transforms unruly paragraphs into perfectly sized, context-aware chunks. Perfect for RAG systems and document analysis.
+Got a wall of text that's overwhelming? The `DocumentChunker` transforms unruly paragraphs into sized, context-aware chunks. Perfect for RAG systems and document analysis.
 
-It preserves meaning and flow, with no confusing puzzle pieces.
+It preserves meaning and flow, no confusing puzzle pieces.
 
 ### Where `DocumentChunker` Really Shines! ⚡
 
-The `DocumentChunker` comes packed with smart features that make it your go-to text wrangling sidekick:
+The `DocumentChunker` comes loaded with features that make it your go-to text wrangling sidekick:
 
 -  **Flexible Composable Constraints:** Ultimate control over your chunks! Mix and match limits based on sentences, tokens, or section breaks (headings, horizontal rules, `<details>` tags). Craft exactly the chunk size you need with precision control!
 -  **Intelligent Overlap:** Adds smart overlaps between chunks so your text flows smoothly. No more jarring transitions that leave readers scratching their heads!
@@ -57,7 +57,7 @@ The `DocumentChunker` comes packed with smart features that make it your go-to t
 | `lang`               | `str`             | Language code (`'en'`, `'fr'`, ...) or `'auto'`. Required. |
 
 !!! note "Auto language detection requires the `[auto]` extra"
-    When you use `lang="auto"`, the chunker needs `py3langid` to detect the language of your text. This is not installed by default, so install it with:
+    When you use `lang="auto"`, the chunker needs `py3langid` to detect the language of your text. This is not installed by default; install it with:
 
     ```bash
     pip install 'chunklet-py[auto]'
@@ -340,7 +340,7 @@ chunks = chunker.chunk_file(path=file_path)
 
 ## Batch: Chunk Multiple Items! 📚
 
-While `chunk_text` is perfect for single texts and `chunk_file` for single files, `chunk_texts` and `chunk_files` are your power players for processing multiple texts or files in parallel. They use memory-friendly generators so you can handle massive collections with ease.
+While `chunk_text` handles single texts and `chunk_file` single files, `chunk_texts` and `chunk_files` are for processing multiple texts or files in parallel. They use memory-friendly generators so you can work through large collections without loading everything at once.
 
 - `chunk_texts()` - process multiple raw text strings
 - `chunk_files()` - process multiple file paths

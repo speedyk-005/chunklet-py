@@ -12,7 +12,7 @@ The base exception. Catch this if you want to catch all the things. One ring to 
 
 ### `InvalidInputError`
 
-You passed something wrong. Wrong type, missing required field, bad file extension, etc. We tried to work with it but couldn't. This is our way of saying "that doesn't look right": we validate inputs on the way in so you find out early.
+You passed something wrong. Wrong type, missing required field, bad file extension, etc. We tried to work with it but couldn't. This is our way of saying "that doesn't look right". We validate inputs on the way in so you find out early.
 
 **Fix:** Check the error message. It usually tells you what's up. Yes, actually read it.
 
@@ -55,7 +55,7 @@ The list of supported formats includes things like `.txt`, `.md`, `.pdf`, `.docx
 
 ### `TokenLimitError` 📏
 
-A code block is too fat for `max_tokens` and you're in `strict` mode. We refuse to split it because that would break the code. This happens in `CodeChunker` when a function or class is larger than your token limit: splitting it would result in broken, unrunnable code, so we error instead.
+A code block is too fat for `max_tokens` and you're in `strict` mode. We refuse to split it because that would break the code. This happens in `CodeChunker` when a function or class is larger than your token limit; splitting it would result in broken, unrunnable code, so we error instead.
 
 **Fix:** Bump `max_tokens` or set `strict=False` (which will split it anyway, even if it breaks).
 
@@ -101,7 +101,7 @@ Using universal rule-based splitter. Language not supported or detected with low
 Offset {} >= total sentences {}. Returning empty list.
 ```
 
-**What it means:** Your offset is bigger than the text. There's nothing left to split so we return nothing. This is just informing you: it's not an error, you just asked for more sentences than exist.
+**What it means:** Your offset is bigger than the text. There's nothing left to split so we return nothing. This is just informing you; it's not an error, you just asked for more sentences than exist.
 
 **Fix:** Use a smaller offset.
 
@@ -113,7 +113,7 @@ Offset {} >= total sentences {}. Returning empty list.
 Skipping failed task. Reason: {error}
 ```
 
-**What it means:** One file in your batch choked and you set `on_errors='skip'`. We logged the error and kept going. This is intentional: you told us to continue on error, so we do. Check the logs to see what actually failed.
+**What it means:** One file in your batch choked and you set `on_errors='skip'`. We logged the error and kept going. This is intentional; you told us to continue on error, so we do. Check the logs to see what actually failed.
 
 **Fix:** Check the reason. Fix the file or change `on_errors`.
 
