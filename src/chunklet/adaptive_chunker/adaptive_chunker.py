@@ -5,6 +5,7 @@ Better LLM Applications"): chunking parameters are adjusted dynamically based on
 measured content characteristics instead of using fixed limits.
 """
 
+import copy
 import os
 import tempfile
 from collections import deque
@@ -60,6 +61,16 @@ MAX_SENTENCES_PER_PARAGRAPH = 25.0
 SECTION_DENSITY_THRESHOLD = 0.75
 N_JOBS = 4
 
+DEFAULT_LEARNED_STATE = {
+    "document": {
+        "max_sentences": 7.0,
+        "header_density_ratio": 0.05,
+        "max_section_breaks": 1,
+        "max_tokens": 512.0,
+    },
+    "code": {"max_lines": 15.0, "max_functions": 1, "max_tokens": 512.0},
+}
+
 
 class AdaptiveChunker:
     """Adaptively chunk mixed text/code corpora based on learned content profiles.
@@ -83,6 +94,7 @@ class AdaptiveChunker:
         hard_token_limit: int = 1024,
         ema_alpha: Annotated[float, Field(ge=0, le=1)] = 0.3,
         verbose: bool = False,
+        initial_state: dict | None = None,
     ):
         """
         Initializes the AdaptiveChunker.
@@ -95,6 +107,9 @@ class AdaptiveChunker:
             ema_alpha: Smoothing factor in [0, 1] for the exponential moving average;
                 higher values react faster to recent sources.
             verbose: Enable verbose logging.
+            initial_state: Optional pre-calculated running average to seed the learned
+                profiles (e.g. exported from a previous ``learned_state``). Missing
+                profiles or metrics fall back to the built-in defaults.
         """
         self._verbose = verbose
         self._lang = lang
@@ -103,15 +118,7 @@ class AdaptiveChunker:
         self.hard_token_limit = hard_token_limit
         self.ema_alpha = ema_alpha
 
-        self.learned_state = {
-            "document": {
-                "max_sentences": 7.0,
-                "header_density_ratio": 0.05,
-                "max_section_breaks": 1,
-                "max_tokens": 512.0,
-            },
-            "code": {"max_lines": 15.0, "max_functions": 1, "max_tokens": 512.0},
-        }
+        self.learned_state = self._merge_initial_state(initial_state)
 
         self._pending_sources = deque()
         self._temp_files: list[Path] = []
@@ -166,6 +173,34 @@ class AdaptiveChunker:
         self.learned_state[profile_type][key] = (self.ema_alpha * current_value) + (
             (1.0 - self.ema_alpha) * previous_ema
         )
+
+    @staticmethod
+    def _merge_initial_state(initial_state: dict | None) -> dict:
+        """Build a learned-state dict from defaults, overlaying a provided baseline.
+
+        Args:
+            initial_state: Optional profile mapping to seed the learned state with.
+                Profiles or metrics not present fall back to the built-in defaults.
+
+        Returns:
+            A fresh learned-state dict safe to mutate per instance.
+
+        Raises:
+            ValueError: If initial_state contains an unknown profile name.
+        """
+        state = copy.deepcopy(DEFAULT_LEARNED_STATE)
+        if initial_state is None:
+            return state
+
+        for profile, metrics in initial_state.items():
+            if profile not in state:
+                raise ValueError(
+                    f"Unknown profile '{profile}' in initial_state. "
+                    f"Supported profiles: {sorted(state)}"
+                )
+            state[profile].update(metrics)
+
+        return state
 
     def _detect_file_type(self, file: Path) -> Literal["document", "code"]:
         """Detect a file's type by extension, binary sniffing, and content.

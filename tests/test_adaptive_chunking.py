@@ -115,6 +115,47 @@ def test_missing_token_counter_skips_max_tokens_learning():
     assert chunker.learned_state["document"]["max_tokens"] == 512.0
 
 
+def test_initial_state_seeds_learned_profiles():
+    """Test that a provided baseline becomes the starting point for learning."""
+    baseline = {
+        "code": {"max_lines": 40.0, "max_functions": 2, "max_tokens": 256.0},
+        "document": {
+            "max_sentences": 12.0,
+            "header_density_ratio": 0.2,
+            "max_section_breaks": 2,
+            "max_tokens": 256.0,
+        },
+    }
+    chunker = AdaptiveChunker(
+        token_counter=simple_token_counter, ema_alpha=0.0, initial_state=baseline
+    )
+    chunker.add_files(SOURCES)
+    list(chunker.process())
+
+    assert chunker.learned_state == baseline
+
+
+def test_initial_state_fills_missing_metrics_with_defaults():
+    """Test that omitted profiles and metrics fall back to defaults."""
+    chunker = AdaptiveChunker(initial_state={"code": {"max_lines": 42.0}})
+
+    assert chunker.learned_state["code"]["max_lines"] == 42.0
+    assert chunker.learned_state["code"]["max_functions"] == 1
+    assert chunker.learned_state["code"]["max_tokens"] == 512.0
+    assert chunker.learned_state["document"] == {
+        "max_sentences": 7.0,
+        "header_density_ratio": 0.05,
+        "max_section_breaks": 1,
+        "max_tokens": 512.0,
+    }
+
+
+def test_initial_state_with_unknown_profile_raises():
+    """Test that an unknown profile name in initial_state raises ValueError."""
+    with pytest.raises(ValueError, match="Unknown profile 'spreadsheet'"):
+        AdaptiveChunker(initial_state={"spreadsheet": {"max_rows": 3}})
+
+
 def test_hard_token_limit_caps_learned_max_tokens(tmp_path, monkeypatch):
     """Test that hard_token_limit caps the learned max_tokens at chunk time."""
     chunker = AdaptiveChunker(token_counter=simple_token_counter, hard_token_limit=128)
