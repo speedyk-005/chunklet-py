@@ -59,12 +59,14 @@ Key features:
 - **Pluggable architecture** — Swap in custom tokenizers, sentence splitters, or processors
 - **Rich metadata** — Every chunk comes with source references, spans, and structural info
 - **Multi-format support** — PDF, DOCX, EPUB, Markdown, HTML, LaTeX, ODT, CSV, Excel, and plain text
+- **Adaptive chunking** — Learns per-profile structural stats (via an exponential moving average) to size chunks to your actual content, no manual tuning
 
 Available tools:
 
 - `SentenceSplitter` — Lightweight sentence tokenization
 - `DocumentChunker` — Natural language with semantic boundaries
 - `CodeChunker` — Language-aware code chunking
+- `AdaptiveChunker` — Self-tuning chunking for mixed text/code corpora
 - `ChunkVisualizer` — Interactive web-based exploration
 
 Perfect for prepping data for LLMs, building RAG systems, or powering AI search - Chunklet-py gives you the precision and flexibility you need across tons of formats and languages.
@@ -77,6 +79,7 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 | 🔧 **Infinitely Customizable** | Offers extensive customization options, from pluggable token counters to custom sentence splitters and processors. |
 | 🌐 **Multilingual Mastery** | Supports over 60 natural languages for text and document chunking with intelligent detection and language-specific algorithms. |
 | 🧑‍💻 **Code-Aware Intelligence** | Language-agnostic code chunking that understands and preserves the structural integrity of your source code. |
+| 🤖 **Adaptive Chunking** | Self-tuning chunk boundaries for mixed text/code corpora — learns per-profile structural stats (exponential moving average) and sizes chunks to your actual content. No manual constraint tuning. |
 | 🎯 **Precision Chunking** | Flexible chunking with configurable limits based on sentences, tokens, sections, lines, and functions. |
 | 📄 **Document Format Mastery** | Processes a wide array of document formats including `.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx`. |
 | 💻 **Triple Interface: CLI, Library & Web** | Use it as a command-line tool, import as a library for deep integration, or launch the interactive web visualizer for real-time chunk exploration and parameter tuning. |
@@ -132,6 +135,10 @@ Want to unlock more Chunklet-py superpowers? Add these optional dependencies bas
 *   **Code Chunking:** For Language-agnostic code chunking features:
     ```bash
     pip install "chunklet-py[code]"
+    ```
+*   **Adaptive Chunking:** For self-tuning mixed text/code chunking (bundles `struct-doc`, `code`, and `auto`):
+    ```bash
+    pip install "chunklet-py[adaptive]"
     ```
 *   **Auto Language Detection:** For automatic language detection (`lang="auto"`). Uses `py3langid` to detect the language of your text:
     ```bash
@@ -201,6 +208,7 @@ Pick your weapon based on whatever data mess you're currently cleaning up.
 ```python
 from chunklet import DocumentChunker  # For PDFs, DOCX, and general text chaos
 from chunklet import CodeChunker  # For source code (it actually respects brackets)
+from chunklet import AdaptiveChunker  # For mixed text + code, self-tuning chunking
 from chunklet import SentenceSplitter  # For when you just need to split sentences
 from chunklet import visualizer  # Web-based chunk visualizer
 ```
@@ -242,6 +250,20 @@ chunks = chunker.chunk_text(
     max_functions=1,  # One function per chunk (keeps things tidy)
     strict=True,  # True: Crash on big blocks; False: Slice 'em up anyway
 )
+```
+
+**AdaptiveChunker (Mixed Text & Code)**
+
+Detects each source as document or code, learns per-profile structural metrics (EMA), and sizes chunks to match — no constraint tuning needed.
+
+```python
+chunker = AdaptiveChunker(token_counter=word_counter, ema_alpha=0.5)
+
+chunker.add_file("docs/guide.md")
+chunker.add_text("Some raw prose, enqueued just like a file.")
+
+chunks = chunker.process(show_progress=False)
+# Each chunk.metadata carries "inferred_type": "document" or "code"
 ```
 
 ### The Output Object
@@ -297,18 +319,6 @@ chunklet chunk --help
 chunklet visualize --help
 chunklet [COMMAND] [OPTIONS*]
 ```
-
----
-
-## 🗺 Features & Roadmap
-
-- [x] CLI interface
-- [x] Documents chunking with metadata
-- [x] Code chunking based on interest point
-- [x] Interactive chunk visualizer (web interface)
-- [x] Extended file format support:
-  - [x] ODT files
-  - [x] CSV and Excel files
 
 ---
 

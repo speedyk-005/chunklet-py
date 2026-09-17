@@ -307,6 +307,23 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+adaptive = [
+    { name = "defusedxml" },
+    { name = "docutils" },
+    { name = "ebooklib" },
+    { name = "littletree" },
+    { name = "mailparse" },
+    { name = "mammoth" },
+    { name = "markdownify" },
+    { name = "odfpy" },
+    { name = "openpyxl" },
+    { name = "pdfminer-six" },
+    { name = "py3langid" },
+    { name = "pylatexenc" },
+    { name = "python-docx" },
+    { name = "python-pptx" },
+    { name = "striprtf" },
+]
 all = [
     { name = "aiofiles" },
     { name = "defusedxml" },
@@ -362,6 +379,7 @@ dev-all = [
     { name = "odfpy" },
     { name = "openpyxl" },
     { name = "pdfminer-six" },
+    { name = "properdocs" },
     { name = "py3langid" },
     { name = "pylatexenc" },
     { name = "pymdown-extensions" },
@@ -380,6 +398,7 @@ docs = [
     { name = "mkdocs-api-autonav" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings-python" },
+    { name = "properdocs" },
     { name = "pymdown-extensions" },
 ]
 indic = [
@@ -411,8 +430,9 @@ viz = [
 requires-dist = [
     { name = "aiofiles", marker = "extra == 'viz'", specifier = "==25.1.0" },
     { name = "charset-normalizer", specifier = ">=3.4.2,<4.0" },
-    { name = "chunklet-py", extras = ["dev", "docs", "struct-doc", "code", "viz", "auto", "indic"], marker = "extra == 'dev-all'" },
-    { name = "chunklet-py", extras = ["struct-doc", "code", "viz", "auto", "indic"], marker = "extra == 'all'" },
+    { name = "chunklet-py", extras = ["auto", "struct-doc", "code"], marker = "extra == 'adaptive'" },
+    { name = "chunklet-py", extras = ["dev", "docs", "struct-doc", "code", "viz", "auto", "indic", "adaptive"], marker = "extra == 'dev-all'" },
+    { name = "chunklet-py", extras = ["struct-doc", "code", "viz", "auto", "indic", "adaptive"], marker = "extra == 'all'" },
     { name = "defusedxml", marker = "extra == 'code'", specifier = ">=0.7.1,<0.8" },
     { name = "docutils", marker = "extra == 'struct-doc'", specifier = ">=0.21.2,<0.24" },
     { name = "ebooklib", marker = "extra == 'struct-doc'", specifier = ">=0.19,<0.30" },
@@ -433,6 +453,7 @@ requires-dist = [
     { name = "odfpy", marker = "extra == 'struct-doc'", specifier = ">=1.4.1,<2.0" },
     { name = "openpyxl", marker = "extra == 'struct-doc'", specifier = ">=3.1.5,<4.0" },
     { name = "pdfminer-six", marker = "extra == 'struct-doc'", specifier = ">=20250324" },
+    { name = "properdocs", marker = "extra == 'docs'", specifier = "<2.0" },
     { name = "py3langid", marker = "extra == 'auto'", specifier = ">=0.4.0,<0.5.0" },
     { name = "pydantic", specifier = ">=2.11.0,<3.0" },
     { name = "pylatexenc", marker = "extra == 'struct-doc'", specifier = "==2.11" },
@@ -452,7 +473,7 @@ requires-dist = [
     { name = "uvicorn", marker = "extra == 'viz'", specifier = ">=0.35.0,<0.53" },
     { name = "yasbd-lib", specifier = ">=0.16.1,<1.0" },
 ]
-provides-extras = ["indic", "auto", "struct-doc", "code", "viz", "all", "dev", "docs", "dev-all"]
+provides-extras = ["indic", "auto", "struct-doc", "code", "adaptive", "viz", "all", "dev", "docs", "dev-all"]
 
 [[package]]
 name = "click"
@@ -1605,6 +1626,29 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f9/e2/3e91f31a7d2b083fe6ef3fa267035b518369d9511ffab804f839851d2779/pluggy-1.6.0.tar.gz", hash = "sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3", size = 69412, upload-time = "2025-05-15T12:30:07.975Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl", hash = "sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746", size = 20538, upload-time = "2025-05-15T12:30:06.134Z" },
+]
+
+[[package]]
+name = "properdocs"
+version = "1.6.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "ghp-import" },
+    { name = "jinja2" },
+    { name = "markdown" },
+    { name = "markupsafe" },
+    { name = "packaging" },
+    { name = "pathspec" },
+    { name = "platformdirs" },
+    { name = "pyyaml" },
+    { name = "pyyaml-env-tag" },
+    { name = "watchdog" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ec/29/f27a4e1eddf72ed3db6e47818fbafe6debbf09fd7051f9c1a007239b46ef/properdocs-1.6.7.tar.gz", hash = "sha256:adc7b16e562890af0e098a7e5b02e3a81c20894a87d6a28d345c9300de73c26e", size = 276141, upload-time = "2026-03-20T20:07:48.167Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/4d/fc923f5c85318ee8cc903566dc4e0ebe41b2dfc1d2ecf5546db232397ed6/properdocs-1.6.7-py3-none-any.whl", hash = "sha256:6fa0cfa2e01bf338f684892c8a506cf70ea88ae7f3479c933b6fa20168101cbd", size = 225406, upload-time = "2026-03-20T20:07:46.875Z" },
 ]
 
 [[package]]

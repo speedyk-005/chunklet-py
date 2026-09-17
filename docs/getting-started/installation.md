@@ -43,6 +43,10 @@ Chunklet-py offers optional dependencies to unlock additional functionalities, s
     ```bash
     pip install "chunklet-py[code]"
     ```
+*   **Adaptive Chunking:** For self-tuning mixed text/code chunking (bundles `struct-doc`, `code`, and `auto`):
+    ```bash
+    pip install "chunklet-py[adaptive]"
+    ```
 *   **Auto Language Detection:** For automatic language detection (`lang="auto"`). Uses `py3langid` to detect the language of your text:
     ```bash
     pip install "chunklet-py[auto]"

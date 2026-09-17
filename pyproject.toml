@@ -79,6 +79,9 @@ code = [
   "littletree>=0.8.7,<1.0",
 ]
 
+# AdaptiveChunker: pairs document + code chunking with automatic language detection
+adaptive = ["chunklet-py[auto,struct-doc,code]"]
+
 viz = [
   "uvicorn>=0.35.0,<0.53",
   "fastapi>=0.116.0,<0.142",
@@ -89,7 +92,7 @@ viz = [
   "aiofiles==25.1.0",
 ]
 
-all = ["chunklet-py[struct-doc,code,viz,auto,indic]"]
+all = ["chunklet-py[struct-doc,code,viz,auto,indic,adaptive]"]
 
 dev = [
   "pytest>=8.3.5",
@@ -99,6 +102,7 @@ dev = [
 ]
 
 docs = [
+  "properdocs<2.0",
   "mike>=2.1.2",
   "mkdocs-material>=9.6.20",
   "mkdocs-api-autonav>=0.4.0",
@@ -106,7 +110,7 @@ docs = [
   "pymdown-extensions>=10.16.1",
 ]
 
-dev-all = ["chunklet-py[dev,docs,struct-doc,code,viz,auto,indic]"]
+dev-all = ["chunklet-py[dev,docs,struct-doc,code,viz,auto,indic,adaptive]"]
 
 [project.urls]
 Homepage = "https://github.com/speedyk-005/chunklet-py"

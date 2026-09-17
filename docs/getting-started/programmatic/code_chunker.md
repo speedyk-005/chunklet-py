@@ -16,21 +16,21 @@ This installs all the code processing dependencies needed for language-agnostic 
 
 Got a massive codebase that's hard to navigate? The `CodeChunker` transforms tangled functions and classes into clean, understandable chunks that actually make sense.
 
-It uses pattern-based line-by-line processing to identify code structures — no heavy parsers needed. Lightweight yet surprisingly accurate across 30+ languages.
+It uses pattern-based line-by-line processing to identify code structures, so no heavy parsers needed. Lightweight yet surprisingly accurate across 30+ languages.
 
 ### Code Chunker Superpowers! ⚡
 
 The `CodeChunker` comes packed with smart features for your coding adventures:
 
--  **Multi-Language Support:** Works with 30+ languages out of the box — Python, JavaScript, Java, C++, Go, Rust, PHP, and more! One library to rule them all! 🌍
--  **Convention-Aware:** Assumes your code plays by the rules — no full language parsers needed for surprisingly accurate results! 🎯
--  **Flexible Composable Constraints:** Ultimate control over code segmentation! Mix and match limits based on tokens, lines, or functions for perfect chunks. 🎛️
--  **Customizable Token Counting:** Plug in your own token counter for perfect alignment with different LLMs. Because one size definitely doesn't fit all models! 🤖
--  **Annotation-Aware:** Keeps comments and docstrings intact — your code's story stays complete! 📝
--  **Strict Mode Control:** By default keeps functions and classes together even if large. Set `strict=False` for more flexibility. No more orphaned code! 🛡️
--  **Namespace Hierarchy Tracking:** Builds a tree of your code's structure — functions, classes, namespaces — all tracked for accurate metadata 🌳
--  **Memory-Conscious Operation:** Handles massive codebases efficiently by yielding chunks one at a time. Your RAM will thank you later! 💾
--  **Bulk Processing Powerhouse:** Got a mountain of code files to conquer? No problem! This powerhouse efficiently processes multiple files in parallel. 📚⚡
+-  **Multi-Language Support:** Works with 30+ languages out of the box: Python, JavaScript, Java, C++, Go, Rust, PHP, and more! One library to rule them all!
+-  **Convention-Aware:** Assumes your code plays by the rules, so no full language parsers needed for surprisingly accurate results!
+-  **Flexible Composable Constraints:** Ultimate control over code segmentation! Mix and match limits based on tokens, lines, or functions for perfect chunks.
+-  **Customizable Token Counting:** Plug in your own token counter for perfect alignment with different LLMs. Because one size definitely doesn't fit all models!
+-  **Annotation-Aware:** Keeps comments and docstrings intact, so your code's story stays complete!
+-  **Strict Mode Control:** By default keeps functions and classes together even if large. Set `strict=False` for more flexibility. No more orphaned code!
+-  **Namespace Hierarchy Tracking:** Builds a tree of your code's structure (functions, classes, namespaces), all tracked for accurate metadata
+-  **Memory-Conscious Operation:** Handles massive codebases efficiently by yielding chunks one at a time. Your RAM will thank you later!
+-  **Bulk Processing Powerhouse:** Got a mountain of code files to conquer? No problem! This powerhouse efficiently processes multiple files in parallel.
 
 ### Code Constraints: Your Chunking Control Panel! 🎛️
 
@@ -48,7 +48,7 @@ The `CodeChunker` comes packed with smart features for your coding adventures:
 
 The `CodeChunker` has four main methods: `chunk_text`, `chunk_file`, `chunk_texts`, and `chunk_files`. `chunk_text` and `chunk_file` return a list of [`DotDict`][chunklet.common.dotdict.DotDict] objects, while `chunk_texts` and `chunk_files` are memory-friendly generators that yield chunks one by one. Each `DotDict` has `content` (str) and `metadata` (dict). For metadata details, see the [Metadata guide](../metadata.md#codechunker-metadata).
 
-## Single Run: 
+## Single Run 1⃣ 
 
 Let's see `CodeChunker` in action with a single code input. It provides two methods:
 

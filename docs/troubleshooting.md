@@ -67,9 +67,9 @@ Things break. Here's how to fix them.
 
 ??? question "Something threw an exception. Now what?"
 
-    First: actually read the error message. We know, we know — "just read the error" sounds obvious, but sometimes it actually tells you what's wrong.
+    First: actually read the error message. We know, we know: "just read the error" sounds obvious, but sometimes it actually tells you what's wrong.
     
-    If it's a warning, you're probably fine — just a heads up. If it's an exception, something actually broke.
+    If it's a warning, you're probably fine, just a heads up. If it's an exception, something actually broke.
     
     **What to do:**
     

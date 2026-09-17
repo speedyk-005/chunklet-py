@@ -36,12 +36,14 @@ Key features:
 - **Pluggable architecture** — Swap in custom tokenizers, sentence splitters, or processors  
 - **Rich metadata** — Every chunk comes with source references, spans, and structural info
 - **Multi-format support** — PDF, DOCX, EPUB, Markdown, HTML, LaTeX, ODT, CSV, Excel, and plain text
+- **Adaptive chunking** — Learns per-profile structural stats (via an exponential moving average) to size chunks to your actual content, no manual tuning
 
 Available tools:
 
 - `SentenceSplitter` — Lightweight sentence tokenization
 - `DocumentChunker` — Natural language with semantic boundaries
 - `CodeChunker` — Language-aware code chunking
+- `AdaptiveChunker` — Self-tuning chunking for mixed text/code corpora
 - `ChunkVisualizer` — Interactive web-based exploration
 
 Perfect for prepping data for LLMs, building RAG systems, or powering AI search - Chunklet-py gives you the precision and flexibility you need across tons of formats and languages.
@@ -71,6 +73,10 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 - :material-code-tags:{ .lg .middle } __Code-Aware Intelligence__
 
     Language-agnostic code chunking that understands and preserves the structural integrity of your source code.
+
+- :material-robot:{ .lg .middle } __Adaptive Chunking__
+
+    Self-tuning chunk boundaries for mixed text/code corpora. Learns per-profile structural stats (exponential moving average) and sizes chunks to your actual content. No manual constraint tuning.
 
 - :material-ruler-square:{ .lg .middle } __Precision Chunking__
 
