@@ -349,6 +349,17 @@ class AdaptiveChunker:
             self._fit_section_breaks(lines, paragraphs)
             self._fit_max_tokens_document(paragraphs)
 
+    def _fit_and_stream_text(
+        self, text_or_gen: IterableOfStr
+    ) -> Generator[str, None, None]:
+        """Fit each text span as a document while streaming it through unchanged."""
+        if isinstance(text_or_gen, str):
+            text_or_gen = [text_or_gen]
+
+        for text in text_or_gen:
+            self._fit(text, "document")
+            yield text
+
     @validate_input
     def add_file(self, file_path: str | Path) -> None:
         """Enqueue a single local system file if exists
@@ -432,14 +443,6 @@ class AdaptiveChunker:
             `DotDict` object, representing a chunk with its content and metadata.
         """
 
-        def fit_and_stream_text(text_or_gen):
-            if isinstance(text_or_gen, str):
-                text_or_gen = [text_or_gen]
-
-            for text in text_or_gen:
-                self._fit(text, "document")
-                yield text
-
         while self._pending_sources:
             pending_src = self._pending_sources.popleft()
 
@@ -480,7 +483,7 @@ class AdaptiveChunker:
                     learned_state["max_section_breaks"]
                 )
 
-                gen = fit_and_stream_text(text_or_gen)
+                gen = self._fit_and_stream_text(text_or_gen)
                 chunks = self.document_chunker.chunk_texts(
                     gen,
                     token_counter=self.token_counter,
