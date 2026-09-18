@@ -70,28 +70,12 @@ class CodeStructureExtractor:
         return "\n" * num_newlines
 
     def _annotate_block(self, tag: str, match: re.Match) -> str:
-        """Prefix each line in a matched block with a tag for tracking.
-
-        Args:
-            tag: Tag identifier for the block type.
-            match: Regex match object for the block.
-
-        Returns:
-            Annotated block with tag prefixes.
-        """
+        """Prefix each line in a matched block with a tag for tracking."""
         lines = match.group(0).splitlines()
         return "\n".join(f"(-- {tag} -->) {line}" for line in lines)
 
     def _summarize_docstring_style_one(self, match: re.Match) -> str:
-        """
-        Extracts the first line from a block-style documentation string.
-
-        Args:
-            match: Regex match object for the docstring with captured groups.
-
-        Returns:
-            The summarized docstring line.
-        """
+        """Extracts the first line from a block-style documentation string."""
         # The `DOCSTRING_STYLE_ONE` regex contains multiple alternative patterns,
         # which results in `None` values for the capturing groups that did not match.
         # filters out the `None` values to reliably extract while preserving the empty string indent
@@ -107,17 +91,7 @@ class CodeStructureExtractor:
         return summarized_line_content + "\n" * padding_count
 
     def _summarize_docstring_style_two(self, match: re.Match) -> str:
-        """
-        Extracts a summary from line-prefixed documentation comments.
-
-        Attempts to parse <summary> XML tags; falls back to the first meaningful ine if parsing fails.
-
-        Args:
-            match: Regex match object for line-based docstring.
-
-        Returns:
-            The summarized docstring line(s).
-        """
+        """Extracts a summary from line-prefixed documentation comments."""
         if not ET:
             raise ImportError(
                 "The 'defusedxml' library is not installed. "

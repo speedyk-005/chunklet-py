@@ -57,17 +57,7 @@ class SentenceSplitter:
     @staticmethod
     @lru_cache(maxsize=52)
     def _get_lang_handler(lang: str, verbose: bool) -> Callable | None:
-        """
-        Get language-specific sentence splitting handler.
-
-        Args:
-            lang: Language code (e.g., 'en', 'ja', 'hi').
-            verbose: If True, logs which splitter library is being used.
-
-        Returns:
-            A callable that takes text (str) and returns list[str], or None if no
-            special handler exists for the language.
-        """
+        """Get language-specific sentence splitting handler."""
         if lang in YASBD_SUPPORTED_LANGUAGES:
             from yasbd.boundary_detector import BoundaryDetector
 
@@ -95,15 +85,7 @@ class SentenceSplitter:
         return None
 
     def _clean_sentences(self, sentences: list[str]) -> list[str]:
-        """
-        Filtering empty strings and rejoining stray punctuation.
-
-        Args:
-            sentences: Raw list of split sentences.
-
-        Returns:
-            Cleaned list of sentences with proper punctuation handling.
-        """
+        """Filtering empty strings and rejoining stray punctuation."""
         processed_sentences = []
         for sent in sentences:
             stripped_sent = sent.strip()

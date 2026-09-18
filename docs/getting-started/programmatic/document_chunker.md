@@ -56,11 +56,11 @@ The `DocumentChunker` comes loaded with features that make it your go-to text wr
 | `offset`             | `int >= 0`        | Skip the first N sentences before chunking. Defaults to 0. |
 | `lang`               | `str`             | Language code (`'en'`, `'fr'`, ...) or `'auto'`. Required. |
 
-!!! note "Auto language detection requires the `[auto]` extra"
+!!! note "Auto language detection requires the `[lang-detect]` extra"
     When you use `lang="auto"`, the chunker needs `py3langid` to detect the language of your text. This is not installed by default; install it with:
 
     ```bash
-    pip install 'chunklet-py[auto]'
+    pip install 'chunklet-py[lang-detect]'
     ```
 
     If you only need specific languages (e.g. `lang="en"`), the default install is enough.

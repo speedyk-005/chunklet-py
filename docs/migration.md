@@ -81,30 +81,12 @@ In v2, `lang` defaulted to `"auto"` and `py3langid` was a hard dependency; it wa
 If you were relying on automatic language detection, you need to:
 
 1. Pass `lang="auto"` explicitly (it's no longer implicit).
-2. Install the extra: `pip install 'chunklet-py[auto]'`
+2. Install the extra: `pip install 'chunklet-py[lang-detect]'`
 
 If you only ever used specific language codes like `lang="en"`, you don't need the extra; the default install is enough.
 
 !!! note "No auto-detection warning for you"
     In v2, `SentenceSplitter` warned on first use with `lang="auto"` ("Consider setting the `lang` parameter to a specific language"). That warning is removed in v3. Auto-detection still works, and the detected language and confidence are still logged at `verbose` level. If you relied on that warning, note that `lang` is now a required argument, so you already have it in hand: check `lang == "auto"` yourself and emit your own warning outside the library.
-
-### `show_progress` now defaults to `False`
-
-In v2, batch methods (`chunk_texts`, `chunk_files`) and `SelfTuningChunker.process` showed a progress bar by default. In v3, `show_progress` defaults to `False` everywhere. Pass `show_progress=True` explicitly if you want the bar back.
-
-=== "Before (v2.x.x)"
-
-    ```py
-    chunks = list(chunker.chunk_files(paths))  # progress bar shown
-    ```
-
-=== "After (v3.x.x)"
-
-    ```py
-    chunks = list(chunker.chunk_files(paths, show_progress=True))
-    ```
-
-### `lang="auto"` is no longer the default
 
 === "Before (v2.x.x)"
 
@@ -123,7 +105,23 @@ In v2, batch methods (`chunk_texts`, `chunk_files`) and `SelfTuningChunker.proce
     And install the extra:
 
     ```bash
-    pip install 'chunklet-py[auto]'
+    pip install 'chunklet-py[lang-detect]'
+    ```
+
+### `show_progress` now defaults to `False`
+
+In v2, batch methods (`chunk_texts`, `chunk_files`) and `SelfTuningChunker.process` showed a progress bar by default. In v3, `show_progress` defaults to `False` everywhere. Pass `show_progress=True` explicitly if you want the bar back.
+
+=== "Before (v2.x.x)"
+
+    ```py
+    chunks = list(chunker.chunk_files(paths))  # progress bar shown
+    ```
+
+=== "After (v3.x.x)"
+
+    ```py
+    chunks = list(chunker.chunk_files(paths, show_progress=True))
     ```
 
 ### Language detection moved to `common`
@@ -155,7 +153,7 @@ This affects two ways you may have used it before:
 It still needs `py3langid`, so install the extra if you haven't:
 
 ```bash
-pip install 'chunklet-py[auto]'
+pip install 'chunklet-py[lang-detect]'
 ```
 
 ### Constraints moved to the constructor

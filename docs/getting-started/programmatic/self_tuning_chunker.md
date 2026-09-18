@@ -12,7 +12,7 @@ pip install chunklet-py[self-tuning]
 
 `SelfTuningChunker` rides on top of the `DocumentChunker` and `CodeChunker`, so the `self-tuning` extra bundles its `struct-doc`, `code` dependencies in one shot.
 
-!!! note "Auto language detection requires the `[auto]` extra"
+!!! note "Auto language detection requires the `[lang-detect]` extra"
     When you use `lang="auto"`, the chunker needs `py3langid` to detect the language of your text. This is not installed by default.
 
 ## SelfTuningChunker: Your Self-Tuning Text Sidekick! 🤖

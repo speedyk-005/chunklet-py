@@ -164,13 +164,7 @@ class SelfTuningChunker:
         self.code_chunker.verbose = value
 
     def _update_kama(self, profile_type: str, key: str, current_value: float) -> None:
-        """Update the given profile metric with an Kaufman Adaptive Moving Average.
-
-        Args:
-            profile_type: Which profile to update, "document" or "code".
-            key: Metric name within the profile.
-            current_value: Fresh measurement for the metric.
-        """
+        """Update the given profile metric with an Kaufman Adaptive Moving Average."""
         history = self.histories[(profile_type, key)]
         previous_kama = self.learned_state[profile_type][key]
 
@@ -262,14 +256,7 @@ class SelfTuningChunker:
         return file_type
 
     def _fit_max_lines(self, text: str, fx_matches: list) -> None:
-        """Fold the average spacing between functions into the code max_lines KAMA.
-
-        The pairwise gaps between consecutive function starts are collected and
-        their mean is KAMA-folded into max_lines.
-
-        `text` is only used to convert each match start offset to a 1-based line
-        number. Files with fewer than two functions are skipped, as no gap exists.
-        """
+        """Fold the average spacing between functions into the code max_lines KAMA."""
         if len(fx_matches) < 2:
             return
 
@@ -279,14 +266,7 @@ class SelfTuningChunker:
         self._update_kama("code", key="max_lines", current_value=avg_diff)
 
     def _fit_max_functions(self, fx_matches: list) -> None:
-        """Fold the 1-or-2 function-per-chunk signal into the code max_functions KAMA.
-
-        When the mean pairwise gap between function starts exceeds half of
-        IDEAL_LINES_PER_FUNCTION the functions are spread out enough to allow
-        one per chunk, so 1 is folded in; otherwise 2 is folded in.
-
-        Files with fewer than two functions are skipped, as no gap exists.
-        """
+        """Fold the 1-or-2 function-per-chunk signal into the code max_functions KAMA."""
         starts = [start for _, start, _ in fx_matches]
 
         if len(starts) < 2:
@@ -300,12 +280,7 @@ class SelfTuningChunker:
         )
 
     def _fit_sentences_per_para(self, paragraphs: list[str]) -> None:
-        """Fold the average sentences-per-paragraph into the document KAMA.
-
-        Each paragraph is cut into sentences with the fallback `UniversalSplitter`
-        and the mean of the per-paragraph sentence counts is KAMA-folded into
-        max_sentences, clamped to the [2, 25] range.
-        """
+        """Fold the average sentences-per-paragraph into the document KAMA."""
         sentence_counts = [len(self._sentence_splitter.split(p)) for p in paragraphs]
         if not sentence_counts:
             return
@@ -321,14 +296,7 @@ class SelfTuningChunker:
         )
 
     def _fit_section_breaks(self, lines: list[str], paragraphs: list[str]) -> None:
-        """Fold header density and the section-break signal into the document KAMA.
-
-        Lines carrying a section marker (markdown headings, thKAMAtic breaks, and
-        HTML sectioning tags, per `SECTION_BREAK_PATTERN`) are counted and divided
-        by the paragraph count. That density is KAMA-folded into
-        header_density_ratio, and max_section_breaks receives 2 when more than 75%
-        of paragraphs carry a marker, otherwise 1.
-        """
+        """Fold header density and the section-break signal into the document KAMA."""
         marker_count = sum(1 for line in lines if SECTION_BREAK_PATTERN.match(line))
         density = marker_count / max(1, len(paragraphs))
         self._update_kama(
@@ -343,14 +311,7 @@ class SelfTuningChunker:
         )
 
     def _fit_max_tokens_code(self, text: str, starts: list[int]) -> None:
-        """Fold the average token span between functions into the code max_tokens KAMA.
-
-        Each of the first five function declarations is treated as a span end; the
-        text between consecutive starts is token-counted with `count_tokens` and
-        the mean of those spans is KAMA-folded into code max_tokens.
-
-        Files with fewer than two functions are skipped, as no span exists.
-        """
+        """Fold the average token span between functions into the code max_tokens KAMA."""
         if self.token_counter is None:
             return
 
@@ -367,11 +328,7 @@ class SelfTuningChunker:
         )
 
     def _fit_max_tokens_document(self, paragraphs: list[str]) -> None:
-        """Fold the average paragraph token count into the document max_tokens KAMA.
-
-        The first five paragraphs are token-counted with `count_tokens` and their
-        mean is KAMA-folded into document max_tokens.
-        """
+        """Fold the average paragraph token count into the document max_tokens KAMA."""
         if self.token_counter is None:
             return
 
