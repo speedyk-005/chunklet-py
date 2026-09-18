@@ -30,7 +30,7 @@ def detect_top_language(text: str) -> tuple[str, float]:
             raise ImportError(
                 "The 'py3langid' library is required for auto language detection. "
                 "Please install it with 'pip install 'py3langid>=0.4.0,<0.5.0'' "
-                "or install the auto extra with 'pip install 'chunklet-py[auto]''"
+                "or install the lang-detect extra with 'pip install 'chunklet-py[lang-detect]''"
             ) from e
 
     return _lang_identifier.classify(text)

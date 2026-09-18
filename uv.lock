@@ -330,9 +330,6 @@ all = [
     { name = "striprtf" },
     { name = "uvicorn" },
 ]
-auto = [
-    { name = "py3langid" },
-]
 code = [
     { name = "defusedxml" },
     { name = "littletree" },
@@ -387,6 +384,9 @@ docs = [
 indic = [
     { name = "indic-nlp-library" },
 ]
+lang-detect = [
+    { name = "py3langid" },
+]
 self-tuning = [
     { name = "defusedxml" },
     { name = "docutils" },
@@ -429,9 +429,9 @@ viz = [
 requires-dist = [
     { name = "aiofiles", marker = "extra == 'viz'", specifier = "==25.1.0" },
     { name = "charset-normalizer", specifier = ">=3.4.2,<4.0" },
-    { name = "chunklet-py", extras = ["dev", "docs", "struct-doc", "code", "viz", "auto", "indic", "self-tuning"], marker = "extra == 'dev-all'" },
+    { name = "chunklet-py", extras = ["dev", "docs", "struct-doc", "code", "viz", "lang-detect", "indic", "self-tuning"], marker = "extra == 'dev-all'" },
     { name = "chunklet-py", extras = ["struct-doc", "code"], marker = "extra == 'self-tuning'" },
-    { name = "chunklet-py", extras = ["struct-doc", "code", "viz", "auto", "indic", "self-tuning"], marker = "extra == 'all'" },
+    { name = "chunklet-py", extras = ["struct-doc", "code", "viz", "lang-detect", "indic", "self-tuning"], marker = "extra == 'all'" },
     { name = "defusedxml", marker = "extra == 'code'", specifier = ">=0.7.1,<0.8" },
     { name = "docutils", marker = "extra == 'struct-doc'", specifier = ">=0.21.2,<0.24" },
     { name = "ebooklib", marker = "extra == 'struct-doc'", specifier = ">=0.19,<0.30" },
@@ -453,7 +453,7 @@ requires-dist = [
     { name = "openpyxl", marker = "extra == 'struct-doc'", specifier = ">=3.1.5,<4.0" },
     { name = "pdfminer-six", marker = "extra == 'struct-doc'", specifier = ">=20250324" },
     { name = "properdocs", marker = "extra == 'docs'", specifier = "<2.0" },
-    { name = "py3langid", marker = "extra == 'auto'", specifier = ">=0.4.0,<0.5.0" },
+    { name = "py3langid", marker = "extra == 'lang-detect'", specifier = ">=0.4.0,<0.5.0" },
     { name = "pydantic", specifier = ">=2.11.0,<3.0" },
     { name = "pylatexenc", marker = "extra == 'struct-doc'", specifier = "==2.11" },
     { name = "pymdown-extensions", marker = "extra == 'docs'", specifier = ">=10.16.1" },
@@ -472,7 +472,7 @@ requires-dist = [
     { name = "uvicorn", marker = "extra == 'viz'", specifier = ">=0.35.0,<0.53" },
     { name = "yasbd-lib", specifier = ">=0.16.1,<1.0" },
 ]
-provides-extras = ["indic", "auto", "struct-doc", "code", "self-tuning", "viz", "all", "dev", "docs", "dev-all"]
+provides-extras = ["indic", "lang-detect", "struct-doc", "code", "self-tuning", "viz", "all", "dev", "docs", "dev-all"]
 
 [[package]]
 name = "click"

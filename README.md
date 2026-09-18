@@ -140,7 +140,7 @@ Want to unlock more Chunklet-py superpowers? Add these optional dependencies bas
     ```
 *   **Auto Language Detection:** For automatic language detection (`lang="auto"`). Uses `py3langid` to detect the language of your text:
     ```bash
-    pip install "chunklet-py[auto]"
+    pip install "chunklet-py[lang-detect]"
     ```
 *   **Indic Languages:** For splitting text in Indic languages (Assamese, Gujarati, Kannada, Nepali, Odia, Punjabi, Sanskrit, Tamil, Telugu). Note: Bengali, Malayalam, and Hindi are already covered by the default install:
     ```bash

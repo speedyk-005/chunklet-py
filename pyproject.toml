@@ -54,7 +54,7 @@ dependencies = [
 indic = ["indic-nlp-library>=0.92,<1.0"]
 
 # Language detection; required for lang="auto"
-auto = ["py3langid>=0.4.0,<0.5.0"]
+lang-detect = ["py3langid>=0.4.0,<0.5.0"]
 
 struct-doc = [
   "pdfminer.six>=20250324",
@@ -92,7 +92,7 @@ viz = [
   "aiofiles==25.1.0",
 ]
 
-all = ["chunklet-py[struct-doc,code,viz,auto,indic,self-tuning]"]
+all = ["chunklet-py[struct-doc,code,viz,lang-detect,indic,self-tuning]"]
 
 dev = [
   "pytest>=8.3.5",
@@ -110,7 +110,7 @@ docs = [
   "pymdown-extensions>=10.16.1",
 ]
 
-dev-all = ["chunklet-py[dev,docs,struct-doc,code,viz,auto,indic,self-tuning]"]
+dev-all = ["chunklet-py[dev,docs,struct-doc,code,viz,lang-detect,indic,self-tuning]"]
 
 [project.urls]
 Homepage = "https://github.com/speedyk-005/chunklet-py"

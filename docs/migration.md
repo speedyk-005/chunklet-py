@@ -81,7 +81,7 @@ In v2, `lang` defaulted to `"auto"` and `py3langid` was a hard dependency; it wa
 If you were relying on automatic language detection, you need to:
 
 1. Pass `lang="auto"` explicitly (it's no longer implicit).
-2. Install the extra: `pip install 'chunklet-py[auto]'`
+2. Install the extra: `pip install 'chunklet-py[lang-detect]'`
 
 If you only ever used specific language codes like `lang="en"`, you don't need the extra; the default install is enough.
 
@@ -105,7 +105,7 @@ If you only ever used specific language codes like `lang="en"`, you don't need t
     And install the extra:
 
     ```bash
-    pip install 'chunklet-py[auto]'
+    pip install 'chunklet-py[lang-detect]'
     ```
 
 ### `show_progress` now defaults to `False`
@@ -153,7 +153,7 @@ This affects two ways you may have used it before:
 It still needs `py3langid`, so install the extra if you haven't:
 
 ```bash
-pip install 'chunklet-py[auto]'
+pip install 'chunklet-py[lang-detect]'
 ```
 
 ### Constraints moved to the constructor
