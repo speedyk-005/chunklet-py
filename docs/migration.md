@@ -85,6 +85,9 @@ If you were relying on automatic language detection, you need to:
 
 If you only ever used specific language codes like `lang="en"`, you don't need the extra; the default install is enough.
 
+!!! note "No auto-detection warning for you"
+    In v2, `SentenceSplitter` warned on first use with `lang="auto"` ("Consider setting the `lang` parameter to a specific language"). That warning is removed in v3. Auto-detection still works, and the detected language and confidence are still logged at `verbose` level. If you relied on that warning, note that `lang` is now a required argument, so you already have it in hand: check `lang == "auto"` yourself and emit your own warning outside the library.
+
 === "Before (v2.x.x)"
 
     ```py
