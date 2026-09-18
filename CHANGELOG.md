@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`lang` is no longer required to default to `"auto"`**: `lang` is now a required argument with no default.
   - `py3langid` is no longer a hard dependency (it's an optional extra called `[auto]`), needed only when using `lang="auto"`.
   - **Visualizer**: The visualizer's document chunker now defaults to `lang="en"` instead of `"auto"`.
+  - **SentenceSplitter**: Removed the warning emitted on first use with `lang="auto"` ("Consider setting the `lang` parameter to a specific language"). Auto-detection still works; the detected language and confidence are still logged at `verbose` level.
 - **`indic-nlp-library` is now an optional extra**: Moved out of the core dependencies into the `[indic]` extra. Install with `pip install 'chunklet-py[indic]'` for Indic language support.
 - **Dependency upper bounds tightened**: Optional-extras dependencies no longer accept blanket `<1.0` bounds. Upper bounds now track the tested versions so future breaking releases are excluded.
 - **Extras consolidated**: The `structured-document` extra is renamed to `struct-doc` (`pip install 'chunklet-py[struct-doc]'`). The `document` alias for it and the `visualization` extra are removed; the `viz` extra now carries the visualizer dependencies directly.
