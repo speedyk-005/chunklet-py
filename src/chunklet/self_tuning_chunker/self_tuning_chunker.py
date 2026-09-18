@@ -16,6 +16,7 @@ from typing import Any, Callable, Generator, Literal
 from chunklet import CodeChunker, DocumentChunker
 from chunklet.code_chunker.patterns import FUNCTION_DECLARATION
 from chunklet.common.dotdict import DotDict
+from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import is_binary_file, read_text_file
 from chunklet.common.token_utils import count_tokens
 from chunklet.common.validation import IterableOfPath, IterableOfStr, validate_input
@@ -245,22 +246,20 @@ class SelfTuningChunker:
         """
         ext = file.suffix
         if ext in self.document_chunker.BUILTIN_SUPPORTED_EXTENSIONS:
-            return "document"
-
-        if ext in COMMON_CODE_FILE_EXTENSIONS:
-            return "code"
-
-        if is_binary_file(file):
+            file_type = "document"
+        elif ext in COMMON_CODE_FILE_EXTENSIONS:
+            file_type = "code"
+        elif is_binary_file(file):
             raise UnsupportedFileTypeError(
                 f"File type '{ext}' is not supported.\nSupported extensions are: "
                 f"{self.document_chunker.BUILTIN_SUPPORTED_EXTENSIONS} + any code files"
             )
+        else:
+            text = read_text_file(file)
+            file_type = "code" if is_code_like(text) else "document"
 
-        text = read_text_file(file)
-        if is_code_like(text):
-            return "code"
-
-        return "document"
+        log_info(self._verbose, "Detected file type '{}' for {}", file_type, file)
+        return file_type
 
     def _fit_max_lines(self, text: str, fx_matches: list) -> None:
         """Fold the average spacing between functions into the code max_lines KAMA.
