@@ -32,6 +32,16 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
     [:octicons-arrow-right-24: Learn More](code_chunker.md)
 
+-   :material-robot:{ .lg .middle } __Self-Tuning Chunker__
+
+    ---
+
+    Self-tuning chunks for mixed text and code corpora. Classifies each source as document or code, learns per-profile structural statistics via a Kaufman Adaptive Moving Average (KAMA), and sizes chunk boundaries to match your content without manual constraint tuning.
+
+    Perfect for heterogeneous corpora, evolving codebases, and anyone tired of hand-picking `max_sentences` / `max_lines` limits.
+
+    [:octicons-arrow-right-24: Learn More](self_tuning_chunker.md)
+
 -   :material-monitor-shimmer:{ .lg .middle } __Text Chunk Visualizer__
 
     ---

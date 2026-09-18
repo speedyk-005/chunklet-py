@@ -16,12 +16,12 @@ Think of it as a skilled linguist who knows where sentences actually end. It han
 
 The `SentenceSplitter` is a sophisticated system:
 
--  **Multilingual Support 🌍:** Handles over **60** languages with automatic language detection. See the [full list](../../supported-languages.md).
--  **Reliable Fallback 🛡️:** For unsupported languages, a rule-based fallback kicks in.
--  **Output Refinement ✨:** Removes empty sentences and fixes punctuation.
+-  **Multilingual Support:** Handles over **60** languages with intelligent detection. See the [full list](../../supported-languages.md).
+-  **Reliable Fallback:** For unsupported languages, a rule-based fallback kicks in.
+-  **Output Refinement:** Removes empty sentences and fixes punctuation.
 
 !!! note "Auto language detection requires the `[auto]` extra"
-    When you use `lang="auto"`, the splitter needs `py3langid` to detect the language of your text. This is not installed by default; install it with:
+    When you use `lang="auto"`, the splitter needs `py3langid` to detect the language of your text. This is not installed by default, so install it with:
 
     ```bash
     pip install 'chunklet-py[auto]'

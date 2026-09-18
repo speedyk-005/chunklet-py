@@ -44,6 +44,7 @@ __all__ = [
     "CallbackError",
     "SentenceSplitter",
     "DocumentChunker",
+    "SelfTuningChunker",
     "CodeChunker",
     "Visualizer",
 ]
@@ -53,6 +54,7 @@ __all__ = [
 _LOOKUP = {
     "SentenceSplitter": "chunklet.sentence_splitter",
     "DocumentChunker": "chunklet.document_chunker",
+    "SelfTuningChunker": "chunklet.self_tuning_chunker",
     "CodeChunker": "chunklet.code_chunker",
     "Visualizer": "chunklet.visualizer",
 }

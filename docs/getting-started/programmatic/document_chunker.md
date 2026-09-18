@@ -26,19 +26,19 @@ Got a wall of text that's overwhelming? The `DocumentChunker` transforms unruly 
 
 It preserves meaning and flow, no confusing puzzle pieces.
 
-### Where `DocumentChunker` Really Shines
+### Where `DocumentChunker` Really Shines! ⚡
 
 The `DocumentChunker` comes loaded with features that make it your go-to text wrangling sidekick:
 
--  **Flexible Composable Constraints:** Full control over your chunks! Mix and match limits based on sentences, tokens, or section breaks (headings, horizontal rules, `<details>` tags). Craft exactly the chunk size you need. 🎯
--  **Overlap:** Adds overlap between chunks so your text flows smoothly. No more jarring transitions that leave readers scratching their heads!
--  **Multilingual Support:** Speaks over 60 languages fluently, thanks to our trusty sentence splitter. Global domination through better text chunking! 🌍
--  **Customizable Token Counting:** Plug in your own token counter for alignment with different LLMs. Because one size definitely doesn't fit all models!
--  **Memory-Conscious Operation:** Handles massive documents efficiently by yielding chunks one at a time. Your RAM will thank you later! 💾
--  **Multi-Format Maestro:** From corporate DOCX boardrooms to academic PDF libraries, this chunker speaks every file language fluently! Handles `.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx` files like a pro. 🌍
--  **Metadata Magician:** Not just text - it automatically enriches your chunks with metadata. Your chunks come with bonus context! 📊
--  **Bulk Processing Powerhouse:** Got a mountain of documents to conquer? No problem! This powerhouse processes multiple documents in parallel. 📚⚡
--  **Pluggable Processor Power:** Have a mysterious file format that's one-of-a-kind? Plug in your own custom processors - `DocumentChunker` is ready for any challenge you throw at it! 🔌🛠️
+-  **Flexible Composable Constraints:** Ultimate control over your chunks! Mix and match limits based on sentences, tokens, or section breaks (headings, horizontal rules, `<details>` tags). Craft exactly the chunk size you need with precision control!
+-  **Intelligent Overlap:** Adds smart overlaps between chunks so your text flows smoothly. No more jarring transitions that leave readers scratching their heads!
+-  **Extensive Multilingual Support:** Speaks over 60 languages fluently, thanks to our trusty sentence splitter. Global domination through better text chunking!
+-  **Customizable Token Counting:** Plug in your own token counter for perfect alignment with different LLMs. Because one size definitely doesn't fit all models!
+-  **Memory-Conscious Operation:** Handles massive documents efficiently by yielding chunks one at a time. Your RAM will thank you later!
+-  **Multi-Format Maestro:** From corporate DOCX boardrooms to academic PDF libraries, this chunker speaks every file language fluently! Handles `.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, `.txt`, `.tex`, `.html`, `.hml`, `.md`, `.rst`, `.rtf`, `.odt`, `.csv`, and `.xlsx` files like a pro.
+-  **Metadata Magician:** Not just text - it automatically enriches your chunks with valuable metadata. Your chunks come with bonus context!
+-  **Bulk Processing Powerhouse:** Got a mountain of documents to conquer? No problem! This powerhouse efficiently processes multiple documents in parallel.
+-  **Pluggable Processor Power:** Have a mysterious file format that's one-of-a-kind? Plug in your own custom processors - `DocumentChunker` is ready for any challenge you throw at it!
 
 !!! note "No Scanned PDF Support"
     Currently, `DocumentChunker` does **not** support scanned PDFs (images). It can only process PDFs with selectable/extractable text. For scanned documents, you'll need to OCR them first before chunking! 📷
@@ -71,7 +71,7 @@ The `DocumentChunker` comes loaded with features that make it your go-to text wr
 The `DocumentChunker` has four main methods: `chunk_text`, `chunk_file`, `chunk_texts`, and `chunk_files`. `chunk_text` and `chunk_file` return a list of [`DotDict`][chunklet.common.dotdict.DotDict] objects, while `chunk_texts` and `chunk_files` are memory-friendly generators that yield chunks one by one. Each `DotDict` has `content` (the actual text) and `metadata` (all the juicy details). Check the [Metadata guide](../metadata.md#documentchunker-metadata) for the full scoop!
 
 
-## Single: Chunk One Text! 📝
+## Single: Chunk One Text! 🔤
 
 Chunk a single string of text into manageable pieces using various constraints:
 - `chunk_text()` - accepts raw text as a string
@@ -467,7 +467,7 @@ for i, doc_chunks in enumerate(chunk_groups):
 
 Want to handle exotic file formats that `DocumentChunker` doesn't know about? Create your own custom processors! This lets you add specialized processing for any file type and prioritize your custom processors over the built-in ones.
 
-Custom processors live in a [`CustomProcessorRegistry`](../../reference/chunklet/document_chunker/registry.md) instance that **you create and own**. Create a registry, register your processors on it, and pass it to a `DocumentChunker` via the `processor_registry` parameter. This gives you full control over scope, no more global side effects.
+Custom processors live in a [`CustomProcessorRegistry`](../../reference/chunklet/document_chunker/registry.md) instance that **you create and own**. Create a registry, register your processors on it, and pass it to a `DocumentChunker` via the `processor_registry` parameter. This gives you full control over scope, with no global side effects.
 
 To use a custom processor, you leverage the [`@registry.register`](../../reference/chunklet/document_chunker/registry.md) decorator. This decorator allows you to register your function for one or more file extensions directly. Your custom processor function must accept a single `file_path` parameter (str) and return a `tuple[str | list[str], dict]` containing extracted text (or list of texts for multi-section documents) and a metadata dictionary.
 

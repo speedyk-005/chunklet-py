@@ -65,6 +65,7 @@ Available tools:
 - `SentenceSplitter`: lightweight sentence tokenization
 - `DocumentChunker`: natural language with semantic boundaries
 - `CodeChunker`: language-aware code chunking
+- `SelfTuningChunker`: for mixed text/code corpora
 - `ChunkVisualizer`: interactive web-based exploration
 
 Perfect for prepping data for LLMs, building RAG systems, or powering AI search - Chunklet-py gives you the precision and flexibility you need across tons of formats and languages.
@@ -132,6 +133,10 @@ Want to unlock more Chunklet-py superpowers? Add these optional dependencies bas
 *   **Code Chunking:** For Language-agnostic code chunking features:
     ```bash
     pip install "chunklet-py[code]"
+    ```
+*   **Self-Tuning Chunking:** For self-tuning mixed text/code chunking (bundles `struct-doc`, `code`, and `auto`):
+    ```bash
+    pip install "chunklet-py[self-tuning]"
     ```
 *   **Auto Language Detection:** For automatic language detection (`lang="auto"`). Uses `py3langid` to detect the language of your text:
     ```bash
@@ -201,6 +206,7 @@ Pick your weapon based on whatever data mess you're currently cleaning up.
 ```python
 from chunklet import DocumentChunker  # For PDFs, DOCX, and general text chaos
 from chunklet import CodeChunker  # For source code (it actually respects brackets)
+from chunklet import SelfTuningChunker  # For mixed text + code, self-tuning chunking
 from chunklet import SentenceSplitter  # For when you just need to split sentences
 from chunklet import visualizer  # Web-based chunk visualizer
 ```
@@ -242,6 +248,20 @@ chunks = chunker.chunk_text(
     max_functions=1,  # One function per chunk (keeps things tidy)
     strict=True,  # True: Crash on big blocks; False: Slice 'em up anyway
 )
+```
+
+**SelfTuningChunker (Mixed Text & Code)**
+
+Detects each source as document or code, learns per-profile structural metrics (KAMA), and sizes chunks to match — no constraint tuning needed.
+
+```python
+chunker = SelfTuningChunker(token_counter=word_counter)
+
+chunker.add_file("docs/guide.md")
+chunker.add_text("Some raw prose, enqueued just like a file.")
+
+chunks = chunker.process(show_progress=False)
+# Each chunk.metadata carries "inferred_type": "document" or "code"
 ```
 
 ### The Output Object
@@ -297,18 +317,6 @@ chunklet chunk --help
 chunklet visualize --help
 chunklet [COMMAND] [OPTIONS*]
 ```
-
----
-
-## 🗺 Features & Roadmap
-
-- [x] CLI interface
-- [x] Documents chunking with metadata
-- [x] Code chunking based on interest point
-- [x] Interactive chunk visualizer (web interface)
-- [x] Extended file format support:
-  - [x] ODT files
-  - [x] CSV and Excel files
 
 ---
 

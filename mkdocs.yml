@@ -58,6 +58,7 @@ nav:
       - 'Sentence Splitter': 'getting-started/programmatic/sentence_splitter.md'
       - 'Document Chunker': 'getting-started/programmatic/document_chunker.md'
       - 'Code Chunker': 'getting-started/programmatic/code_chunker.md'
+      - 'Self-Tuning Chunker': 'getting-started/programmatic/self_tuning_chunker.md'
       - 'Visualizer': 'getting-started/programmatic/visualizer.md'
       
   - 'Supported Languages': 'supported-languages.md'
