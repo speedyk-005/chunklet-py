@@ -71,18 +71,6 @@ Your custom callback (token_counter, splitter, processor) threw an error. Whatev
 
 ## Warnings ⚠️
 
-### Language auto-detect 🌍
-
-```
-The language is set to `auto`. Consider setting `lang` explicitly.
-```
-
-**What it means:** We don't know what language your text is. Auto-detect works, but explicit is faster and more reliable, especially with short texts. Language detection is a guess — short texts have less signal, so the guess is less confident.
-
-**Fix:** Pass `lang='en'` (or whatever) if you know it.
-
----
-
 ### Universal splitter fallback 🌐
 
 ```

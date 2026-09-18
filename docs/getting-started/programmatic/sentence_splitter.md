@@ -60,7 +60,6 @@ for sentence in sentences:
 
 ??? success "Click to show output"
     ```linenums="0"
-    2025-11-02 16:27:29.277 | WARNING  | chunklet.sentence_splitter.sentence_splitter:split_text:192 - The language is set to `auto`. Consider setting the `lang` parameter to a specific language to improve reliability.
     2025-11-02 16:27:29.316 | INFO     | chunklet.sentence_splitter.sentence_splitter:split_text:158 - Language detection: 'en' with confidence 10/10.
     2025-11-02 16:27:29.447 | INFO     | chunklet.sentence_splitter.sentence_splitter:split_text:166 - Text splitted into sentences. Total sentences detected: 19
     She loves cooking.
