@@ -149,11 +149,6 @@ class SentenceSplitter:
             return []
 
         if lang == "auto":
-            if self._last_lang_used is None:
-                logger.warning(
-                    "The language is set to `auto`. Consider setting the `lang` parameter "
-                    "to a specific language to improve reliability."
-                )
             lang_detected, confidence = detect_top_language(text)
             log_info(
                 self.verbose,
