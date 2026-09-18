@@ -26,8 +26,3 @@ changelog:
       labels:
         - bug
         - bug-fixes
-
-    - title: '📝 Documentation'
-      labels:
-        - documentation
-        - benchmark
