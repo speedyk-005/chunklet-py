@@ -13,9 +13,9 @@ from chunklet.document_chunker import DocumentChunker
 from chunklet.document_chunker._plain_text_chunker import SECTION_BREAK_PATTERN
 from chunklet.sentence_splitter import SentenceSplitter
 
-LANG = "en"
-
 # --- Constants ---
+
+LANG = "en"
 
 # Sentinel to serve as boundary between the groups of chunks for each text
 SEPARATOR_SENTINEL = object()
@@ -36,6 +36,8 @@ Robots are learning. It's raining. Let's code. Mars is red. Sr. sleep is rare. C
 
 
 # --- Fixtures ---
+
+
 @pytest.fixture
 def chunker():
     """Provides a configured Chunklet instance for testing"""

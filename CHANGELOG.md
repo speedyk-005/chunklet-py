@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.0.0] - Unreleased
 
+### Added
+- **SelfTuningChunker**: Self-tuning chunker for mixed text/code corpora. Classifies each source as document or code (extension, binary sniff, then content heuristics), learns per-profile structural metrics via a Kaufman Adaptive Moving Average (KAMA), and sizes chunk boundaries from the learned state instead of fixed limits.
+  - Ships with a queue-based API (`add_file`, `add_files`, `add_text`, `add_texts`, `process`)
+  - Enriches every chunk with `inferred_type` metadata.
+  - New optional extra `[self-tuning]` bundles the `struct-doc`, `code`, and `auto` extras.
+  - `hard_token_limit` caps the dynamically grown `max_tokens`.
+  - `initial_state` seeds the profiles from a previous run's `learned_state`.
+
 ### Changed
 - **Chunker constraints moved to the constructor**: Sizing/tuning parameters are now set at `__init__` instead of per call:
   - `DocumentChunker` / `PlainTextChunker`: `max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, `offset`, and `lang` are now set at construction instead of passed to `chunk_text`, `chunk_texts`, `chunk_file` and `chunk_files`.
@@ -259,7 +267,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed critical bug where path detection logic incorrectly called `is_path_like()` on Path objects instead of strings, causing validation errors when PosixPath objects were passed. Corrected the logic to properly check `isinstance(source, Path)` first, then only call `is_path_like()` on string inputs.
 - **CLI Destination Logic:** Fixed out-of-design destination handling by removing input count restrictions, ensuring consistent JSON file output and directory handling.
 - **CLI Path Validation Bug (#6):** Resolved TypeError where len(destination) was called on a PosixPath object. Thanks to [@arnoldfranz](https://github.com/arnoldfranz) for reporting this issue.
-- **Document Chunker Batch Error Handling Bugs:** Fixed multiple bugs in `DocumentChunker._gather_all_data()` that were hidden due to missing test coverage. Issues included incorrect exception raising (`raise error` instead of `raise`), malformed logging format strings, KeyError when accessing path_section_counts for failed files, and missing early return when no files are successfully processed. These bugs were discovered and fixed while adding comprehensive test coverage for batch processing error handling.
+- **Document Chunker Batch Error Handling Bugs:** Fixed multiple bugs in `DocumentChunker._gather_all_data()` hidden due to missing test coverage: incorrect exception raising (`raise error` instead of `raise`), malformed logging format strings, KeyError when accessing path_section_counts for failed files, and missing early return when no files are successfully processed.
 
 ---
 
@@ -292,7 +300,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **CLI Bug:** Fixed a critical unpacking bug in the `split` command. The line intended to extract sentences and confidence from `splitter.split` (e.g., `sentences, confidence = splitter.split(...)`) caused either a `ValueError` (if `splitter.split` returned a number of sentences other than exactly two) or silent, incorrect unpacking (if exactly two sentences were returned, assigning the first sentence string to `sentences` and the second to `confidence`, leading to character-level iteration). The fix now correctly separates language detection and confidence retrieval from sentence splitting, resolving both issues and ensuring accurate output.
+- **CLI Bug:** Fixed a critical unpacking bug in the `split` command. The line `sentences, confidence = splitter.split(...)` caused either a `ValueError` (wrong return count) or silent incorrect unpacking (first sentence string assigned to `sentences`, second to `confidence`). The fix separates language detection from sentence splitting.
 
 ---
 
@@ -324,7 +332,7 @@ This officially boosts language support from 36+ to 50+.
     - Refactored the `SentenceSplitter` to be more modular and extensible. The management of custom splitters has been moved to a new `registry` module, which provides a centralized way to register and use custom splitter functions.
     - Introduced a new way of registering custom splitters using the `register_splitter` function and the `@registered_splitter` decorator, replacing the old dictionary-based approach. This new API is more explicit, provides better validation, and is easier to use.
 - **Improved FallbackSplitter:** Replaced the existing universal sentence splitter with a more robust, multi-stage version. The new splitter offers more accurate handling of abbreviations, numbered lists, and complex punctuation, and has a larger punctuation coverage, improving fallback support for unsupported languages.
-- **SentenceSplitter Extraction:** The core sentence splitting logic, previously embedded within `PlainTextChunker`, has been extracted and consolidated into a dedicated `SentenceSplitter` module. This significantly improves modularity, reusability, and maintainability across the library.
+- **SentenceSplitter Extraction:** The core sentence splitting logic, previously embedded within `PlainTextChunker`, has been extracted into a dedicated `SentenceSplitter` module. This improves modularity and reusability across the library.
 - **Clause Delimiters**: Added ellipsis to the list of clause delimiters for more accurate chunking.
 - **Batch Chunking Flexibility:** Modified `PlainTextChunker.batch_chunk` to accept any `Iterable` of strings for the `texts` parameter, instead of being restricted to `list`.
 - **Memory Optimization:** Refactored all batch methods in the lib to fully utilize generators, yielding chunks one at a time to reduce memory footprint, especially for large documents. That also means you dont have to wait for the chunks fully be processed before start using them.
