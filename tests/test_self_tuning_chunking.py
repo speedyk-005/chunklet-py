@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from chunklet import (
-    AdaptiveChunker,
+    SelfTuningChunker,
     UnsupportedFileTypeError,
 )
 
@@ -27,8 +27,8 @@ SOURCES = [SAMPLE_CODE, SAMPLE_DOCUMENT]
 
 @pytest.fixture
 def chunker():
-    """Provide a ready-to-use AdaptiveChunker instance for tests."""
-    return AdaptiveChunker(token_counter=simple_token_counter)
+    """Provide a ready-to-use SelfTuningChunker instance for tests."""
+    return SelfTuningChunker(token_counter=simple_token_counter)
 
 
 # --- Profile Detection Tests ---
@@ -86,8 +86,8 @@ def test_document_profile_metrics_are_learned(chunker):
 
 def test_different_ema_alpha_changes_learned_values():
     """Test that ema_alpha changes how strongly fresh metrics drive the EMA."""
-    fresh = AdaptiveChunker(token_counter=simple_token_counter, ema_alpha=1.0)
-    frozen = AdaptiveChunker(token_counter=simple_token_counter, ema_alpha=0.0)
+    fresh = SelfTuningChunker(token_counter=simple_token_counter, ema_alpha=1.0)
+    frozen = SelfTuningChunker(token_counter=simple_token_counter, ema_alpha=0.0)
 
     for chunker in (fresh, frozen):
         chunker.add_files(SOURCES)
@@ -106,7 +106,7 @@ def test_different_ema_alpha_changes_learned_values():
 
 def test_missing_token_counter_skips_max_tokens_learning():
     """Test that max_tokens learning is skipped when no token counter is set."""
-    chunker = AdaptiveChunker()
+    chunker = SelfTuningChunker()
     chunker.add_files(SOURCES)
     chunks = list(chunker.process())
 
@@ -126,7 +126,7 @@ def test_initial_state_seeds_learned_profiles():
             "max_tokens": 256.0,
         },
     }
-    chunker = AdaptiveChunker(
+    chunker = SelfTuningChunker(
         token_counter=simple_token_counter, ema_alpha=0.0, initial_state=baseline
     )
     chunker.add_files(SOURCES)
@@ -137,7 +137,7 @@ def test_initial_state_seeds_learned_profiles():
 
 def test_initial_state_fills_missing_metrics_with_defaults():
     """Test that omitted profiles and metrics fall back to defaults."""
-    chunker = AdaptiveChunker(initial_state={"code": {"max_lines": 42.0}})
+    chunker = SelfTuningChunker(initial_state={"code": {"max_lines": 42.0}})
 
     assert chunker.learned_state["code"]["max_lines"] == 42.0
     assert chunker.learned_state["code"]["max_functions"] == 1
@@ -153,12 +153,14 @@ def test_initial_state_fills_missing_metrics_with_defaults():
 def test_initial_state_with_unknown_profile_raises():
     """Test that an unknown profile name in initial_state raises ValueError."""
     with pytest.raises(ValueError, match="Unknown profile 'spreadsheet'"):
-        AdaptiveChunker(initial_state={"spreadsheet": {"max_rows": 3}})
+        SelfTuningChunker(initial_state={"spreadsheet": {"max_rows": 3}})
 
 
 def test_hard_token_limit_caps_learned_max_tokens(tmp_path, monkeypatch):
     """Test that hard_token_limit caps the learned max_tokens at chunk time."""
-    chunker = AdaptiveChunker(token_counter=simple_token_counter, hard_token_limit=128)
+    chunker = SelfTuningChunker(
+        token_counter=simple_token_counter, hard_token_limit=128
+    )
     monkeypatch.setitem(chunker.learned_state["code"], "max_tokens", 100_000)
     monkeypatch.setitem(chunker.learned_state["document"], "max_tokens", 100_000)
 

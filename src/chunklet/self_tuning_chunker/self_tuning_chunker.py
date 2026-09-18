@@ -1,8 +1,8 @@
 """
-A lightweight adaptive chunking prototype inspired by the "Adaptive Chunking"
-technique (Machine Learning Mastery, "Essential Chunking Techniques for Building
-Better LLM Applications"): chunking parameters are adjusted dynamically based on
-measured content characteristics instead of using fixed limits.
+A self-tuning chunker inspired by the "Adaptive Chunking" technique (Machine
+Learning Mastery, "Essential Chunking Techniques for Building Better LLM
+Applications"): chunking parameters are adjusted dynamically based on measured
+content characteristics instead of using fixed limits.
 """
 
 import copy
@@ -16,7 +16,6 @@ from typing import Annotated, Any, Callable, Generator, Literal
 from pydantic import Field
 
 from chunklet import CodeChunker, DocumentChunker
-from chunklet.adaptive_chunker.utils import is_code_like
 from chunklet.code_chunker.patterns import FUNCTION_DECLARATION
 from chunklet.common.dotdict import DotDict
 from chunklet.common.path_utils import is_binary_file, read_text_file
@@ -24,6 +23,7 @@ from chunklet.common.token_utils import count_tokens
 from chunklet.common.validation import IterableOfPath, IterableOfStr, validate_input
 from chunklet.document_chunker._plain_text_chunker import SECTION_BREAK_PATTERN
 from chunklet.exceptions import UnsupportedFileTypeError
+from chunklet.self_tuning_chunker.utils import is_code_like
 from chunklet.sentence_splitter._universal_splitter import UniversalSplitter
 
 COMMON_CODE_FILE_EXTENSIONS = {
@@ -72,8 +72,8 @@ DEFAULT_LEARNED_STATE = {
 }
 
 
-class AdaptiveChunker:
-    """Adaptively chunk mixed text/code corpora based on learned content profiles.
+class SelfTuningChunker:
+    """Self-tune chunk boundaries for mixed text/code corpora from learned profiles.
 
     The chunker maintains an exponential moving average of structural metrics per
     content profile and uses the resulting estimates to size the chunk boundaries
@@ -82,7 +82,7 @@ class AdaptiveChunker:
     Key Features:
         - Profile-based dispatch: classifies each source as code or document via heuristic.
         - Learning memory (EMA profiles): persists per-profile stats via exponential moving average.
-        - Adaptive limits: derives constraints from the learned profile each time instead of using fixed values.
+        - Self-tuning limits: derives constraints from the learned profile each time instead of using fixed values.
         - Enriched chunk metadata: adds inferred_type to each chunk.
     """
 
@@ -93,11 +93,11 @@ class AdaptiveChunker:
         token_counter: Callable[[str], int] | None = None,
         hard_token_limit: int = 1024,
         ema_alpha: Annotated[float, Field(ge=0, le=1)] = 0.3,
-        verbose: bool = False,
         initial_state: dict | None = None,
+        verbose: bool = False,
     ):
         """
-        Initializes the AdaptiveChunker.
+        Initializes the SelfTuningChunker.
 
         Args:
             lang: Language code (e.g., 'en', 'fr', 'auto'). Defaults to auto
@@ -106,10 +106,10 @@ class AdaptiveChunker:
             hard_token_limit: Ceiling for the dynamically grown ``max_tokens``.
             ema_alpha: Smoothing factor in [0, 1] for the exponential moving average;
                 higher values react faster to recent sources.
-            verbose: Enable verbose logging.
             initial_state: Optional pre-calculated running average to seed the learned
                 profiles (e.g. exported from a previous ``learned_state``). Missing
                 profiles or metrics fall back to the built-in defaults.
+            verbose: Enable verbose logging.
         """
         self._verbose = verbose
         self._lang = lang

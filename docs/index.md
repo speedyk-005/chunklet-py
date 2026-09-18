@@ -72,7 +72,7 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 
     Code chunking that preserves the structure of your source code.
 
-- :material-robot:{ .lg .middle } __Adaptive Chunking__
+- :material-robot:{ .lg .middle } __Self-Tuning Chunking__
 
     Self-tuning chunk boundaries for mixed text/code corpora. Learns per-profile structural stats (exponential moving average) and sizes chunks to your actual content. No manual constraint tuning.
 

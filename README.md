@@ -133,9 +133,9 @@ Want to unlock more Chunklet-py superpowers? Add these optional dependencies bas
     ```bash
     pip install "chunklet-py[code]"
     ```
-*   **Adaptive Chunking:** For self-tuning mixed text/code chunking (bundles `struct-doc`, `code`, and `auto`):
+*   **Self-Tuning Chunking:** For self-tuning mixed text/code chunking (bundles `struct-doc`, `code`, and `auto`):
     ```bash
-    pip install "chunklet-py[adaptive]"
+    pip install "chunklet-py[self-tuning]"
     ```
 *   **Auto Language Detection:** For automatic language detection (`lang="auto"`). Uses `py3langid` to detect the language of your text:
     ```bash
@@ -205,7 +205,7 @@ Pick your weapon based on whatever data mess you're currently cleaning up.
 ```python
 from chunklet import DocumentChunker  # For PDFs, DOCX, and general text chaos
 from chunklet import CodeChunker  # For source code (it actually respects brackets)
-from chunklet import AdaptiveChunker  # For mixed text + code, self-tuning chunking
+from chunklet import SelfTuningChunker  # For mixed text + code, self-tuning chunking
 from chunklet import SentenceSplitter  # For when you just need to split sentences
 from chunklet import visualizer  # Web-based chunk visualizer
 ```
@@ -249,12 +249,12 @@ chunks = chunker.chunk_text(
 )
 ```
 
-**AdaptiveChunker (Mixed Text & Code)**
+**SelfTuningChunker (Mixed Text & Code)**
 
 Detects each source as document or code, learns per-profile structural metrics (EMA), and sizes chunks to match — no constraint tuning needed.
 
 ```python
-chunker = AdaptiveChunker(token_counter=word_counter, ema_alpha=0.5)
+chunker = SelfTuningChunker(token_counter=word_counter, ema_alpha=0.5)
 
 chunker.add_file("docs/guide.md")
 chunker.add_text("Some raw prose, enqueued just like a file.")

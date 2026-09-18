@@ -43,9 +43,9 @@ Chunklet-py offers optional extras for document processing, code chunking, and m
     ```bash
     pip install "chunklet-py[code]"
     ```
-*   **Adaptive Chunking:** For self-tuning mixed text/code chunking (bundles `struct-doc`, `code`, and `auto`):
+*   **Self-Tuning Chunking:** For self-tuning mixed text/code chunking (bundles `struct-doc`, `code`, and `auto`):
     ```bash
-    pip install "chunklet-py[adaptive]"
+    pip install "chunklet-py[self-tuning]"
     ```
 *   **Auto Language Detection:** For automatic language detection (`lang="auto"`). Uses `py3langid` to detect the language of your text:
     ```bash

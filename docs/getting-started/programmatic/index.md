@@ -32,7 +32,7 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
     [:octicons-arrow-right-24: Learn More](code_chunker.md)
 
--   :material-robot:{ .lg .middle } __Adaptive Chunker__
+-   :material-robot:{ .lg .middle } __Self-Tuning Chunker__
 
     ---
 
@@ -40,7 +40,7 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
     Perfect for heterogeneous corpora, evolving codebases, and anyone tired of hand-picking `max_sentences` / `max_lines` limits.
 
-    [:octicons-arrow-right-24: Learn More](adaptive_chunker.md)
+    [:octicons-arrow-right-24: Learn More](self_tuning_chunker.md)
 
 -   :material-monitor-shimmer:{ .lg .middle } __Text Chunk Visualizer__
 
