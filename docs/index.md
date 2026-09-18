@@ -74,7 +74,7 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 
 - :material-robot:{ .lg .middle } __Self-Tuning Chunking__
 
-    Self-tuning chunk boundaries for mixed text/code corpora. Learns per-profile structural stats (exponential moving average) and sizes chunks to your actual content. No manual constraint tuning.
+    Self-tuning chunk boundaries for mixed text/code corpora. Learns per-profile structural stats (KAMA) and sizes chunks to your actual content. No manual constraint tuning.
 
 - :material-ruler-square:{ .lg .middle } __Precision Chunking__
 

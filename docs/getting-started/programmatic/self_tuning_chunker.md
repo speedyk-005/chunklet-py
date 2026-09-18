@@ -23,14 +23,16 @@ pip install chunklet-py[self-tuning]
 
 Got a messy mix of prose and source code, and no patience to hand-tune chunk sizes for each file? The `SelfTuningChunker` watches how your sources are structured and sizes its own chunk boundaries to match. No manual constraint tuning required.
 
-It classifies every source as **document** or **code**, keeps a running memory (an exponential moving average) of structural metrics per profile, and uses that memory to size the chunks for everything you throw at it.
+It classifies every source as **document** or **code**, keeps a running memory
+(a [Kaufman Adaptive Moving Average (KAMA)](https://www.tradingview.com/support/solutions/43000773012-kaufman-s-adaptive-moving-average-kama/))
+of structural metrics per profile, and uses that memory to size the chunks for everything you throw at it.
 
 ### Why `SelfTuningChunker` is cool. 🆒
 
 Here's what makes it tick:
 
 -  **Profile-Based Dispatch:** Knows documents from code by extension first, then binary sniffing, then content heuristics for anything extensionless. No setup needed!
--  **Learning Memory (EMA Profiles):** Persists per-profile statistics via an exponential moving average so that chunk sizes react to your real corpus, not to guessed defaults.
+-  **Learning Memory (KAMA Profiles):** Persists per-profile statistics via a Kaufman Adaptive Moving Average so that chunk sizes react to your real corpus, not to guessed defaults.
 -  **Self-Tuning Limits:** Derives constraints from the learned profile each time instead of using fixed values. The more you chunk, the sharper it gets!
 -  **Token Budget Ceiling:** A `hard_token_limit` caps the dynamically grown `max_tokens`, so self-tuning limits never run away.
 -  **Raw Text & File Support:** Feed it file paths or raw strings; both land in the same queue and get chunked the same way.
@@ -44,7 +46,6 @@ Here's what makes it tick:
 | `lang` | `'auto'` | Language code (`'en'`, `'fr'`, ...) passed down to the document chunker. |
 | `token_counter` | `None` | Function counting tokens in text. When provided, `max_tokens` is learned **and** bounded; when `None`, token limits and `max_tokens` learning are disabled. |
 | `hard_token_limit` | `1024` | Ceiling for the dynamically grown `max_tokens`. |
-| `ema_alpha` | `0.3` | Smoothing factor in `[0, 1]` for the exponential moving average. Higher values react faster to recent sources. |
 | `verbose` | `False` | Toggles verbose logging on the underlying chunkers. |
 | `initial_state` | `None` | Pre-calculated running average (e.g. an exported `learned_state`) to seed the profiles with. Missing profiles/metrics fall back to defaults. |
 
@@ -81,7 +82,7 @@ Here's what makes it tick:
 | `document` | `max_section_breaks` | 2 when header density is high, otherwise 1. |
 | `document` | `max_tokens` | Mean paragraph token count (needs `token_counter`). |
 
-Each measurement is folded into the stored estimate with `ema_alpha`.
+Each measurement is folded into the stored estimate with a Kaufman Adaptive Moving Average (KAMA).
 
 !!! tip "Seed From a Previous Run"
     Already tuned a profile on a representative corpus? Pass the saved `learned_state` back in as `initial_state` so the next run starts warm instead of relearning from the defaults:
@@ -115,7 +116,7 @@ def word_counter(text: str) -> int:  # (1)!
     return len(text.split())
 
 
-chunker = SelfTuningChunker(token_counter=word_counter, ema_alpha=0.5)
+chunker = SelfTuningChunker(token_counter=word_counter)
 
 prose = """# My Document
 
@@ -233,16 +234,16 @@ print(chunker.learned_state)
 ```
 
 ```py linenums="0"
-{'document': {'max_sentences': 4.5, 'header_density_ratio': 0.275, 'max_section_breaks': 1.0, 'max_tokens': 260.4},
- 'code': {'max_lines': 10.0, 'max_functions': 1.0, 'max_tokens': 263.5}}
+{'document': {'max_sentences': 6.67741935483871, 'header_density_ratio': 0.07903225806451614, 'max_section_breaks': 1.0, 'max_tokens': 479.53548387096777},
+ 'code': {'max_lines': 14.35483870967742, 'max_functions': 1.0, 'max_tokens': 479.93548387096774}}
 ```
 
-`max_sentences` dropped from the default `7.0` toward the prose's real ~4-5 sentences per paragraph, and both `max_tokens` values are now estimated from your actual content instead of the `512.0` default. Chunk the same corpus again and the boundaries will already fit it better! 📈
+`max_sentences` dropped from the default `7.0` toward the prose's real ~6-7 sentences per paragraph, and both `max_tokens` values are now estimated from your actual content instead of the `512.0` default. Chunk the same corpus again and the boundaries will already fit it better! 📈
 
-!!! tip "Tuning `ema_alpha`"
-    -  `ema_alpha=1.0` trusts only the most recent source (fast, jumpy).
-    -  `ema_alpha=0.0` keeps the defaults forever (no learning).
-    -  Values in between blend old memory with new measurements, so smaller is smoother.
+!!! tip "How the Memory Works (KAMA)"
+    Each profile metric is updated with a [Kaufman Adaptive Moving Average (KAMA)](https://www.tradingview.com/support/solutions/43000773012-kaufman-s-adaptive-moving-average-kama/): the smoothing constant adapts to how efficiently the measurement is moving. When a metric is stable, the average moves slowly (keeps its estimate); when it swings, the average catches up faster. The first ten measurements per metric use the slowest constant, so the estimate warms up gently and doesn't get thrown off by a single noisy source.
+
+    The memory is per-instance and per-profile, so code and document metrics learn independently. Reset it by creating a fresh `SelfTuningChunker`, or seed it from a previous run with `initial_state`.
 
 ## Batch: Chunk Multiple Sources! 📚
 
@@ -271,7 +272,7 @@ for chunk in chunks:
 
 ## Self-Tuning vs Adaptive: Same Family, Different Level 🎚
 
-Self-tuning *is* adaptive chunking — same family, not competitors. The difference is the level at which the adaptation happens.
+Self-tuning *is* adaptive chunking, same family, not competitors. The difference is the level at which the adaptation happens.
 
 **Adaptive chunking** usually means adapting *within* a document: pick the splitter or boundaries that best fit *this* text (multiple strategies, embedding distances, a scoring pass). Call it micro-level adaptation.
 
@@ -279,15 +280,13 @@ Self-tuning *is* adaptive chunking — same family, not competitors. The differe
 
 That single distinction cascades into everything below.
 
-**They pick a splitter, we tune one.** Tools like [`adaptive-chunking`](https://github.com/ekimetrics/adaptive-chunking) (from the LREC 2026 paper "Optimizing Chunking-Method Selection for RAG") and `adaptive-oci-chunking` run recursive, page, and LLM-regex splitters in parallel, score each candidate with intrinsic metrics (size compliance, intra-chunk cohesion, contextual coherence, ...), and keep the highest scorer — one document at a time. `SelfTuningChunker` never changes the chunking method: it always drives the same `CodeChunker` and `DocumentChunker`, but the *limits* those chunkers use (`max_lines`, `max_functions`, `max_sentences`, `max_section_breaks`, `max_tokens`) are recalculated from a running, EMA-smoothed profile of everything you've already processed.
+**They pick a splitter, we tune one.** Tools like [`adaptive-chunking`](https://github.com/ekimetrics/adaptive-chunking) (from the LREC 2026 paper "Optimizing Chunking-Method Selection for RAG") and `adaptive-oci-chunking` run recursive, page, and LLM-regex splitters in parallel, score each candidate with intrinsic metrics (size compliance, intra-chunk cohesion, contextual coherence, ...), and keep the highest scorer. `SelfTuningChunker` never changes the chunking method: it always drives the same `CodeChunker` and `DocumentChunker`, but the *limits* those chunkers use (`max_lines`, `max_functions`, `max_sentences`, `max_section_breaks`, `max_tokens`) are recalculated from a running, KAMA-smoothed profile of everything you've already processed.
 
-**Online macro learning beats post-hoc micro scoring.** Because scoring-based tools decide per document, their choice for one file tells you nothing about the next. `SelfTuningChunker` learns *while it drains the queue*: each source updates the profile before the next one is chunked, so file #100 is automatically chunked with sharper boundaries than file #1 — at no extra cost.
+**Online macro learning beats post-hoc micro scoring.** Because scoring-based tools decide per document, their choice for one file tells you nothing about the next. `SelfTuningChunker` learns *while it drains the queue*: each source updates the profile before the next one is chunked, so file #100 is automatically chunked with sharper boundaries than file #1 at no extra cost.
 
-**No LLM, no embeddings, no inference bills.** `semantic-chunkers` leans on embedding distances and [`chunking-strategy`](https://pypi.org/project/chunking-strategy/) on an AI-powered profiler. Our signals are purely structural: sentences per paragraph, header density, section-break density, function-declaration spans, and token counts. That means it's offline, free, deterministic (the same corpus always learns the same profile), and fast — one linear measurement pass on top of the chunking itself.
+**No LLM, no embeddings, no inference bills.** `semantic-chunkers` leans on embedding distances and [`chunking-strategy`](https://pypi.org/project/chunking-strategy/) on an AI-powered profiler. Our signals are purely structural: sentences per paragraph, header density, section-break density, function-declaration spans, and token counts. That means it's offline, free, deterministic (the same corpus always learns the same profile), and fast; just one linear measurement pass on top of the chunking itself.
 
 **Built for mixed code/document corpora.** Most adaptive chunkers assume prose. `SelfTuningChunker` keeps a dedicated `code` and `document` profile and routes each source by extension, then binary sniffing, then content heuristics, so folders mixing `*.py` + `.md` + extensionless text just work.
-
-**A growth ceiling you control.** Scored selection can't cap runaway sizes. Our EMA grows `max_tokens`, but `hard_token_limit` clamps the final value to `min(hard_token_limit, learned_max_tokens)`, so your worst-case token budget stays yours to define.
 
 **Native, not a framework hub.** `adaptive-oci-chunking` ships wrappers for LangChain/LlamaIndex and `chunking-strategy` dispatches to 40 external splitters. `SelfTuningChunker` is a first-class chunklet class: it reuses the library's own chunkers and `DotDict` chunk vocabulary, adds no framework glue, and the `[self-tuning]` extra only bundles dependencies chunklet already needs.
 
@@ -299,7 +298,7 @@ That single distinction cascades into everything below.
 | Decision unit | One document at a time | The running corpus profile |
 | Passes over text | Several (strategies plus scoring) | One measurement pass plus chunking |
 | Inference needed | Often LLM and/or embeddings | None |
-| Cross-document learning | None | EMA-smoothed across all sources |
+| Cross-document learning | None | KAMA-smoothed across all sources |
 | Growth boundary | Usually none | `hard_token_limit` |
 | Deterministic | Varies | Yes |
 

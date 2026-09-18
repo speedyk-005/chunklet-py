@@ -8,12 +8,10 @@ content characteristics instead of using fixed limits.
 import copy
 import os
 import tempfile
-from collections import deque
+from collections import defaultdict, deque
 from itertools import pairwise
 from pathlib import Path
-from typing import Annotated, Any, Callable, Generator, Literal
-
-from pydantic import Field
+from typing import Any, Callable, Generator, Literal
 
 from chunklet import CodeChunker, DocumentChunker
 from chunklet.code_chunker.patterns import FUNCTION_DECLARATION
@@ -54,6 +52,12 @@ COMMON_CODE_FILE_EXTENSIONS = {
     ".bash",
 }
 
+# Constant for KAMA
+ER_PERIOD = 10
+FAST_SC = 2 / 3
+SLOW_SC = 2 / 31
+
+# Metric constants
 IDEAL_LINES_PER_FUNCTION = 15
 TOKEN_SAMPLE_SIZE = 5
 MIN_SENTENCES_PER_PARAGRAPH = 2.0
@@ -75,13 +79,13 @@ DEFAULT_LEARNED_STATE = {
 class SelfTuningChunker:
     """Self-tune chunk boundaries for mixed text/code corpora from learned profiles.
 
-    The chunker maintains an exponential moving average of structural metrics per
+    The chunker maintains an Kaufman Adaptive Moving Average of structural metrics per
     content profile and uses the resulting estimates to size the chunk boundaries
     for each source it processes.
 
     Key Features:
         - Profile-based dispatch: classifies each source as code or document via heuristic.
-        - Learning memory (EMA profiles): persists per-profile stats via exponential moving average.
+        - Learning memory (KAMA profiles): persists per-profile stats via Kaufman Adaptive Moving Average.
         - Self-tuning limits: derives constraints from the learned profile each time instead of using fixed values.
         - Enriched chunk metadata: adds inferred_type to each chunk.
     """
@@ -92,7 +96,6 @@ class SelfTuningChunker:
         lang: str = "auto",
         token_counter: Callable[[str], int] | None = None,
         hard_token_limit: int = 1024,
-        ema_alpha: Annotated[float, Field(ge=0, le=1)] = 0.3,
         initial_state: dict | None = None,
         verbose: bool = False,
     ):
@@ -104,8 +107,6 @@ class SelfTuningChunker:
             token_counter: Function that counts tokens in text.
                 If None, token-based limits and max_tokens learning are disabled.
             hard_token_limit: Ceiling for the dynamically grown ``max_tokens``.
-            ema_alpha: Smoothing factor in [0, 1] for the exponential moving average;
-                higher values react faster to recent sources.
             initial_state: Optional pre-calculated running average to seed the learned
                 profiles (e.g. exported from a previous ``learned_state``). Missing
                 profiles or metrics fall back to the built-in defaults.
@@ -114,10 +115,9 @@ class SelfTuningChunker:
         self._verbose = verbose
         self._lang = lang
         self.token_counter = token_counter
-
         self.hard_token_limit = hard_token_limit
-        self.ema_alpha = ema_alpha
 
+        self.histories = defaultdict(list)
         self.learned_state = self._merge_initial_state(initial_state)
 
         self._pending_sources = deque()
@@ -161,17 +161,39 @@ class SelfTuningChunker:
         self.document_chunker.verbose = value
         self.code_chunker.verbose = value
 
-    def _update_ema(self, profile_type: str, key: str, current_value: float) -> None:
-        """Update the given profile metric with an Exponential Moving Average.
+    def _update_kama(self, profile_type: str, key: str, current_value: float) -> None:
+        """Update the given profile metric with an Kaufman Adaptive Moving Average.
 
         Args:
             profile_type: Which profile to update, "document" or "code".
             key: Metric name within the profile.
             current_value: Fresh measurement for the metric.
         """
-        previous_ema = self.learned_state[profile_type][key]
-        self.learned_state[profile_type][key] = (self.ema_alpha * current_value) + (
-            (1.0 - self.ema_alpha) * previous_ema
+        history = self.histories[(profile_type, key)]
+        previous_kama = self.learned_state[profile_type][key]
+
+        history.append(current_value)
+
+        # KAMA needs ER_PERIOD + 1 observations to measure efficiency
+        if len(history) <= ER_PERIOD:
+            smoothing_constant = SLOW_SC
+        else:
+            net_movement = abs(history[-1] - history[-1 - ER_PERIOD])
+            recent_values = history[-(ER_PERIOD + 1) :]
+            total_movement = sum(
+                abs(curr - prev) for prev, curr in pairwise(recent_values)
+            )
+
+            # Map efficiency onto the fast/slow smoothing range
+            # to obtain KAMA's adaptive smoothing constant
+            efficiency_ratio = (
+                (net_movement / total_movement) if total_movement else 0.0
+            )
+            smoothing_constant = (efficiency_ratio * (FAST_SC - SLOW_SC) + SLOW_SC) ** 2
+
+        # Move only a fraction of the gap toward the new observation
+        self.learned_state[profile_type][key] = previous_kama + smoothing_constant * (
+            current_value - previous_kama
         )
 
     @staticmethod
@@ -240,10 +262,10 @@ class SelfTuningChunker:
         return "document"
 
     def _fit_max_lines(self, text: str, fx_matches: list) -> None:
-        """Fold the average spacing between functions into the code max_lines EMA.
+        """Fold the average spacing between functions into the code max_lines KAMA.
 
         The pairwise gaps between consecutive function starts are collected and
-        their mean is EMA-folded into max_lines.
+        their mean is KAMA-folded into max_lines.
 
         `text` is only used to convert each match start offset to a 1-based line
         number. Files with fewer than two functions are skipped, as no gap exists.
@@ -254,10 +276,10 @@ class SelfTuningChunker:
         starts = [text[:start].count("\n") + 1 for _, start, _ in fx_matches]
         diffs = [abs(b - a) for a, b in pairwise(starts)]
         avg_diff = sum(diffs) / len(diffs)
-        self._update_ema("code", key="max_lines", current_value=avg_diff)
+        self._update_kama("code", key="max_lines", current_value=avg_diff)
 
     def _fit_max_functions(self, fx_matches: list) -> None:
-        """Fold the 1-or-2 function-per-chunk signal into the code max_functions EMA.
+        """Fold the 1-or-2 function-per-chunk signal into the code max_functions KAMA.
 
         When the mean pairwise gap between function starts exceeds half of
         IDEAL_LINES_PER_FUNCTION the functions are spread out enough to allow
@@ -273,13 +295,15 @@ class SelfTuningChunker:
         diffs = [abs(b - a) for a, b in pairwise(starts)]
         avg_diff = sum(diffs) / len(diffs)
         functions_per_chunk = 1 if avg_diff > IDEAL_LINES_PER_FUNCTION / 2 else 2
-        self._update_ema("code", key="max_functions", current_value=functions_per_chunk)
+        self._update_kama(
+            "code", key="max_functions", current_value=functions_per_chunk
+        )
 
     def _fit_sentences_per_para(self, paragraphs: list[str]) -> None:
-        """Fold the average sentences-per-paragraph into the document EMA.
+        """Fold the average sentences-per-paragraph into the document KAMA.
 
         Each paragraph is cut into sentences with the fallback `UniversalSplitter`
-        and the mean of the per-paragraph sentence counts is EMA-folded into
+        and the mean of the per-paragraph sentence counts is KAMA-folded into
         max_sentences, clamped to the [2, 25] range.
         """
         sentence_counts = [len(self._sentence_splitter.split(p)) for p in paragraphs]
@@ -287,7 +311,7 @@ class SelfTuningChunker:
             return
 
         avg_sent = sum(sentence_counts) / len(sentence_counts)
-        self._update_ema(
+        self._update_kama(
             "document",
             key="max_sentences",
             current_value=min(
@@ -297,33 +321,33 @@ class SelfTuningChunker:
         )
 
     def _fit_section_breaks(self, lines: list[str], paragraphs: list[str]) -> None:
-        """Fold header density and the section-break signal into the document EMA.
+        """Fold header density and the section-break signal into the document KAMA.
 
-        Lines carrying a section marker (markdown headings, thematic breaks, and
+        Lines carrying a section marker (markdown headings, thKAMAtic breaks, and
         HTML sectioning tags, per `SECTION_BREAK_PATTERN`) are counted and divided
-        by the paragraph count. That density is EMA-folded into
+        by the paragraph count. That density is KAMA-folded into
         header_density_ratio, and max_section_breaks receives 2 when more than 75%
         of paragraphs carry a marker, otherwise 1.
         """
         marker_count = sum(1 for line in lines if SECTION_BREAK_PATTERN.match(line))
         density = marker_count / max(1, len(paragraphs))
-        self._update_ema(
+        self._update_kama(
             "document",
             key="header_density_ratio",
             current_value=density,
         )
-        self._update_ema(
+        self._update_kama(
             "document",
             key="max_section_breaks",
             current_value=2 if density > SECTION_DENSITY_THRESHOLD else 1,
         )
 
     def _fit_max_tokens_code(self, text: str, starts: list[int]) -> None:
-        """Fold the average token span between functions into the code max_tokens EMA.
+        """Fold the average token span between functions into the code max_tokens KAMA.
 
         Each of the first five function declarations is treated as a span end; the
         text between consecutive starts is token-counted with `count_tokens` and
-        the mean of those spans is EMA-folded into code max_tokens.
+        the mean of those spans is KAMA-folded into code max_tokens.
 
         Files with fewer than two functions are skipped, as no span exists.
         """
@@ -334,7 +358,7 @@ class SelfTuningChunker:
             return
 
         spans = [text[a:b] for a, b in pairwise(starts[:TOKEN_SAMPLE_SIZE])]
-        self._update_ema(
+        self._update_kama(
             "code",
             key="max_tokens",
             current_value=(
@@ -343,10 +367,10 @@ class SelfTuningChunker:
         )
 
     def _fit_max_tokens_document(self, paragraphs: list[str]) -> None:
-        """Fold the average paragraph token count into the document max_tokens EMA.
+        """Fold the average paragraph token count into the document max_tokens KAMA.
 
         The first five paragraphs are token-counted with `count_tokens` and their
-        mean is EMA-folded into document max_tokens.
+        mean is KAMA-folded into document max_tokens.
         """
         if self.token_counter is None:
             return
@@ -355,7 +379,7 @@ class SelfTuningChunker:
         if not paras:
             return
 
-        self._update_ema(
+        self._update_kama(
             "document",
             key="max_tokens",
             current_value=(
@@ -364,7 +388,7 @@ class SelfTuningChunker:
         )
 
     def _fit(self, text: str, profile_type: Literal["code", "document"]) -> None:
-        """Measure structural metrics from text and fold them into the EMA state."""
+        """Measure structural metrics from text and fold them into the KAMA state."""
         if not text or text.isspace():
             return
 

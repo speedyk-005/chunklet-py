@@ -65,9 +65,9 @@ def test_code_profile_matches_are_learned(chunker, tmp_path):
     list(chunker.process())
 
     assert chunker.learned_state["code"] == {
-        "max_lines": pytest.approx(13.05),
+        "max_lines": pytest.approx(14.58, rel=1e-3),
         "max_functions": pytest.approx(1.0),
-        "max_tokens": pytest.approx(363.875),
+        "max_tokens": pytest.approx(480.14, rel=1e-3),
     }
 
 
@@ -77,31 +77,11 @@ def test_document_profile_metrics_are_learned(chunker):
     list(chunker.process())
 
     assert chunker.learned_state["document"] == {
-        "max_sentences": pytest.approx(6.7),
-        "header_density_ratio": pytest.approx(0.035),
+        "max_sentences": pytest.approx(6.93, rel=1e-2),
+        "header_density_ratio": pytest.approx(0.0468, rel=1e-2),
         "max_section_breaks": pytest.approx(1.0),
-        "max_tokens": pytest.approx(395.6),
+        "max_tokens": pytest.approx(486.96, rel=1e-2),
     }
-
-
-def test_different_ema_alpha_changes_learned_values():
-    """Test that ema_alpha changes how strongly fresh metrics drive the EMA."""
-    fresh = SelfTuningChunker(token_counter=simple_token_counter, ema_alpha=1.0)
-    frozen = SelfTuningChunker(token_counter=simple_token_counter, ema_alpha=0.0)
-
-    for chunker in (fresh, frozen):
-        chunker.add_files(SOURCES)
-        list(chunker.process())
-
-    assert fresh.learned_state["code"]["max_lines"] == pytest.approx(8.5)
-    assert fresh.learned_state["code"]["max_tokens"] == pytest.approx(18.25)
-    assert fresh.learned_state["document"]["max_sentences"] == pytest.approx(6.0)
-    assert fresh.learned_state["document"]["max_tokens"] == pytest.approx(124.0)
-
-    assert frozen.learned_state["code"]["max_lines"] == pytest.approx(15.0)
-    assert frozen.learned_state["code"]["max_tokens"] == pytest.approx(512.0)
-    assert frozen.learned_state["document"]["max_sentences"] == pytest.approx(7.0)
-    assert frozen.learned_state["document"]["max_tokens"] == pytest.approx(512.0)
 
 
 def test_missing_token_counter_skips_max_tokens_learning():
@@ -127,12 +107,24 @@ def test_initial_state_seeds_learned_profiles():
         },
     }
     chunker = SelfTuningChunker(
-        token_counter=simple_token_counter, ema_alpha=0.0, initial_state=baseline
+        token_counter=simple_token_counter, initial_state=baseline
     )
     chunker.add_files(SOURCES)
     list(chunker.process())
 
-    assert chunker.learned_state == baseline
+    assert chunker.learned_state == {
+        "code": {
+            "max_lines": pytest.approx(37.96, rel=1e-3),
+            "max_functions": pytest.approx(1.93, rel=1e-2),
+            "max_tokens": pytest.approx(240.66, rel=1e-3),
+        },
+        "document": {
+            "max_sentences": pytest.approx(11.61, rel=1e-3),
+            "header_density_ratio": pytest.approx(0.187, rel=1e-2),
+            "max_section_breaks": pytest.approx(1.93, rel=1e-2),
+            "max_tokens": pytest.approx(247.48, rel=1e-3),
+        },
+    }
 
 
 def test_initial_state_fills_missing_metrics_with_defaults():

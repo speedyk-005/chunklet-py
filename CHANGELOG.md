@@ -10,11 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.0.0] - Unreleased
 
 ### Added
-- **SelfTuningChunker**: Self-tuning chunker for mixed text/code corpora. Classifies each source as document or code (extension, binary sniff, then content heuristics), learns per-profile structural metrics via an exponential moving average, and sizes chunk boundaries from the learned state instead of fixed limits.
+- **SelfTuningChunker**: Self-tuning chunker for mixed text/code corpora. Classifies each source as document or code (extension, binary sniff, then content heuristics), learns per-profile structural metrics via a Kaufman Adaptive Moving Average (KAMA), and sizes chunk boundaries from the learned state instead of fixed limits.
   - Ships with a queue-based API (`add_file`, `add_files`, `add_text`, `add_texts`, `process`)
   - Enriches every chunk with `inferred_type` metadata.
   - New optional extra `[self-tuning]` bundles the `struct-doc`, `code`, and `auto` extras.
-  - `hard_token_limit` caps the dynamically grown `max_tokens`; `ema_alpha` tunes learning reactivity.
+  - `hard_token_limit` caps the dynamically grown `max_tokens`.
+  - `initial_state` seeds the profiles from a previous run's `learned_state`.
 
 ### Changed
 - **Chunker constraints moved to the constructor**: Sizing/tuning parameters are now set at `__init__` instead of per call:

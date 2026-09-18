@@ -36,7 +36,7 @@ Welcome to the programmatic interface! This is where you integrate Chunklet-py's
 
     ---
 
-    Self-tuning chunks for mixed text and code corpora. Classifies each source as document or code, learns per-profile structural statistics via an exponential moving average, and sizes chunk boundaries to match your content without manual constraint tuning.
+    Self-tuning chunks for mixed text and code corpora. Classifies each source as document or code, learns per-profile structural statistics via a Kaufman Adaptive Moving Average (KAMA), and sizes chunk boundaries to match your content without manual constraint tuning.
 
     Perfect for heterogeneous corpora, evolving codebases, and anyone tired of hand-picking `max_sentences` / `max_lines` limits.
 

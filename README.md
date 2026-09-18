@@ -251,10 +251,10 @@ chunks = chunker.chunk_text(
 
 **SelfTuningChunker (Mixed Text & Code)**
 
-Detects each source as document or code, learns per-profile structural metrics (EMA), and sizes chunks to match — no constraint tuning needed.
+Detects each source as document or code, learns per-profile structural metrics (KAMA), and sizes chunks to match — no constraint tuning needed.
 
 ```python
-chunker = SelfTuningChunker(token_counter=word_counter, ema_alpha=0.5)
+chunker = SelfTuningChunker(token_counter=word_counter)
 
 chunker.add_file("docs/guide.md")
 chunker.add_text("Some raw prose, enqueued just like a file.")
