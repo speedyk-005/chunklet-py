@@ -80,7 +80,7 @@ code = [
 ]
 
 # SelfTuningChunker: pairs document + code chunking with automatic language detection
-self-tuning = ["chunklet-py[auto,struct-doc,code]"]
+self-tuning = ["chunklet-py[struct-doc,code]"]
 
 viz = [
   "uvicorn>=0.35.0,<0.53",

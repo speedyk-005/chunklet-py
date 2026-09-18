@@ -10,14 +10,10 @@
 pip install chunklet-py[self-tuning]
 ```
 
-`SelfTuningChunker` rides on top of the `DocumentChunker` and `CodeChunker` with automatic language detection, so the `self-tuning` extra bundles its `struct-doc`, `code`, and `auto` dependencies in one shot.
+`SelfTuningChunker` rides on top of the `DocumentChunker` and `CodeChunker`, so the `self-tuning` extra bundles its `struct-doc`, `code` dependencies in one shot.
 
 !!! note "Auto language detection requires the `[auto]` extra"
-    The default `lang="auto"` needs `py3langid` to detect the language of your text which is why it ships with the `self-tuning` extra. If you only chunk a known language (e.g. `lang="en"`), the default install is enough:
-
-    ```bash
-    pip install chunklet-py[struct-doc,code] -U
-    ```
+    When you use `lang="auto"`, the chunker needs `py3langid` to detect the language of your text. This is not installed by default.
 
 ## SelfTuningChunker: Your Self-Tuning Text Sidekick! 🤖
 
@@ -43,7 +39,7 @@ Here's what makes it tick:
 
 | Parameter | Default | Description |
 | :-------- | :------ | :---------- |
-| `lang` | `'auto'` | Language code (`'en'`, `'fr'`, ...) passed down to the document chunker. |
+| `lang` | None | Language code (`'en'`, `'fr'`, ...) passed down to the document chunker. Required |
 | `token_counter` | `None` | Function counting tokens in text. When provided, `max_tokens` is learned **and** bounded; when `None`, token limits and `max_tokens` learning are disabled. |
 | `hard_token_limit` | `1024` | Ceiling for the dynamically grown `max_tokens`. |
 | `verbose` | `False` | Toggles verbose logging on the underlying chunkers. |
@@ -88,7 +84,7 @@ Each measurement is folded into the stored estimate with a Kaufman Adaptive Movi
     Already tuned a profile on a representative corpus? Pass the saved `learned_state` back in as `initial_state` so the next run starts warm instead of relearning from the defaults:
 
     ```python
-    chunker = SelfTuningChunker(token_counter=word_counter)
+    chunker = SelfTuningChunker(lang="auto", token_counter=word_counter)
     # ... chunk a representative corpus ...
     baseline = chunker.learned_state
 
@@ -116,7 +112,7 @@ def word_counter(text: str) -> int:  # (1)!
     return len(text.split())
 
 
-chunker = SelfTuningChunker(token_counter=word_counter)
+chunker = SelfTuningChunker(lang="en", token_counter=word_counter)
 
 prose = """# My Document
 

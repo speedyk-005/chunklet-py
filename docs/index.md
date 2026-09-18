@@ -42,6 +42,7 @@ Available tools:
 - `SentenceSplitter`: lightweight sentence tokenization
 - `DocumentChunker`: natural language with semantic boundaries
 - `CodeChunker`: language-aware code chunking
+- `SelfTuningChunker`: for mixed text/code corpora
 - `ChunkVisualizer`: interactive web-based exploration
 
 Perfect for prepping data for LLMs, building RAG systems, or powering AI search - Chunklet-py handles tons of formats and languages.

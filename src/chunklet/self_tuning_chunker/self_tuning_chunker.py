@@ -93,7 +93,7 @@ class SelfTuningChunker:
     @validate_input
     def __init__(
         self,
-        lang: str = "auto",
+        lang: str,
         token_counter: Callable[[str], int] | None = None,
         hard_token_limit: int = 1024,
         initial_state: dict | None = None,
@@ -103,7 +103,8 @@ class SelfTuningChunker:
         Initializes the SelfTuningChunker.
 
         Args:
-            lang: Language code (e.g., 'en', 'fr', 'auto'). Defaults to auto
+            lang: Language code (e.g., 'en', 'fr', 'auto'). Required; pass 'auto'
+                to auto-detect per source (needs the `[self-tuning]` extra).
             token_counter: Function that counts tokens in text.
                 If None, token-based limits and max_tokens learning are disabled.
             hard_token_limit: Ceiling for the dynamically grown ``max_tokens``.

@@ -28,7 +28,7 @@ SOURCES = [SAMPLE_CODE, SAMPLE_DOCUMENT]
 @pytest.fixture
 def chunker():
     """Provide a ready-to-use SelfTuningChunker instance for tests."""
-    return SelfTuningChunker(token_counter=simple_token_counter)
+    return SelfTuningChunker(lang="en", token_counter=simple_token_counter)
 
 
 # --- Profile Detection Tests ---
@@ -86,7 +86,7 @@ def test_document_profile_metrics_are_learned(chunker):
 
 def test_missing_token_counter_skips_max_tokens_learning():
     """Test that max_tokens learning is skipped when no token counter is set."""
-    chunker = SelfTuningChunker()
+    chunker = SelfTuningChunker(lang="en")
     chunker.add_files(SOURCES)
     chunks = list(chunker.process())
 
@@ -107,7 +107,7 @@ def test_initial_state_seeds_learned_profiles():
         },
     }
     chunker = SelfTuningChunker(
-        token_counter=simple_token_counter, initial_state=baseline
+        lang="en", token_counter=simple_token_counter, initial_state=baseline
     )
     chunker.add_files(SOURCES)
     list(chunker.process())
@@ -129,7 +129,7 @@ def test_initial_state_seeds_learned_profiles():
 
 def test_initial_state_fills_missing_metrics_with_defaults():
     """Test that omitted profiles and metrics fall back to defaults."""
-    chunker = SelfTuningChunker(initial_state={"code": {"max_lines": 42.0}})
+    chunker = SelfTuningChunker(lang="en", initial_state={"code": {"max_lines": 42.0}})
 
     assert chunker.learned_state["code"]["max_lines"] == 42.0
     assert chunker.learned_state["code"]["max_functions"] == 1
@@ -145,13 +145,13 @@ def test_initial_state_fills_missing_metrics_with_defaults():
 def test_initial_state_with_unknown_profile_raises():
     """Test that an unknown profile name in initial_state raises ValueError."""
     with pytest.raises(ValueError, match="Unknown profile 'spreadsheet'"):
-        SelfTuningChunker(initial_state={"spreadsheet": {"max_rows": 3}})
+        SelfTuningChunker(lang="en", initial_state={"spreadsheet": {"max_rows": 3}})
 
 
 def test_hard_token_limit_caps_learned_max_tokens(tmp_path, monkeypatch):
     """Test that hard_token_limit caps the learned max_tokens at chunk time."""
     chunker = SelfTuningChunker(
-        token_counter=simple_token_counter, hard_token_limit=128
+        lang="en", token_counter=simple_token_counter, hard_token_limit=128
     )
     monkeypatch.setitem(chunker.learned_state["code"], "max_tokens", 100_000)
     monkeypatch.setitem(chunker.learned_state["document"], "max_tokens", 100_000)
