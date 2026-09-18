@@ -398,7 +398,6 @@ self-tuning = [
     { name = "odfpy" },
     { name = "openpyxl" },
     { name = "pdfminer-six" },
-    { name = "py3langid" },
     { name = "pylatexenc" },
     { name = "python-docx" },
     { name = "python-pptx" },
@@ -430,8 +429,8 @@ viz = [
 requires-dist = [
     { name = "aiofiles", marker = "extra == 'viz'", specifier = "==25.1.0" },
     { name = "charset-normalizer", specifier = ">=3.4.2,<4.0" },
-    { name = "chunklet-py", extras = ["auto", "struct-doc", "code"], marker = "extra == 'self-tuning'" },
     { name = "chunklet-py", extras = ["dev", "docs", "struct-doc", "code", "viz", "auto", "indic", "self-tuning"], marker = "extra == 'dev-all'" },
+    { name = "chunklet-py", extras = ["struct-doc", "code"], marker = "extra == 'self-tuning'" },
     { name = "chunklet-py", extras = ["struct-doc", "code", "viz", "auto", "indic", "self-tuning"], marker = "extra == 'all'" },
     { name = "defusedxml", marker = "extra == 'code'", specifier = ">=0.7.1,<0.8" },
     { name = "docutils", marker = "extra == 'struct-doc'", specifier = ">=0.21.2,<0.24" },

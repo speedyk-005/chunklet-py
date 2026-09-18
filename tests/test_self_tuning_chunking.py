@@ -217,7 +217,7 @@ def test_separator_is_yielded_between_chunks_per_source(chunker):
     """Test that a separator is yielded between chunks of the same source."""
     chunker.add_files(SOURCES)
     separator = object()
-    results = list(chunker.process(separator=separator))
+    results = list(chunker.process(separator=separator, show_progress=True))
 
     chunk_count = sum(1 for r in results if r is not separator)
     separator_count = sum(1 for r in results if r is separator)

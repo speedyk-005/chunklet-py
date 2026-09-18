@@ -261,7 +261,7 @@ for chunk in chunks:
 
 1.  A value yielded after the chunks of each source, handy for grouping (the same trick as `chunk_texts` / `chunk_files`).
 2.  How to handle processing errors: `'raise'` (default), `'skip'`, or `'break'`.
-3.  Show a progress bar while draining the queue. Defaults to `True`.
+3.  Show a progress bar while draining the queue. Defaults to `False`.
 
 !!! note "Mixed Corpora Are The Sweet Spot"
     Feed it documents *and* code side by side cause that's exactly the scenario `SelfTuningChunker` was built for. No need to sort or tag your inputs; the profile dispatch handles it.

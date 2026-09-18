@@ -26,7 +26,7 @@ def run_in_batch(
     iterable_of_args: Iterable,
     iterable_name: str,
     n_jobs: int | None = None,
-    show_progress: bool = True,
+    show_progress: bool = False,
     on_errors: Literal["raise", "skip", "break"] = "raise",
     separator: Any = None,
     verbose: bool = True,
@@ -41,7 +41,7 @@ def run_in_batch(
         iterable_name: Name of the iterable. needed for logging and exception message.
         n_jobs: Number of parallel workers to use.
             If None, uses all available CPUs. Must be >= 1 if specified.
-        show_progress: Whether to display a progress bar.
+        show_progress: Display progress bar during processing. Defaults to False.
         on_errors:
             How to handle errors during processing. Defaults to "raise".
         separator: A value to be yielded after the chunks of each text are processed.
