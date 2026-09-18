@@ -410,7 +410,7 @@ class DocumentChunker(BaseChunker):
         base_metadata: dict[str, Any] | None = None,
         separator: Any = None,
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
-        show_progress: bool = True,
+        show_progress: bool = False,
         on_errors: Literal["raise", "skip", "break"] = "raise",
     ) -> Generator[DotDict, None, None]:
         """
@@ -423,7 +423,7 @@ class DocumentChunker(BaseChunker):
             base_metadata: Optional dictionary to be included with each chunk.
             separator: A value to be yielded after the chunks of each text are processed.
             n_jobs: Number of parallel workers.
-            show_progress: Show progress bar.
+            show_progress: Display progress bar during processing. Defaults to False.
             on_errors: How to handle errors.
 
         yields:
@@ -504,7 +504,7 @@ class DocumentChunker(BaseChunker):
         token_counter: Callable[[str], int] | None = None,
         separator: Any = None,
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
-        show_progress: bool = True,
+        show_progress: bool = False,
         on_errors: Literal["raise", "skip", "break"] = "raise",
     ) -> Generator[DotDict, None, None]:
         """
@@ -523,7 +523,7 @@ class DocumentChunker(BaseChunker):
 
             n_jobs: Number of parallel workers to use. If None, uses all available CPUs.
                    Must be >= 1 if specified.
-            show_progress: Flag to show or disable the loading bar.
+            show_progress: Display progress bar during processing. Defaults to False.
             on_errors: How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
 
         yields:

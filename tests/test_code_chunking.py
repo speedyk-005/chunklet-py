@@ -381,6 +381,7 @@ def test_batch_chunk_success(chunker):
             MULTIPLE_SOURCES,
             on_errors="skip",
             separator=separator,
+            show_progress=True,
         )
     )
 
@@ -432,13 +433,7 @@ def test_batch_chunk_error_handling_on_task(chunker):
     try:
         # Test on_errors = 'raise'
         with pytest.raises(FileProcessingError):
-            list(
-                chunker.chunk_files(
-                    sources_with_error,
-                    on_errors="raise",
-                    show_progress=False,
-                )
-            )
+            list(chunker.chunk_files(sources_with_error, on_errors="raise"))
 
         # Test on_errors = 'skip'
         chunks = list(chunker.chunk_files(sources_with_error, on_errors="skip"))

@@ -97,7 +97,7 @@ def test_batch_chunk_with_different_file_type(chunker):
         "samples/Free_Test_Data_100KB_PPTX.pptx",
         "samples/Sample.tex",
     ]
-    all_document_chunks = list(chunker.chunk_files(paths))
+    all_document_chunks = list(chunker.chunk_files(paths, show_progress=True))
 
     # Check that we got some chunks
     assert len(all_document_chunks) > 0

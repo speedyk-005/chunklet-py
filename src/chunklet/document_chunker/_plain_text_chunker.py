@@ -548,7 +548,7 @@ class PlainTextChunker:
         separator: Any = None,
         base_metadata: dict[str, Any] | None = None,
         n_jobs: int | None = None,
-        show_progress: bool = True,
+        show_progress: bool = False,
         on_errors: Literal["raise", "skip", "break"] = "raise",
     ) -> Generator[Any, None, None]:
         """
@@ -568,7 +568,7 @@ class PlainTextChunker:
             base_metadata: Optional dictionary to be included with each chunk.
             n_jobs: Number of parallel workers to use. If None, uses all available CPUs.
                 Must be >= 1 if specified.
-            show_progress: Flag to show or disable the loading bar.
+            show_progress: Display progress bar during processing. Defaults to False.
             on_errors: How to handle errors during processing.
                 Defaults to 'raise'.
 

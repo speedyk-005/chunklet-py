@@ -485,7 +485,7 @@ class SelfTuningChunker:
         *,
         separator: Any = None,
         on_errors: Literal["raise", "skip", "break"] = "raise",
-        show_progress: bool = True,
+        show_progress: bool = False,
     ) -> Generator[DotDict, None, None]:
         """Process the queue, extracting and chunking each source on the spot.
 
@@ -494,7 +494,7 @@ class SelfTuningChunker:
         Args:
             separator: A value to be yielded after the chunks of each source
                 are processed. Note: None cannot be used as a separator.
-            show_progress: Flag to show or disable the loading bar.
+            show_progress: Display progress bar during processing. Defaults to False.
             on_errors: How to handle errors during processing. Can be
                 'raise', 'skip', or 'break'.
 

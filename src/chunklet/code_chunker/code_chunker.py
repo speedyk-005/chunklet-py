@@ -684,7 +684,7 @@ class CodeChunker(BaseChunker):
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
         strict: bool = True,
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
-        show_progress: bool = True,
+        show_progress: bool = False,
         on_errors: Literal["raise", "skip", "break"] = "raise",
     ) -> Generator[DotDict, None, None]:
         """
@@ -707,7 +707,7 @@ class CodeChunker(BaseChunker):
                 Defaults to "all"
             strict: If True, raise error when structural blocks exceed max_tokens. If False, split oversized blocks. Default: True.
             n_jobs: Number of parallel workers. Uses all available CPUs if None.
-            show_progress: Display progress bar during processing. Defaults to True.
+            show_progress: Display progress bar during processing. Defaults to False.
             on_errors:
                 How to handle errors during processing. Defaults to 'raise'.
 
@@ -758,7 +758,7 @@ class CodeChunker(BaseChunker):
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
         strict: bool = True,
         n_jobs: Annotated[int, Field(ge=1)] | None = None,
-        show_progress: bool = True,
+        show_progress: bool = False,
         on_errors: Literal["raise", "skip", "break"] = "raise",
     ) -> Generator[DotDict, None, None]:
         """
@@ -781,7 +781,7 @@ class CodeChunker(BaseChunker):
                 Defaults to "all"
             strict: If True, raise error when structural blocks exceed max_tokens. If False, split oversized blocks. Default: True.
             n_jobs: Number of parallel workers. Uses all available CPUs if None.
-            show_progress: Display progress bar during processing. Defaults to True.
+            show_progress: Display progress bar during processing. Defaults to False.
             on_errors:
                 How to handle errors during processing. Defaults to 'raise'.
 

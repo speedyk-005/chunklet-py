@@ -344,7 +344,6 @@ def test_batch_chunk_error_handling_on_task(chunker):
             chunker.chunk_texts(
                 texts,
                 on_errors="raise",
-                show_progress=False,  # Disabled to prevent an unexpected hanging
                 n_jobs=2,
             )
         )
