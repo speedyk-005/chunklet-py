@@ -124,16 +124,7 @@ class CodeChunker(BaseChunker):
         self.extractor.verbose = value
 
     def _merge_tree(self, relations_list: list[list]) -> str:
-        """
-        Merges multiple sets of parent-child relation dictionaries into a single tree
-        then returns its string representation.
-
-        Args:
-            relations_list: A list containing relation lists.
-
-        Returns:
-            The string representation of the tree
-        """
+        """Merges multiple sets of parent-child relation dictionaries into a single tree"""
         if not relations_list:
             return "global"
 
@@ -268,20 +259,7 @@ class CodeChunker(BaseChunker):
         max_functions: int,
         content_preview: str,
     ) -> str:
-        """
-        Format a limit exceeded error message, only including limits that are not sys.maxsize.
-
-        Args:
-            box_tokens: Actual token count in the block
-            max_tokens: Maximum allowed tokens
-            max_lines: Maximum allowed lines
-            function_count: Actual function count in the block
-            max_functions: Maximum allowed functions
-            content_preview: Preview of the content that exceeded limits
-
-        Returns:
-            Formatted error message with applicable limits
-        """
+        """Format a limit exceeded error message, only including limits that are not sys.maxsize."""
         limits = []
 
         if max_tokens != sys.maxsize:
@@ -363,25 +341,7 @@ class CodeChunker(BaseChunker):
         strict: bool,
         source: str | Path,
     ) -> list[DotDict]:
-        """
-        Group code snippets into chunks based on specified constraints.
-
-        Iteratively merges snippets into chunks while respecting token, line, and function limits.
-        Handles oversized snippets by splitting them if strict mode is disabled.
-
-        Args:
-            snippet_dicts: List of extracted code snippet dictionaries.
-            cumulative_lengths: Cumulative character lengths for span calculation.
-            token_counter: Function to count tokens in text.
-            max_tokens: Maximum tokens per chunk.
-            max_lines: Maximum lines per chunk.
-            max_functions: Maximum functions per chunk.
-            strict: If True, raise error on oversized snippets; if False, split them.
-            source: Original source for metadata.
-
-        Returns:
-            List of chunks with content and metadata.
-        """
+        """Group code snippets into chunks based on specified constraints."""
         source = (
             str(source) if (isinstance(source, Path) or is_path_like(source)) else "N/A"
         )

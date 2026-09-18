@@ -61,15 +61,7 @@ class PPTXProcessor(BaseProcessor):
         self.prs = Presentation(file_path)
 
     def _extract_slide_title(self, slide: Any) -> str | None:
-        """
-        Safely isolates and extracts the authentic presentation slide title shape.
-
-        Args:
-            slide: A python-pptx slide object.
-
-        Returns:
-            The string text of the title formatted as a Markdown H1 header, or None.
-        """
+        """Safely isolates and extracts the authentic presentation slide title shape."""
         title_shape = getattr(slide.shapes, "title", None)
         if (
             title_shape
@@ -82,15 +74,7 @@ class PPTXProcessor(BaseProcessor):
         return None
 
     def _extract_text(self, shape: Any) -> str | None:
-        """
-        Processes standard shapes, placeholders, and content text frames.
-
-        Args:
-            shape: A python-pptx shape object.
-
-        Returns:
-            Extracted lines of text formatted into Markdown paragraphs or bullets.
-        """
+        """Processes standard shapes, placeholders, and content text frames."""
         if not shape.has_text_frame:
             return None
 
@@ -115,15 +99,7 @@ class PPTXProcessor(BaseProcessor):
         return getattr(pf, "type", None) in self.TEMPLATE_PLACEHOLDERS
 
     def _extract_table(self, shape: Any) -> str | None:
-        """
-        Extracts complex layout grid shapes and transforms them into Markdown tables.
-
-        Args:
-            shape: A python-pptx shape object holding table attributes.
-
-        Returns:
-            A clean structured Markdown grid table text block.
-        """
+        """Extracts complex layout grid shapes and transforms them into Markdown tables."""
         if not hasattr(shape, "has_table") or not shape.has_table:
             return None
 
@@ -138,15 +114,7 @@ class PPTXProcessor(BaseProcessor):
         return build_md_table(rows)
 
     def _extract_chart(self, shape: Any) -> str | None:
-        """
-        Extracts chart properties, categories, and plot series values into Markdown.
-
-        Args:
-            shape: A python-pptx graphic frame shape object containing a chart.
-
-        Returns:
-            A structured Markdown representation of the chart data, or None.
-        """
+        """Extracts chart properties, categories, and plot series values into Markdown."""
         if not hasattr(shape, "has_chart") or not shape.has_chart:
             return None
 
@@ -204,15 +172,7 @@ class PPTXProcessor(BaseProcessor):
         return rows
 
     def _extract_notes(self, slide: Any) -> str | None:
-        """
-        Extracts presenter/speaker notes text associated with the slide.
-
-        Args:
-            slide: A python-pptx slide object.
-
-        Returns:
-            Extracted text blocks formatted as a blockquote block, or None.
-        """
+        """Extracts presenter/speaker notes text associated with the slide."""
         notes_slide = getattr(slide, "notes_slide", None)
         if (
             notes_slide
@@ -237,14 +197,7 @@ class PPTXProcessor(BaseProcessor):
         return None
 
     def _extract_layout_blocks(self, slide: Any) -> list[str]:
-        """Extract markdown blocks from the slide's layout shapes.
-
-        Args:
-            slide: A python-pptx Slide object.
-
-        Returns:
-            A list of markdown string blocks for each shape in the slide layout.
-        """
+        """Extract markdown blocks from the slide's layout shapes."""
         blocks: list[str] = []
         for shape in slide.shapes:
             if shape == slide.shapes.title:

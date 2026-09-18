@@ -117,24 +117,7 @@ class PlainTextChunker:
         base_metadata: dict[str, Any],
         span_finder: DeterministicSpanFinder,
     ) -> list[DotDict]:
-        """
-        Helper to create a list of DotDict objects for chunks with embedded metadata and auto-assigned chunk numbers.
-
-        Args:
-            chunks: An iterable (e.g., list or generator) of raw text strings,
-                each representing a chunk of content.
-            base_metadata: A dictionary containing document-level metadata
-                (e.g., 'source' file path, 'page_count' for PDFs) to be embedded
-                into each chunk's metadata.
-            span_finder: The span finder instance for locating chunks.
-
-        Returns:
-            A list of `DotDict` objects. Each `DotDict` contains:
-
-                - 'content' (str): The text of the chunk.
-                - 'metadata' (dict): A dictionary including 'chunk_num' (int)
-                    and all key-value pairs from `base_metadata`.
-        """
+        """Helper to create a list of DotDict objects for chunks with embedded metadata and auto-assigned chunk numbers."""
         chunks_out = []
         for i, chunk_str in enumerate(chunks, start=1):
             chunk = DotDict({})
@@ -152,18 +135,7 @@ class PlainTextChunker:
         sentences: list[str],
         overlap_percent: int | float,
     ) -> list[str]:
-        """
-        Extracts a specified number of clauses from the end of the previous chunk
-        to create overlap for the next chunk.
-        It optionally prepends a continuation marker in some cases.
-
-        Args:
-            sentences: A list of sentences to be chunked.
-            overlap_percent: Percentage of overlap between chunks (0-75).
-
-        Returns:
-            A list of clauses as overlap.
-        """
+        """Extracts a specified number of clauses from the end of the previous chunk"""
         clauses = [
             clause for sent in sentences for clause in CLAUSE_END_PATTERN.split(sent)
         ]
@@ -304,6 +276,52 @@ class PlainTextChunker:
 
         return overlap_clauses
 
+    def _evaluate_sentence(
+        self,
+        sentence: str,
+        constraint_counter: dict[str, int],
+        token_counter: Callable[[str], int] | None,
+        max_tokens: int,
+        max_sentences: int,
+        max_section_breaks: int,
+    ) -> dict[str, Any]:
+        """Evaluate a single sentence against the chunk constraints.
+
+        Returns a dict with keys: prepared_sentence, sentence_tokens,
+        is_heading, sentence_limit_reached, heading_limit_reached,
+        token_limit_reached.
+        """
+        is_heading = False
+        if SECTION_BREAK_PATTERN.match(sentence):
+            is_heading = True
+            sentence = "\n" + sentence
+
+        sentence_tokens = (
+            count_tokens(sentence + "\n", token_counter)
+            if max_tokens != sys.maxsize
+            else 0
+        )
+
+        sentence_limit_reached = (
+            constraint_counter["sentence_count"] + 1 > max_sentences
+        )
+        heading_limit_reached = (
+            is_heading and constraint_counter["heading_count"] + 1 > max_section_breaks
+        )
+        token_limit_reached = (
+            max_tokens != sys.maxsize
+            and constraint_counter["token_count"] + sentence_tokens > max_tokens
+        )
+
+        return {
+            "prepared_sentence": sentence,
+            "sentence_tokens": sentence_tokens,
+            "is_heading": is_heading,
+            "sentence_limit_reached": sentence_limit_reached,
+            "heading_limit_reached": heading_limit_reached,
+            "token_limit_reached": token_limit_reached,
+        }
+
     def _group_by_chunk(
         self,
         sentences: list[str],
@@ -313,21 +331,7 @@ class PlainTextChunker:
         max_section_breaks: int,
         overlap_percent: int | float,
     ) -> list[str]:
-        """
-        Groups sentences into chunks based on the specified constraints.
-        Applies overlap logic between consecutive chunks.
-
-        Args:
-            sentences: A list of sentences to be chunked.
-            token_counter: The token counting function.
-            max_tokens: Maximum number of tokens per chunk.
-            max_sentences: Maximum number of sentences per chunk.
-            max_section_breaks: Maximum number of section breaks per chunk.
-            overlap_percent: Percentage of overlap between chunks.
-
-        Returns:
-            A list of chunk strings.
-        """
+        """Groups sentences into chunks based on the specified constraints."""
         chunks = []
         curr_chunk = []
         constraint_counter = {
@@ -340,28 +344,20 @@ class PlainTextChunker:
         while index < len(sentences):
             sentence = sentences[index]
 
-            is_heading = False
-            if SECTION_BREAK_PATTERN.match(sentence):
-                is_heading = True
-                sentence = "\n" + sentence
-
-            sentence_tokens = (
-                count_tokens(sentence + "\n", token_counter)
-                if max_tokens != sys.maxsize
-                else 0
+            eval_result = self._evaluate_sentence(
+                sentence,
+                constraint_counter,
+                token_counter,
+                max_tokens,
+                max_sentences,
+                max_section_breaks,
             )
-
-            sentence_limit_reached = (
-                constraint_counter["sentence_count"] + 1 > max_sentences
-            )
-            heading_limit_reached = (
-                is_heading
-                and constraint_counter["heading_count"] + 1 > max_section_breaks
-            )
-            token_limit_reached = (
-                max_tokens != sys.maxsize
-                and constraint_counter["token_count"] + sentence_tokens > max_tokens
-            )
+            sentence = eval_result["prepared_sentence"]
+            sentence_tokens = eval_result["sentence_tokens"]
+            is_heading = eval_result["is_heading"]
+            sentence_limit_reached = eval_result["sentence_limit_reached"]
+            heading_limit_reached = eval_result["heading_limit_reached"]
+            token_limit_reached = eval_result["token_limit_reached"]
 
             if any(
                 [token_limit_reached, sentence_limit_reached, heading_limit_reached]

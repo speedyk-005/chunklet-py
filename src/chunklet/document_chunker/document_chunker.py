@@ -233,16 +233,7 @@ class DocumentChunker(BaseChunker):
         return extension
 
     def _read(self, path: str | Path, ext: str) -> str:
-        """
-        Read text content from a file using charset detection, handling special formats like RTF.
-
-        Args:
-            path: Path to the file
-            ext: File extension
-
-        Returns:
-            The text content of the file
-        """
+        """Read text content from a file using charset detection, handling special formats like RTF."""
         content = read_text_file(path)
 
         if ext == ".rtf":
@@ -259,30 +250,7 @@ class DocumentChunker(BaseChunker):
     def _prepare_batch_documents(
         self, paths: Iterable[str | Path], on_errors: str
     ) -> dict:
-        """
-        Prepares documents for batch processing by extracting text and metadata from multiple paths.
-
-        This method iterates through a list of file paths,
-        validates each path, handles any validation or processing errors,
-        and extracts the content and metadata from each valid file. It uses a memory-efficient approach
-        by creating a master generator for all text content rather than loading
-        it all into memory.
-
-        Args:
-            paths: An iterable of file paths to process.
-            on_errors: Defines the error
-                handling strategy for validation or processing failures.
-
-        Returns:
-            A dictionary containing the prepared data, with the
-                following keys:
-                - "path_section_counts": A mapping of file paths to the
-                  number of sections (e.g., pages) within them.
-                - "all_texts_gen": A single generator that yields
-                  the text content of all documents sequentially.
-                - "all_metadata": A list of metadata dictionaries, one
-                  for each successfully processed document.
-        """
+        """Prepares documents for batch processing by extracting text and metadata from multiple paths."""
         sections_per_path = {}
         all_metadata = []
         texts_to_chain = []

@@ -115,11 +115,7 @@ class Visualizer:
         return {"status": "healthy"}
 
     async def _get_index(self):
-        """Serves the main HTML interface for the visualizer.
-
-        Returns:
-            The content of index.html if exists, else a default heading.
-        """
+        """Serves the main HTML interface for the visualizer."""
         index_path = self.static_dir / "index.html"
         if index_path.exists():
             async with aiofiles.open(index_path, "r", encoding="utf-8") as f:

@@ -77,21 +77,7 @@ class PDFProcessor(BaseProcessor):
         )
 
     def _cleanup_text(self, text: str) -> str:
-        """Clean and normalize extracted PDF text.
-
-        Performs:
-            - Collapse multiple newlines
-            - Remove lines containing only numbers (page numbers)
-            - Split concatenated words with punctuation and numbers
-            - Collapse multiple spaces
-            - Remove zero-width / non-breaking characters
-
-        Args:
-            text: Raw text extracted from PDF page.
-
-        Returns:
-            Cleaned and normalized text.
-        """
+        """Clean and normalize extracted PDF text."""
         if not text:
             return ""
         text = MULTIPLE_NEWLINE_PATTERN.sub("\n", text)
@@ -101,31 +87,13 @@ class PDFProcessor(BaseProcessor):
         return text
 
     def _safe_decode(self, value: str | bytes):
-        """Utility to decode bytes to str, ignoring errors, otherwise return as-is.
-
-        Args:
-            value: The input value, which may be a string or a byte sequence.
-
-        Returns:
-            The decoded string if the input was bytes, or the original string
-                 if the input was already a string.
-        """
+        """Utility to decode bytes to str, ignoring errors, otherwise return as-is."""
         if isinstance(value, bytes):
             return value.decode("utf-8", "ignore")
         return value
 
     def _extract_info_metadata(self, doc: Any) -> dict:
-        """Extract metadata from PDF document info dictionary.
-
-        Reads PDF info fields and extracts standardized metadata fields
-        defined in METADATA_FIELDS.
-
-        Args:
-            doc: PDFDocument instance with info attribute.
-
-        Returns:
-            Dictionary of normalized metadata key-value pairs.
-        """
+        """Extract metadata from PDF document info dictionary."""
         metadata = {}
         if not (hasattr(doc, "info") and doc.info):
             return metadata

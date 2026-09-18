@@ -20,15 +20,7 @@ class DeterministicSpanFinder:
         self._last_end = 0
 
     def _build_index_map(self, text: str) -> tuple[str, dict[int, int]]:
-        """Build a cleaned text string and index map for fast searching.
-
-        Args:
-            text: The text to process.
-
-        Returns:
-            A tuple of (cleaned_text, index_map) where
-                index_map maps positions in cleaned_text to positions in original text.
-        """
+        """Build a cleaned text string and index map for fast searching."""
         index_map = {}
         curr_idx = 0
         chars = []
