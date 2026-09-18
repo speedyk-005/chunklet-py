@@ -56,7 +56,7 @@ class DocumentChunker(BaseChunker):
       document-level metadata (e.g., PDF page numbers) to each chunk.
         - Bulk Processing: Efficiently chunks multiple documents in a single call.
         - Pluggable Document processors: Integrate custom processors allowing definition
-    of specific logic for extracting text from various file types.
+            of specific logic for extracting text from various file types.
     """
 
     BUILTIN_SUPPORTED_EXTENSIONS = {
@@ -256,47 +256,6 @@ class DocumentChunker(BaseChunker):
         else:  # For .txt, .md, and others handled by simple read
             return content
 
-    def _extract_text_and_metadata(
-        self, path: str | Path, ext: str
-    ) -> tuple[str | Generator[str, None, None], dict[str, Any]]:
-        """
-        Extracts text content and metadata from a document.
-
-        Args:
-            path: The path to the document file.
-            ext: The file extension.
-
-        Returns:
-            A tuple containing
-            either a string (for simple text files) or a generator of strings (for processed documents)
-            and a dictionary of metadata.
-        """
-        log_info(self.verbose, "Extracting text from file {}", path)
-
-        # Prioritize custom processors from registry
-        if self.processor_registry.is_registered(ext):
-            (
-                texts_and_metadata,
-                processor_name,
-            ) = self.processor_registry.extract_data(str(path), ext)
-            log_info(self.verbose, "Used registered processor: {}", processor_name)
-            text_or_gen, metadata = texts_and_metadata
-            metadata["source"] = metadata.get("source", str(path))
-            return text_or_gen, metadata
-
-        elif ext in self.processors:
-            processor_class = self.processors[ext]
-            processor = processor_class(path)
-            return processor.extract_text(), processor.extract_metadata()
-
-        elif ext in self.converters:
-            text_content = self.converters[ext](path)
-
-        else:
-            text_content = self._read(path, ext)
-
-        return text_content, {"source": str(path)}
-
     def _prepare_batch_documents(
         self, paths: Iterable[str | Path], on_errors: str
     ) -> dict:
@@ -334,7 +293,7 @@ class DocumentChunker(BaseChunker):
                 ext = self._validate_and_get_extension(path)
 
                 text_content_or_generator, document_metadata = (
-                    self._extract_text_and_metadata(path, ext)
+                    self.extract_text_and_metadata(path, ext)
                 )
                 all_metadata.append(document_metadata)
 
@@ -377,6 +336,47 @@ class DocumentChunker(BaseChunker):
             "all_texts_gen": chain.from_iterable(texts_to_chain),
             "all_metadata": all_metadata,
         }
+
+    def extract_text_and_metadata(
+        self, path: str | Path, ext: str
+    ) -> tuple[str | Generator[str, None, None], dict[str, Any]]:
+        """
+        Extracts text content and metadata from a document.
+
+        Args:
+            path: The path to the document file.
+            ext: The file extension.
+
+        Returns:
+            A tuple containing
+            either a string (for simple text files) or a generator of strings (for processed documents)
+            and a dictionary of metadata.
+        """
+        log_info(self.verbose, "Extracting text from file {}", path)
+
+        # Prioritize custom processors from registry
+        if self.processor_registry.is_registered(ext):
+            (
+                texts_and_metadata,
+                processor_name,
+            ) = self.processor_registry.extract_data(str(path), ext)
+            log_info(self.verbose, "Used registered processor: {}", processor_name)
+            text_or_gen, metadata = texts_and_metadata
+            metadata["source"] = metadata.get("source", str(path))
+            return text_or_gen, metadata
+
+        elif ext in self.processors:
+            processor_class = self.processors[ext]
+            processor = processor_class(path)
+            return processor.extract_text(), processor.extract_metadata()
+
+        elif ext in self.converters:
+            text_content = self.converters[ext](path)
+
+        else:
+            text_content = self._read(path, ext)
+
+        return text_content, {"source": str(path)}
 
     @validate_input
     def chunk_text(
@@ -472,7 +472,7 @@ class DocumentChunker(BaseChunker):
         path = Path(path)
         ext = self._validate_and_get_extension(path)
 
-        text_content, document_metadata = self._extract_text_and_metadata(path, ext)
+        text_content, document_metadata = self.extract_text_and_metadata(path, ext)
 
         if not isinstance(text_content, str):
             raise UnsupportedFileTypeError(

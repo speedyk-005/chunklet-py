@@ -42,6 +42,7 @@ Available tools:
 - `SentenceSplitter`: lightweight sentence tokenization
 - `DocumentChunker`: natural language with semantic boundaries
 - `CodeChunker`: language-aware code chunking
+- `SelfTuningChunker`: for mixed text/code corpora
 - `ChunkVisualizer`: interactive web-based exploration
 
 Perfect for prepping data for LLMs, building RAG systems, or powering AI search - Chunklet-py handles tons of formats and languages.
@@ -71,6 +72,10 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 - :material-code-tags:{ .lg .middle } __Code-Aware Intelligence__
 
     Code chunking that preserves the structure of your source code.
+
+- :material-robot:{ .lg .middle } __Self-Tuning Chunking__
+
+    Self-tuning chunk boundaries for mixed text/code corpora. Learns per-profile structural stats (KAMA) and sizes chunks to your actual content. No manual constraint tuning.
 
 - :material-ruler-square:{ .lg .middle } __Precision Chunking__
 
