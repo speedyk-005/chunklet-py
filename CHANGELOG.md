@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **UniversalSplitter**:
-  - CJK sentences (e.g. Chinese) with no whitespace between them now split correctly.
+  - non-latin sentences (e.g. Chinese) with no whitespace between them now split correctly.
   - Regex patterns hoisted to module-level constants so they compile once at import time instead of on every instance creation.
 - **Plain text chunker**: When a sentence is split mid-way on the token limit, its unfitted remainder now opens the next chunk instead of the full sentence being re-appended on top of the overlap clause. Fixes duplicated clauses and unresolved `(-1, -1)` spans in token-limited chunking.
 - **Span finder**:
