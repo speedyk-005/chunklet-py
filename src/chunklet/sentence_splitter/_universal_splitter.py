@@ -2,6 +2,30 @@ import regex as re
 
 from chunklet.sentence_splitter.terminators import GLOBAL_SENTENCE_TERMINATORS
 
+SENTENCE_TERMINATORS = "".join(GLOBAL_SENTENCE_TERMINATORS)
+
+FLATTENED_NUMBERED_LIST_PATTERN = re.compile(
+    rf"(?<=[{SENTENCE_TERMINATORS}:])\s+(\p{{N}}\.)+"
+)
+
+QUOTE_OR_PAREN_PATTERN = re.compile(
+    r"(\p{Pi}|['\"]).+?(\p{Pf}|\1)|"
+    r"\p{Ps}.+?\p{Pe}",
+    re.S | re.X,
+)
+
+HASHED_PATTERN = re.compile(r"##-?\d+##")
+NUMBERED_LIST_PATTERN = re.compile(r"[\n:]\s*\p{N}\.")
+
+SENTENCE_END_PATTERN = re.compile(
+    rf"""
+    (?<!\b(?:\p{{Lu}}\p{{Ll}}{{1,4}}\.)+)  # Latin abbreviations (e.g., Dr., Prof.)
+    (?<=[{SENTENCE_TERMINATORS}])          # sentence-ending punctuation
+    (?=[\p{{Lo}}\p{{Lt}}]|\s+[^\p{{Ll}}])                     # Followed by optional space + non-lowercase letter
+    """,
+    re.X,
+)
+
 
 class UniversalSplitter:
     """
@@ -19,36 +43,6 @@ class UniversalSplitter:
       - Primary splitter for languages without dedicated support
       - Fallback when language-specific splitters unavailable
     """
-
-    def __init__(self):
-        self.sentence_terminators = "".join(GLOBAL_SENTENCE_TERMINATORS)
-        self.flattened_numbered_list_pattern = re.compile(
-            rf"(?<=[{self.sentence_terminators}:])\s+(\p{{N}}\.)+"
-        )
-
-        self.quote_or_paren_pattern = re.compile(
-            r"(\p{Pi}|['\"]).+?(\p{Pf}|\1)|"
-            r"\p{Ps}.+?\p{Pe}",
-            re.DOTALL,
-        )
-
-        self.hashed_pattern = re.compile(r"##-?\d+##")
-        self.numbered_list_pattern = re.compile(r"[\n:]\s*\p{N}\.")
-
-        # Core sentence split regex
-        # NOTE: Acronyms like "U.S.A" are protected primarily by the lookahead (?=\s+...).
-        # Since "U.S.A," has no space after it (just punctuation), the lookahead fails
-        # and no split occurs. The negative lookbehind handles other abbreviations like "Dr."
-        # This means acronym protection is *not* dependent on masking—it's explicit in the
-        # lookahead requirement for whitespace or newline before the next uppercase letter.
-        self.sentence_end_pattern = re.compile(
-            rf"""
-            (?<!\b(\p{{Lu}}\p{{Ll}}{{1, 4}}\.)*)   # Latin-only abbreviation
-            (?<=[{self.sentence_terminators}])       # sentence-ending punctuation
-            (?=\s+[\p{{Lu}}\p{{Lo}}\p{{Lt}}]|\s*\n|\s*$)  # followed by letter (upper or catch-all) or end
-            """,
-            re.VERBOSE,
-        )
 
     def split(self, text: str) -> list[str]:
         """
@@ -74,24 +68,25 @@ class UniversalSplitter:
         def unmask(match: re.Match, norm_map: dict):
             return norm_map.get(match.group(), match.group())
 
-        text = self.flattened_numbered_list_pattern.sub(r"\n \1", text.strip())
+        text = FLATTENED_NUMBERED_LIST_PATTERN.sub(r"\n \1", text.strip())
 
         # Normalize to protect them
         norm_map = {}
-        text = self.quote_or_paren_pattern.sub(lambda m: mask(m, norm_map), text)
-        text = self.numbered_list_pattern.sub(lambda m: mask(m, norm_map), text)
+        text = QUOTE_OR_PAREN_PATTERN.sub(lambda m: mask(m, norm_map), text)
+        text = NUMBERED_LIST_PATTERN.sub(lambda m: mask(m, norm_map), text)
 
         # Firstly, split base on punctuation
         # then split further on newline
         final_sentences = []
-        sentences = self.sentence_end_pattern.split(text.strip())
+        sentences = SENTENCE_END_PATTERN.split(text.strip())
+
         for sent in sentences:
             if sent:
                 final_sentences.extend(sent.strip().splitlines())
 
         # Restore the normalization
         return [
-            self.hashed_pattern.sub(lambda m: unmask(m, norm_map), sent)
+            HASHED_PATTERN.sub(lambda m: unmask(m, norm_map), sent)
             for sent in final_sentences
             if sent.strip()
         ]
