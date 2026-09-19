@@ -1,6 +1,7 @@
 import pytest
 
 from chunklet.sentence_splitter import SentenceSplitter
+from chunklet.sentence_splitter._universal_splitter import UniversalSplitter
 
 # --- Fixture ---
 
@@ -9,6 +10,12 @@ from chunklet.sentence_splitter import SentenceSplitter
 def splitter():
     """Provides a configured SentenceSplitter instance"""
     return SentenceSplitter(lang="en")
+
+
+@pytest.fixture
+def universal_splitter():
+    """Provides a UniversalSplitter instance for fallback testing."""
+    return UniversalSplitter()
 
 
 # --- Multilingual Splitting Tests ---
@@ -71,3 +78,56 @@ def test_special_handler_exists(splitter, lang):
 
     result = handler("Hello world. This is a test.")
     assert result, f"Handler for '{lang}' returned empty result"
+
+
+@pytest.mark.parametrize(
+    "text, expected_sentences",
+    [
+        # CJK with mixed punctuation
+        (
+            "这是第一句。这是第二句！这是第三句？",
+            ["这是第一句。", "这是第二句！", "这是第三句？"],
+        ),
+        # Abbreviations must NOT split
+        (
+            "Dr. Smith said hi. He left.",
+            ["Dr. Smith said hi.", "He left."],
+        ),
+        (
+            "The U.S.A. is great. We love it.",
+            ["The U.S.A. is great.", "We love it."],
+        ),
+        # Numbers must NOT split mid-value
+        (
+            "The price is $3.14. It weighs 123.45 kg.",
+            ["The price is $3.14.", "It weighs 123.45 kg."],
+        ),
+        # Numbered lists
+        (
+            "Item 1. Item 2. Item 3.",
+            ["Item 1.", "Item 2.", "Item 3."],
+        ),
+        # Quotes and parentheses are preserved
+        (
+            'She said "Hello there." Then she left.',
+            ['She said "Hello there." Then she left.'],
+        ),
+        (
+            "Paris (France) is nice. It is cold.",
+            ["Paris (France) is nice.", "It is cold."],
+        ),
+        # Email / URL preserved
+        (
+            "Email me at pierrot1234@gmail.com please.",
+            ["Email me at pierrot1234@gmail.com please."],
+        ),
+        # Newlines split
+        (
+            "First line.\nSecond line.\nThird line.",
+            ["First line.", "Second line.", "Third line."],
+        ),
+    ],
+)
+def test_universal_splitter_basic(universal_splitter, text, expected_sentences):
+    """text that UniversalSplitter handles Latin, CJK, abbreviations, numbers, quotes."""
+    assert universal_splitter.split(text) == expected_sentences

@@ -2,7 +2,6 @@ import regex as re
 
 from chunklet.sentence_splitter.terminators import GLOBAL_SENTENCE_TERMINATORS
 
-
 SENTENCE_TERMINATORS = "".join(GLOBAL_SENTENCE_TERMINATORS)
 
 FLATTENED_NUMBERED_LIST_PATTERN = re.compile(
@@ -12,25 +11,19 @@ FLATTENED_NUMBERED_LIST_PATTERN = re.compile(
 QUOTE_OR_PAREN_PATTERN = re.compile(
     r"(\p{Pi}|['\"]).+?(\p{Pf}|\1)|"
     r"\p{Ps}.+?\p{Pe}",
-    re.DOTALL,
+    re.S | re.X,
 )
 
 HASHED_PATTERN = re.compile(r"##-?\d+##")
 NUMBERED_LIST_PATTERN = re.compile(r"[\n:]\s*\p{N}\.")
 
-# Core sentence split regex
-# NOTE: Acronyms like "U.S.A" are protected primarily by the lookahead (?=\s+...).
-# Since "U.S.A," has no space after it (just punctuation), the lookahead fails
-# and no split occurs. The negative lookbehind handles other abbreviations like "Dr."
-# This means acronym protection is *not* dependent on masking—it's explicit in the
-# lookahead requirement for whitespace or newline before the next uppercase letter.
 SENTENCE_END_PATTERN = re.compile(
     rf"""
-    (?<!\b(\p{{Lu}}\p{{Ll}}{{1,4}}\.)*)   # Latin-only abbreviation
-    (?<=[{SENTENCE_TERMINATORS}])         # sentence-ending punctuation
-    (?=\s+[\p{{Lu}}\p{{Lo}}\p{{Lt}}]|\s*\n|\s*$)  # followed by letter (upper or catch-all) or end
+    (?<!\b(?:\p{{Lu}}\p{{Ll}}{{1,4}}\.)+)  # Latin abbreviations (e.g., Dr., Prof.)
+    (?<=[{SENTENCE_TERMINATORS}])          # sentence-ending punctuation
+    (?=[\p{{Lo}}\p{{Lt}}]|\s+[^\p{{Ll}}])                     # Followed by optional space + non-lowercase letter
     """,
-    re.VERBOSE,
+    re.X,
 )
 
 
@@ -86,6 +79,7 @@ class UniversalSplitter:
         # then split further on newline
         final_sentences = []
         sentences = SENTENCE_END_PATTERN.split(text.strip())
+
         for sent in sentences:
             if sent:
                 final_sentences.extend(sent.strip().splitlines())
