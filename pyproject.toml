@@ -83,7 +83,7 @@ code = [
 self-tuning = ["chunklet-py[struct-doc,code]"]
 
 viz = [
-  "uvicorn>=0.35.0,<0.53",
+  "uvicorn>=0.35.0,<0.54",
   "fastapi>=0.116.0,<0.142",
   "python-multipart>=0.0.20,<0.33",
   "msgpack>=1.1.0,<2.0",
