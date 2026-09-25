@@ -556,12 +556,10 @@ def chunk_command(
     else:
         file_paths = _extract_files(source)
 
-        if len(file_paths) == 1 and file_paths[0].suffix not in {
-            ".docx",
-            ".epub",
-            ".pdf",
-            ".odt",
-        }:
+        if len(file_paths) == 1:
+            # chunk_file supports both str-returning and iterable-returning
+            # processors (e.g. PDF, DOCX, EPUB, ODT), so a single file can
+            # always be chunked directly without falling back to the batch path.
             single_file = file_paths[0]
             chunks = chunker_instance.chunk_file(
                 single_file,
