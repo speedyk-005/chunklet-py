@@ -42,14 +42,11 @@ File couldn't be read. Missing, permissions, encoding issues, corrupted: somethi
 
 ### `UnsupportedFileTypeError` 📄
 
-We don't support that file extension. We checked our list of supported formats and yours wasn't on it. This can also happen if:
-
-- The processor for that file type returns an iterable (not a string), which requires batch processing 🔄
-- The file has no extension, so we don't know how to handle it
+We don't support that file extension. We checked our list of supported formats and yours wasn't on it. This can also happen if the file has no extension, so we don't know how to handle it.
 
 The list of supported formats includes things like `.txt`, `.md`, `.pdf`, `.docx`, `.epub`, `.eml`, `.pptx`, `.html`, `.rst`, `.rtf`, `.tex`, `.odt`, `.csv`, and `.xlsx`. If your file isn't one of these, you'll see this error.
 
-**Fix:** Use a supported format, register a [custom processor](./getting-started/programmatic/document_chunker.md#custom-processors-build-your-own-document-wizards), or use `chunk_files([path])` for formats that require batch processing.
+**Fix:** Use a supported format, or register a [custom processor](./getting-started/programmatic/document_chunker.md#custom-processors-build-your-own-document-wizards).
 
 ---
 
