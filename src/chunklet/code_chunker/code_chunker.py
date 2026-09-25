@@ -23,6 +23,7 @@ Inspired by:
     - CintraAI Code Chunker
 """
 
+import copy
 import sys
 from functools import partial
 from itertools import chain
@@ -151,6 +152,7 @@ class CodeChunker(BaseChunker):
         max_lines: int,
         source: str | Path,
         token_counter: Callable | None,
+        base_metadata: dict[str, Any] | None,
         cumulative_lengths: tuple[int, ...],
     ):
         """
@@ -172,6 +174,7 @@ class CodeChunker(BaseChunker):
         Returns:
             A list of sub-chunks derived from the original block.
         """
+        base_metadata = copy.deepcopy(base_metadata) if base_metadata else {}
         sub_chunks = []
         curr_chunk = []
         token_count = 0
@@ -197,6 +200,7 @@ class CodeChunker(BaseChunker):
                         {
                             "content": "\n".join(curr_chunk),
                             "metadata": {
+                                **base_metadata,
                                 "tree": tree,
                                 "start_line": start_line,
                                 "end_line": end_line,
@@ -233,6 +237,7 @@ class CodeChunker(BaseChunker):
                     {
                         "content": "\n".join(curr_chunk),
                         "metadata": {
+                            **base_metadata,
                             "tree": tree,
                             "start_line": start_line,
                             "end_line": end_line,
@@ -323,6 +328,7 @@ class CodeChunker(BaseChunker):
             kwargs["max_lines"],
             kwargs["source"],
             kwargs["token_counter"],
+            kwargs["base_metadata"],
             kwargs["cumulative_lengths"],
         )
 
@@ -335,6 +341,7 @@ class CodeChunker(BaseChunker):
         snippet_dicts: list[dict],
         cumulative_lengths: tuple[int, ...],
         token_counter: Callable[[str], int] | None,
+        base_metadata: dict[str, Any] | None,
         max_tokens: int,
         max_lines: int,
         max_functions: int,
@@ -345,6 +352,7 @@ class CodeChunker(BaseChunker):
         source = (
             str(source) if (isinstance(source, Path) or is_path_like(source)) else "N/A"
         )
+        base_metadata = copy.deepcopy(base_metadata) if base_metadata else {}
 
         merged_content = []
         relations_list = []
@@ -402,6 +410,7 @@ class CodeChunker(BaseChunker):
                         "strict": strict,
                         "source": source,
                         "token_counter": token_counter,
+                        "base_metadata": base_metadata,
                         "cumulative_lengths": cumulative_lengths,
                         "result_chunks": result_chunks,
                         "box_tokens": box_tokens,
@@ -418,6 +427,7 @@ class CodeChunker(BaseChunker):
                     {
                         "content": "\n".join(merged_content),
                         "metadata": {
+                            **base_metadata,
                             "chunk_num": len(result_chunks) + 1,
                             "tree": self._merge_tree(relations_list),
                             "start_line": start_line,
@@ -446,6 +456,7 @@ class CodeChunker(BaseChunker):
                 {
                     "content": "\n".join(merged_content),
                     "metadata": {
+                        **base_metadata,
                         "chunk_num": len(result_chunks) + 1,
                         "tree": self._merge_tree(relations_list),
                         "start_line": start_line,
@@ -494,6 +505,7 @@ class CodeChunker(BaseChunker):
         code: str,
         *,
         token_counter: Callable[[str], int] | None = None,
+        base_metadata: dict[str, Any] | None = None,
         include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
         strict: bool = True,
@@ -508,6 +520,7 @@ class CodeChunker(BaseChunker):
             code: Raw code string or file path to process.
             token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
+            base_metadata: Optional dictionary to be included with each chunk.
             include_comments: Include comments in output chunks. Default: True.
             docstring_mode: Docstring processing strategy:
 
@@ -558,6 +571,7 @@ class CodeChunker(BaseChunker):
             snippet_dicts=snippet_dicts,
             cumulative_lengths=cumulative_lengths,
             token_counter=token_counter,
+            base_metadata=base_metadata,
             max_tokens=max_tokens,
             max_lines=max_lines,
             max_functions=max_functions,
@@ -575,6 +589,7 @@ class CodeChunker(BaseChunker):
         path: str | Path,
         *,
         token_counter: Callable[[str], int] | None = None,
+        base_metadata: dict[str, Any] | None = None,
         include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
         strict: bool = True,
@@ -589,6 +604,7 @@ class CodeChunker(BaseChunker):
             path: File path to process.
             token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
+            base_metadata: Optional dictionary to be included with each chunk.
             include_comments: Include comments in output chunks. Default: True.
             docstring_mode: Docstring processing strategy:
 
@@ -628,6 +644,7 @@ class CodeChunker(BaseChunker):
         return self.chunk_text(
             code=code,
             token_counter=token_counter or self.token_counter,
+            base_metadata=base_metadata,
             include_comments=include_comments,
             docstring_mode=docstring_mode,
             strict=strict,
@@ -639,6 +656,7 @@ class CodeChunker(BaseChunker):
         codes: IterableOfStr,
         *,
         token_counter: Callable[[str], int] | None = None,
+        base_metadata: dict[str, Any] | None = None,
         separator: Any = None,
         include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
@@ -656,6 +674,7 @@ class CodeChunker(BaseChunker):
             codes: A non-string iterable of raw code strings.
             token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
+            base_metadata: Optional dictionary to be included with each chunk.
             separator: A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
             include_comments: Include comments in output chunks. Default: True.
@@ -665,7 +684,8 @@ class CodeChunker(BaseChunker):
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
                 Defaults to "all"
-            strict: If True, raise error when structural blocks exceed max_tokens. If False, split oversized blocks. Default: True.
+            strict: If True, raise error when structural blocks exceed
+                max_tokens. If False, split oversized blocks. Default: True.
             n_jobs: Number of parallel workers. Uses all available CPUs if None.
             show_progress: Display progress bar during processing. Defaults to False.
             on_errors:
@@ -691,11 +711,11 @@ class CodeChunker(BaseChunker):
         chunk_func = partial(
             self.chunk_text,
             token_counter=token_counter or self.token_counter,
+            base_metadata=base_metadata,
             include_comments=include_comments,
             docstring_mode=docstring_mode,
             strict=strict,
         )
-
         yield from run_in_batch(
             func=chunk_func,
             iterable_of_args=codes,
@@ -713,6 +733,7 @@ class CodeChunker(BaseChunker):
         paths: IterableOfPath,
         *,
         token_counter: Callable[[str], int] | None = None,
+        base_metadata: dict[str, Any] | None = None,
         separator: Any = None,
         include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
@@ -730,6 +751,7 @@ class CodeChunker(BaseChunker):
             paths: A non-string iterable of file paths to process.
             token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
+            base_metadata: Optional dictionary to be included with each chunk.
             separator: A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
             include_comments: Include comments in output chunks. Default: True.
@@ -739,7 +761,8 @@ class CodeChunker(BaseChunker):
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
                 Defaults to "all"
-            strict: If True, raise error when structural blocks exceed max_tokens. If False, split oversized blocks. Default: True.
+            strict: If True, raise error when structural blocks exceed
+                max_tokens. If False, split oversized blocks. Default: True.
             n_jobs: Number of parallel workers. Uses all available CPUs if None.
             show_progress: Display progress bar during processing. Defaults to False.
             on_errors:
@@ -766,11 +789,11 @@ class CodeChunker(BaseChunker):
         chunk_func = partial(
             self.chunk_file,
             token_counter=token_counter or self.token_counter,
+            base_metadata=base_metadata,
             include_comments=include_comments,
             docstring_mode=docstring_mode,
             strict=strict,
         )
-
         yield from run_in_batch(
             func=chunk_func,
             iterable_of_args=paths,
