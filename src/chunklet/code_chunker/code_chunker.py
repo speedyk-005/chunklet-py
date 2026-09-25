@@ -49,7 +49,7 @@ from chunklet.code_chunker._code_structure_extractor import CodeStructureExtract
 from chunklet.code_chunker.utils import is_python_code
 from chunklet.common.batch_runner import run_in_batch
 from chunklet.common.logging_utils import log_info
-from chunklet.common.path_utils import is_path_like, read_text_file
+from chunklet.common.path_utils import read_text_file
 from chunklet.common.token_utils import count_tokens
 from chunklet.common.validation import IterableOfPath, IterableOfStr, validate_input
 from chunklet.exceptions import (
@@ -150,7 +150,6 @@ class CodeChunker(BaseChunker):
         snippet_dict: dict,
         max_tokens: int,
         max_lines: int,
-        source: str | Path,
         token_counter: Callable | None,
         base_metadata: dict[str, Any] | None,
         cumulative_lengths: tuple[int, ...],
@@ -174,7 +173,6 @@ class CodeChunker(BaseChunker):
         Returns:
             A list of sub-chunks derived from the original block.
         """
-        base_metadata = copy.deepcopy(base_metadata) if base_metadata else {}
         sub_chunks = []
         curr_chunk = []
         token_count = 0
@@ -205,14 +203,6 @@ class CodeChunker(BaseChunker):
                                 "start_line": start_line,
                                 "end_line": end_line,
                                 "span": (start_span, end_span),
-                                "source": (
-                                    str(source)
-                                    if isinstance(source, Path)
-                                    or (
-                                        isinstance(source, str) and is_path_like(source)
-                                    )
-                                    else "N/A"
-                                ),
                             },
                         }
                     )
@@ -242,11 +232,6 @@ class CodeChunker(BaseChunker):
                             "start_line": start_line,
                             "end_line": end_line,
                             "span": (start_span, end_span),
-                            "source": (
-                                str(source)
-                                if (isinstance(source, Path) or is_path_like(source))
-                                else "N/A"
-                            ),
                         },
                     }
                 )
@@ -326,7 +311,6 @@ class CodeChunker(BaseChunker):
             snippet_dict,
             kwargs["max_tokens"],
             kwargs["max_lines"],
-            kwargs["source"],
             kwargs["token_counter"],
             kwargs["base_metadata"],
             kwargs["cumulative_lengths"],
@@ -385,13 +369,12 @@ class CodeChunker(BaseChunker):
         max_lines: int,
         max_functions: int,
         strict: bool,
-        source: str | Path,
+        source: str | None,
     ) -> list[DotDict]:
         """Group code snippets into chunks based on specified constraints."""
-        source = (
-            str(source) if (isinstance(source, Path) or is_path_like(source)) else "N/A"
-        )
         base_metadata = copy.deepcopy(base_metadata) if base_metadata else {}
+        if source:
+            base_metadata["source"] = source
 
         merged_content = []
         relations_list = []
@@ -448,7 +431,6 @@ class CodeChunker(BaseChunker):
                         "max_lines": max_lines,
                         "max_functions": max_functions,
                         "strict": strict,
-                        "source": source,
                         "token_counter": token_counter,
                         "base_metadata": base_metadata,
                         "cumulative_lengths": cumulative_lengths,
@@ -473,7 +455,6 @@ class CodeChunker(BaseChunker):
                             "start_line": start_line,
                             "end_line": end_line,
                             "span": (start_span, end_span),
-                            "source": source,
                         },
                     }
                 )
@@ -502,7 +483,6 @@ class CodeChunker(BaseChunker):
                         "start_line": start_line,
                         "end_line": end_line,
                         "span": (start_span, end_span),
-                        "source": source,
                     },
                 }
             )
@@ -616,7 +596,7 @@ class CodeChunker(BaseChunker):
             max_lines=max_lines,
             max_functions=max_functions,
             strict=strict,
-            source=code,
+            source=None,
         )
 
         log_info(self.verbose, "Generated {} chunk(s) for the code", len(result_chunks))
