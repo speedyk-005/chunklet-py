@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Span finder**:
   - The normalized search keeps `#` from Markdown headings, so a chunk starting with a heading reports a span that includes the heading marker instead of starting after it.
   - Repeated text now resolves to its own occurrence instead of reusing the first matched span. The finder tracks the end of the last match and starts exact-match searches from there.
+- **DocumentChunker**: `chunk_file` now handles streaming processors (PDF, DOCX, EPUB, ODT) directly instead of raising `UnsupportedFileTypeError` and pointing users at `chunk_files`. A single streaming file is chunked via the batch pipeline internally.
 
 ### Removed
 - **Deprecated APIs**: Removed the aliases deprecated in v2.2.0 ahead of the v3.0.0 release:

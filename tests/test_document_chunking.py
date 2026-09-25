@@ -115,19 +115,10 @@ def test_batch_chunk_with_different_file_type(chunker):
         assert len(chunks_by_source[path]) > 0
 
 
-def test_chunk_method_unsupported_iterable_processor(chunker):
-    """Test that chunk method raises UnsupportedFileTypeError when processor returns iterable."""
-    # PDF files return an iterable, so using chunk() method should fail with specific error
-    with pytest.raises(
-        UnsupportedFileTypeError,
-        match=re.escape(
-            "File type '.pdf' is not supported by the general chunk method.\n"
-            "Reason: The processor for this file returns iterable, "
-            "so it must be processed in parallel for efficiency.\n"
-            "💡 Hint: use `chunker.chunk_files([file.ext])` for this file type."
-        ),
-    ):
-        chunker.chunk_file("samples/sample-pdf-a4-size.pdf")
+def test_chunk_method_iterable_processor(chunker):
+    """Test that chunk method works even for iterable processor."""
+    chunks = chunker.chunk_file("samples/sample-pdf-a4-size.pdf")
+    assert len(list(chunks)) > 0
 
 
 # --- Custom Processor Tests ---
@@ -138,7 +129,6 @@ def test_chunk_method_with_custom_processor(
 ):
     """Test that the chunk method correctly uses a custom processor."""
 
-    # Define and register a mock custom processor callback
     @registry.register(".mock", name="MockProcessor")
     def mock_custom_processor_callback(file_path: str) -> tuple[str, dict]:
         return "Processed failed.", {"mock": "metadata"}
@@ -160,7 +150,6 @@ def test_chunk_method_with_custom_processor(
         assert "source" in chunks[0].metadata
         assert chunks[0].metadata["source"] == str(dummy_file)
     finally:
-        # Unregister the custom processor after the test
         registry.unregister(".mock")
 
 

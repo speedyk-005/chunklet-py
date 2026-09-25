@@ -330,10 +330,10 @@ file_path = "sample_text.txt"
 chunks = chunker.chunk_file(path=file_path)
 ```
 
-!!! note "Special Handling for Streaming Processors"
-    Some processors work differently due to their streaming nature - they yield content page by page or in blocks rather than all at once. This means they require special care:
+!!! note "Streaming vs. Regular Processors"
+    Some processors work differently due to their streaming nature - they yield content page by page or in blocks rather than all at once. Both `chunk_file` and `chunk_files` handle them:
 
-    **Streaming processors** (PDF, EPUB, DOCX, ODT): These beauties process content as they go, so they're designed for `chunk_files` method. Using them with `chunk_file` will throw an [`UnsupportedFileTypeError`](../../exceptions-and-warnings.md#unsupportedfiletypeerror) since `chunk_file` expects all content upfront.
+    **Streaming processors** (PDF, EPUB, DOCX, ODT): These beauties process content as they go, yielding blocks page by page. `chunk_file` chunks a single one of these files by running them through the batch pipeline internally, so you can use either method without worrying about the streaming nature.
 
     **Regular processors** work fine with both `chunk_file` and `chunk_files` methods.
 
