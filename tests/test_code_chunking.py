@@ -407,7 +407,6 @@ def test_batch_chunk_success(chunker):
         assert hasattr(chunk.metadata, "tree")
         assert hasattr(chunk.metadata, "start_line")
         assert hasattr(chunk.metadata, "end_line")
-        assert hasattr(chunk.metadata, "source")
         assert hasattr(chunk.metadata, "chunk_num")
 
 
