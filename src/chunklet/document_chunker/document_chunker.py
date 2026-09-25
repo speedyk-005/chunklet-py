@@ -1,3 +1,4 @@
+import os
 from itertools import chain, tee
 from pathlib import Path
 from typing import Annotated, Any, Callable, Generator, Iterable, Literal
@@ -275,29 +276,26 @@ class DocumentChunker(BaseChunker):
                     # Wrap in a list to prevent breakking the str into chars
                     texts_to_chain.append([text_content_or_generator])
             except Exception as e:
+                # fmt: off
                 if on_errors == "raise":
                     logger.error(
                         "Document processing failed for '{}'.\nReason: {}.",
-                        path,
-                        e,
+                        path, e
                     )
                     raise
                 elif on_errors == "break":
                     logger.error(
                         "Stopping due to validation error on '{}' at paths[{}].\nReason: {}.",
-                        path,
-                        i,
-                        e,
+                        path, i, e
                     )
                     break
                 else:  # skip
                     logger.warning(
                         "Skipping document '{}' at paths[{}] due to validation failure.\nReason: {}.",
-                        path,
-                        i,
-                        e,
+                        path, i, e
                     )
                     continue
+                # fmt: on
 
         return {
             "path_to_section_counts": sections_per_path,
@@ -442,20 +440,21 @@ class DocumentChunker(BaseChunker):
 
         text_content, document_metadata = self.extract_text_and_metadata(path, ext)
 
-        if not isinstance(text_content, str):
-            raise UnsupportedFileTypeError(
-                f"File type '{ext}' is not supported by the general chunk method.\n"
-                "Reason: The processor for this file returns iterable, "
-                "so it must be processed in parallel for efficiency.\n"
-                "💡 Hint: use `chunker.chunk_files([file.ext])` for this file type."
-            )
-
         log_info(self.verbose, "Starting chunk processing for path: {}.", path)
 
-        chunks_out = self.plain_text_chunker.chunk(
-            text=text_content,
-            token_counter=token_counter or self.token_counter,
-        )
+        if isinstance(text_content, str):
+            chunks_out = self.plain_text_chunker.chunk(
+                text=text_content,
+                token_counter=token_counter or self.token_counter,
+            )
+        else:
+            chunks_out = list(
+                self.plain_text_chunker.batch_chunk(
+                    texts=text_content,
+                    token_counter=token_counter or self.token_counter,
+                    n_jobs=os.cpu_count() - 1,
+                )
+            )
 
         for chunk in chunks_out:
             chunk.metadata.update(document_metadata)
