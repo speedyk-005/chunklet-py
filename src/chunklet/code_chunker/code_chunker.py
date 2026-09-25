@@ -629,7 +629,6 @@ class CodeChunker(BaseChunker):
         path: str | Path,
         *,
         token_counter: Callable[[str], int] | None = None,
-        base_metadata: dict[str, Any] | None = None,
         include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
         strict: bool = True,
@@ -644,7 +643,6 @@ class CodeChunker(BaseChunker):
             path: File path to process.
             token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
-            base_metadata: Optional dictionary to be included with each chunk.
             include_comments: Include comments in output chunks. Default: True.
             docstring_mode: Docstring processing strategy:
 
@@ -684,7 +682,6 @@ class CodeChunker(BaseChunker):
         return self.chunk_text(
             code=code,
             token_counter=token_counter or self.token_counter,
-            base_metadata=base_metadata,
             include_comments=include_comments,
             docstring_mode=docstring_mode,
             strict=strict,
@@ -773,7 +770,6 @@ class CodeChunker(BaseChunker):
         paths: IterableOfPath,
         *,
         token_counter: Callable[[str], int] | None = None,
-        base_metadata: dict[str, Any] | None = None,
         separator: Any = None,
         include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
@@ -791,7 +787,6 @@ class CodeChunker(BaseChunker):
             paths: A non-string iterable of file paths to process.
             token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
-            base_metadata: Optional dictionary to be included with each chunk.
             separator: A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
             include_comments: Include comments in output chunks. Default: True.
@@ -829,7 +824,6 @@ class CodeChunker(BaseChunker):
         chunk_func = partial(
             self.chunk_file,
             token_counter=token_counter or self.token_counter,
-            base_metadata=base_metadata,
             include_comments=include_comments,
             docstring_mode=docstring_mode,
             strict=strict,
