@@ -182,6 +182,18 @@ def test_long_sentence_truncation(chunker):
     )
 
 
+def test_base_metadata_on_chunk_text(chunker):
+    """base_metadata is merged into every chunk's metadata."""
+    chunks = chunker.chunk_text(TEXT, base_metadata={"project": "demo", "repo": "x"})
+
+    assert chunks
+    for chunk in chunks:
+        assert chunk.metadata.project == "demo"
+        assert chunk.metadata.repo == "x"
+        # base_metadata must not clobber structural fields
+        assert chunk.metadata.chunk_num >= 1
+
+
 # --- Overlap Related Tests ---
 
 

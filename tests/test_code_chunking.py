@@ -202,7 +202,7 @@ def test_chunking_with_different_constraints(
                 )
 
 
-# --- Docstring Tests ---
+# --- Other config Tests ---
 
 
 @pytest.mark.parametrize(
@@ -263,9 +263,6 @@ def test_docstring_modes(chunker, code_string, all_mode_pattern, summary_mode_pa
         )
 
 
-# --- Comment Inclusion Tests ---
-
-
 @pytest.mark.parametrize("include_comments", [True, False])
 def test_comment_inclusion(chunker, include_comments):
     """Test Inclusion/Exclusion Of Comments."""
@@ -277,6 +274,21 @@ def test_comment_inclusion(chunker, include_comments):
         assert "# Multiply two numbers" in content
     else:
         assert "# Multiply two numbers" not in content
+
+
+def test_base_metadata_on_chunk_text(chunker):
+    """base_metadata is merged into every chunk's metadata."""
+    chunks = chunker.chunk_text(
+        PYTHON_CODE, base_metadata={"project": "demo", "repo": "x"}
+    )
+
+    assert chunks
+    for chunk in chunks:
+        assert chunk.metadata.project == "demo"
+        assert chunk.metadata.repo == "x"
+        # base_metadata must not clobber structural fields
+        assert chunk.metadata.chunk_num >= 1
+        assert chunk.metadata.tree
 
 
 # --- Error Handling Tests ---
