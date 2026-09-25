@@ -336,6 +336,45 @@ class CodeChunker(BaseChunker):
             sub_chunk.metadata.chunk_num = len(result_chunks) + 1
             result_chunks.append(sub_chunk)
 
+    def _evaluate_snippet(
+        self,
+        snippet_dict: dict,
+        constraint_counter: dict[str, int],
+        token_counter: Callable[[str], int] | None,
+        max_tokens: int,
+        max_lines: int,
+        max_functions: int,
+    ) -> dict[str, Any]:
+        """Evaluate a single code snippet against the chunk constraints.
+
+        Returns a dict with keys: box_tokens, box_lines, is_function,
+        token_limit_reached, line_limit_reached, function_limit_reached.
+        """
+        box_tokens = (
+            count_tokens(snippet_dict["content"], token_counter)
+            if max_tokens != sys.maxsize
+            else 0
+        )
+        box_lines = snippet_dict["content"].count("\n") + bool(snippet_dict["content"])
+        is_function = bool(snippet_dict.get("func_partial_signature"))
+
+        token_limit_reached = (
+            constraint_counter["token_count"] + box_tokens > max_tokens
+        )
+        line_limit_reached = constraint_counter["line_count"] + box_lines > max_lines
+        function_limit_reached = is_function and (
+            constraint_counter["function_count"] + 1 > max_functions
+        )
+
+        return {
+            "box_tokens": box_tokens,
+            "box_lines": box_lines,
+            "is_function": is_function,
+            "token_limit_reached": token_limit_reached,
+            "line_limit_reached": line_limit_reached,
+            "function_limit_reached": function_limit_reached,
+        }
+
     def _group_by_chunk(
         self,
         snippet_dicts: list[dict],
@@ -358,30 +397,31 @@ class CodeChunker(BaseChunker):
         relations_list = []
         start_line = None
         end_line = None
-        token_count = 0
-        line_count = 0
-        function_count = 0
         result_chunks = []
+        constraint_counter = {
+            "token_count": 0,
+            "line_count": 0,
+            "function_count": 0,
+        }
 
         index = 0
         while index < len(snippet_dicts):
             snippet_dict = snippet_dicts[index]
-            box_tokens = (
-                count_tokens(snippet_dict["content"], token_counter)
-                if max_tokens != sys.maxsize
-                else 0
-            )
-            box_lines = snippet_dict["content"].count("\n") + bool(
-                snippet_dict["content"]
-            )
-            is_function = bool(snippet_dict.get("func_partial_signature"))
 
-            # Check if adding this snippet exceeds any limits
-            token_limit_reached = token_count + box_tokens > max_tokens
-            line_limit_reached = line_count + box_lines > max_lines
-            function_limit_reached = is_function and (
-                function_count + 1 > max_functions
+            eval_result = self._evaluate_snippet(
+                snippet_dict,
+                constraint_counter,
+                token_counter,
+                max_tokens,
+                max_lines,
+                max_functions,
             )
+            box_tokens = eval_result["box_tokens"]
+            box_lines = eval_result["box_lines"]
+            is_function = eval_result["is_function"]
+            token_limit_reached = eval_result["token_limit_reached"]
+            line_limit_reached = eval_result["line_limit_reached"]
+            function_limit_reached = eval_result["function_limit_reached"]
 
             if not any(
                 [token_limit_reached, line_limit_reached, function_limit_reached]
@@ -389,10 +429,10 @@ class CodeChunker(BaseChunker):
                 # Fits: merge normally
                 merged_content.append(snippet_dict["content"])
                 relations_list.append(snippet_dict["relations"])
-                token_count += box_tokens
-                line_count += box_lines
+                constraint_counter["token_count"] += box_tokens
+                constraint_counter["line_count"] += box_lines
                 if is_function:
-                    function_count += 1
+                    constraint_counter["function_count"] += 1
 
                 if start_line is None:
                     start_line = snippet_dict["start_line"]
@@ -444,9 +484,9 @@ class CodeChunker(BaseChunker):
                 relations_list.clear()
                 start_line = None
                 end_line = None
-                token_count = 0
-                line_count = 0
-                function_count = 0
+                constraint_counter["token_count"] = 0
+                constraint_counter["line_count"] = 0
+                constraint_counter["function_count"] = 0
 
         # Flush remaining content
         if merged_content:
