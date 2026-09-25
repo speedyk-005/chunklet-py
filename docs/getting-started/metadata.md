@@ -13,8 +13,7 @@ No matter which chunker you use, every chunk includes these metadata fields. Thi
 *   **`source`** (str): Where did this chunk come from?
      *   **File processing**: Absolute path to the file (for [DocumentChunker](programmatic/document_chunker.md) or [CodeChunker](programmatic/code_chunker.md))
      *   **CLI text input**: `"stdin"` (because it came from standard input)
-     *   **Document chunker Text input**: Only included if you provide it via `base_metadata` parameter
-     *   **CodeChunker edge cases**: Might be `"N/A"` if the source can't be determined
+     *   **Programmatic text input**: Only included if you provide it via `base_metadata` parameter
 
 ## DocumentChunker Metadata: Rich & Detailed 📚 {#documentchunker-metadata}
 

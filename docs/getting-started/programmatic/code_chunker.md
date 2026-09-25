@@ -400,6 +400,9 @@ for i, chunk in enumerate(chunks):
 !!! tip "Overrides token_counter"
     You can also provide the `token_counter` directly to any chunking method (e.g., `chunker.chunk_text(..., token_counter=my_tokenizer_function)`). If a `token_counter` is provided in both the constructor and the chunking method, the one in the method call will be used.
 
+!!! tip "Adding Base Metadata"
+    You can pass a `base_metadata` dictionary to `chunk_text` and `chunk_texts`. It's merged into every chunk's metadata (e.g., `chunker.chunk_text(code, base_metadata={"project": "demo"})`). For more details, see the [Metadata guide](../metadata.md#codechunker-metadata).
+
 ### Combining Multiple Constraints: Mix and Match Magic! 🎭
 The real power of `CodeChunker` comes from combining multiple constraints. Here are a few ways to layer them:
 

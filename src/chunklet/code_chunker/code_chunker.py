@@ -23,6 +23,7 @@ Inspired by:
     - CintraAI Code Chunker
 """
 
+import copy
 import sys
 from functools import partial
 from itertools import chain
@@ -48,7 +49,7 @@ from chunklet.code_chunker._code_structure_extractor import CodeStructureExtract
 from chunklet.code_chunker.utils import is_python_code
 from chunklet.common.batch_runner import run_in_batch
 from chunklet.common.logging_utils import log_info
-from chunklet.common.path_utils import is_path_like, read_text_file
+from chunklet.common.path_utils import read_text_file
 from chunklet.common.token_utils import count_tokens
 from chunklet.common.validation import IterableOfPath, IterableOfStr, validate_input
 from chunklet.exceptions import (
@@ -149,8 +150,8 @@ class CodeChunker(BaseChunker):
         snippet_dict: dict,
         max_tokens: int,
         max_lines: int,
-        source: str | Path,
         token_counter: Callable | None,
+        base_metadata: dict[str, Any] | None,
         cumulative_lengths: tuple[int, ...],
     ):
         """
@@ -197,18 +198,11 @@ class CodeChunker(BaseChunker):
                         {
                             "content": "\n".join(curr_chunk),
                             "metadata": {
+                                **base_metadata,
                                 "tree": tree,
                                 "start_line": start_line,
                                 "end_line": end_line,
                                 "span": (start_span, end_span),
-                                "source": (
-                                    str(source)
-                                    if isinstance(source, Path)
-                                    or (
-                                        isinstance(source, str) and is_path_like(source)
-                                    )
-                                    else "N/A"
-                                ),
                             },
                         }
                     )
@@ -233,15 +227,11 @@ class CodeChunker(BaseChunker):
                     {
                         "content": "\n".join(curr_chunk),
                         "metadata": {
+                            **base_metadata,
                             "tree": tree,
                             "start_line": start_line,
                             "end_line": end_line,
                             "span": (start_span, end_span),
-                            "source": (
-                                str(source)
-                                if (isinstance(source, Path) or is_path_like(source))
-                                else "N/A"
-                            ),
                         },
                     }
                 )
@@ -321,8 +311,8 @@ class CodeChunker(BaseChunker):
             snippet_dict,
             kwargs["max_tokens"],
             kwargs["max_lines"],
-            kwargs["source"],
             kwargs["token_counter"],
+            kwargs["base_metadata"],
             kwargs["cumulative_lengths"],
         )
 
@@ -330,50 +320,91 @@ class CodeChunker(BaseChunker):
             sub_chunk.metadata.chunk_num = len(result_chunks) + 1
             result_chunks.append(sub_chunk)
 
+    def _evaluate_snippet(
+        self,
+        snippet_dict: dict,
+        constraint_counter: dict[str, int],
+        token_counter: Callable[[str], int] | None,
+        max_tokens: int,
+        max_lines: int,
+        max_functions: int,
+    ) -> dict[str, Any]:
+        """Evaluate a single code snippet against the chunk constraints.
+
+        Returns a dict with keys: box_tokens, box_lines, is_function,
+        token_limit_reached, line_limit_reached, function_limit_reached.
+        """
+        box_tokens = (
+            count_tokens(snippet_dict["content"], token_counter)
+            if max_tokens != sys.maxsize
+            else 0
+        )
+        box_lines = snippet_dict["content"].count("\n") + bool(snippet_dict["content"])
+        is_function = bool(snippet_dict.get("func_partial_signature"))
+
+        token_limit_reached = (
+            constraint_counter["token_count"] + box_tokens > max_tokens
+        )
+        line_limit_reached = constraint_counter["line_count"] + box_lines > max_lines
+        function_limit_reached = is_function and (
+            constraint_counter["function_count"] + 1 > max_functions
+        )
+
+        return {
+            "box_tokens": box_tokens,
+            "box_lines": box_lines,
+            "is_function": is_function,
+            "token_limit_reached": token_limit_reached,
+            "line_limit_reached": line_limit_reached,
+            "function_limit_reached": function_limit_reached,
+        }
+
     def _group_by_chunk(
         self,
         snippet_dicts: list[dict],
         cumulative_lengths: tuple[int, ...],
         token_counter: Callable[[str], int] | None,
+        base_metadata: dict[str, Any] | None,
         max_tokens: int,
         max_lines: int,
         max_functions: int,
         strict: bool,
-        source: str | Path,
+        source: str | None,
     ) -> list[DotDict]:
         """Group code snippets into chunks based on specified constraints."""
-        source = (
-            str(source) if (isinstance(source, Path) or is_path_like(source)) else "N/A"
-        )
+        base_metadata = copy.deepcopy(base_metadata) if base_metadata else {}
+        if source:
+            base_metadata["source"] = source
 
         merged_content = []
         relations_list = []
         start_line = None
         end_line = None
-        token_count = 0
-        line_count = 0
-        function_count = 0
         result_chunks = []
+        constraint_counter = {
+            "token_count": 0,
+            "line_count": 0,
+            "function_count": 0,
+        }
 
         index = 0
         while index < len(snippet_dicts):
             snippet_dict = snippet_dicts[index]
-            box_tokens = (
-                count_tokens(snippet_dict["content"], token_counter)
-                if max_tokens != sys.maxsize
-                else 0
-            )
-            box_lines = snippet_dict["content"].count("\n") + bool(
-                snippet_dict["content"]
-            )
-            is_function = bool(snippet_dict.get("func_partial_signature"))
 
-            # Check if adding this snippet exceeds any limits
-            token_limit_reached = token_count + box_tokens > max_tokens
-            line_limit_reached = line_count + box_lines > max_lines
-            function_limit_reached = is_function and (
-                function_count + 1 > max_functions
+            eval_result = self._evaluate_snippet(
+                snippet_dict,
+                constraint_counter,
+                token_counter,
+                max_tokens,
+                max_lines,
+                max_functions,
             )
+            box_tokens = eval_result["box_tokens"]
+            box_lines = eval_result["box_lines"]
+            is_function = eval_result["is_function"]
+            token_limit_reached = eval_result["token_limit_reached"]
+            line_limit_reached = eval_result["line_limit_reached"]
+            function_limit_reached = eval_result["function_limit_reached"]
 
             if not any(
                 [token_limit_reached, line_limit_reached, function_limit_reached]
@@ -381,10 +412,10 @@ class CodeChunker(BaseChunker):
                 # Fits: merge normally
                 merged_content.append(snippet_dict["content"])
                 relations_list.append(snippet_dict["relations"])
-                token_count += box_tokens
-                line_count += box_lines
+                constraint_counter["token_count"] += box_tokens
+                constraint_counter["line_count"] += box_lines
                 if is_function:
-                    function_count += 1
+                    constraint_counter["function_count"] += 1
 
                 if start_line is None:
                     start_line = snippet_dict["start_line"]
@@ -400,8 +431,8 @@ class CodeChunker(BaseChunker):
                         "max_lines": max_lines,
                         "max_functions": max_functions,
                         "strict": strict,
-                        "source": source,
                         "token_counter": token_counter,
+                        "base_metadata": base_metadata,
                         "cumulative_lengths": cumulative_lengths,
                         "result_chunks": result_chunks,
                         "box_tokens": box_tokens,
@@ -418,12 +449,12 @@ class CodeChunker(BaseChunker):
                     {
                         "content": "\n".join(merged_content),
                         "metadata": {
+                            **base_metadata,
                             "chunk_num": len(result_chunks) + 1,
                             "tree": self._merge_tree(relations_list),
                             "start_line": start_line,
                             "end_line": end_line,
                             "span": (start_span, end_span),
-                            "source": source,
                         },
                     }
                 )
@@ -434,9 +465,9 @@ class CodeChunker(BaseChunker):
                 relations_list.clear()
                 start_line = None
                 end_line = None
-                token_count = 0
-                line_count = 0
-                function_count = 0
+                constraint_counter["token_count"] = 0
+                constraint_counter["line_count"] = 0
+                constraint_counter["function_count"] = 0
 
         # Flush remaining content
         if merged_content:
@@ -446,12 +477,12 @@ class CodeChunker(BaseChunker):
                 {
                     "content": "\n".join(merged_content),
                     "metadata": {
+                        **base_metadata,
                         "chunk_num": len(result_chunks) + 1,
                         "tree": self._merge_tree(relations_list),
                         "start_line": start_line,
                         "end_line": end_line,
                         "span": (start_span, end_span),
-                        "source": source,
                     },
                 }
             )
@@ -494,6 +525,7 @@ class CodeChunker(BaseChunker):
         code: str,
         *,
         token_counter: Callable[[str], int] | None = None,
+        base_metadata: dict[str, Any] | None = None,
         include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
         strict: bool = True,
@@ -508,6 +540,7 @@ class CodeChunker(BaseChunker):
             code: Raw code string or file path to process.
             token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
+            base_metadata: Optional dictionary to be included with each chunk.
             include_comments: Include comments in output chunks. Default: True.
             docstring_mode: Docstring processing strategy:
 
@@ -558,11 +591,12 @@ class CodeChunker(BaseChunker):
             snippet_dicts=snippet_dicts,
             cumulative_lengths=cumulative_lengths,
             token_counter=token_counter,
+            base_metadata=base_metadata,
             max_tokens=max_tokens,
             max_lines=max_lines,
             max_functions=max_functions,
             strict=strict,
-            source=code,
+            source=None,
         )
 
         log_info(self.verbose, "Generated {} chunk(s) for the code", len(result_chunks))
@@ -639,6 +673,7 @@ class CodeChunker(BaseChunker):
         codes: IterableOfStr,
         *,
         token_counter: Callable[[str], int] | None = None,
+        base_metadata: dict[str, Any] | None = None,
         separator: Any = None,
         include_comments: bool = True,
         docstring_mode: Literal["summary", "all", "excluded"] = "all",
@@ -656,6 +691,7 @@ class CodeChunker(BaseChunker):
             codes: A non-string iterable of raw code strings.
             token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
+            base_metadata: Optional dictionary to be included with each chunk.
             separator: A value to be yielded after the chunks of each text are processed.
                 Note: None cannot be used as a separator.
             include_comments: Include comments in output chunks. Default: True.
@@ -665,7 +701,8 @@ class CodeChunker(BaseChunker):
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
                 Defaults to "all"
-            strict: If True, raise error when structural blocks exceed max_tokens. If False, split oversized blocks. Default: True.
+            strict: If True, raise error when structural blocks exceed
+                max_tokens. If False, split oversized blocks. Default: True.
             n_jobs: Number of parallel workers. Uses all available CPUs if None.
             show_progress: Display progress bar during processing. Defaults to False.
             on_errors:
@@ -691,11 +728,11 @@ class CodeChunker(BaseChunker):
         chunk_func = partial(
             self.chunk_text,
             token_counter=token_counter or self.token_counter,
+            base_metadata=base_metadata,
             include_comments=include_comments,
             docstring_mode=docstring_mode,
             strict=strict,
         )
-
         yield from run_in_batch(
             func=chunk_func,
             iterable_of_args=codes,
@@ -739,7 +776,8 @@ class CodeChunker(BaseChunker):
                 - "all": Include complete docstrings
                 - "excluded": Remove all docstrings
                 Defaults to "all"
-            strict: If True, raise error when structural blocks exceed max_tokens. If False, split oversized blocks. Default: True.
+            strict: If True, raise error when structural blocks exceed
+                max_tokens. If False, split oversized blocks. Default: True.
             n_jobs: Number of parallel workers. Uses all available CPUs if None.
             show_progress: Display progress bar during processing. Defaults to False.
             on_errors:
@@ -770,7 +808,6 @@ class CodeChunker(BaseChunker):
             docstring_mode=docstring_mode,
             strict=strict,
         )
-
         yield from run_in_batch(
             func=chunk_func,
             iterable_of_args=paths,
