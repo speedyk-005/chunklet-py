@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.0.0] - Unreleased
 
 ### Added
+- **`base_metadata` parameter**: `CodeChunker.chunk_text` and `CodeChunker.chunk_texts` now accept a `base_metadata` dict merged into every chunk's metadata, matching `DocumentChunker.chunk_text`/`chunk_texts`.
 - **SelfTuningChunker**: Self-tuning chunker for mixed text/code corpora. Classifies each source as document or code (extension, binary sniff, then content heuristics), learns per-profile structural metrics via a Kaufman Adaptive Moving Average (KAMA), and sizes chunk boundaries from the learned state instead of fixed limits.
   - Ships with a queue-based API (`add_file`, `add_files`, `add_text`, `add_texts`, `process`)
   - Enriches every chunk with `inferred_type` metadata.
