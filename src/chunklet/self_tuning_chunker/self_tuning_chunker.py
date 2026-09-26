@@ -277,13 +277,12 @@ class SelfTuningChunker:
         avg_diff = sum(diffs) / len(diffs)
         self._update_kama("code", key="max_lines", current_value=avg_diff)
 
-    def _fit_max_functions(self, fx_matches: list) -> None:
+    def _fit_max_functions(self, text: str, fx_matches: list) -> None:
         """Fold the 1-or-2 function-per-chunk signal into the code max_functions KAMA."""
-        starts = [start for _, start, _ in fx_matches]
-
-        if len(starts) < 2:
+        if len(fx_matches) < 2:
             return
 
+        starts = [text[:start].count("\n") + 1 for _, start, _ in fx_matches]
         diffs = [abs(b - a) for a, b in pairwise(starts)]
         avg_diff = sum(diffs) / len(diffs)
         functions_per_chunk = 1 if avg_diff > IDEAL_LINES_PER_FUNCTION / 2 else 2
@@ -367,7 +366,7 @@ class SelfTuningChunker:
                 for m in FUNCTION_DECLARATION.finditer(text)
             ]
             self._fit_max_lines(text, fx_matches)
-            self._fit_max_functions(fx_matches)
+            self._fit_max_functions(text, fx_matches)
             starts = [start for _, start, _ in fx_matches]
             self._fit_max_tokens_code(text, starts)
         else:

@@ -88,9 +88,26 @@ def test_code_profile_matches_are_learned(chunker):
     assert chunks
     assert chunker.learned_state["code"] == {
         "max_lines": pytest.approx(14.58, rel=1e-3),
-        "max_functions": pytest.approx(1.0),
+        # the sample spaces functions 8.5 lines apart, above the 7.5 threshold, so the
+        # observation is 1 -- identical to the default, so the history is the only proof
+        "max_functions": 1,
         "max_tokens": pytest.approx(480.14, rel=1e-3),
     }
+    assert chunker.histories[("code", "max_functions")] == [1]
+
+
+def test_dense_code_learns_two_functions_per_chunk(chunker):
+    """Test that tightly packed functions move max_functions off its default."""
+    dense_code = "\n".join(f"def f{i}():\n    return {i}" for i in range(12))
+
+    chunks = chunker.chunk_text(dense_code, file_type="code")
+
+    assert chunks
+    # 2 lines apart, under the 7.5 threshold, so the observation is 2
+    assert chunker.histories[("code", "max_functions")] == [2]
+    assert chunker.learned_state["code"]["max_functions"] == pytest.approx(
+        1.0645, rel=1e-3
+    )
 
 
 def test_document_profile_metrics_are_learned(chunker):
@@ -99,11 +116,28 @@ def test_document_profile_metrics_are_learned(chunker):
 
     assert chunks
     assert chunker.learned_state["document"] == {
-        "max_sentences": pytest.approx(6.93, rel=1e-2),
+        "max_sentences": pytest.approx(6.9355, rel=1e-4),
         "header_density_ratio": pytest.approx(0.0468, rel=1e-2),
-        "max_section_breaks": pytest.approx(1.0),
+        # the sample's header density is 0.047, far below the 0.75 threshold, so the
+        # observation is 1 -- identical to the default, hence the history assertion
+        "max_section_breaks": 1,
         "max_tokens": pytest.approx(486.96, rel=1e-2),
     }
+    assert chunker.histories[("document", "max_section_breaks")] == [1]
+
+
+def test_header_dense_document_learns_two_section_breaks(chunker):
+    """Test that header-dense prose moves max_section_breaks off its default."""
+    marker_doc = "\n\n".join(f"## Section {i}\nsome body text here." for i in range(10))
+
+    chunks = chunker.chunk_text(marker_doc, file_type="document")
+
+    assert chunks
+    # every paragraph opens with a header, so density clears 0.75 and the signal is 2
+    assert chunker.histories[("document", "max_section_breaks")] == [2]
+    assert chunker.learned_state["document"]["max_section_breaks"] == pytest.approx(
+        1.0645, rel=1e-3
+    )
 
 
 def test_missing_token_counter_skips_max_tokens_learning():
