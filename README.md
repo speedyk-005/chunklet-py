@@ -75,7 +75,7 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 | 🚀 **Blazingly Fast** | Parallel processing to chunk large volumes of content quickly. |
 | 🪶 **Featherlight Footprint** | Lightweight and memory-efficient, no unnecessary overhead. |
 | 🗂️ **Rich Metadata for RAG** | Chunks include context-aware metadata (source, span, document properties, code AST details) for RAG and LLM pipelines. |
-| 🔧 **Infinitely Customizable** | Pluggable token counters, custom document processors, custom registry scoping: mix and match. |
+| 🔧 **Infinitely Customizable** | Pluggable token counters, custom document processors and more. |
 | 🌐 **Multilingual Mastery** | Supports 60+ languages for text and document chunking with automatic detection and language-specific algorithms. |
 | 🧑‍💻 **Code-Aware Intelligence** | Language-agnostic code chunking that preserves the structural integrity of your source code. |
 | 🎯 **Precision Chunking** | Configurable limits based on sentences, tokens, sections, lines, and functions. |
@@ -305,8 +305,8 @@ The batch methods also have `show_progress`, `on_errors`, `n_jobs` params.
 The "lite" version for when you just need sentences and no fancy metadata.
 
 ```python
-# 'auto' usually guesses right, but you can specify 'en', 'es', etc.
 # Pass lang="auto" to detect it (needs the [lang-detect] extra)
+# 'auto' usually guesses right, but you can specify 'en', 'es', etc.
 splitter = SentenceSplitter(lang="auto")
 
 sentences = splitter.split_text(text)

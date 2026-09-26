@@ -526,16 +526,18 @@ class SelfTuningChunker:
                 _already_fitted=_already_fitted,
             )
 
-        chunk_func = partial(
-            self.chunk_text, base_metadata=metadata, _already_fitted=True
-        )
+        def fit_and_stream_spans(texts: Iterator) -> Iterator:
+            for text in texts:
+                self._fit(text, file_type)
+                yield text, metadata, file_type
+
+        chunk_func = partial(self.chunk_text, _already_fitted=True)
 
         return list(
             run_in_batch(
                 func=chunk_func,
-                iterable_of_args=text_or_gen,
+                iterable_of_args=fit_and_stream_spans(text_or_gen),
                 iterable_name="texts",
-                file_type=file_type,
                 n_jobs=os.cpu_count() - 1,
                 verbose=self.verbose,
             )
