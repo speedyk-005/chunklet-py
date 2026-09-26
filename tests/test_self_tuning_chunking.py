@@ -23,7 +23,7 @@ def simple_token_counter(text: str) -> int:
 SAMPLE_CODE = "samples/sample_module.py"
 SAMPLE_DOCUMENT = "samples/sample_text.txt"
 
-SOURCES = [SAMPLE_CODE, SAMPLE_DOCUMENT]
+SOURCES = [SAMPLE_CODE, SAMPLE_DOCUMENT, "samples/sample-pdf-a4-size.pdf"]
 
 # --- Fixtures ---
 
@@ -279,7 +279,7 @@ def test_separator_is_yielded_between_chunks_per_source(chunker):
     separator_count = sum(1 for r in results if r is separator)
 
     assert chunk_count > 1
-    assert separator_count == 2
+    assert separator_count == 7
 
 
 # --- Interface Tests ---
@@ -302,5 +302,6 @@ def test_base_metadata_is_attached_to_every_chunk(chunker):
         Path(SAMPLE_DOCUMENT).read_text(), base_metadata={"page": 3}
     )
 
-    assert code_chunks and doc_chunks
+    assert code_chunks
+    assert doc_chunks
     assert all(chunk.metadata.page == 3 for chunk in code_chunks + doc_chunks)
