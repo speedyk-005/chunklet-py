@@ -1,3 +1,5 @@
+import copy
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
@@ -6,6 +8,7 @@ from chunklet import (
     SelfTuningChunker,
     UnsupportedFileTypeError,
 )
+from chunklet.exceptions import FileProcessingError
 
 # --- Helpers ---
 
@@ -49,21 +52,40 @@ def test_source_is_routed_to_expected_profile(
     src = tmp_path / target
     src.write_text(Path(source).read_text())
 
-    chunker.add_file(src)
-    chunks = list(chunker.process())
+    chunks = chunker.chunk_file(src)
 
     assert chunks
     assert all(chunk.metadata.inferred_type == expected_type for chunk in chunks)
 
 
+def test_explicit_file_type_overrides_detection(chunker):
+    """Test that an explicit file_type is used even when it contradicts the content."""
+    code_text = Path(SAMPLE_CODE).read_text()
+    assert chunker._detect_file_type(code_text) == "code"
+
+    before = copy.deepcopy(chunker.learned_state)
+    chunks = chunker.chunk_text(
+        code_text, file_type="document", base_metadata={"real_type": "code"}
+    )
+    first_chunk = chunks[0]
+
+    assert chunks
+    assert first_chunk.metadata.inferred_type == "document"
+    assert first_chunk.metadata.real_type == "code"
+
+    # forced to document, so the document profile learns and code is left alone
+    assert chunker.learned_state["document"] != before["document"]
+    assert chunker.learned_state["code"] == before["code"]
+
+
 # --- Learning Tests ---
 
 
-def test_code_profile_matches_are_learned(chunker, tmp_path):
+def test_code_profile_matches_are_learned(chunker):
     """Test that the code profile learns the real source metrics."""
-    chunker.add_file(SAMPLE_CODE)
-    list(chunker.process())
+    chunks = chunker.chunk_file(SAMPLE_CODE)
 
+    assert chunks
     assert chunker.learned_state["code"] == {
         "max_lines": pytest.approx(14.58, rel=1e-3),
         "max_functions": pytest.approx(1.0),
@@ -73,9 +95,9 @@ def test_code_profile_matches_are_learned(chunker, tmp_path):
 
 def test_document_profile_metrics_are_learned(chunker):
     """Test that the document profile learns the real source metrics."""
-    chunker.add_file(SAMPLE_DOCUMENT)
-    list(chunker.process())
+    chunks = chunker.chunk_file(SAMPLE_DOCUMENT)
 
+    assert chunks
     assert chunker.learned_state["document"] == {
         "max_sentences": pytest.approx(6.93, rel=1e-2),
         "header_density_ratio": pytest.approx(0.0468, rel=1e-2),
@@ -87,8 +109,7 @@ def test_document_profile_metrics_are_learned(chunker):
 def test_missing_token_counter_skips_max_tokens_learning():
     """Test that max_tokens learning is skipped when no token counter is set."""
     chunker = SelfTuningChunker(lang="en")
-    chunker.add_files(SOURCES)
-    chunks = list(chunker.process())
+    chunks = chunker.chunk_file(SAMPLE_CODE) + chunker.chunk_file(SAMPLE_DOCUMENT)
 
     assert chunks
     assert chunker.learned_state["code"]["max_tokens"] == 512.0
@@ -109,8 +130,8 @@ def test_initial_state_seeds_learned_profiles():
     chunker = SelfTuningChunker(
         lang="en", token_counter=simple_token_counter, initial_state=baseline
     )
-    chunker.add_files(SOURCES)
-    list(chunker.process())
+    chunker.chunk_file(SAMPLE_CODE)
+    chunker.chunk_file(SAMPLE_DOCUMENT)
 
     assert chunker.learned_state == {
         "code": {
@@ -148,7 +169,7 @@ def test_initial_state_with_unknown_profile_raises():
         SelfTuningChunker(lang="en", initial_state={"spreadsheet": {"max_rows": 3}})
 
 
-def test_hard_token_limit_caps_learned_max_tokens(tmp_path, monkeypatch):
+def test_hard_token_limit_caps_learned_max_tokens(monkeypatch):
     """Test that hard_token_limit caps the learned max_tokens at chunk time."""
     chunker = SelfTuningChunker(
         lang="en", token_counter=simple_token_counter, hard_token_limit=128
@@ -156,8 +177,8 @@ def test_hard_token_limit_caps_learned_max_tokens(tmp_path, monkeypatch):
     monkeypatch.setitem(chunker.learned_state["code"], "max_tokens", 100_000)
     monkeypatch.setitem(chunker.learned_state["document"], "max_tokens", 100_000)
 
-    chunker.add_files(SOURCES)
-    chunks = list(chunker.process())
+    chunks = chunker.chunk_file(SAMPLE_CODE)
+    chunks += chunker.chunk_file(SAMPLE_DOCUMENT)
 
     assert chunks
     assert chunker.code_chunker.max_tokens == 128
@@ -168,10 +189,10 @@ def test_hard_token_limit_caps_learned_max_tokens(tmp_path, monkeypatch):
 # --- Error Handling Tests ---
 
 
-def test_missing_file_raises_file_not_found(chunker):
-    """Test that enqueuing a missing file path raises FileNotFoundError."""
-    with pytest.raises(FileNotFoundError):
-        chunker.add_file("/path/to/nonexistent/file.py")
+def test_missing_file_raises_file_processing_error(chunker):
+    """Test that chunking a missing file path raises FileProcessingError."""
+    with pytest.raises(FileProcessingError):
+        chunker.chunk_file("/path/to/nonexistent/file.py")
 
 
 def test_binary_file_raises_unsupported_type(chunker, tmp_path):
@@ -179,25 +200,26 @@ def test_binary_file_raises_unsupported_type(chunker, tmp_path):
     binary_file = tmp_path / "data.bin"
     binary_file.write_bytes(b"\x00\x01\x02\x03\xff")
 
-    chunker.add_file(binary_file)
     with pytest.raises(UnsupportedFileTypeError):
-        list(chunker.process())
+        chunker.chunk_file(binary_file)
 
 
-# --- Process / Batch Tests ---
+# --- Batch Tests ---
 
 
-def test_process_on_empty_queue_yields_nothing(chunker):
-    """Test that processing an empty queue yields no chunks."""
-    assert list(chunker.process()) == []
+def test_empty_batch_yields_no_chunks(chunker):
+    """Test that empty text and file batches yield no chunks."""
+    assert list(chunker.chunk_texts([])) == []
+    assert list(chunker.chunk_files([])) == []
 
 
-def test_add_texts_routes_each_source_to_its_profile(chunker):
-    """Test that add_texts classifies each raw string independently."""
-    chunker.add_texts(
-        [Path(SAMPLE_CODE).read_text(), Path(SAMPLE_DOCUMENT).read_text()]
+def test_chunk_texts_routes_each_text_to_its_profile(chunker):
+    """Test that chunk_texts classifies each raw string independently."""
+    chunks = list(
+        chunker.chunk_texts(
+            [Path(SAMPLE_CODE).read_text(), Path(SAMPLE_DOCUMENT).read_text()]
+        )
     )
-    chunks = list(chunker.process())
 
     types = {chunk.metadata.inferred_type for chunk in chunks}
     assert types == {"code", "document"}
@@ -205,8 +227,7 @@ def test_add_texts_routes_each_source_to_its_profile(chunker):
 
 def test_all_chunks_carry_inferred_type(chunker):
     """Test that every produced chunk is tagged with inferred_type."""
-    chunker.add_files(SOURCES)
-    chunks = list(chunker.process())
+    chunks = list(chunker.chunk_files(SOURCES))
 
     assert chunks
     for chunk in chunks:
@@ -215,12 +236,37 @@ def test_all_chunks_carry_inferred_type(chunker):
 
 def test_separator_is_yielded_between_chunks_per_source(chunker):
     """Test that a separator is yielded between chunks of the same source."""
-    chunker.add_files(SOURCES)
     separator = object()
-    results = list(chunker.process(separator=separator, show_progress=True))
+    results = list(
+        chunker.chunk_files(SOURCES, separator=separator, show_progress=True)
+    )
 
     chunk_count = sum(1 for r in results if r is not separator)
     separator_count = sum(1 for r in results if r is separator)
 
     assert chunk_count > 1
     assert separator_count == 2
+
+
+# --- Interface Tests ---
+
+
+def test_methods_return_the_annotated_type(chunker):
+    """Test that each method returns the type its signature promises."""
+    assert isinstance(chunker.chunk_text("Hello world."), list)
+    assert isinstance(chunker.chunk_file(SAMPLE_CODE), list)
+    assert isinstance(chunker.chunk_texts(["Hello world."]), Generator)
+    assert isinstance(chunker.chunk_files([SAMPLE_CODE]), Generator)
+
+
+def test_base_metadata_is_attached_to_every_chunk(chunker):
+    """Test that base_metadata reaches every chunk of both profiles."""
+    code_chunks = chunker.chunk_text(
+        Path(SAMPLE_CODE).read_text(), base_metadata={"page": 3}
+    )
+    doc_chunks = chunker.chunk_text(
+        Path(SAMPLE_DOCUMENT).read_text(), base_metadata={"page": 3}
+    )
+
+    assert code_chunks and doc_chunks
+    assert all(chunk.metadata.page == 3 for chunk in code_chunks + doc_chunks)

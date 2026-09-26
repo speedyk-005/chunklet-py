@@ -7,14 +7,18 @@ content characteristics instead of using fixed limits.
 
 import copy
 import os
-import tempfile
-from collections import defaultdict, deque
+from collections import defaultdict
+from collections.abc import Iterator
+from functools import partial
 from itertools import pairwise
 from pathlib import Path
-from typing import Any, Callable, Generator, Literal
+from typing import Annotated, Any, Callable, Generator, Literal
+
+from pydantic import Field
 
 from chunklet import CodeChunker, DocumentChunker
 from chunklet.code_chunker.patterns import FUNCTION_DECLARATION
+from chunklet.common.batch_runner import run_in_batch
 from chunklet.common.dotdict import DotDict
 from chunklet.common.logging_utils import log_info
 from chunklet.common.path_utils import is_binary_file, read_text_file
@@ -122,8 +126,6 @@ class SelfTuningChunker:
         self.histories = defaultdict(list)
         self.learned_state = self._merge_initial_state(initial_state)
 
-        self._pending_sources = deque()
-        self._temp_files: list[Path] = []
         self._sentence_splitter = UniversalSplitter()
 
         # Initialize chunkers with sensible defaults; constraint attributes are
@@ -220,8 +222,10 @@ class SelfTuningChunker:
 
         return state
 
-    def _detect_file_type(self, file: Path) -> Literal["document", "code"]:
-        """Detect a file's type by extension, binary sniffing, and content.
+    def _detect_file_type(
+        self, text_or_file: str | Path
+    ) -> Literal["document", "code"]:
+        """Detect a text/file's type by extension, binary sniffing, and content.
 
         Fast extension-based routing first: known document formats and common code
         extensions are decided without reading the file. Anything else is sniffed
@@ -229,7 +233,7 @@ class SelfTuningChunker:
         :func:`is_code_like`.
 
         Args:
-            file: Path to the file to classify.
+            text_or_file: Text or path to the file to classify.
 
         Returns:
             "document" or "code".
@@ -238,6 +242,14 @@ class SelfTuningChunker:
             UnsupportedFileTypeError: If the file is binary and has neither a
                 document nor a code extension.
         """
+        if isinstance(text_or_file, str):
+            file_type = "code" if is_code_like(text_or_file) else "document"
+            log_info(
+                self._verbose, "Detected text type '{}' for {}", file_type, text_or_file
+            )
+            return file_type
+
+        file = text_or_file
         ext = file.suffix
         if ext in self.document_chunker.BUILTIN_SUPPORTED_EXTENSIONS:
             file_type = "document"
@@ -365,153 +377,235 @@ class SelfTuningChunker:
             self._fit_section_breaks(lines, paragraphs)
             self._fit_max_tokens_document(paragraphs)
 
-    def _fit_and_stream_text(
-        self, text_or_gen: IterableOfStr
-    ) -> Generator[str, None, None]:
-        """Fit each text span as a document while streaming it through unchanged."""
-        if isinstance(text_or_gen, str):
-            text_or_gen = [text_or_gen]
-
-        for text in text_or_gen:
-            self._fit(text, "document")
-            yield text
-
     @validate_input
-    def add_file(self, file_path: str | Path) -> None:
-        """Enqueue a single local system file if exists
-
-        Note:
-            Only the path is queued here so `add_file`/`add_files` stay cheap.
-
-        Args:
-            file_path: Path to the file to process.
-
-        Raises:
-            FileNotFoundError: If the given path doesn't exist.
-        """
-        path_obj = Path(file_path)
-        if not path_obj.exists():
-            raise FileNotFoundError(f"Source file path not found: {file_path}")
-        self._pending_sources.append(file_path)
-
-    @validate_input
-    def add_files(self, file_paths: IterableOfPath) -> None:
-        """Enqueue a batch list of local system files.
-
-        Args:
-            file_paths: A non-string iterable of paths to the document files.
-
-        Raises:
-            FileNotFoundError: If any given path doesn't exist.
-        """
-        for path in file_paths:
-            self.add_file(path)
-
-    @validate_input
-    def add_text(self, text: str) -> None:
-        """Enqueue a raw text string by persisting it to a temporary file.
-
-        The content is written without a file extension so that type detection
-        falls back to the content heuristics, exactly like an extensionless
-        source. The temporary file is removed once ``process`` finishes
-        draining the queue.
-
-        Args:
-            text: Raw text content to chunk.
-        """
-        fd, tmp_path = tempfile.mkstemp(prefix="chunklet_")
-        with os.fdopen(fd, "w") as tmp_file:
-            tmp_file.write(text)
-        tmp_file = Path(tmp_path)
-        self._temp_files.append(tmp_file)
-        self.add_file(tmp_file)
-
-    @validate_input
-    def add_texts(self, texts: IterableOfStr) -> None:
-        """Enqueue a batch list of raw text strings.
-
-        Args:
-            texts: An iterable of raw text strings to chunk.
-        """
-        for text in texts:
-            self.add_text(text)
-
-    @validate_input
-    def process(
+    def chunk_text(
         self,
-        *,
-        separator: Any = None,
-        on_errors: Literal["raise", "skip", "break"] = "raise",
-        show_progress: bool = False,
-    ) -> Generator[DotDict, None, None]:
-        """Process the queue, extracting and chunking each source on the spot.
-
-        Every returned chunk is enriched with inferred_type metadata.
+        text: str,
+        base_metadata: dict[str, Any] | None = None,
+        file_type: Literal["document", "code"] | None = None,
+        _already_fitted: bool = False,
+    ) -> list[DotDict]:
+        """Chunks raw text content using the constraints configured at initialization.
 
         Args:
-            separator: A value to be yielded after the chunks of each source
-                are processed. Note: None cannot be used as a separator.
-            show_progress: Display progress bar during processing. Defaults to False.
-            on_errors: How to handle errors during processing. Can be
-                'raise', 'skip', or 'break'.
+            text: The raw text to fit and chunk.
+            base_metadata: Optional dictionary to be included with each chunk.
+            file_type: Optional file type.
+            _already_fitted: internal param to avoid double fitting.
 
-        Yields:
-            `DotDict` object, representing a chunk with its content and metadata.
+        Returns:
+            A list of `DotDict` objects, each representing a chunk.
         """
 
-        while self._pending_sources:
-            pending_src = self._pending_sources.popleft()
+        file_type = file_type or self._detect_file_type(text)
+        if not _already_fitted:
+            self._fit(text, file_type)
 
-            path_obj = Path(pending_src)
-            file_type = self._detect_file_type(path_obj)
-            learned_state = self.learned_state[file_type]
+        learned_state = self.learned_state[file_type]
+        if file_type == "code":
+            self.code_chunker.token_counter = self.token_counter
+            self.code_chunker.max_tokens = (
+                min(self.hard_token_limit, learned_state["max_tokens"])
+                if self.token_counter
+                else None
+            )
+            self.code_chunker.max_lines = learned_state["max_lines"]
+            self.code_chunker.max_functions = round(learned_state["max_functions"])
 
-            if file_type == "code":
-                content = read_text_file(path_obj)
-                self._fit(content, file_type)
+            chunks = self.code_chunker.chunk_text(
+                text,
+                token_counter=self.token_counter,
+                strict=False,
+                base_metadata=base_metadata,
+            )
+        else:
+            self.document_chunker.max_tokens = (
+                min(self.hard_token_limit, learned_state["max_tokens"])
+                if self.token_counter
+                else None
+            )
+            self.document_chunker.max_sentences = int(learned_state["max_sentences"])
+            self.document_chunker.max_section_breaks = round(
+                learned_state["max_section_breaks"]
+            )
 
-                self.code_chunker.token_counter = self.token_counter
-                self.code_chunker.max_tokens = (
-                    min(self.hard_token_limit, learned_state["max_tokens"])
-                    if self.token_counter
-                    else None
-                )
-                self.code_chunker.max_lines = learned_state["max_lines"]
-                self.code_chunker.max_functions = round(learned_state["max_functions"])
+            chunks = self.document_chunker.chunk_text(
+                text, token_counter=self.token_counter, base_metadata=base_metadata
+            )
 
-                chunks = self.code_chunker.chunk_text(
-                    content, token_counter=self.token_counter, strict=False
-                )
-            else:
+        for chunk in chunks:
+            chunk["metadata"]["inferred_type"] = file_type
+
+        return chunks
+
+    @validate_input
+    def chunk_texts(
+        self,
+        texts: IterableOfStr,
+        *,
+        base_metadata: dict[str, Any] | None = None,
+        separator: Any = None,
+        n_jobs: Annotated[int, Field(ge=1)] | None = None,
+        show_progress: bool = False,
+        on_errors: Literal["raise", "skip", "break"] = "raise",
+    ) -> Generator[DotDict, None, None]:
+        """
+        Chunks multiple text contents using the constraints configured
+        at initialization.
+
+        Args:
+            texts: A non-string iterable of texts to chunk.
+            base_metadata: Optional dictionary to be included with each chunk.
+            separator: A value to be yielded after the chunks of each text are processed.
+            n_jobs: Number of parallel workers.
+            show_progress: Display progress bar during processing. Defaults to False.
+            on_errors: How to handle errors.
+
+        yields:
+            `DotDict` object, representing a chunk with its content and metadata.
+
+        Raises:
+            InvalidInputError: If the input arguments aren't valid.
+            UnsupportedFileTypeError: If the file extension is not supported or is missing.
+        """
+
+        def fit_and_stream_pairs(texts: IterableOfStr) -> Iterator:
+            for text in texts:
+                file_type = self._detect_file_type(text)
+                self._fit(text, file_type)
+                yield text, base_metadata, file_type
+
+        chunk_func = partial(self.chunk_text, _already_fitted=True)
+
+        yield from run_in_batch(
+            func=chunk_func,
+            iterable_of_args=fit_and_stream_pairs(texts),
+            iterable_name="texts",
+            separator=separator,
+            n_jobs=n_jobs,
+            show_progress=show_progress,
+            on_errors=on_errors,
+            verbose=self.verbose,
+        )
+
+    @validate_input
+    def chunk_file(
+        self,
+        path: str | Path,
+        file_type: Literal["document", "code"] | None = None,
+        _already_fitted: bool = False,
+    ) -> list[DotDict]:
+        """
+        Chunks a single document/code from a given path using the constraints
+        configured at initialization.
+
+        Args:
+            path: The path to the document file.
+            file_type: Optional file type.
+            _already_fitted: internal param to avoid double fitting.
+
+        Returns:
+            A list of `DotDict` objects, each representing a chunk with its content and metadata.
+
+        Raises:
+            InvalidInputError: If the input arguments aren't valid.
+            FileNotFoundError: If provided file path not found.
+            UnsupportedFileTypeError: If the file extension is not supported or is missing.
+        """
+        path = Path(path)
+        file_type = file_type or self._detect_file_type(path)
+
+        text_or_gen, metadata = self.document_chunker.extract_text_and_metadata(
+            path, path.suffix
+        )
+
+        if isinstance(text_or_gen, str):
+            return self.chunk_text(
+                text_or_gen,
+                file_type=file_type,
+                base_metadata=metadata,
+                _already_fitted=_already_fitted,
+            )
+
+        chunk_func = partial(
+            self.chunk_text, base_metadata=metadata, _already_fitted=True
+        )
+
+        return list(
+            run_in_batch(
+                func=chunk_func,
+                iterable_of_args=text_or_gen,
+                iterable_name="texts",
+                file_type=file_type,
+                n_jobs=os.cpu_count() - 1,
+                verbose=self.verbose,
+            )
+        )
+
+    @validate_input
+    def chunk_files(
+        self,
+        paths: IterableOfPath,
+        *,
+        token_counter: Callable[[str], int] | None = None,
+        separator: Any = None,
+        n_jobs: Annotated[int, Field(ge=1)] | None = None,
+        show_progress: bool = False,
+        on_errors: Literal["raise", "skip", "break"] = "raise",
+    ) -> Generator[DotDict, None, None]:
+        """
+        Chunks multiple documents/codes from a list of file paths using the constraints
+        configured at initialization.
+
+        This method is a memory-efficient generator that yields chunks as they
+        are processed, without loading all documents into memory at once. It
+        handles various file types.
+
+        Args:
+            paths: A non-string iterable of paths to the document files.
+            token_counter: Optional token counting function.
+            separator: A value to be yielded after the chunks of each text are processed.
+                Note: None cannot be used as a separator.
+
+            n_jobs: Number of parallel workers to use. If None, uses all available CPUs.
+                   Must be >= 1 if specified.
+            show_progress: Display progress bar during processing. Defaults to False.
+            on_errors: How to handle errors during processing. Can be 'raise', 'ignore', or 'break'.
+
+        yields:
+            `DotDict` object, representing a chunk with its content and metadata.
+
+        Raises:
+            InvalidInputError: If the input arguments aren't valid.
+            FileNotFoundError: If provided file path not found.
+            UnsupportedFileTypeError: If the file extension is not supported or is missing.
+            MissingTokenCounterError: If `max_tokens` is provided but no `token_counter` is provided.
+            CallbackError: If a callback function (e.g., custom processors callbacks) fails during execution.
+        """
+
+        def fit_and_stream_tuples(paths: IterableOfPath) -> Iterator:
+            for path in paths:
+                path = Path(path)
+                file_type = self._detect_file_type(path)
                 text_or_gen, metadata = self.document_chunker.extract_text_and_metadata(
-                    path_obj, path_obj.suffix
+                    path, path.suffix
                 )
 
-                self.document_chunker.max_tokens = (
-                    min(self.hard_token_limit, learned_state["max_tokens"])
-                    if self.token_counter
-                    else None
-                )
-                self.document_chunker.max_sentences = int(
-                    learned_state["max_sentences"]
-                )
-                self.document_chunker.max_section_breaks = round(
-                    learned_state["max_section_breaks"]
-                )
+                if isinstance(text_or_gen, str):
+                    text_or_gen = [text_or_gen]
 
-                gen = self._fit_and_stream_text(text_or_gen)
-                chunks = self.document_chunker.chunk_texts(
-                    gen,
-                    token_counter=self.token_counter,
-                    n_jobs=N_JOBS,
-                    show_progress=show_progress,
-                    on_errors=on_errors,
-                    base_metadata=metadata,
-                )
+                for text in text_or_gen:
+                    self._fit(text, file_type)
+                    yield text, metadata, file_type
 
-            for chunk in chunks:
-                chunk["metadata"]["inferred_type"] = file_type
-                yield chunk
-
-            if separator is not None:
-                yield separator
+        chunk_func = partial(self.chunk_text, _already_fitted=True)
+        yield from run_in_batch(
+            func=chunk_func,
+            iterable_of_args=fit_and_stream_tuples(paths),
+            iterable_name="paths",
+            separator=separator,
+            n_jobs=n_jobs,
+            show_progress=show_progress,
+            on_errors=on_errors,
+            verbose=self.verbose,
+        )
