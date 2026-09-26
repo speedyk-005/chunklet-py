@@ -76,7 +76,7 @@ If you were already calling the `chunk_text`/`chunk_texts`/`split_text` methods,
 
 ### `lang="auto"` is no longer the default
 
-In v2, `lang` defaulted to `"auto"` and `py3langid` was a hard dependency; it was always installed. In v3, `lang` is required (no default), and `py3langid` is now an optional extra called `[auto]`.
+In v2, `lang` defaulted to `"auto"` and `py3langid` was a hard dependency; it was always installed. In v3, `lang` is required (no default), and `py3langid` is now an optional extra called `[lang-detect]`.
 
 If you were relying on automatic language detection, you need to:
 
@@ -110,7 +110,7 @@ If you only ever used specific language codes like `lang="en"`, you don't need t
 
 ### `show_progress` now defaults to `False`
 
-In v2, batch methods (`chunk_texts`, `chunk_files`) and `SelfTuningChunker.process` showed a progress bar by default. In v3, `show_progress` defaults to `False` everywhere. Pass `show_progress=True` explicitly if you want the bar back.
+In v2, batch methods (`chunk_texts`, `chunk_files`) showed a progress bar by default. In v3, `show_progress` defaults to `False` everywhere. Pass `show_progress=True` explicitly if you want the bar back.
 
 === "Before (v2.x.x)"
 

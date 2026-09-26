@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **base_metadata parameter**: `CodeChunker.chunk_text` and `CodeChunker.chunk_texts` now accept a `base_metadata` dict merged into every chunk's metadata, matching `DocumentChunker.chunk_text`/`chunk_texts`.
 - **SelfTuningChunker**: Self-tuning chunker for mixed text/code corpora. Classifies each source as document or code (extension, binary sniff, then content heuristics), learns per-profile structural metrics via a Kaufman Adaptive Moving Average (KAMA), and sizes chunk boundaries from the learned state instead of fixed limits.
-  - Ships with a queue-based API (`add_file`, `add_files`, `add_text`, `add_texts`, `process`)
+  - Ships with the standard chunker API (`chunk_text`, `chunk_file`, `chunk_texts`, `chunk_files`); each call measures and learns as it chunks, with no separate processing step.
   - Enriches every chunk with `inferred_type` metadata.
   - New optional extra `[self-tuning]` bundles the `struct-doc`, `code`, and `auto` extras.
   - `hard_token_limit` caps the dynamically grown `max_tokens`.
@@ -26,10 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `SentenceSplitter`: `lang` is now set at construction; `split_text` and `split_file` no longer accept it.
 - **Mutability Constraints**: Constraints are now plain attributes on the chunker. Mutating a validated constraint (e.g., `chunker.max_sentences = 4`) re-runs constraint validation, and `DocumentChunker` delegates these attributes to its internal plain-text chunker.
 - **lang is no longer required to default to `"auto"`**: `lang` is now a required argument with no default.
-  - `py3langid` is no longer a hard dependency (it's an optional extra called `[auto]`), needed only when using `lang="auto"`.
+  - `py3langid` is no longer a hard dependency (it's an optional extra called `[lang-detect]`), needed only when using `lang="auto"`.
   - **Visualizer**: The visualizer's document chunker now defaults to `lang="en"` instead of `"auto"`.
   - **SentenceSplitter**: Removed the warning emitted on first use with `lang="auto"` ("Consider setting the `lang` parameter to a specific language"). Auto-detection still works; the detected language and confidence are still logged at `verbose` level.
-- **show_progress defaults to `False`**: Batch methods (`DocumentChunker.chunk_texts`/`chunk_files`, `CodeChunker.chunk_texts`/`chunk_files`, `PlainTextChunker.chunk_texts`/`chunk_files`) and `SelfTuningChunker.process` no longer show a progress bar by default. Pass `show_progress=True` explicitly to get the bar back.
+- **show_progress defaults to `False`**: Batch methods (`DocumentChunker.chunk_texts`/`chunk_files`, `CodeChunker.chunk_texts`/`chunk_files`, `PlainTextChunker.chunk_texts`/`chunk_files`) no longer show a progress bar by default. Pass `show_progress=True` explicitly to get the bar back.
 - **[auto] extra renamed to `[lang-detect]`**: The optional extra that pulls in `py3langid` is now `lang-detect` (`pip install 'chunklet-py[lang-detect]'`). The `lang="auto"` sentinel value is unchanged. Anyone pinning `chunklet-py[auto]` must switch to `chunklet-py[lang-detect]`.
 - **indic-nlp-library is now an optional extra**: Moved out of the core dependencies into the `[indic]` extra. Install with `pip install 'chunklet-py[indic]'` for Indic language support.
 - **Dependency upper bounds tightened**: Optional-extras dependencies no longer accept blanket `<1.0` bounds. Upper bounds now track the tested versions so future breaking releases are excluded.

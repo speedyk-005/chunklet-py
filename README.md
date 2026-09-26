@@ -21,7 +21,7 @@
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/speedyk-005/chunklet-py)
 
 > [!WARNING]
-> **Quick heads up!** Version 2 has some breaking changes. No worries though - check our [Migration Guide](https://speedyk-005.github.io/chunklet-py/latest/migration/) for a smooth upgrade!
+> **Quick heads up!** Version 3 has some breaking changes. No worries though - check our [Migration Guide](https://speedyk-005.github.io/chunklet-py/latest/migration/) for a smooth upgrade!
 
 ---
 
@@ -56,7 +56,7 @@ Smart chunking solves this by:
 Key features:
 
 - **Composable constraints**: mix and match limits (sentences, tokens, sections) to get exactly the chunks you need
-- **Pluggable architecture**: swap in custom tokenizers, sentence splitters, or processors
+- **Pluggable architecture**: swap in custom token counters or document processors
 - **Rich metadata**: every chunk comes with source references, spans, and structural info
 - **Multi-format support**: PDF, DOCX, EPUB, Markdown, HTML, LaTeX, ODT, CSV, Excel, and plain text
 
@@ -75,7 +75,7 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 | 🚀 **Blazingly Fast** | Parallel processing to chunk large volumes of content quickly. |
 | 🪶 **Featherlight Footprint** | Lightweight and memory-efficient, no unnecessary overhead. |
 | 🗂️ **Rich Metadata for RAG** | Chunks include context-aware metadata (source, span, document properties, code AST details) for RAG and LLM pipelines. |
-| 🔧 **Infinitely Customizable** | Pluggable token counters, custom sentence splitters, custom processors: mix and match. |
+| 🔧 **Infinitely Customizable** | Pluggable token counters, custom document processors, custom registry scoping: mix and match. |
 | 🌐 **Multilingual Mastery** | Supports 60+ languages for text and document chunking with automatic detection and language-specific algorithms. |
 | 🧑‍💻 **Code-Aware Intelligence** | Language-agnostic code chunking that preserves the structural integrity of your source code. |
 | 🎯 **Precision Chunking** | Configurable limits based on sentences, tokens, sections, lines, and functions. |
@@ -220,17 +220,21 @@ These tools don't share arguments, so don't try to use `max_functions` on a PDF 
 Perfect for natural language where you don't want to cut someone off mid-sentence.
 
 ```python
-chunker = DocumentChunker()
-
-# Feel free to mix and match these
-chunks = chunker.chunk_text(
-    text,
+# Constraints are set once, at construction -- then reused by every call
+chunker = DocumentChunker(
+    lang="en",  # Required. Pass "auto" to detect it (needs the [lang-detect] extra)
     max_sentences=3,  # Stop after X sentences
     max_tokens=500,  # Don't blow up the LLM context
     max_section_breaks=2,  # Respect the Markdown headers
+    token_counter=...,  # Required whenever you set max_tokens
     overlap_percent=20,  # Give it some "memory" of the last chunk
     offset=0,  # Skip the first N sentences if you're feeling adventurous
 )
+
+chunks = chunker.chunk_text(text)
+
+# They're plain attributes, so tweak them whenever you like
+chunker.max_sentences = 5
 ```
 
 **CodeChunker (Source Code)**
@@ -238,14 +242,17 @@ chunks = chunker.chunk_text(
 Logic-aware. It doesn't do "overlap" because duplicate code is a hallucination waiting to happen.
 
 ```python
-chunker = CodeChunker()
-
 # Again, use whichever constraints make sense for your file
-chunks = chunker.chunk_text(
-    text,
+chunker = CodeChunker(
     max_lines=50,  # Height limit
     max_tokens=512,  # Width limit
     max_functions=1,  # One function per chunk (keeps things tidy)
+    token_counter=...,  # Required whenever you set max_tokens
+)
+
+# `strict` stays per-call, since it depends on the source
+chunks = chunker.chunk_text(
+    text,
     strict=True,  # True: Crash on big blocks; False: Slice 'em up anyway
 )
 ```
@@ -255,13 +262,16 @@ chunks = chunker.chunk_text(
 Detects each source as document or code, learns per-profile structural metrics (KAMA), and sizes chunks to match — no constraint tuning needed.
 
 ```python
-chunker = SelfTuningChunker(token_counter=word_counter)
+# token_counter is optional if you don't want max_tokens
+chunker = SelfTuningChunker(lang="en", token_counter=...)
 
-chunker.add_file("docs/guide.md")
-chunker.add_text("Some raw prose, enqueued just like a file.")
+# Learning happens per call -- no queue, no separate processing step
+chunks = chunker.chunk_file("docs/guide.md")
+chunks += chunker.chunk_text("Some raw prose, chunked just like a file.")
 
-chunks = chunker.process(show_progress=False)
 # Each chunk.metadata carries "inferred_type": "document" or "code"
+# Already know which? Skip the guesswork with file_type="code"
+chunks = chunker.chunk_text(text, file_type="code")
 ```
 
 ### The Output Object
@@ -277,7 +287,7 @@ for chunk in chunks:
 
 ### Input Methods (Chunkers Only)
 
-These helper methods are for the DocumentChunker and CodeChunker. The SentenceSplitter is a simple soul and only takes strings.
+These helper methods are for the DocumentChunker, CodeChunker and SelfTuningChunker. The SentenceSplitter is a simple soul and only takes strings.
 
 | Method | Input | Return Type |
 |--------|-------|-------------|
@@ -286,6 +296,8 @@ These helper methods are for the DocumentChunker and CodeChunker. The SentenceSp
 | `chunk_texts(list)` | List[str] | Generator[Chunk] |
 | `chunk_files(list)` | List[Path] | Generator[Chunk] |
 
+The batch methods also have `show_progress`, `on_errors`, `n_jobs` params.
+
 ### Specialized Tools
 
 **SentenceSplitter**
@@ -293,10 +305,11 @@ These helper methods are for the DocumentChunker and CodeChunker. The SentenceSp
 The "lite" version for when you just need sentences and no fancy metadata.
 
 ```python
-splitter = SentenceSplitter()
-
 # 'auto' usually guesses right, but you can specify 'en', 'es', etc.
-sentences = splitter.split_text(text, lang="auto")
+# Pass lang="auto" to detect it (needs the [lang-detect] extra)
+splitter = SentenceSplitter(lang="auto")
+
+sentences = splitter.split_text(text)
 ```
 
 > [!TIP]
