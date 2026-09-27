@@ -402,11 +402,6 @@ def chunk_command(
         "--overlap-percent",
         help="Percentage of overlap between chunks (0-85).",
     ),
-    offset: int = typer.Option(
-        0,
-        "--offset",
-        help="Starting sentence offset for chunking.",
-    ),
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging."
     ),
@@ -540,7 +535,6 @@ def chunk_command(
             max_sentences=max_sentences,
             max_section_breaks=max_section_breaks,
             overlap_percent=overlap_percent,
-            offset=offset,
             lang=lang,
         )
         chunk_kwargs = {

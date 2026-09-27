@@ -85,7 +85,6 @@ class DocumentChunker(BaseChunker):
         "max_sentences",
         "max_section_breaks",
         "overlap_percent",
-        "offset",
         "lang",
     }
 
@@ -97,7 +96,6 @@ class DocumentChunker(BaseChunker):
         max_sentences: Annotated[int | None, Field(ge=1)] = None,
         max_section_breaks: Annotated[int | None, Field(ge=1)] = None,
         overlap_percent: Annotated[int, Field(ge=0, le=75)] = 20,
-        offset: Annotated[int, Field(ge=0)] = 0,
         token_counter: Callable[[str], int] | None = None,
         processor_registry: CustomProcessorRegistry | None = None,
         continuation_marker: str = "...",
@@ -114,7 +112,6 @@ class DocumentChunker(BaseChunker):
                 Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags.
                 Must be >= 1.
             overlap_percent: Percentage of overlap between chunks (0-75). Defaults to 20.
-            offset: Starting sentence offset for chunking. Defaults to 0.
             token_counter: Function that counts tokens in text.
                 If None, must be provided (or token-based limits disabled).
             processor_registry: An optional CustomProcessorRegistry instance to use for
@@ -133,7 +130,6 @@ class DocumentChunker(BaseChunker):
             max_sentences=max_sentences,
             max_section_breaks=max_section_breaks,
             overlap_percent=overlap_percent,
-            offset=offset,
             token_counter=self.token_counter,
             lang=lang,
             verbose=self._verbose,

@@ -49,7 +49,6 @@ const elements = {
     max_section_breaks: document.getElementById('max_section_breaks'),
     overlap_percent: document.getElementById('overlap_percent'),
     overlapValue: document.getElementById('overlapValue'),
-    offset: document.getElementById('offset'),
     
     max_tokens_code: document.getElementById('max_tokens_code'),
     max_tokens_code_hint: document.querySelector('#max_tokens_code + small'),
@@ -459,8 +458,7 @@ function getCurrentParameters() {
             max_sentences: 'max_sentences',
             max_tokens: 'max_tokens',
             max_section_breaks: 'max_section_breaks',
-            overlap_percent: 'overlap_percent',
-            offset: 'offset'
+            overlap_percent: 'overlap_percent'
         },
         code: {
             max_tokens_code: 'max_tokens',
