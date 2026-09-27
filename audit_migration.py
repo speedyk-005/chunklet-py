@@ -15,12 +15,12 @@ REMOVED_ARGUMENTS = {
     "custom_splitters": "Remove it.",
     "mode": "Remove it. Pass your limits (max_sentences, max_tokens, etc.) instead.",
     "offset": (
-        "Remove it. Split the text yourself with yasbd.BoundaryDetector.detect(), "
-        " which yields each sentence's cumulative end offset, then slice the original text "
-        " at that offset. Dropping leading chunks is NOT equivalent."
+        "Remove it. Split the text yourself with `yasbd.BoundaryDetector.detect()`, "
+        "which yields each sentence's cumulative end offset, then slice the original "
+        "text at that offset. Dropping leading chunks is NOT equivalent."
     ),
     "sentence_splitter": (
-        "Removed in v3. DocumentChunker/PlainTextChunker always use a default SentenceSplitter."
+        "Removed it. DocumentChunker/PlainTextChunker always use a default SentenceSplitter."
     ),
 }
 
