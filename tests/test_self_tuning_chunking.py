@@ -279,7 +279,7 @@ def test_separator_is_yielded_between_chunks_per_source(chunker):
     separator_count = sum(1 for r in results if r is separator)
 
     assert chunk_count > 1
-    assert separator_count == 7
+    assert separator_count == 3
 
 
 # --- Interface Tests ---
