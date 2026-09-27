@@ -44,7 +44,7 @@ def run_in_batch(
         show_progress: Display progress bar during processing. Defaults to False.
         on_errors:
             How to handle errors during processing. Defaults to "raise".
-        separator: A value to be yielded after the chunks of each text are processed.
+        separator: A value to be yielded after the chunks of each input are processed.
             Note: None cannot be used as a separator.
         verbose: Whether to enable verbose logging.
 

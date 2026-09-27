@@ -485,7 +485,7 @@ class DocumentChunker(BaseChunker):
         Args:
             paths: A non-string iterable of paths to the document files.
             token_counter: Optional token counting function.
-            separator: A value to be yielded after the chunks of each text are processed.
+            separator: A value to be yielded after the chunks of each source are processed.
                 Note: None cannot be used as a separator.
 
             n_jobs: Number of parallel workers to use. If None, uses all available CPUs.

@@ -767,7 +767,7 @@ class CodeChunker(BaseChunker):
             paths: A non-string iterable of file paths to process.
             token_counter: Token counting function. Uses instance
                 counter if None. Required for token-based chunking.
-            separator: A value to be yielded after the chunks of each text are processed.
+            separator: A value to be yielded after the chunks of each source are processed.
                 Note: None cannot be used as a separator.
             include_comments: Include comments in output chunks. Default: True.
             docstring_mode(Literal["summary", "all", "excluded"]): Docstring processing strategy:
