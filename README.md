@@ -134,7 +134,7 @@ Want to unlock more Chunklet-py superpowers? Add these optional dependencies bas
     ```bash
     pip install "chunklet-py[code]"
     ```
-*   **Self-Tuning Chunking:** For self-tuning mixed text/code chunking (bundles `struct-doc`, `code`, and `auto`):
+*   **Self-Tuning Chunking:** For self-tuning mixed text/code chunking (bundles `struct-doc`, `code`):
     ```bash
     pip install "chunklet-py[self-tuning]"
     ```
