@@ -14,7 +14,11 @@ REMOVED_ARGUMENTS = {
     "use_cache": "Remove it.",
     "custom_splitters": "Remove it.",
     "mode": "Remove it. Pass your limits (max_sentences, max_tokens, etc.) instead.",
-    "offset": "Remove it. Slice the text yourself, or skip the leading chunks.",
+    "offset": (
+        "Remove it. Split the text yourself with yasbd.BoundaryDetector.detect(), "
+        " which yields each sentence's cumulative end offset, then slice the original text "
+        " at that offset. Dropping leading chunks is NOT equivalent."
+    ),
     "sentence_splitter": (
         "Removed in v3. DocumentChunker/PlainTextChunker always use a default SentenceSplitter."
     ),

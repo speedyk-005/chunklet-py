@@ -160,7 +160,9 @@ pip install 'chunklet-py[lang-detect]'
 
 The `offset` parameter is removed. It skipped the first N sentences before chunking, and returned nothing when the offset exceeded the sentence count. It's gone from `DocumentChunker`, `PlainTextChunker`, and the `--offset` CLI flag.
 
-If you used it to drop a preamble (a license header, a table of contents), slice that text off before chunking instead. If you used it to resume mid-document, drop the leading chunks after the fact.
+`offset` sliced the chunker's internal sentence list before grouping, and that list is not exposed by any public API, so there is no drop-in replacement.
+
+The only exact equivalent is to split the text yourself and slice at a sentence boundary, using a splitter that reports accurate character offsets. `yasbd` (already a core dependency) exposes these through `BoundaryDetector.detect()`, which yields the cumulative end offset of each sentence. Slicing the original string at one of those offsets reproduces exactly what `offset` selected, and re-joining split segments is not required. Mind the index: `offset` was a count of sentences to skip, while `detect()` returns a 0-indexed list of end offsets, so the boundary is at `offset - 1`.
 
 === "Before (v2.x.x)"
 
@@ -171,15 +173,28 @@ If you used it to drop a preamble (a license header, a table of contents), slice
 === "After (v3.x.x)"
 
     ```py
-    # Drop the preamble before chunking
-    body = text.partition("## Introduction")[2]
-    chunks = chunker.chunk_text(body)
+    from yasbd import BoundaryDetector
+
+    # The only exact equivalent. `detect()` yields the cumulative end offset of
+    # each sentence, so slicing the original text there reproduces exactly what
+    # `offset` used to select.
+    offset = 5  # number of sentences to skip, as before
+    offsets = list(BoundaryDetector(lang="en").detect(text))
+
+    # `offset` counted sentences to skip, but `offsets` is a 0-indexed list of end
+    # offsets, so the boundary sits at `offset - 1`. At `offset=0` there is
+    # nothing to skip, and `offsets` must not be indexed at all.
+    start = offsets[offset - 1] if offset else 0
+    chunks = chunker.chunk_text(text[start:])  # start at the 6th sentence
     ```
 
-    ```py
-    # Or skip the leading chunks after the fact
-    chunks = chunker.chunk_text(text)[5:]
-    ```
+!!! warning "An out-of-range `offset` now raises"
+    `offset` past the end of the document logged a warning and returned an empty list. Indexing `offsets` the same way raises `IndexError` instead, so clamp the value if it comes from user input.
+
+!!! note "This splits sentences twice"
+    Slicing at a boundary reported by yasbd means the text is split once in your code and once again inside the chunker,
+    so it costs more than `offset` did. If you were only dropping a fixed preamble such as a license header or table of
+    contents, slicing the text at a boundary you choose is cheaper and gives the same result.
 
 ### Constraints moved to the constructor
 
