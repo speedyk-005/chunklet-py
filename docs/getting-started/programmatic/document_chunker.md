@@ -53,7 +53,6 @@ The `DocumentChunker` comes loaded with features that make it your go-to text wr
 | `max_tokens`         | `int >= 12`       | Token budget watcher! We'll carefully pack sentences into chunks while respecting your token limits. If a sentence gets too chatty, we'll politely split it at clause boundaries. 🤐 |
 | `max_section_breaks` | `int >= 1`        | Structure superhero! Limits section breaks per chunk: headings (`##`), horizontal rules (`---`, `***`, `___`), and `<details>` tags. Your document structure stays intact! |
 | `overlap_percent`    | `int 0-75`        | Repeat a bit of the previous chunk's tail for continuity. Defaults to 20. |
-| `offset`             | `int >= 0`        | Skip the first N sentences before chunking. Defaults to 0. |
 | `lang`               | `str`             | Language code (`'en'`, `'fr'`, ...) or `'auto'`. Required. |
 
 !!! note "Auto language detection requires the `[lang-detect]` extra"
@@ -112,7 +111,6 @@ chunker = DocumentChunker(  # (1)!
     lang="auto",  # (2)!
     max_sentences=2,
     overlap_percent=0,  # (3)!
-    offset=0,  # (4)!
 )
 
 chunks = chunker.chunk_text(text=text)
@@ -127,7 +125,6 @@ for i, chunk in enumerate(chunks):
 1.  Initialize `DocumentChunker` - no extra dependencies needed for plain text!
 2.  `lang="auto"` lets us detect the language automatically. Super convenient, but specifying a known language like `lang="en"` can boost accuracy and speed.
 3.  `overlap_percent=0` means no overlap between chunks. By default, we add 20% overlap to keep your text flowing smoothly across chunks.
-4.  `offset=0` starts us from the very beginning of the text. (Zero-based indexing - because programmers love starting from zero!)
 
 ??? success "Click to show output"
     ```linenums="0"

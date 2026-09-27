@@ -70,7 +70,6 @@ The `chunk` command is where the chunking happens! It's your versatile tool for 
 | `--max-sentences` | Maximum number of sentences per chunk. Applies to DocumentChunker. (Must be >= 1) | None |
 | `--max-section-breaks` | Maximum number of section breaks per chunk. Section breaks include Markdown headings (# to ######), horizontal rules (---, ***, ___), and <details> tags. Applies to DocumentChunker. (Must be >= 1) | None |
 | `--overlap-percent` | Percentage of overlap between chunks (0-75). Applies to DocumentChunker. | 20.0 |
-| `--offset` | Starting sentence offset for chunking. Applies to DocumentChunker. | 0 |
 | `--lang` | Language of the text (e.g., 'en', 'fr', 'auto'). | auto |
 | `--metadata` | Include rich metadata (source, span, chunk num, etc.) in the output. If `--destination` is a directory, metadata is saved as separate `.json` files; otherwise, it's included inline in the output. | False |
 | `--verbose, -v` | Enable verbose logging for extra insights. | False |

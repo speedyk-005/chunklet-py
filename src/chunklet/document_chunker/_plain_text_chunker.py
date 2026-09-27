@@ -5,8 +5,6 @@ from collections.abc import Iterable
 from functools import partial
 from typing import Any, Callable, Generator, Literal
 
-from loguru import logger
-
 from chunklet.common.batch_runner import run_in_batch
 from chunklet.common.dotdict import DotDict
 from chunklet.common.logging_utils import log_info
@@ -59,7 +57,6 @@ class PlainTextChunker:
         max_sentences: int | None = None,
         max_section_breaks: int | None = None,
         overlap_percent: int = 20,
-        offset: int = 0,
         token_counter: Callable[[str], int] | None = None,
         continuation_marker: str = "...",
         verbose: bool = False,
@@ -78,7 +75,6 @@ class PlainTextChunker:
         self.max_sentences = max_sentences
         self.max_section_breaks = max_section_breaks
         self.overlap_percent = overlap_percent
-        self.offset = offset
         self.lang = lang
 
         self._validate_constraints(
@@ -513,17 +509,8 @@ class PlainTextChunker:
         if not sentences:
             return []
 
-        offset = round(self.offset)
-        if offset >= len(sentences):
-            logger.warning(
-                "Offset {} >= total sentences {}. Returning empty list.",
-                offset,
-                len(sentences),
-            )
-            return []
-
         chunks = self._group_by_chunk(
-            sentences[offset:],
+            sentences,
             token_counter=token_counter or self.token_counter,
             max_tokens=max_tokens,
             max_sentences=max_sentences,

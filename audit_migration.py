@@ -14,6 +14,11 @@ REMOVED_ARGUMENTS = {
     "use_cache": "Remove it.",
     "custom_splitters": "Remove it.",
     "mode": "Remove it. Pass your limits (max_sentences, max_tokens, etc.) instead.",
+    "offset": (
+        "Remove it. Split the text yourself with yasbd.BoundaryDetector.detect(), "
+        " which yields each sentence's cumulative end offset, then slice the original text "
+        " at that offset. Dropping leading chunks is NOT equivalent."
+    ),
     "sentence_splitter": (
         "Removed in v3. DocumentChunker/PlainTextChunker always use a default SentenceSplitter."
     ),
@@ -24,7 +29,6 @@ MOVED_TO_CONSTRUCTOR = {
     "max_sentences": "Move to the constructor: `Chunker(max_sentences=...)`.",
     "max_section_breaks": "Move to the constructor: `Chunker(max_section_breaks=...)`.",
     "overlap_percent": "Move to the constructor: `Chunker(overlap_percent=...)`.",
-    "offset": "Move to the constructor: `Chunker(offset=...)`.",
     "lang": "Move to the constructor: `Chunker(lang=...)`.",
     "max_lines": "Move to the constructor: `CodeChunker(max_lines=...)`.",
     "max_functions": "Move to the constructor: `CodeChunker(max_functions=...)`.",

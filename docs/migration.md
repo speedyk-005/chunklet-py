@@ -156,9 +156,39 @@ It still needs `py3langid`, so install the extra if you haven't:
 pip install 'chunklet-py[lang-detect]'
 ```
 
+### `offset` is gone
+
+The `offset` parameter is removed. It skipped the first N sentences before chunking, and returned nothing when the offset exceeded the sentence count. It's gone from `DocumentChunker`, `PlainTextChunker`, and the `--offset` CLI flag.
+
+`offset` sliced the chunker's internal sentence list before grouping, and that list is not exposed by any public API, so there is no drop-in replacement.
+
+The only exact equivalent is to split the text yourself and slice at a sentence boundary, using a splitter that reports accurate character offsets. `yasbd` (already a core dependency) exposes these through `BoundaryDetector.detect()`, which yields the cumulative end offset of each sentence. Slicing the original string at one of those offsets reproduces exactly what `offset` selected, and re-joining split segments is not required. Mind the index: `offset` was a count of sentences to skip, while `detect()` returns a 0-indexed list of end offsets, so the boundary is at `offset - 1`.
+
+=== "Before (v2.x.x)"
+
+    ```py
+    chunks = chunker.chunk_text(text, offset=5)  # start at the 6th sentence
+    ```
+
+=== "After (v3.x.x)"
+
+    ```py
+    from yasbd import BoundaryDetector
+
+    offset = 5  # number of sentences to skip, as before
+    offsets = list(BoundaryDetector(lang="en").detect(text))
+    start = offsets[offset - 1] if offset else 0
+    chunks = chunker.chunk_text(text[start:])  # start at the 6th sentence
+    ```
+
+!!! note "This splits sentences twice"
+    Slicing at a boundary reported by yasbd means the text is split once in your code and once again inside the chunker,
+    so it costs more than `offset` did. If you were only dropping a fixed preamble such as a license header or table of
+    contents, slicing the text at a boundary you choose is cheaper and gives the same result.
+
 ### Constraints moved to the constructor
 
-Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, `offset`, `lang`) used to be passed per call to `chunk_text()`, `chunk_file()`, `chunk_texts()`, `chunk_files()`, `split_text()`, and `split_file()`. They now live on the chunker/splitter instance, set once at construction and mutable as plain attributes. The same applies to `CodeChunker` (`max_tokens`, `max_lines`, `max_functions`) and `SentenceSplitter` (`lang`).
+Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, `lang`) used to be passed per call to `chunk_text()`, `chunk_file()`, `chunk_texts()`, `chunk_files()`, `split_text()`, and `split_file()`. They now live on the chunker/splitter instance, set once at construction and mutable as plain attributes. The same applies to `CodeChunker` (`max_tokens`, `max_lines`, `max_functions`) and `SentenceSplitter` (`lang`).
 
 === "Before"
 
@@ -171,7 +201,6 @@ Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks
         max_tokens=500,
         max_section_breaks=2,
         overlap_percent=20,
-        offset=0,
     )
     ```
 
@@ -184,7 +213,6 @@ Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks
         max_tokens=500,
         max_section_breaks=2,
         overlap_percent=20,
-        offset=0,
     )
     chunks = chunker.chunk_text(text)
     ```

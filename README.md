@@ -228,7 +228,6 @@ chunker = DocumentChunker(
     max_section_breaks=2,  # Respect the Markdown headers
     token_counter=...,  # Required whenever you set max_tokens
     overlap_percent=20,  # Give it some "memory" of the last chunk
-    offset=0,  # Skip the first N sentences if you're feeling adventurous
 )
 
 chunks = chunker.chunk_text(text)

@@ -134,32 +134,6 @@ def test_constraint_based_chunking(
             )
 
 
-@pytest.mark.parametrize(
-    "offset, expect_chunks",
-    [
-        (0, True),
-        (3, True),
-        (12, True),
-        (100, False),  # More than total sentences
-    ],
-)
-def test_offset_behavior(chunker, offset, expect_chunks):
-    """Verify offset affects output and large offsets produce no chunks"""
-    chunker = DocumentChunker(
-        lang=LANG,
-        token_counter=chunker.token_counter,
-        max_sentences=3,
-        offset=offset,
-    )
-    chunks = chunker.chunk_text(TEXT)
-
-    if expect_chunks:
-        assert len(chunks) >= 1, f"Should get chunks for offset={offset}"
-        assert len(chunks[0].content) > 0, "Chunk content should not be empty"
-    else:
-        assert not chunks, f"Should get no chunks for offset={offset}"
-
-
 def test_token_counter_validation():
     """Test that a MissingTokenCounterError is raised when a token_counter is missing for token/hybrid modes."""
     with pytest.raises(MissingTokenCounterError):
