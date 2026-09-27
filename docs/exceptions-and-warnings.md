@@ -80,18 +80,6 @@ Using universal rule-based splitter. Language not supported or detected with low
 
 ---
 
-### Offset out of range 📍
-
-```
-Offset {} >= total sentences {}. Returning empty list.
-```
-
-**What it means:** Your offset is bigger than the text. There's nothing left to split so we return nothing. This is just informing you; it's not an error, you just asked for more sentences than exist.
-
-**Fix:** Use a smaller offset.
-
----
-
 ### Skipping failed task 🏃
 
 ```
