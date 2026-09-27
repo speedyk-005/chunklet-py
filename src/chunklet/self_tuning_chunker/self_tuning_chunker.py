@@ -423,7 +423,7 @@ class SelfTuningChunker:
                 if self.token_counter
                 else None
             )
-            self.document_chunker.max_sentences = int(learned_state["max_sentences"])
+            self.document_chunker.max_sentences = round(learned_state["max_sentences"])
             self.document_chunker.max_section_breaks = round(
                 learned_state["max_section_breaks"]
             )
