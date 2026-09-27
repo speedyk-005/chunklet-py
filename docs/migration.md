@@ -156,9 +156,34 @@ It still needs `py3langid`, so install the extra if you haven't:
 pip install 'chunklet-py[lang-detect]'
 ```
 
+### `offset` is gone
+
+The `offset` parameter is removed. It skipped the first N sentences before chunking, and returned nothing when the offset exceeded the sentence count. It's gone from `DocumentChunker`, `PlainTextChunker`, and the `--offset` CLI flag.
+
+If you used it to drop a preamble (a license header, a table of contents), slice that text off before chunking instead. If you used it to resume mid-document, drop the leading chunks after the fact.
+
+=== "Before (v2.x.x)"
+
+    ```py
+    chunks = chunker.chunk_text(text, offset=5)  # start at the 6th sentence
+    ```
+
+=== "After (v3.x.x)"
+
+    ```py
+    # Drop the preamble before chunking
+    body = text.partition("## Introduction")[2]
+    chunks = chunker.chunk_text(body)
+    ```
+
+    ```py
+    # Or skip the leading chunks after the fact
+    chunks = chunker.chunk_text(text)[5:]
+    ```
+
 ### Constraints moved to the constructor
 
-Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, `offset`, `lang`) used to be passed per call to `chunk_text()`, `chunk_file()`, `chunk_texts()`, `chunk_files()`, `split_text()`, and `split_file()`. They now live on the chunker/splitter instance, set once at construction and mutable as plain attributes. The same applies to `CodeChunker` (`max_tokens`, `max_lines`, `max_functions`) and `SentenceSplitter` (`lang`).
+Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, `lang`) used to be passed per call to `chunk_text()`, `chunk_file()`, `chunk_texts()`, `chunk_files()`, `split_text()`, and `split_file()`. They now live on the chunker/splitter instance, set once at construction and mutable as plain attributes. The same applies to `CodeChunker` (`max_tokens`, `max_lines`, `max_functions`) and `SentenceSplitter` (`lang`).
 
 === "Before"
 
@@ -171,7 +196,6 @@ Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks
         max_tokens=500,
         max_section_breaks=2,
         overlap_percent=20,
-        offset=0,
     )
     ```
 
@@ -184,7 +208,6 @@ Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks
         max_tokens=500,
         max_section_breaks=2,
         overlap_percent=20,
-        offset=0,
     )
     chunks = chunker.chunk_text(text)
     ```
