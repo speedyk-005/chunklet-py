@@ -470,7 +470,7 @@ requires-dist = [
     { name = "striprtf", marker = "extra == 'struct-doc'", specifier = ">=0.0.29,<0.34" },
     { name = "typer", specifier = ">=0.19.0,<0.30" },
     { name = "uvicorn", marker = "extra == 'viz'", specifier = ">=0.35.0,<0.54" },
-    { name = "yasbd-lib", specifier = ">=0.16.1,<1.0" },
+    { name = "yasbd-lib", specifier = ">=1.0.0,<2.0" },
 ]
 provides-extras = ["indic", "lang-detect", "struct-doc", "code", "self-tuning", "viz", "all", "dev", "docs", "dev-all"]
 
@@ -718,18 +718,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f7/e6/7adb4c5fa231e82c35b8f5741a9f2d055f520c29af5546fd70d3e8e1cd2e/fastapi-0.135.3.tar.gz", hash = "sha256:bd6d7caf1a2bdd8d676843cdcd2287729572a1ef524fc4d65c17ae002a1be654", size = 396524, upload-time = "2026-04-01T16:23:58.188Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/84/a4/5caa2de7f917a04ada20018eccf60d6cc6145b0199d55ca3711b0fc08312/fastapi-0.135.3-py3-none-any.whl", hash = "sha256:9b0f590c813acd13d0ab43dd8494138eb58e484bfac405db1f3187cfc5810d98", size = 117734, upload-time = "2026-04-01T16:23:59.328Z" },
-]
-
-[[package]]
-name = "ftfy"
-version = "6.3.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "wcwidth" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a5/d3/8650919bc3c7c6e90ee3fa7fd618bf373cbbe55dff043bd67353dbb20cd8/ftfy-6.3.1.tar.gz", hash = "sha256:9b3c3d90f84fb267fe64d375a07b7f8912d817cf86009ae134aa03e1819506ec", size = 308927, upload-time = "2024-10-26T00:50:35.149Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ab/6e/81d47999aebc1b155f81eca4477a616a70f238a2549848c38983f3c22a82/ftfy-6.3.1-py3-none-any.whl", hash = "sha256:7c70eb532015cd2f9adb53f101fb6c7945988d023a085d127d1573dc49dd0083", size = 44821, upload-time = "2024-10-26T00:50:33.425Z" },
 ]
 
 [[package]]
@@ -2652,15 +2640,6 @@ wheels = [
 ]
 
 [[package]]
-name = "wcwidth"
-version = "0.6.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/35/a2/8e3becb46433538a38726c948d3399905a4c7cabd0df578ede5dc51f0ec2/wcwidth-0.6.0.tar.gz", hash = "sha256:cdc4e4262d6ef9a1a57e018384cbeb1208d8abbc64176027e2c2455c81313159", size = 159684, upload-time = "2026-02-06T19:19:40.919Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/68/5a/199c59e0a824a3db2b89c5d2dade7ab5f9624dbf6448dc291b46d5ec94d3/wcwidth-0.6.0-py3-none-any.whl", hash = "sha256:1a3a1e510b553315f8e146c54764f4fb6264ffad731b3d78088cdb1478ffbdad", size = 94189, upload-time = "2026-02-06T19:19:39.646Z" },
-]
-
-[[package]]
 name = "win32-setctime"
 version = "1.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2680,17 +2659,15 @@ wheels = [
 
 [[package]]
 name = "yasbd-lib"
-version = "0.16.1"
+version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
-    { name = "ftfy" },
-    { name = "loguru" },
     { name = "radicli" },
     { name = "regex" },
     { name = "retrie" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b7/f5/d762dc632879a7c6640e0a55c0dff0a17864f2ce3587613f591ba34ab226/yasbd_lib-0.16.1.tar.gz", hash = "sha256:9346fe71706dc69676d8caf4672a1fbb260bebd94be37241c4283e9d7f905da4", size = 94522, upload-time = "2026-08-26T22:00:10.584Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e3/8d/d1177c35e416ad30a3820609d62ada78a5f0e6db0dfec8532414683a26e8/yasbd_lib-1.0.1.tar.gz", hash = "sha256:cff54941d69792032deceea646f75d611e7480cc4b8289b6e7288f8daf5755c9", size = 98227, upload-time = "2026-09-26T04:34:24.068Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2c/38/6e719b702efdab41b958a1f11d01a209b03831544468119b515baa200280/yasbd_lib-0.16.1-py3-none-any.whl", hash = "sha256:8da3e4c318bc18ef0f5a5f22a351ba33d4dce797d5451e35c644f8a4b665276d", size = 97456, upload-time = "2026-08-26T22:00:09.173Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/cc/ecb03783cb031255717294ca23df02661c6b23892b9ac2d5f376bd712b05/yasbd_lib-1.0.1-py3-none-any.whl", hash = "sha256:221c7fbb4e5355ea74d0e27bb3e1d135bd6b8b1cf758f35cadef77edf2c43d82", size = 100218, upload-time = "2026-09-26T04:34:22.63Z" },
 ]
