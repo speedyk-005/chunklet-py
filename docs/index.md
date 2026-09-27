@@ -63,7 +63,7 @@ Perfect for prepping data for LLMs, building RAG systems, or powering AI search 
 
 - :material-tune:{ .lg .middle } __Infinitely Customizable__
 
-    Offers extensive customization options, from pluggable token counters to custom sentence splitters and processors.
+    Offers extensive customization options, from pluggable token counters to custom processors.
 
 - :material-translate:{ .lg .middle } __Multilingual Mastery__
 
