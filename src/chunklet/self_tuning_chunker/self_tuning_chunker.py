@@ -614,7 +614,7 @@ class SelfTuningChunker:
         # HACK: Since a sentinel is always at the end of the gen,
         # and we are using itertools.chain, the last item of the chunks
         # might will be an empty one. e.g, [1, 2, 3] => 1-2, 2-3
-        # The only work-around to add a sentinel at paths
+        # The only work-around is to add a mock to the end.
         chunks = chain(chunks, [DotDict({"metadata": {"source": ""}})])
 
         prev = None
