@@ -491,6 +491,7 @@ class SelfTuningChunker:
     def chunk_file(
         self,
         path: str | Path,
+        *,
         file_type: Literal["document", "code"] | None = None,
         _already_fitted: bool = False,
     ) -> list[DotDict]:
