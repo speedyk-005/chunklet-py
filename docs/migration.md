@@ -175,21 +175,11 @@ The only exact equivalent is to split the text yourself and slice at a sentence 
     ```py
     from yasbd import BoundaryDetector
 
-    # The only exact equivalent. `detect()` yields the cumulative end offset of
-    # each sentence, so slicing the original text there reproduces exactly what
-    # `offset` used to select.
     offset = 5  # number of sentences to skip, as before
     offsets = list(BoundaryDetector(lang="en").detect(text))
-
-    # `offset` counted sentences to skip, but `offsets` is a 0-indexed list of end
-    # offsets, so the boundary sits at `offset - 1`. At `offset=0` there is
-    # nothing to skip, and `offsets` must not be indexed at all.
     start = offsets[offset - 1] if offset else 0
     chunks = chunker.chunk_text(text[start:])  # start at the 6th sentence
     ```
-
-!!! warning "An out-of-range `offset` now raises"
-    `offset` past the end of the document logged a warning and returned an empty list. Indexing `offsets` the same way raises `IndexError` instead, so clamp the value if it comes from user input.
 
 !!! note "This splits sentences twice"
     Slicing at a boundary reported by yasbd means the text is split once in your code and once again inside the chunker,

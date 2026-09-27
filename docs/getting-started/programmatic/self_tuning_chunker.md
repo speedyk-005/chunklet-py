@@ -302,6 +302,53 @@ for chunk in chunks:
 !!! note "Mixed Corpora Are The Sweet Spot"
     Feed it documents *and* code side by side cause that's exactly the scenario `SelfTuningChunker` was built for. No need to sort or tag your inputs; the profile dispatch handles it.
 
+### Separator: Grouping Sources Back Together! 📋
+
+One separator is yielded per **source**, not per span. A five-page PDF is still one
+source, so it contributes a single separator however many page spans it was split into
+on the way in. The separator is yielded after the last source too, so the stream ends
+with a trailing one, which `split_at` turns into a final empty group.
+
+```py linenums="1" hl_lines="1 5 9 13-15"
+from more_itertools import split_at
+
+chunker = SelfTuningChunker(lang="en", token_counter=word_counter)
+PATHS = ["samples/sample_text.txt", "samples/sample-pdf-a4-size.pdf"]
+custom_separator = "---END_OF_SOURCE---"
+
+chunks_with_separators = chunker.chunk_files(
+    PATHS,
+    separator=custom_separator,
+    show_progress=False,
+)
+
+chunk_groups = split_at(chunks_with_separators, lambda x: x == custom_separator)
+for i, source_chunks in enumerate(chunk_groups):
+    if source_chunks:  # (1)!
+        print(f"--- Chunks for Source {i + 1} ---")
+        for chunk in source_chunks:
+            print(f"Content: {chunk.content}")
+            print(f"Metadata: {chunk.metadata}")
+        print()
+```
+
+1.  Avoid processing the empty list at the end if stream ends with separator
+
+??? success "Click to show output"
+    ```linenums="0"
+    --- Chunks for Source 1 ---
+    Content: The quick brown fox jumps over the lazy dog.
+    Metadata: {'source': 'samples/sample_text.txt', 'chunk_num': 1, 'span': (0, 555), 'inferred_type': 'document'}
+
+    --- Chunks for Source 2 ---
+    Content: Company, Inc.
+    Sample
+    PDF
+    ...
+    Metadata: {'source': 'samples/sample-pdf-a4-size.pdf', 'page_count': 5, 'chunk_num': 1, 'span': (0, 88), 'inferred_type': 'document'}
+    ...
+    ```
+
 ## Self-Tuning vs Adaptive: Same Family, Different Level 🎚
 
 Self-tuning *is* adaptive chunking, same family, not competitors. The difference is the level at which the adaptation happens.

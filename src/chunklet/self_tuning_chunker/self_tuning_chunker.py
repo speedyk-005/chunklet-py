@@ -10,7 +10,7 @@ import os
 from collections import defaultdict
 from collections.abc import Iterator
 from functools import partial
-from itertools import pairwise
+from itertools import chain, pairwise
 from pathlib import Path
 from typing import Annotated, Any, Callable, Generator, Literal
 
@@ -423,7 +423,7 @@ class SelfTuningChunker:
                 if self.token_counter
                 else None
             )
-            self.document_chunker.max_sentences = int(learned_state["max_sentences"])
+            self.document_chunker.max_sentences = round(learned_state["max_sentences"])
             self.document_chunker.max_section_breaks = round(
                 learned_state["max_section_breaks"]
             )
@@ -455,7 +455,7 @@ class SelfTuningChunker:
         Args:
             texts: A non-string iterable of texts to chunk.
             base_metadata: Optional dictionary to be included with each chunk.
-            separator: A value to be yielded after the chunks of each text are processed.
+            separator: A value to be yielded after the chunks of each source are processed.
             n_jobs: Number of parallel workers.
             show_progress: Display progress bar during processing. Defaults to False.
             on_errors: How to handle errors.
@@ -565,7 +565,7 @@ class SelfTuningChunker:
         Args:
             paths: A non-string iterable of paths to the document files.
             token_counter: Optional token counting function.
-            separator: A value to be yielded after the chunks of each text are processed.
+            separator: A value to be yielded after the chunks of each source are processed.
                 Note: None cannot be used as a separator.
 
             n_jobs: Number of parallel workers to use. If None, uses all available CPUs.
@@ -600,7 +600,7 @@ class SelfTuningChunker:
                     yield text, metadata, file_type
 
         chunk_func = partial(self.chunk_text, _already_fitted=True)
-        yield from run_in_batch(
+        chunks = run_in_batch(
             func=chunk_func,
             iterable_of_args=fit_and_stream_tuples(paths),
             iterable_name="paths",
@@ -610,3 +610,23 @@ class SelfTuningChunker:
             on_errors=on_errors,
             verbose=self.verbose,
         )
+
+        # HACK: Since a sentinel is always at the end of the gen,
+        # and we are using itertools.chain, the last item of the chunks
+        # might will be an empty one. e.g, [1, 2, 3] => 1-2, 2-3
+        # The only work-around is to add a mock to the end.
+        chunks = chain(chunks, [DotDict({"metadata": {"source": ""}})])
+
+        prev = None
+        for curr, next in pairwise(chunks):
+            if (
+                curr == separator
+                and prev is not None
+                and prev.metadata.source == next.metadata.source
+            ):
+                continue
+
+            if curr != separator:
+                prev = curr
+
+            yield curr

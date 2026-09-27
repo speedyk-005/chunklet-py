@@ -416,7 +416,7 @@ The `separator` parameter works for both `chunk_texts` and `chunk_files`. It let
 !!! note "Quick Note"
     `None` won't work as a separator - you'll need something more substantial!
 
-```py linenums="1" hl_lines="3 8 12 16-20"
+```py linenums="1" hl_lines="1 8 12 16-19"
 from more_itertools import split_at
 
 chunker = DocumentChunker(lang="en", max_sentences=1)
@@ -433,7 +433,6 @@ chunks_with_separators = chunker.chunk_texts(
 )
 
 chunk_groups = split_at(chunks_with_separators, lambda x: x == custom_separator)
-# Process the results using split_at
 for i, doc_chunks in enumerate(chunk_groups):
     if doc_chunks:  # (1)!
         print(f"--- Chunks for Document {i + 1} ---")
