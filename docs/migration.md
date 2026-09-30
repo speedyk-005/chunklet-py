@@ -193,7 +193,7 @@ Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks
 === "Before"
 
     ```py
-    chunker = DocumentChunker()
+    chunker = DocumentChunker(token_counter=...)
     chunks = chunker.chunk_text(
         text,
         lang="auto",
@@ -213,6 +213,7 @@ Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks
         max_tokens=500,
         max_section_breaks=2,
         overlap_percent=20,
+        token_counter=...,
     )
     chunks = chunker.chunk_text(text)
     ```
