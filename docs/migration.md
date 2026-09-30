@@ -59,7 +59,7 @@ In v2, custom processors lived on a **global** `custom_processor_registry` singl
     ```
 
 !!! tip "Scope your registries"
-    Each `DocumentChunker` without a `processor_registry` arg gets its own fresh registry. Share a single `CustomProcessorRegistry()` instance across chunkers only when you actually want them to share the same custom processors.
+    Share a single `CustomProcessorRegistry()` instance across chunkers only when you actually want them to share the same custom processors.
 
 ### Removed v2.2.0 aliases
 
