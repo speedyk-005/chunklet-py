@@ -79,7 +79,7 @@ code = [
   "littletree>=0.8.7,<1.0",
 ]
 
-# SelfTuningChunker: pairs document + code chunking with automatic language detection
+# SelfTuningChunker: pairs document + code chunking
 self-tuning = ["chunklet-py[struct-doc,code]"]
 
 viz = [
@@ -92,7 +92,7 @@ viz = [
   "aiofiles==25.1.0",
 ]
 
-all = ["chunklet-py[struct-doc,code,viz,lang-detect,indic,self-tuning]"]
+all = ["chunklet-py[struct-doc,code,viz,lang-detect]"]
 
 dev = [
   "pytest>=8.3.5",
