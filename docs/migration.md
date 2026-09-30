@@ -17,6 +17,19 @@ python audit_migration.py /path/to/your/project
 
 The v2-v3 jump is small: no API renames, just a couple of removals. If you're already on the unified `chunk_text`/`chunk_texts`/`split_text` API, you're unaffected by the deprecation removals.
 
+### Removed v2.2.0 aliases
+
+The names deprecated in v2.2.0 are gone in v3. If you were still using them, here's the mapping:
+
+- `SentenceSplitter.split()` => `split_text()`
+- `DocumentChunker.chunk()` => `chunk_text()` / `chunk_file()`
+- `DocumentChunker.batch_chunk()` => `chunk_texts()` / `chunk_files()`
+- `CodeChunker.chunk()` => `chunk_text()` / `chunk_file()`
+- `CodeChunker.batch_chunk()` => `chunk_texts()` / `chunk_files()`
+- `PlainTextChunker` public import => `DocumentChunker.chunk_text()`
+
+If you were already calling the `chunk_text`/`chunk_texts`/`split_text` methods, nothing changes for you.
+
 ### Custom sentence splitters are gone
 
 !!! warning "Removed in v3.0.0"
@@ -60,19 +73,6 @@ In v2, custom processors lived on a **global** `custom_processor_registry` singl
 
 !!! tip "Scope your registries"
     Share a single `CustomProcessorRegistry()` instance across chunkers only when you actually want them to share the same custom processors.
-
-### Removed v2.2.0 aliases
-
-The names deprecated in v2.2.0 are gone in v3. If you were still using them, here's the mapping:
-
-- `SentenceSplitter.split()` => `split_text()`
-- `DocumentChunker.chunk()` => `chunk_text()` / `chunk_file()`
-- `DocumentChunker.batch_chunk()` => `chunk_texts()` / `chunk_files()`
-- `CodeChunker.chunk()` => `chunk_text()` / `chunk_file()`
-- `CodeChunker.batch_chunk()` => `chunk_texts()` / `chunk_files()`
-- `PlainTextChunker` public import => `DocumentChunker.chunk_text()`
-
-If you were already calling the `chunk_text`/`chunk_texts`/`split_text` methods, nothing changes for you.
 
 ### `lang="auto"` is no longer the default
 
@@ -186,7 +186,7 @@ The only exact equivalent is to split the text yourself and slice at a sentence 
     so it costs more than `offset` did. If you were only dropping a fixed preamble such as a license header or table of
     contents, slicing the text at a boundary you choose is cheaper and gives the same result.
 
-### Constraints moved to the constructor
+### Config moved to the constructor
 
 Sizing and tuning parameters (`max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, `lang`) used to be passed per call to `chunk_text()`, `chunk_file()`, `chunk_texts()`, `chunk_files()`, `split_text()`, and `split_file()`. They now live on the chunker/splitter instance, set once at construction and mutable as plain attributes. The same applies to `CodeChunker` (`max_tokens`, `max_lines`, `max_functions`) and `SentenceSplitter` (`lang`).
 
