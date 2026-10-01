@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **CodeChunke no longer emits "N/A" for source**: To match `DocumentChunker` chunk_text methods.
-- **Chunker constraints moved to the constructor**: Sizing/tuning parameters are now set at `__init__` instead of per call:
+- **Chunker configs moved to the constructor**: Sizing/tuning parameters are now set at `__init__` instead of per call:
   `max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, and `lang` are now set at construction instead of passed to the chunking/splitting methods.
 - **`DotDict.to_dict()` renamed to `to_std_dict()`** (also on `DotList`): `DotDict` already subclasses `dict`, so `to_dict()` was a misleading name for a conversion to *standard* containers. Only needed when a consumer requires exact types, e.g. `yaml.dump()` emits `!!python/object` tags for dict subclasses.
 - **Mutability Constraints**: Constraints are now plain attributes on the chunker. Mutating a validated constraint (e.g., `chunker.max_sentences = 4`) re-runs constraint validation, and `DocumentChunker` delegates these attributes to its internal plain-text chunker.

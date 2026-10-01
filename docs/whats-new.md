@@ -3,7 +3,47 @@
 
 ---
 
-## Chunklet v2.4.1 and v2.4.2
+## Chunklet v3.0.0
+
+!!! warning "Not released yet"
+    This is what's coming in the next major. None of it is on PyPI today.
+
+### 🤖 SelfTuningChunker, or "Let It Figure It Out"
+
+The headline act is `SelfTuningChunker`, built for mixed text/code corpora. It classifies each source as document or code (extension first, then a binary sniff, then content heuristics), learns per-profile structural metrics over time with a Kaufman Adaptive Moving Average, and sizes chunk boundaries from what it learned instead of a number you guessed.
+
+### 🏗️ Better config
+
+We got tired of passing the same sizing knobs into every call. `max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, and `lang` now live on the object, set once at construction. They're plain attributes, so `chunker.max_sentences = 6` works, and re-runs validation when you do it. `lang` is required now (no more silent `"auto"`), and `show_progress` defaults to `False`, because not every script wants a progress bar.
+
+### 🗑️ Deleted, With Prejudice
+
+- **The v2.2.0 grace period is over.** `chunk()`, `batch_chunk()`, `split()`, and the public `PlainTextChunker` import are gone.
+- **`offset` is gone**, everywhere: `DocumentChunker`, `PlainTextChunker`, the CLI flag, and the visualizer form.
+- **Registries got trimmed.** The global `custom_processor_registry` is now a plain instance you create and pass in, and the custom sentence splitter registry is gone entirely.
+- **`sentence_splitter` constructor param** removed; both chunkers always use a default `SentenceSplitter`.
+- **`SentenceSplitter.detected_top_language()`** is now the standalone `detect_top_language()`.
+- **Those DotDict serializers from v2.3.2 are gone.** `to_json()`, `to_yaml()`, `to_toml()`, and `to_msgpack()` had zero callers, and `to_dict()` is now `to_std_dict()`. Use `json.dumps(chunk)` and friends.
+
+### 📦 Leaner Installs
+
+`py3langid` and `indic-nlp-library` no longer install by default as they dragged `numpy`, `pandas`, and `morfessor` in for everyone. Both are optional extras now (`[lang-detect]` and `[indic]`). The `structured-document` extra is renamed to `struct-doc`, the `document` and `visualization` aliases are gone, and `viz` carries the visualizer dependencies directly.
+
+### 🐛 The Fixes
+
+- **Span finder**: repeated text resolves to its own occurrence instead of reusing the first match, and a chunk starting with a Markdown heading now reports a span that includes the `#`
+- **Token-limited chunking**: the unfitted remainder of a split sentence opens the next chunk instead of the full sentence getting re-appended on top of the overlap clause; no more duplicated clauses or `(-1, -1)` spans
+- **UniversalSplitter**: non-Latin sentences jammed together with no whitespace now split correctly
+
+### 🧹 The Boring Stuff
+
+- `CodeChunker.chunk_text()` and `chunk_texts()` accept `base_metadata` now, same as `DocumentChunker`
+- `CodeChunker` stopped writing `"N/A"` into the `source` field
+- `DocumentChunker.chunk_file()` handles streaming processors (PDF, DOCX, EPUB, ODT) directly instead of pointing you at `chunk_files()`
+
+---
+
+## Chunklet v2.4.1-v2.4.3
 
 ### 📄 The "We Forgot to Mention" Release
 
