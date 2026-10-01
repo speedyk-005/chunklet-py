@@ -13,6 +13,8 @@
 
 We fixed the lazy loader to keep a proper filename while the model opens. The public API is unchanged; `detect_top_language()` still does exactly what it did before, just without the Android surprise.
 
+---
+
 ## Chunklet v3.0.0
 
 ### 🤖 SelfTuningChunker, or "Let It Figure It Out"
