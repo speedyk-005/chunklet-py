@@ -387,10 +387,9 @@ class PlainTextChunker:
 
                     curr_chunk.append(fitted)
 
-                    if unfitted:
-                        # We need to process the remnants separately
-                        sentences[index] = unfitted
-                        has_remnant = True
+                    # We need to process any remnants separately
+                    has_remnant = bool(unfitted)
+                    sentences[index] = unfitted
 
                 chunks.append("\n".join(curr_chunk))  # Considered complete
 
@@ -413,8 +412,7 @@ class PlainTextChunker:
             curr_chunk.append(sentence)
             constraint_counter["token_count"] += sentence_tokens
             constraint_counter["sentence_count"] += 1
-            if is_heading:
-                constraint_counter["heading_count"] += 1
+            constraint_counter["heading_count"] += int(is_heading)
             index += 1
 
         # Add the last chunk if it exists

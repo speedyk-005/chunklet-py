@@ -77,7 +77,7 @@ function init() {
     setElementText(elements.processBtn, 'No file is uploaded yet');
     
     console.log('Text Chunk Visualizer initialized');
-    fetchConfigAndSetupUI();
+    void fetchConfigAndSetupUI();
 }
 
 /**
@@ -125,7 +125,7 @@ function setupEventListeners() {
             e.preventDefault();
             showToast('Please upload a file first to enable processing.', 'warning');
         } else {
-            processUploadedFile();
+            void processUploadedFile();
         }
     });
     
@@ -673,9 +673,9 @@ function toggleFullscreen() {
     if (!elements.resultsSection) return;
     
     if (document.fullscreenElement) {
-        document.exitFullscreen();
+        document.exitFullscreen().catch(() => {});
     } else {
-        elements.resultsSection.requestFullscreen();
+        elements.resultsSection.requestFullscreen().catch(() => {});
     }
 }
 
