@@ -3,10 +3,17 @@
 
 ---
 
-## Chunklet v3.0.0
+## Chunklet v3.0.1
 
-!!! warning "Not released yet"
-    This is what's coming in the next major. None of it is on PyPI today.
+### 🌐  Android/Pydroid3 compatibility for language detection
+
+`py3langid` handles `lang="auto"`, but on Android/Pydroid3 the model loader can get dramatic. NumPy was receiving a raw temp-file handle that didn't look like a real file object, triggering:
+
+`AttributeError: 'int' object has no attribute 'endswith'`
+
+We fixed the lazy loader to keep a proper filename while the model opens. The public API is unchanged; `detect_top_language()` still does exactly what it did before, just without the Android surprise.
+
+## Chunklet v3.0.0
 
 ### 🤖 SelfTuningChunker, or "Let It Figure It Out"
 

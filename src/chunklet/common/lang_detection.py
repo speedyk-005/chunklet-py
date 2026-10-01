@@ -4,6 +4,30 @@ from typing import Callable
 _lang_identifier: Callable | None = None
 
 
+def _load_lang_identifier():
+    """Load py3langid safely on Android/Pydroid3.
+
+    NumPy expects the temporary file object to expose a valid `.name`
+    attribute during model loading. Some Android runtimes provide a raw
+    file descriptor instead, which breaks `numpy.load()` with:
+    `AttributeError: 'int' object has no attribute 'endswith'`
+    """
+    import tempfile
+
+    original_tempfile = tempfile.TemporaryFile
+    try:
+        def _patched_tempfile(*args, **kwargs):
+            kwargs.setdefault("delete", False)
+            return tempfile.NamedTemporaryFile(*args, **kwargs)
+
+        tempfile.TemporaryFile = _patched_tempfile
+
+        from py3langid.langid import MODEL_FILE, LanguageIdentifier
+        return LanguageIdentifier.from_model_file(MODEL_FILE, norm_probs=True)
+    finally:
+        tempfile.TemporaryFile = original_tempfile
+
+
 def detect_top_language(text: str) -> tuple[str, float]:
     """Detect the top language of the given text using py3langid.
 
@@ -33,11 +57,7 @@ def detect_top_language(text: str) -> tuple[str, float]:
     global _lang_identifier
     if _lang_identifier is None:
         try:
-            from py3langid.langid import MODEL_FILE, LanguageIdentifier
-
-            _lang_identifier = LanguageIdentifier.from_model_file(
-                MODEL_FILE, norm_probs=True
-            )
+            _lang_identifier = _load_lang_identifier()
         except ImportError as e:  # pragma: no cover
             raise ImportError(
                 "The 'py3langid' library is required for auto language detection. "
