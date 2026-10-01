@@ -211,9 +211,9 @@ def _print_chunks(chunks, destination: Optional[Path], metadata: bool):
     chunk_counter = 0
     for chunk_box in chunks:
         chunk_counter += 1
-        output_content.append(f"## --- Chunk {chunk_counter} ---")
-        output_content.append(chunk_box.content)
-        output_content.append("")
+        output_content.extend(
+            [f"## --- Chunk {chunk_counter} ---", chunk_box.content, ""]
+        )
         if metadata:
             chunk_metadata = chunk_box.metadata.to_std_dict()
             output_content.append("\n--- Metadata ---")  # Use a sub-header
