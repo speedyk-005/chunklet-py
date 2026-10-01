@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.0.0] - Unreleased
+## [3.0.0] - 2026-10-01
 
 ### Added
 - **base_metadata parameter**: `CodeChunker.chunk_text` and `CodeChunker.chunk_texts` now accept a `base_metadata` dict merged into every chunk's metadata, matching `DocumentChunker.chunk_text`/`chunk_texts`.
