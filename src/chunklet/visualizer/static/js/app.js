@@ -673,9 +673,9 @@ function toggleFullscreen() {
     if (!elements.resultsSection) return;
     
     if (document.fullscreenElement) {
-        document.exitFullscreen();
+        document.exitFullscreen().catch(() => {});
     } else {
-        elements.resultsSection.requestFullscreen();
+        elements.resultsSection.requestFullscreen().catch(() => {});
     }
 }
 
