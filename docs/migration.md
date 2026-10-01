@@ -53,18 +53,6 @@ If you were already calling the `chunk_text`/`chunk_texts`/`split_text` methods,
 !!! note "You probably don't need it"
     `DotDict` subclasses `dict`, so `json.dumps(chunk)` works directly, and `chunk == {"content": "..."}` compares equal to a plain dict. You only need `to_std_dict()` when a consumer insists on exact standard types, e.g., `yaml.dump()` emits `!!python/object` tags for dict subclasses unless you convert first.
 
-=== "Before (v2.x.x)"
-
-    ```py
-    chunk.to_dict()
-    ```
-
-=== "After (v3.x.x)"
-
-    ```py
-    chunk.to_std_dict()
-    ```
-
 ### Custom sentence splitters are gone
 
 !!! warning "Removed in v3.0.0"
