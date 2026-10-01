@@ -157,7 +157,7 @@ def _write_chunks(chunks, destination: Path, metadata: bool):
                 err=True,
             )
 
-        all_chunks = [chunk_box.to_dict() for chunk_box in chunks]
+        all_chunks = [chunk_box.to_std_dict() for chunk_box in chunks]
 
         if not metadata:
             for chunk_dict in all_chunks:
@@ -192,7 +192,7 @@ def _write_chunks(chunks, destination: Path, metadata: bool):
         if metadata:
             output_json_path = destination / f"{base_output_filename}.json"
             with open(output_json_path, "w", encoding="utf-8") as f:
-                json.dump(chunk_box.metadata.to_dict(), f, indent=4)
+                json.dump(chunk_box.metadata.to_std_dict(), f, indent=4)
 
         processed_sources.add(source_name)
 
@@ -215,7 +215,7 @@ def _print_chunks(chunks, destination: Optional[Path], metadata: bool):
         output_content.append(chunk_box.content)
         output_content.append("")
         if metadata:
-            chunk_metadata = chunk_box.metadata.to_dict()
+            chunk_metadata = chunk_box.metadata.to_std_dict()
             output_content.append("\n--- Metadata ---")  # Use a sub-header
 
             for key, value in chunk_metadata.items():
