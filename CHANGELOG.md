@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.1] - 2026-10-01
+
+### Fixed
+- **Language detection compatibility**: Fixed a runtime crash on Android/Pydroid3 when `py3langid` loads its model through `numpy.load()`. The lazy loader now uses a temporary file strategy that preserves a valid `.name` attribute and avoids `AttributeError: 'int' object has no attribute 'endswith'`.
+
+---
+
 ## [3.0.0] - 2026-10-01
 
 ### Added
