@@ -30,6 +30,29 @@ The names deprecated in v2.2.0 are gone in v3. If you were still using them, her
 
 If you were already calling the `chunk_text`/`chunk_texts`/`split_text` methods, nothing changes for you.
 
+### `DotDict` serializers trimmed, `to_dict` renamed
+
+`DotDict` carried `to_json()`, `to_yaml()`, `to_toml()`, and `to_msgpack()` for compatibility with the old `python-box` API. None were ever used inside chunklet and only `to_dict()` was called anywhere at all, so the other four are removed. Use the standard library instead — the names and the output are the same:
+
+=== "Before (v2.x.x)"
+
+    ```py
+    chunk.to_dict()              # -> {"content": "...", ...} 
+    chunk.to_json()              # -> '{"content": "...", ...}'
+    ```
+
+=== "After (v3.x.x)"
+
+    ```py
+    import json
+    json.dumps(chunk.to_std_dict())
+    ```
+
+`to_dict()` is now `to_std_dict()` on both `DotDict` and `DotList`. The old name was misleading: `DotDict` already *is* a `dict`, so `to_dict()` never meant "give me a dict".
+
+!!! note "You probably don't need it"
+    `DotDict` subclasses `dict`, so `json.dumps(chunk)` works directly, and `chunk == {"content": "..."}` compares equal to a plain dict. You only need `to_std_dict()` when a consumer insists on exact standard types, e.g., `yaml.dump()` emits `!!python/object` tags for dict subclasses unless you convert first.
+
 ### Custom sentence splitters are gone
 
 !!! warning "Removed in v3.0.0"

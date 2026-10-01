@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CodeChunke no longer emits "N/A" for source**: To match `DocumentChunker` chunk_text methods.
 - **Chunker constraints moved to the constructor**: Sizing/tuning parameters are now set at `__init__` instead of per call:
   `max_tokens`, `max_sentences`, `max_section_breaks`, `overlap_percent`, and `lang` are now set at construction instead of passed to the chunking/splitting methods.
+- **`DotDict.to_dict()` renamed to `to_std_dict()`** (also on `DotList`): `DotDict` already subclasses `dict`, so `to_dict()` was a misleading name for a conversion to *standard* containers. Only needed when a consumer requires exact types, e.g. `yaml.dump()` emits `!!python/object` tags for dict subclasses.
 - **Mutability Constraints**: Constraints are now plain attributes on the chunker. Mutating a validated constraint (e.g., `chunker.max_sentences = 4`) re-runs constraint validation, and `DocumentChunker` delegates these attributes to its internal plain-text chunker.
 - **lang is no longer required to default to `"auto"`**: `lang` is now a required argument with no default.
   - `py3langid` is no longer a hard dependency (it's an optional extra called `[lang-detect]`), needed only when using `lang="auto"`.
@@ -47,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`offset` parameter**: Removed from `DocumentChunker` and `PlainTextChunker`, from the `--offset` CLI flag, and from the visualizer's document chunker form.
 - **Hard dependency on `py3langid` and `indic-nlp-library`**: No longer installed by default. Both pulled in heavy dependencies (`numpy`, `pandas`, `morfessor`) that most users don't need. They're now optional extras and this significantly reduces the default install size.
 - **SentenceSplitter.detected_top_language()**: Removed as a public method. Language detection is now the standalone `detect_top_language()` in `chunklet.common.lang_detection`. (Before v2 it lived in `chunklet.utils` as `detect_text_language`.)
+- **`DotDict` serialization methods**: Removed `to_json()`, `to_yaml()`, `to_toml()`, and `to_msgpack()` from `DotDict`. They existed only for `python-box` API compatibility and had no callers in the library. Use `json.dumps(chunk)` and friends instead.
 
 ---
 
