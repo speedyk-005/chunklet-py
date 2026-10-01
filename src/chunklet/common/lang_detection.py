@@ -13,10 +13,22 @@ def detect_top_language(text: str) -> tuple[str, float]:
         text: The input text to detect the language for.
 
     Returns:
-        A tuple containing the detected language code and its confidence.
+        A tuple of the ISO 639-1 language code and its confidence in ``[0, 1]``.
+        Confidence depends on the ``py3langid`` model, so treat it as
+        approximate rather than a threshold you can rely on across versions.
 
     Raises:
         ImportError: If py3langid is not installed.
+
+    Examples:
+        >>> lang, confidence = detect_top_language("This sentence is written in English.")
+        >>> lang, confidence > 0.8
+        ('en', True)
+        >>> detect_top_language("Ceci est une phrase ecrite en francais.")[0]
+        'fr'
+        >>> code, confidence = detect_top_language("")
+        >>> round(confidence, 2)
+        0.01
     """
     global _lang_identifier
     if _lang_identifier is None:
