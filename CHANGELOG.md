@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **Windows multiprocessing**: Made the batch result/exception wrapper picklable so `chunk_files()` works with spawned workers.
+
+---
+
 ## [3.0.1] - 2026-10-01
 
 ### Fixed

@@ -356,6 +356,7 @@ A huge thank you to the awesome people who helped shape Chunklet-py:
 - [@arnoldfranz](https://github.com/arnoldfranz): reported the CLI Path Validation Bug (#6) that helped improve error handling.
 - [@AkshatSharma25](https://github.com/AkshatSharma25): fixed EML metadata extraction to capture all header fields.
 - [bh-official](https://github.com/bh-official): Added batch JSONL export example
+- [@vankudothuadhinaik](https://github.com/vankudothuadhinaik): fixed Windows multiprocessing pickling for batch processing (#104).
 
 ---
 
