@@ -18,7 +18,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/speedyk-005/chunklet-py/actions)
 [![CodeFactor](https://www.codefactor.io/repository/github/speedyk-005/chunklet-py/badge)](https://www.codefactor.io/repository/github/speedyk-005/chunklet-py)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/speedyk-005/chunklet-py)
+[![DeepWiki](https://raw.githubusercontent.com/speedyk-005/yasbd-lib/main/assets/deepwiki_badge.svg)](https://deepwiki.com/speedyk-005/chunklet-py)
 
 > [!WARNING]
 > **Quick heads up!** Version 3 has some breaking changes. No worries though - check our [Migration Guide](https://speedyk-005.github.io/chunklet-py/latest/migration/) for a smooth upgrade!
