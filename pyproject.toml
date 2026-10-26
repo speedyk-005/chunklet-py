@@ -38,7 +38,7 @@ dependencies = [
   "yasbd-lib>=1.0.0,<2.0",
 
   # Rust binding (1.0+) for faster performance on supported platforms, legacy for Android temporarily.
-  "sentencex<=0.6.1; sys_platform == 'linux' and (platform_machine == 'aarch64' or platform_machine == 'armv7l')",
+  "sentencex<=1.0.32; sys_platform == 'linux' and (platform_machine == 'aarch64' or platform_machine == 'armv7l')",
   "sentencex>=1.0.0,<2.0; sys_platform != 'linux' or (platform_machine != 'aarch64' and platform_machine != 'armv7l')",
 
   "mpire>=2.10.2,<3.0",
@@ -84,7 +84,7 @@ self-tuning = ["chunklet-py[struct-doc,code]"]
 
 viz = [
   "uvicorn>=0.35.0,<0.55",
-  "fastapi>=0.116.0,<0.144",
+  "fastapi>=0.116.0,<0.162",
   "python-multipart>=0.0.20,<0.33",
   "msgpack>=1.1.0,<2.0",
 
