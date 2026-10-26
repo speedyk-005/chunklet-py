@@ -1,3 +1,4 @@
+import functools
 from collections.abc import Generator, Iterable
 from typing import Any, Callable, Literal
 
@@ -8,17 +9,17 @@ from chunklet.common.logging_utils import log_info
 from chunklet.common.validation import safely_count_iterable
 
 
+def _capture(func, args):
+    """Run func with args and return (result, exception)."""
+    try:
+        return func(*args), None
+    except Exception as e:
+        return None, e
+
+
 def capture_result_and_exception(func):
-    """Decorator to capture result and exception from a function call."""
-
-    def wrapper(*args, **kwargs):  # pragma: no cover
-        try:
-            res = func(*args, **kwargs)
-            return res, None
-        except Exception as e:
-            return None, e
-
-    return wrapper
+    """Wrap func so it can be pickled by the multiprocessing pool."""
+    return functools.partial(_capture, func)
 
 
 def run_in_batch(
@@ -73,7 +74,7 @@ def run_in_batch(
 
             task_iter = imap_func(
                 capture_result_and_exception(func),
-                iterable_of_args,
+                ((item,) for item in iterable_of_args),
                 iterable_len=total,
                 progress_bar=show_progress,
                 progress_bar_options=progress_bar_options,
