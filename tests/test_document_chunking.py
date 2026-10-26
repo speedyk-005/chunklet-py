@@ -229,3 +229,15 @@ def test_batch_chunk_custom_processor_error_handling(
 
     finally:
         registry.unregister(".txt")
+
+
+def test_chunk_files_with_one_worker(tmp_path):
+    """Process files with one worker on spawn-based platforms."""
+    path = tmp_path / "sample.txt"
+    path.write_text("Hello Windows. This should be chunked.")
+    chunker = DocumentChunker(lang="en", max_sentences=5)
+
+    chunks = list(chunker.chunk_files([path], n_jobs=1))
+
+    assert chunks
+    assert chunks[0].metadata["source"] == str(path)
