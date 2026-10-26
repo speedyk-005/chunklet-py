@@ -1,4 +1,5 @@
 from collections.abc import Generator, Iterable
+from functools import partial
 from typing import Any, Callable, Literal
 
 # mpire is lazy imported
@@ -8,17 +9,16 @@ from chunklet.common.logging_utils import log_info
 from chunklet.common.validation import safely_count_iterable
 
 
+def _capture_result_and_exception(func, *args, **kwargs):
+    try:
+        return func(*args, **kwargs), None
+    except Exception as e:
+        return None, e
+
+
 def capture_result_and_exception(func):
-    """Decorator to capture result and exception from a function call."""
-
-    def wrapper(*args, **kwargs):  # pragma: no cover
-        try:
-            res = func(*args, **kwargs)
-            return res, None
-        except Exception as e:
-            return None, e
-
-    return wrapper
+    """Create a picklable wrapper that captures results and exceptions."""
+    return partial(_capture_result_and_exception, func)
 
 
 def run_in_batch(
