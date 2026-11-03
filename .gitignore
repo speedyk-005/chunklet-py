@@ -15,6 +15,7 @@ build/
 # Virtualenv
 .venv/
 env/
+uv.lock
 venv/
 
 # Test artifacts
